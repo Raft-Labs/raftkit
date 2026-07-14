@@ -1,0 +1,34 @@
+{
+  "name": "raftkit",
+  "owner": {
+    "name": "RaftLabs",
+    "email": "aravind@raftlabs.com"
+  },
+  "description": "RaftLabs' private plugin marketplace — the RaftLabs way of shipping software, packaged for Claude Code and Claude apps.",
+  "plugins": [
+    {
+      "name": "raftkit-core",
+      "source": "./plugins/raftkit-core",
+      "description": "House rules, workflow constants, and governance protocols shared by every RaftKit role plugin.",
+      "category": "core"
+    },
+    {
+      "name": "raftkit-pm",
+      "source": "./plugins/raftkit-pm",
+      "description": "PM skills: onboarding, user stories, story readiness, status updates, meeting decisions, estimation.",
+      "category": "role"
+    },
+    {
+      "name": "raftkit-dev",
+      "source": "./plugins/raftkit-dev",
+      "description": "Developer skills: implement, scope guard, simplify, PR, bug fix, UI creation, project setup, recipes.",
+      "category": "role"
+    },
+    {
+      "name": "raftkit-qa",
+      "source": "./plugins/raftkit-qa",
+      "description": "QA skills: test suites, test run sheets, bug filing, retest.",
+      "category": "role"
+    }
+  ]
+}

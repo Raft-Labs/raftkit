@@ -1,0 +1,8 @@
+{
+  "name": "raftkit-core",
+  "version": "0.1.0",
+  "description": "House rules, workflow constants, and governance protocols shared by every RaftKit role plugin.",
+  "author": {
+    "name": "RaftLabs"
+  }
+}

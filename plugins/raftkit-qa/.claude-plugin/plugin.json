@@ -1,0 +1,9 @@
+{
+  "name": "raftkit-qa",
+  "version": "0.1.0",
+  "description": "QA skills: test suites, test run sheets, bug filing, retest.",
+  "author": {
+    "name": "RaftLabs"
+  },
+  "dependencies": ["raftkit-core"]
+}
