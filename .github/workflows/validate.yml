@@ -2,6 +2,8 @@ name: validate
 
 on:
   pull_request:
+    # explicit list because `edited` (fires on base-branch retarget) is not a default type
+    types: [opened, synchronize, reopened, edited, ready_for_review]
   push:
     branches: [main]
 
@@ -9,12 +11,17 @@ concurrency:
   group: validate-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  CLAUDE_CLI_VERSION: 2.1.209
+
 jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the version-bump gate anchors at the merge base
 
       # Catches raw JSON syntax errors even if the CLI install below fails.
       # Never a substitute for the CLI validate — that step is the authority.
@@ -32,17 +39,17 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.npm-global
-          key: claude-cli-2.1.209
+          key: claude-cli-${{ env.CLAUDE_CLI_VERSION }}
 
       - name: Install Claude Code CLI (pinned)
         if: steps.cli-cache.outputs.cache-hit != 'true'
-        run: npm install -g --prefix "$HOME/.npm-global" @anthropic-ai/claude-code@2.1.209
+        run: npm install -g --prefix "$HOME/.npm-global" "@anthropic-ai/claude-code@$CLAUDE_CLI_VERSION"
 
       - name: Add CLI to PATH
         run: echo "$HOME/.npm-global/bin" >> "$GITHUB_PATH"
 
-      - name: CLI smoke check
-        run: claude --version
+      - name: CLI smoke check # asserts the cached CLI matches the pin
+        run: claude --version | grep -F "$CLAUDE_CLI_VERSION"
 
       - name: Validate marketplace and manifests
         env:
