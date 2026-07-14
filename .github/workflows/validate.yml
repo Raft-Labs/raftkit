@@ -1,0 +1,53 @@
+name: validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      # Catches raw JSON syntax errors even if the CLI install below fails.
+      # Never a substitute for the CLI validate — that step is the authority.
+      - name: JSON syntax pre-check
+        run: |
+          jq empty .claude-plugin/marketplace.json
+          for f in plugins/*/.claude-plugin/plugin.json; do jq empty "$f"; done
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Cache Claude Code CLI
+        id: cli-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm-global
+          key: claude-cli-2.1.209
+
+      - name: Install Claude Code CLI (pinned)
+        if: steps.cli-cache.outputs.cache-hit != 'true'
+        run: npm install -g --prefix "$HOME/.npm-global" @anthropic-ai/claude-code@2.1.209
+
+      - name: Add CLI to PATH
+        run: echo "$HOME/.npm-global/bin" >> "$GITHUB_PATH"
+
+      - name: CLI smoke check
+        run: claude --version
+
+      - name: Validate marketplace and manifests
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: bash scripts/validate.sh
+
+      - name: Gate self-test
+        run: bash tests/validate.test.sh
