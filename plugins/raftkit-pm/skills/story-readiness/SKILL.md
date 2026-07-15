@@ -13,9 +13,10 @@ template. The story is the contract (PRD §7.1); a story with unanswered WEESLD
 rows or missing copy ships bugs by design. This gate is cheap; the bugs aren't.
 
 This is the inverse of [user-story](../user-story/SKILL.md): that skill *writes* a
-template-perfect story; this one *audits* one. The same audit is embedded by
-`raftkit-dev · implement` as its Gate 0 — so a story that passes here is the same
-story a dev is allowed to start.
+template-perfect story; this one *audits* one. It is designed to be reused as the
+dev-side Gate 0 that the planned `raftkit-dev · implement` skill (M3, not yet
+built) will run before a dev starts — so the same story passes the same gate on
+both sides. Building that dev-side enforcement is out of scope here.
 
 ## The two rules that govern everything
 
