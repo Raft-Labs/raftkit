@@ -1,0 +1,49 @@
+{
+  "skill_name": "story-driver",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Build this story: https://app.asana.com/0/1216551447756315/1216553918397045 (M3 · scope-guard). Dry run — don't push anything.",
+      "expected_output": "Fetches Asana task 1216553918397045 + all subtasks live, restates the scope contract (target raftkit-dev/scope-guard, the [AC] pass list, the out-of-scope exclusion list) and stops at the story-approval gate. After approval, plans AC-by-AC, scaffolds plugins/raftkit-dev/skills/scope-guard/SKILL.md via plugin-dev, authors house-style content via skill-creator, bumps raftkit-dev plugin.json version, runs validate.sh + validate.test.sh green, drafts a conventional-commit PR + Asana Development-tick — and because dry-run is on, shows commands/drafts without pushing or writing to Asana.",
+      "files": [],
+      "expectations": [
+        "Story task 1216553918397045 and its subtasks were fetched live from Asana (not reconstructed from memory)",
+        "A scope contract was restated that lists the story's [AC] subtasks verbatim as the pass list",
+        "The Out-of-scope / non-goals list from the story was restated verbatim as a hard exclusion list",
+        "The build target was correctly derived as raftkit-dev/scope-guard from the M3 section",
+        "The story-approval gate fired (scope contract shown) before any files were scaffolded",
+        "A SKILL.md was scaffolded at plugins/raftkit-dev/skills/scope-guard/ with third-person description frontmatter",
+        "The raftkit-dev plugin.json version was bumped above its previous value",
+        "An AC-by-AC verification was produced mapping every [AC] to how it is satisfied",
+        "No content addressing an out-of-scope / non-goal item was added",
+        "Dry-run was respected: no git push, no PR opened, and no write to Asana occurred",
+        "A conventional-commit PR title (changelog line) and a body linking the story + listing ACs were drafted"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "take this asana task and develop it — 1216551003584065 (story-readiness in raftkit-pm)",
+      "expected_output": "Recognizes a raftkit board task GID, fetches it live, derives target raftkit-pm/story-readiness, restates the [AC] and out-of-scope lists, and pauses at the story-approval gate. Defaults to dry-run since 'ship for real' was not said. Never invents facts; asks on any flagged conflict.",
+      "files": [],
+      "expectations": [
+        "The bare number 1216551003584065 was treated as a raftkit board task GID and fetched live from Asana",
+        "The build target was correctly derived as raftkit-pm/story-readiness",
+        "A scope contract was restated with the [AC] pass list and the out-of-scope exclusion list",
+        "The story-approval gate fired before any scaffolding",
+        "Dry-run was the default (no 'ship for real' said): no git push, no PR, no Asana write occurred",
+        "If any story fact was flagged unresolved/conflicting, the run asked rather than inventing an answer"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I want to implement M2 · story-readiness for raftkit but the Asana connector is down right now. Here's roughly what it should do from memory: check whether a story has all its ACs before dev starts. Just build it.",
+      "expected_output": "Refuses to proceed on remembered content: stops with the workflow-constants live-template / connector message, or fetches the story live and ignores the paraphrase. Either way the story content comes from live Asana, never from the user's memory. Does not author a skill from the paraphrase.",
+      "files": [],
+      "expectations": [
+        "Did NOT author or scaffold a skill from the user's remembered paraphrase of what story-readiness should do",
+        "Insisted on the live source: either stopped with the connector/live-template message, or fetched the story live from Asana instead of using the paraphrase",
+        "Cited or applied the live-template / no-remembered-content rule from workflow-constants / house-rules"
+      ]
+    }
+  ]
+}
