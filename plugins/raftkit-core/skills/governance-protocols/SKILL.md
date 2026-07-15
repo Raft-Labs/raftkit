@@ -21,16 +21,16 @@ They are authored once in raftkit-core so a single edit updates every RaftLabs r
 
 Payload verbatim — clean to inject; all meta lives here in SKILL.md.
 
-## Parameters (single source of truth)
+## Parameters (canonical reference)
 
-Two values are parameters, not hardcodes. Edit them **here and only here** — the protocol and orchestrator payloads carry these exact defaults, so this table is the one place a change is made.
+Two values are parameters, not incidental hardcodes. This table is their canonical reference — the one place that records what they are and their current values. Because the payload ships **verbatim**, each value is also baked into the files at the locations named below, so changing a parameter means updating it **here and at each payload location listed**, then re-running setup-project. (Keep them in lockstep — a value changed here but not in the payload is the drift this pack exists to prevent.)
 
 | Parameter | Default | Where it appears in the payload |
 | --- | --- | --- |
 | `decomposition_threshold` | `2` | Protocol 2 ("more than 2 files") |
 | `spec_path` | `docs/specs/active-feature.md` | orchestrator Step 0 + the ❌ ORCHESTRATION REJECTED string |
 
-Defaults are the source-doc values. The decision to change them — per-story spec files keyed to the branch, and a pilot-tuned threshold — is Asana task `1216550892331152`, still awaiting Ashit's sign-off. Until it lands, the defaults stand; when it lands, change the values here and re-run setup-project.
+Defaults are the source-doc values. The decision to change them — per-story spec files keyed to the branch, and a pilot-tuned threshold — is Asana task `1216550892331152`, still awaiting Ashit's sign-off. Until it lands, the defaults stand; when it lands, update the value here and in each payload location above, then re-run setup-project.
 
 ## How it's consumed
 
