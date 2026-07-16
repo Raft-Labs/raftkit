@@ -1,9 +1,11 @@
 {
   "name": "raftkit-pm",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "PM skills: onboarding, user stories, story skill generator, story readiness, status updates, meeting decisions, estimation.",
   "author": {
     "name": "RaftLabs"
   },
-  "dependencies": ["raftkit-core"]
+  "dependencies": [
+    "raftkit-core"
+  ]
 }
