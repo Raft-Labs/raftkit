@@ -32,7 +32,7 @@ Two corollaries, both non-negotiable:
 - **Expected results quote the story's exact strings** — verbatim, never
   paraphrased, because a paraphrase is a different assertion (the exact-strings
   rule is defined in full in `references/run-sheet-format.md`).
-- **One story per run sheet** — the story's own limit (section 6); never merge two
+- **One story per run sheet** — the story's own stated limit; never merge two
   stories into one sheet.
 
 ## Inputs
@@ -71,9 +71,9 @@ there is nothing to generate.
    - **No `[AC]`s** → **refuse** and route to `raftkit-pm/story-readiness` — an
      unready story cannot be tested.
 2. **Parse the story.** Match `[AC]` subtasks by the leading `[AC] ` token; read
-   the Gherkin scenarios (section 3) and the WEESLD rows (section 6); read the
+   the Gherkin-scenarios section and the WEESLD edge-cases section; read the
    permission boundary from the header (`Who is allowed / not allowed`). Parse
-   robustly — stories are hand-authored (match sections by number and meaning, not
+   robustly — stories are hand-authored (match sections by meaning, not
    punctuation; expect the template's intentional numbering gap).
 3. **Reuse the project suite where one exists** (`references/suite-slice.md`).
    Where a project test suite Sheet exists, pull the **matching cases by case ID**
@@ -85,7 +85,8 @@ there is nothing to generate.
    action, test data, and the verbatim expected result. Deterministic steps only —
    start state, action, expected — **no "verify it works" steps**. Every `[AC]`
    maps to **at least one** runnable step. Make **every WEESLD state and every
-   permission boundary an explicit step group**. All steps default to `not run`.
+   permission boundary an explicit step group**. Steps take the default status
+   (`references/run-sheet-format.md`).
 5. **Flag the coverage gaps.** List every `[AC]` with no runnable step and every
    WEESLD state the story's `[AC]`s leave uncovered, naming them to **QA and the
    PM**. The sheet covers what exists and names what doesn't.
@@ -105,7 +106,9 @@ creates the bug under the story's `Bugs` subtask). See
 
 - **Read-only on Asana.** This skill reads the story and (optionally) the suite
   Sheet; it writes no Asana task and files no bug. Its output is the run sheet in
-  chat and/or appended to the project Sheet, per the story's surface.
+  chat and/or appended to a **separate run-sheet tab or Sheet — never the suite
+  Sheet's case rows** (those are `test-suite`'s surface, keyed by case ID). That
+  append is a write: gate it draft → approve, per `raftkit-core/write-protocol`.
 - **No new requirements.** The sheet restructures the story into steps; it adds no
   behaviour, no acceptance criterion, and no expected result the story does not
   state.
@@ -120,7 +123,7 @@ creates the bug under the story's `Bugs` subtask). See
 - **Generating or syncing the project suite** — that is `test-suite`; this skill
   only *reuses* an existing suite's cases by case ID.
 - **Marking pass/fail** — execution marks belong to QA; the skill produces the
-  sheet with every step defaulted to `not run`.
+  sheet with every step at the default status.
 
 ## Reference files
 

@@ -8,7 +8,7 @@ none of them fabricates a sheet from an inadequate story.
 A story with **no `[AC]` subtasks** cannot be tested: there is no definition of
 done to derive steps from. Do **not** generate a sheet from a description alone.
 **Refuse and route to `raftkit-pm/story-readiness`** — the Definition-of-Ready gate
-— so the story is made ready first, then re-run. An unready story tests nothing;
+— so the gaps are identified and the story made ready, then re-run. An unready story tests nothing;
 generating against it would ship a run sheet that asserts nothing.
 
 ## Error — the story is unreachable
