@@ -50,9 +50,13 @@ around `user-story`). Its SKILL.md must:
   `workflow-constants` message if it cannot be read. Never carry template text.
 - **Carry the baked context** — the glossary, roles, conflict hierarchy, and source links
   above — as the project grounding the PM no longer has to supply.
-- **Inherit the stop-and-ask rules verbatim.** Copy the generic `user-story` rules exactly:
-  never proceed without the source of truth, never invent or placeholder a fact, and stop
-  and ask — naming what is missing or which sources conflict — on a missing/thin source or
-  a conflict the hierarchy cannot resolve. Verbatim, so both skills behave identically here.
-- **Be named and versioned** — `<project>-user-story`, versioned, stamped with the
-  as-of date of the profile it was generated from.
+- **Inherit the stop-and-ask rules verbatim.** Copy them from the current
+  `raftkit-pm/user-story` SKILL.md ("The one rule that governs everything" + its guardrails) —
+  read that skill at generation time and copy exactly, never a remembered paraphrase, so the
+  rules never drift from the generic skill: never proceed without the source of truth, never
+  invent or placeholder a fact, and stop and ask — naming what is missing or which sources
+  conflict — on a missing/thin source or a conflict the hierarchy cannot resolve. Verbatim, so
+  both skills behave identically here.
+- **Be named and versioned** — `<project>-user-story`, stamped with the as-of date of the
+  profile it was generated from. The first generation is `v1`; regeneration bumps from there
+  (see `references/validation-and-regeneration.md`).

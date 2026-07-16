@@ -68,10 +68,15 @@ Run project-onboarding first — I need an approved Project Profile to bake from
 ## Regeneration
 
 When the project's sources or profile change materially, the PM re-runs this skill. Per
-`references/validation-and-regeneration.md`: re-derive the baked context, **show the PM
-the baked-context diff** (what glossary/roles/hierarchy/source-link entries changed), then
-**replace** the existing skill — regeneration replaces, it never forks — and bump the
-generated skill's version. Re-validate before delivering the new version.
+`references/validation-and-regeneration.md`: re-derive the baked context and build the
+replacement as a **candidate under a distinct staging identity**, then **validate the candidate
+itself through the pre-delivery gate before touching the live skill** — the currently delivered
+skill keeps working until the replacement is proven, and a divergence blocks the swap. Then
+**show the PM the baked-context diff** (what
+glossary/roles/hierarchy/source-link entries changed) and the validation result, **get explicit
+approval, and only then replace** the existing skill — regeneration replaces, it never forks —
+and bump the generated skill's version. Silence is not approval; never overwrite a working,
+already-delivered skill with an unvalidated one (`raftkit-core/write-protocol`).
 
 ## Guardrails
 
