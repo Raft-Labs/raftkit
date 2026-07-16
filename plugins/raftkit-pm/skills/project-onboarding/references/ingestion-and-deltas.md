@@ -1,0 +1,61 @@
+# Ingestion, conflicts, and deltas
+
+How onboarding reads the PM's named sources, what it does when one cannot be read,
+how it surfaces disagreements, and how a re-run stays a delta instead of a rewrite.
+
+## Reading the named sources
+
+Read only the sources the PM named — never reach for one they did not ask for —
+each through its Cowork connector:
+
+- **Google Drive** — PRD, SOW, master doc, and other project documents.
+- **Gmail** — email threads.
+- **Fathom** — meeting recordings and their transcripts.
+- **Asana** — tasks and prior stories.
+
+**Progress (Waiting).** Long ingests report progress per source as they go, e.g.
+"read 3 of 5 sources", so a slow run stays legible.
+
+**Per-run source cap (Limits).** Sources are capped per run to protect context.
+When the named sources will not fit a single run's context window, say so and split
+the ingestion into batches rather than truncating a source silently — a half-read
+source produces false ⚠️/❓ tags.
+
+## Unreadable source — name it, never drop it
+
+If a source cannot be read — connector down, no access, missing or moved file — do
+**not** fail the whole run and do **not** silently skip it:
+
+1. Name the **exact source** that failed and the **access that is missing** (for
+   example: "can't read the Fathom call from 12 May — the Fathom connector isn't
+   connected").
+2. Continue ingesting every source that *can* be read (partial ingest).
+3. List the skipped sources in the result so the PM knows precisely what did not
+   make it into this draft and can re-run once access is fixed.
+
+Silently dropping a source is the failure this rule exists to prevent: it would
+produce a confident-looking profile that is quietly incomplete.
+
+## Conflicts — surface both, resolve neither
+
+When two sources state different values for the same fact (the PRD says one limit,
+a client email says another), record it as a **conflict**, not a fact:
+
+- Present the conflicting values side by side, each with its own citation.
+- Mark it for the PM to resolve; the PM decides which holds.
+- Never silently pick a winner, and never average or merge the two.
+
+## Re-runs propose a delta, not a rewrite
+
+When a profile already exists at the home and the PM adds a new source, compute the
+change against the current profile and present it as a **delta** — never regenerate
+the whole profile from scratch:
+
+- **Changed** — an existing fact whose value or tag the new source updates.
+- **New** — a fact not previously in the profile.
+- **Now-confirmed** — a ⚠️ Partial or ❓ Missing fact the new source lifts to
+  ✅ Confirmed.
+
+Leave every untouched fact exactly as it was, and show the delta for approval
+before writing (`raftkit-core/write-protocol`). A rewrite would discard the PM's
+prior resolutions and the profile's history; a delta preserves them.
