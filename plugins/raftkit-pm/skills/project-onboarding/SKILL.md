@@ -24,7 +24,7 @@ plugins (`raftkit-core/house-rules`).
 - **Surface conflicts, never resolve them.** When two sources disagree, present
   both with their citations and let the PM decide. The skill never silently picks
   a winner.
-- **Only the PM writes the profile.** The skill drafts; it writes the profile —
+- **Never write without PM approval.** The skill drafts; it writes the profile —
   and every later delta — only after explicit PM approval (draft → approve → push,
   `raftkit-core/write-protocol`). Every other skill only ever READS the profile.
 - **Only named sources.** Ingest exactly the sources the PM names — never reach for
@@ -64,9 +64,9 @@ I need at least one source — a PRD, SOW, master doc, email thread, or meeting 
    first-run build; one exists → a delta re-run (step 5).
 
 2. **Ingest the named sources, reporting progress.** Read each source through its
-   connector, announcing progress per source ("read 3 of 5 sources"). Sources are
-   capped per run to protect context; when the named set will not fit a single
-   run's context, say so and split the ingestion into batches. See
+   connector, announcing progress per source ("read 3 of 5 sources"). The source
+   set is bounded by what fits a single run's context; when the named set will not
+   fit, say so and split the ingestion into batches. See
    `references/ingestion-and-deltas.md`.
 
 3. **Handle an unreadable source without dropping it silently.** If a source cannot
@@ -75,8 +75,9 @@ I need at least one source — a PRD, SOW, master doc, email thread, or meeting 
    the skipped ones in the result. Never silently drop a source.
 
 4. **Draft the profile — tagged, cited, conflicts surfaced.** Turn the ingested
-   material into facts, each with exactly one tag (✅/⚠️/❓) and a citation to its
-   source; untagged facts default to ⚠️ Partial. Where sources disagree, surface
+   material into facts, each with exactly one tag (✅/⚠️/❓) and a citation (❓
+   facts cite the gap — see `references/profile-format.md`); untagged facts default
+   to ⚠️ Partial. Where sources disagree, surface
    the conflict with both citations for the PM to resolve — never resolve it here.
 
 5. **On a re-run, propose a delta — not a rewrite.** When a profile already exists
@@ -89,8 +90,8 @@ I need at least one source — a PRD, SOW, master doc, email thread, or meeting 
    approval (silence is not approval), then write it — applying the Asana HTML rules
    if the home is an Asana resource (`raftkit-core/write-protocol`).
 
-7. **Report and offer the next step.** Summarize with a count —
-   "X facts — ✅ a / ⚠️ b / ❓ c. Top gaps: …" — then **offer to run
+7. **Report and offer the next step.** Summarize with the exact success-count shape
+   defined in `references/profile-format.md`, then **offer to run
    story-skill-generator** for the project. Offer only; generating the skill is that
    skill's job, not this one.
 
@@ -112,6 +113,6 @@ I need at least one source — a PRD, SOW, master doc, email thread, or meeting 
   parameterized profile home (open decision + recommended default), and the
   success-summary format.
 - **`references/ingestion-and-deltas.md`** — reading sources across the connectors,
-  per-source progress and the per-run source cap, the unreadable-source error
+  per-source progress and the per-run context bound, the unreadable-source error
   behaviour, conflict surfacing with both citations, and the delta re-run rules
   (changed / new / now-confirmed vs. a rewrite).

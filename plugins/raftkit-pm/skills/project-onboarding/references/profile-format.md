@@ -19,8 +19,10 @@ Every entry in the profile is one **fact** carrying exactly four things:
 
 Group the facts into the sections a delivery team actually reads — a **glossary**,
 **roles and permissions**, **business rules and limits**, and a **source index**
-(every source with its link and as-of date). These are the same elements
-`story-skill-generator` later bakes, so a well-formed profile feeds it directly.
+(every source with its link and as-of date). The glossary, roles, and source index
+map directly onto elements `story-skill-generator` later bakes; its fourth baked
+element — the conflict hierarchy — is the PM's to supply at bake time, since
+onboarding surfaces conflicts and never resolves them.
 Keep the structure to what the sources support — do not invent sections to fill.
 
 ## The confidence tags
@@ -41,8 +43,8 @@ records the conflict with both citations and leaves it for the PM to resolve —
 
 ## Where the profile lives (parameterized — do not hardcode)
 
-The canonical home of the profile is an **open decision** (Asana task
-`1216550765662503`). Until it lands, treat the home as a parameter the PM supplies:
+The canonical home of the profile is an **open decision** on the raftkit board.
+Until it lands, treat the home as a parameter the PM supplies:
 the PM points onboarding at where the profile lives (and where downstream skills
 read it from), and the skill records that location. Never hardcode a path or a
 single connector.

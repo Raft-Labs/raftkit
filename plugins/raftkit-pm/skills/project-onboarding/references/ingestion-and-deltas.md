@@ -16,7 +16,8 @@ each through its Cowork connector:
 **Progress (Waiting).** Long ingests report progress per source as they go, e.g.
 "read 3 of 5 sources", so a slow run stays legible.
 
-**Per-run source cap (Limits).** Sources are capped per run to protect context.
+**Per-run context bound (Limits).** The source set is bounded by what fits a single
+run's context — there is no fixed number.
 When the named sources will not fit a single run's context window, say so and split
 the ingestion into batches rather than truncating a source silently — a half-read
 source produces false ⚠️/❓ tags.
