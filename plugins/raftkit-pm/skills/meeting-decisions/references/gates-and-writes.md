@@ -11,8 +11,9 @@ The profile is the project's single tagged source of truth. This skill only ever
 **updates an existing** profile with what the call confirmed or changed; it never
 builds one (no profile → route to `project-onboarding`, per SKILL.md).
 
-Compute a **delta, not a rewrite** — aligned with `project-onboarding`'s
-`references/profile-format.md` (a fact = statement + tag + citation + date):
+Compute a **delta, not a rewrite** — the fact structure (statement + tag + citation +
+date) per `project-onboarding`'s `references/profile-format.md`, the delta categories
+and conflict rule per its `references/ingestion-and-deltas.md`:
 
 - **Changed** — an existing fact whose value or tag the call updates.
 - **New** — a fact the call establishes that the profile did not hold.
@@ -21,7 +22,7 @@ Compute a **delta, not a rewrite** — aligned with `project-onboarding`'s
 For every delta fact:
 
 - The **citation** is the call, in the `<meeting> @ <timestamp>` form from
-  `extraction-and-citations.md` — this is the "call + timestamp" citation the profile
+  `extraction-and-citations.md` — the "meeting + timestamp" citation the profile
   format expects for a meeting source.
 - The **date** (as-of) is the meeting date.
 - The **default-to-⚠️ rule still holds**: a fact the call only implies is ⚠️ Partial,
@@ -48,17 +49,19 @@ proposed task batch:
 
 ### Asana free-tier task shape
 
-Everything created respects the free tier — **no dependencies, custom fields,
-milestones, start dates, or approval tasks**. Express relationships as links inside
-the task description, not as structured Asana relations:
+Everything created respects the free tier (`raftkit-core/house-rules`) — **no
+dependencies, custom fields, milestones, start dates, or approval tasks**. Express
+relationships as links inside the task description, not as structured Asana
+relations:
 
 - Link the **source meeting** (the recording URL) in the description.
 - Link the **related story or profile** by task link / URL where relevant.
 - A due date is a plain due date only if the call set one and the PM confirms it —
   never inferred.
 
-Read any board/template GID needed live from `raftkit-core/workflow-constants`; never
-hardcode a GID and never reuse a remembered template body.
+Read any template GID live from `raftkit-core/workflow-constants`; the target
+project/board comes from the Project Profile or the PM naming it. Never hardcode a
+GID and never reuse a remembered template body.
 
 ### Reporting the batch
 

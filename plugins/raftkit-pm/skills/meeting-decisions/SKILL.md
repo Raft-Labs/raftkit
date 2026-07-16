@@ -29,8 +29,9 @@ that (see Guardrails).
 - **Scope is a hard line.** A request beyond current scope is flagged, labelled, and
   routed — never silently absorbed into the plan. The fixed flag wording and the
   routing rule live in `references/extraction-and-citations.md`.
-- **Ambiguous assignee = ask, never guess.** An unclear owner triggers one focused
-  question; an unresolved owner defaults to unassigned, never to a guessed name.
+- **Ambiguous assignee = ask, never guess.** An unclear owner triggers exactly one
+  focused question; an unresolved owner defaults to unassigned, never to a guessed
+  name.
 
 ## Inputs — gather before extracting
 
@@ -104,8 +105,8 @@ that (see Guardrails).
 - **No meeting summaries for their own sake** — Fathom already produces those; this
   skill extracts decisions / scope changes / actions, not a recap.
 - **Asana free tier only** on anything created — no structured Asana feature the free
-  tier lacks. The exact exclusions and the relationships-as-links-in-description rule
-  are single-sourced in `references/gates-and-writes.md`.
+  tier lacks. The canonical exclusion list is `raftkit-core/house-rules`' free-tier
+  rule; `references/gates-and-writes.md` applies it to the task batch.
 - **No Slack/email follow-ups** — out of scope (M6 backlog); this skill neither sends
   nor drafts them.
 - **Escalate to founders** (`raftkit-core/house-rules`) when a scope change or

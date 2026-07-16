@@ -55,8 +55,9 @@ Routing rule:
 
 - The item is **labelled and routed, never silently absorbed** into the plan or the
   task batch as ordinary work.
-- If the scope change carries a **commercial** dimension — budget, contract, timeline
-  commitment, or relationship risk — it **escalates to founders**
+- If the scope change carries a **commercial** dimension — budget, contract,
+  relationship risk, or a client commitment (e.g. a timeline promise) — it
+  **escalates to founders**
   (`raftkit-core/house-rules`); the PM does not commit on RaftLabs' behalf.
 - A non-commercial scope adjustment the PM can own stays with the PM, still flagged
   and still cited.
