@@ -50,7 +50,9 @@ a required input is missing, stop and ask — naming exactly what is missing.
    never filed free-floating.
 3. **Extract evidence.**
    - **Jam present:** pull device/browser → Environment; user events → Steps;
-     console + failed network requests → Actual Result, quoted verbatim. Stream
+     console + failed network requests → Actual Result, quoted verbatim. Draft
+     the summary, type, and feature/module from the same context as pre-fill
+     proposals for QA to confirm. Stream
      what was found ("n console errors, m failed requests"). If the Jam captured
      no errors, proceed with steps/video only and say so. Invalid link / no
      access → name which and the fix; do not invent device or console data. See
@@ -90,9 +92,9 @@ a required input is missing, stop and ask — naming exactly what is missing.
   story's project (or ask QA); never hardcode a project-specific tag name. If the
   project has no matching priority tag, **ask QA — do not create one silently**
   (project facts live in Project Profiles, never in this plugin).
-- **Asana free tier** (`raftkit-core/house-rules`): tags are fine; no
-  dependencies, custom fields, milestones, start dates, or approval tasks. Express
-  relationships as task links.
+- **Asana free tier** per `raftkit-core/house-rules`: no dependencies, custom
+  fields, milestones, start dates, or approval tasks; the priority tag is
+  free-tier and story-mandated. Express relationships as task links.
 - **Escalate to founders** per `raftkit-core/house-rules` if a bug implies a
   scope, contract, or client-relationship risk beyond the defect itself.
 

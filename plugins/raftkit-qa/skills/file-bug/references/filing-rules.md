@@ -18,8 +18,7 @@ inside the brackets is whatever the live template carries this run.
 These measure different things and are asked as two distinct questions, each on
 the scale the live template defines:
 
-- **Severity** — how bad the impact is (the template's severity scale, blocker
-  through cosmetic).
+- **Severity** — how bad the impact is (the template's severity scale).
 - **Priority** — how urgently the business wants it fixed (the template's
   priority scale).
 
@@ -45,8 +44,9 @@ These are the story's required minimum; the live template is authority for the
 full list and may add to it.
 
 - Type + Severity + Priority all set
-- Environment filled — platform, environment, exact URL/screen, build/version,
-  device/OS, and (web) browser + version
+- Environment filled — every field the live template's environment block lists;
+  Jam covers device/browser/URL/timestamp, QA supplies whatever template fields
+  remain
 - Role + test account(s) provided
 - Steps reproduce deterministically from a clean start
 - Both Expected Result and Actual Result stated
@@ -65,6 +65,7 @@ to file.
   the target story's project (or ask QA). Never use a hardcoded project-specific
   tag name. If the project has no tag for the chosen priority, **ask QA — do not
   create one silently**.
-- **Asana free tier** (`raftkit-core/house-rules`): tags only; no dependencies,
-  custom fields, milestones, start dates, or approval tasks. Express any
-  relationship (e.g. to the failing run-sheet step) as a task link in the body.
+- **Asana free tier** per `raftkit-core/house-rules`: no dependencies, custom
+  fields, milestones, start dates, or approval tasks. The priority tag is
+  free-tier and story-mandated. Express any relationship (e.g. to the failing
+  run-sheet step) as a task link in the body.

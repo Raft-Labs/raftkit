@@ -38,14 +38,11 @@ error that was not recorded.
 Higher tier = faster fix. The live template defines the tiers and their exact
 names; apply them in its order of preference. A **Jam link is the top (⭐) tier**
 and the default whenever a link is present. When there is no Jam, drop to the
-next tier the template offers — typically a screen video with console/network
-captures, or at minimum screenshots with pasted console errors and failed-request
-details (method, URL, status, response).
+next tier the template offers.
 
 **No-Jam fallback:** accept the lower tier, **mark which tier** it is in the
-Evidence section, and require QA to fill the manual environment block the template
-demands (device, browser + version, URL/screen, build/version, observed-at, and
-any other fields it lists) — the block Jam would otherwise have filled. The bug
+Evidence section, and require QA to fill every field the live template's
+environment block lists — the block Jam would otherwise have filled. The bug
 is still fileable; it is just marked as lower evidence so the gap is visible, not
 hidden.
 
