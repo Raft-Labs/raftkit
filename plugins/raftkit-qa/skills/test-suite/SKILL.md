@@ -73,8 +73,9 @@ No Project Profile found — run raftkit-pm project-onboarding to build it, then
 
 4. **Re-run — sync two-way, surface conflicts.** Re-import the Sheet first (QA's
    added and edited rows are first-class), regenerate from the current profile, and
-   diff by case ID into: new generated cases, deltas on untouched rows, and
-   **conflicts on QA-touched rows listed side by side**. QA edits win by default;
+   diff by case ID into the actionable buckets: new generated cases, deltas on
+   untouched rows, and **conflicts on QA-touched rows listed side by side**
+   (unchanged rows are left alone). QA edits win by default;
    nothing QA touched is overwritten. The full reconciliation and conflict rules
    are in `references/sync-and-conflicts.md`.
 
@@ -102,8 +103,8 @@ No Project Profile found — run raftkit-pm project-onboarding to build it, then
 - **Read-only on the profile and docs; the only write is the Sheet**, and only
   after QA approval.
 - **Out of scope:** automated test execution (guided manual is v1); per-story run
-  sheets — `test-run-sheet` consumes this suite; and code-level unit tests (the
-  dev's TDD owns those).
+  sheets — `test-run-sheet`, next in M4, will consume this suite; and code-level
+  unit tests (the dev's TDD owns those).
 - **Asana free-tier constraints** apply to anything created in Asana
   (`raftkit-core/house-rules` owns that list). **Escalate to founders** on budget,
   contracts, relationship risk, or anything that reads as a client commitment.
@@ -111,7 +112,7 @@ No Project Profile found — run raftkit-pm project-onboarding to build it, then
 ## Reference files
 
 - **`references/sheet-format.md`** — the canonical layout: the eight fixed columns
-  (verbatim, in order), the coverage tags, the status values and `not run` default,
+  (verbatim, in order), the coverage tags, the status values and their default,
   the stable case-ID scheme, traceability, the exact success line, and the
   soft-cap/split heuristic.
 - **`references/sync-and-conflicts.md`** — the two-way sync: re-import-first

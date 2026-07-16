@@ -19,7 +19,7 @@ One Sheet, one header row, these eight columns in this order:
 | expected | the expected result |
 | coverage tag | exactly one of the coverage tags below — mandatory on every case |
 | status | one of the status values below; new cases default to `not run` |
-| owner | who owns the case (QA who authored or last edited it) |
+| owner | who owns the case — generated rows are written with the sentinel `generated`; QA claims a row by putting their name here when they add or edit it |
 
 The skill **owns the structure** — the column set, their order, and the case IDs.
 QA **owns the content** — the values in the rows. A regeneration may add rows and
@@ -33,6 +33,10 @@ Every case carries exactly one coverage tag:
 - `WEESLD` — an edge case in the WEESLD frame (Waiting, Empty, Error, Success,
   Limits, Default values).
 - `permission` — an access-control / role-boundary case.
+
+A case exercising a business rule takes the tag of the path it runs — `happy` for
+the rule's enforced behaviour, `WEESLD` or `permission` when the rule shows up as
+an edge state or boundary.
 
 A generated case with no coverage tag is not emitted — the tag is part of what
 makes a case complete.

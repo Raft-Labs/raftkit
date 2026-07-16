@@ -29,10 +29,14 @@ Sheet **first**, then reconciles:
 
 ## Conflict rule (QA edits win by default)
 
-> **Provisional pending PRD open question §10.8 (Sheet conflict rules).** The
-> default below is the story's own stated policy, shipped as the operative default —
-> not a settled resolution. If §10.8 lands a different rule, this is the single
-> place to change it.
+> **Provisional pending PRD open question §10.8 (Google Sheet sync mechanics).**
+> That question has two open halves: whether QA's Cowork setup carries a Sheets
+> connector at all, and the conflict rules when QA edits collide with a regenerated
+> suite. The default below is the story's own stated policy for the second half,
+> shipped as the operative default — not a settled resolution. If §10.8 lands a
+> different rule, this is the single place to change it. For the first half: if the
+> Sheets connector is absent from the run's environment, stop and name it — never
+> assume it (see the error states).
 
 The default policy:
 
@@ -45,8 +49,13 @@ The default policy:
 - **Never a silent overwrite.** A QA-touched row is never changed by a run without
   QA choosing it. Silence resolves nothing; the conflict stays listed until QA acts.
 
-"QA-touched" means any row QA added or edited since it was last generated — tracked
-by the case ID plus the owner/edit state the Sheet carries, not by guesswork.
+"QA-touched" is determined by the `owner` column, not by guesswork: generated rows
+are written with owner `generated` (`sheet-format.md`), and QA claims a row by
+putting their name in owner when they add or edit it. A row is QA-touched when its
+owner is anything other than `generated`, or when its case ID was never generated
+(a QA-authored case). If a row differs from what generation would produce but still
+carries owner `generated`, treat it as QA-touched too — an unclaimed edit is still
+an edit, and doubt resolves toward protecting QA's work.
 
 ## How the delta and conflicts are presented
 
