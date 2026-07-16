@@ -41,8 +41,8 @@ required input is missing, stop and ask — naming exactly what is missing.
    run). No bug given → **stop and ask**; never retest a guessed target.
 2. **A build to test against.** The bug must carry **"Fixed in build ___"** filled
    by the dev. Missing → **bounce to the dev unretested** with the exact message
-   in `references/retest-run.md`; no retest runs. The template's retest contract
-   requires a build — there is nothing to verify without one.
+   in `references/retest-run.md`; no retest runs. The retest contract — the
+   story's — requires a build; there is nothing to verify without one.
 3. **A "Done when" checklist.** The checklist is the retest contract. A bug with
    none is **routed back through file-bug discipline** (`raftkit-qa/file-bug`) —
    the checklist is added there, then retest re-runs. See `references/retest-run.md`.
@@ -73,8 +73,8 @@ required input is missing, stop and ask — naming exactly what is missing.
    - **All items green** → **close**: post the verbatim confirmation comment
      naming the build, then close the bug. Only QA closes.
    - **Any item fails** → **fail path** (`references/tag-and-evidence.md`): gather
-     fresh evidence + the itemized failures **first**, then apply the Retest Failed
-     tag, comment, and return the bug to the dev — reopened and tracked. This feeds
+     fresh evidence + the itemized failures **first**, then draft the Retest Failed
+     tag application, comment, and return-to-dev — reopened and tracked. This feeds
      the reopen-rate metric; the refix itself is the dev's `fix-bug` loop (M3).
 7. **Draft → approve → push.** Show the drafted close comment, or the fail comment
    plus the tag to apply, and name the exact target bug. On approval, write —
@@ -106,7 +106,7 @@ required input is missing, stop and ask — naming exactly what is missing.
   fields, milestones, start dates, or approval tasks; the Retest Failed tag is
   free-tier. Express relationships as task links.
 - **Escalate to founders** per `raftkit-core/house-rules` if a reopen implies a
-  scope, contract, or client-relationship risk beyond the defect itself.
+  budget, contract, or client-relationship risk beyond the defect itself.
 
 ## Out of scope
 

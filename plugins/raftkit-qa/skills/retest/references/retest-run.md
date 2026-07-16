@@ -80,7 +80,6 @@ Never post it as an optimistic guess before the close and comment are written.
 
 ## Why the whole checklist, not just the repro step
 
-The Bugs Template separates Expected Result from "Done when" precisely so retest
-covers the whole definition of done, adjacent behaviour included — this rationale
-is stated by the **retest story**, not read from the template body (the template is
-fetched live only for its current field shape, never quoted from here).
+Retest covers the whole definition of done, adjacent behaviour included — this
+rationale is stated by the **retest story**, not read from the template body (the
+template is fetched live only for its current field shape, never quoted from here).

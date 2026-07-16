@@ -28,8 +28,9 @@ On a failed retest, after evidence is gathered and failures itemized:
 - Post a comment carrying the **fresh evidence + the itemized failures** (which
   items failed, on which build, with the proof).
 - Apply the **Retest Failed** tag (resolution below).
-- **Return the bug to the dev** — reopened, so the dev's `fix-bug` loop (M3) picks
-  it up again. Retest does not fix and does not decide the refix's priority (that
+- **Return the bug to the dev** — reopened, so the dev's `fix-bug` loop (M3,
+  planned) picks it up once that skill ships. Retest does not fix and does not
+  decide the refix's priority (that
   is PM/dev triage); it verifies and hands back.
 
 All of this goes through draft → approve → push (`raftkit-core/write-protocol`);
@@ -45,9 +46,9 @@ Profiles, never in this plugin).
 Where retest **deliberately diverges** from file-bug: file-bug asks QA before
 creating a missing priority tag. Retest's own rule — mandated by the retest
 story — is **create-or-ask, never silent failure**: if the project has no Retest
-Failed tag, either create it or ask QA which tag to use, but never let the tag step
-fail silently. A reopen that isn't tagged isn't tracked. This divergence is
-mandated by the retest story, not inherited from file-bug.
+Failed tag, either create it (using the canonical name Retest Failed, unless QA
+names the project's own convention) or ask QA which tag to use, but never let the
+tag step fail silently. A reopen that isn't tagged isn't tracked.
 
 ## Why the tag matters — the reopen-rate metric
 
