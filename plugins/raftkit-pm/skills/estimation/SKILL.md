@@ -40,9 +40,9 @@ the breakdown; it never turns one into a price, a quote, or a promise.
    story and consume its verdict — do not rebuild the checklist here. story-readiness
    returns a binary **PASS / NOT READY**; branch on the NOT READY *reason*, checking
    the empty case first:
-   - **Empty description** — NOT READY carrying story-readiness's empty-description
-     message → route the PM to the [user-story](../user-story/SKILL.md) skill to write
-     the story first, then re-run estimation. Do not dump a gap list here.
+   - **Empty description** — NOT READY because the description is empty → route the PM
+     to the [user-story](../user-story/SKILL.md) skill to write the story first, then
+     re-run estimation. Do not dump a gap list here.
    - **NOT READY (gaps, not empty)** → refuse: return story-readiness's gap list
      verbatim and state that estimating unspecified scope produces fiction, not an
      estimate. Emit no numbers.
