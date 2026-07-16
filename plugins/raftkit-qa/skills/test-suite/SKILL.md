@@ -103,7 +103,7 @@ No Project Profile found — run raftkit-pm project-onboarding to build it, then
 - **Read-only on the profile and docs; the only write is the Sheet**, and only
   after QA approval.
 - **Out of scope:** automated test execution (guided manual is v1); per-story run
-  sheets — `test-run-sheet`, next in M4, will consume this suite; and code-level
+  sheets — `test-run-sheet` consumes this suite; and code-level
   unit tests (the dev's TDD owns those).
 - **Asana free-tier constraints** apply to anything created in Asana
   (`raftkit-core/house-rules` owns that list). **Escalate to founders** on budget,
