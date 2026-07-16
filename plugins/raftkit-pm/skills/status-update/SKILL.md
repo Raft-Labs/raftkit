@@ -32,8 +32,8 @@ If asked to send, decline and restate that line.
    range (end before start, unparseable) → ask once, then stop.
 
 Nothing is cached: the board is read **live** by GID every run. raftkit-core is
-required for `house-rules`; if it is missing, stop with the exact
-`workflow-constants` message rather than proceeding.
+required for `house-rules`; if it is missing, stop with the exact **missing-core**
+message from `raftkit-core/workflow-constants` rather than proceeding.
 
 ## Run flow
 
@@ -57,7 +57,9 @@ required for `house-rules`; if it is missing, stop with the exact
 - **Waiting** — on a large board, say the scan is running before the draft lands.
 - **Empty** — no activity in range: state it plainly with
   `Quiet period — no shipped items this week` and still close with the standing
-  ask. Never pad an empty week into a full-looking one.
+  ask — the most recent still-open item from Decisions needed; if none is open,
+  ask the PM what the client owes before drafting. Never pad an empty week into a
+  full-looking one.
 - **Error (most important)** — an unreadable project names the **exact** access
   issue, and the two causes are distinguished because the fix differs:
   - bad link / invalid GID → say the identifier is bad and to check the URL / GID;
@@ -65,8 +67,8 @@ required for `house-rules`; if it is missing, stop with the exact
   An invalid date range → ask once.
 - **Success** — the draft is in chat, ending with the never-send handoff line (see
   The one rule above).
-- **Limits** — one project per run; range capped at 4 weeks.
-- **Default values** — range = since last update if known, else 7 days.
+- **Limits** — one project per run and the 4-week range cap, per Inputs above.
+- **Default values** — the range default, per Inputs above.
 
 ## Guardrails
 

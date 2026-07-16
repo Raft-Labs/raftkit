@@ -46,8 +46,8 @@ rounding.
 
 - **Empty** (no activity in range): lead with the quiet-period line (the exact
   string is in SKILL.md's Empty edge case), note anything genuinely in flight only
-  if the board shows it, and close with the standing ask. Do not manufacture
-  progress to fill the space.
+  if the board shows it, and close with the standing ask (defined in SKILL.md's
+  Empty edge case). Do not manufacture progress to fill the space.
 - **Thin** (little activity): report exactly what moved, plainly. Do not pad one
   shipped item into a paragraph. The honesty is the point — a thin week stated
   plainly beats a padded one every time.
