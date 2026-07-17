@@ -7,19 +7,15 @@ user-facing.
 
 ## Select the stack pack
 
-- **Web story** → the React/Next.js stack pack. Web-native structure applies:
-  real routing, browser back/forward honoured, semantic HTML controls over custom
-  widgets. Full mobile-platform conventions (hardware back, action sheets) are
-  N/A on web.
-- **Mobile story** → the Expo stack pack. Apply `recipes`'
-  `recipe-native-ui-structure` **by reference** — native navigation (stacks,
-  tabs, modals), each platform's back behaviour, and native controls — themed by
-  the project's design tokens. Do not restate the recipe here; consult it.
+- **Web story** → the React/Next.js stack pack; apply `recipes`'
+  `recipe-native-ui-structure` web variant **by reference**.
+- **Mobile story** → the Expo stack pack; apply `recipes`'
+  `recipe-native-ui-structure` **by reference** — do not restate the recipe here,
+  consult it.
 - **Both surfaces** → read the story header's parity vs. divergence note and
   build each surface to its own conventions.
 
-Web-stack defaults (TypeScript, server-enforced auth, tokens-style-not-brand,
-localized strings) live in `recipes`' `web-defaults.md` — consult, do not copy.
+Web-stack defaults live in `recipes`' `web-defaults.md` — consult, do not copy.
 
 ## The no-UI-scope exit
 
