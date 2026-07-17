@@ -1,6 +1,6 @@
 ---
 name: fix-bug
-description: This skill should be used when a RaftLabs developer is handed a templated Asana bug task to fix — e.g. "fix this bug", "run fix-bug on <bug-url>", "work this bug ticket", or when a bug is assigned and needs a defect turned into a failing regression test and then fixed to green. It reads the bug task live from Asana, reproduces the defect as a FAILING test BEFORE any fix is written (the order is enforced — no red test, no fix), then fixes to green on a branch through the same commit → simplify → scope-guard → squash-PR loop as feature work, fills "Fixed in build ___" on the bug task, and hands back to QA. It bounces bugs missing steps or environment back to QA naming the exact missing template sections, and returns cannot-reproduce bugs with what was tried, the environment used, and one focused question — it never fixes blind. Not for filing bugs (raftkit-qa file-bug), retesting fixes (raftkit-qa retest), or production incidents (fix-production-error).
+description: This skill should be used when a RaftLabs developer is handed a templated Asana bug task to fix — e.g. "fix this bug", "run fix-bug on <bug-url>", "work this bug ticket", or when a bug is assigned and needs a defect turned into a failing regression test and then fixed to green. It reads the bug task live from Asana, reproduces the defect as a FAILING test BEFORE any fix is written (the order is enforced — no red test, no fix), then fixes to green on a branch through the same scope-guard → simplify → commit → squash-PR loop as feature work, fills "Fixed in build ___" on the bug task, and hands back to QA. It bounces bugs missing steps or environment back to QA naming the exact missing template sections, and returns cannot-reproduce bugs with what was tried, the environment used, and one focused question — it never fixes blind. Not for filing bugs (raftkit-qa file-bug), retesting fixes (raftkit-qa retest), or production incidents (fix-production-error).
 user-invocable: true
 ---
 
@@ -50,22 +50,23 @@ Everything else in this skill serves that order. The mechanics are in
    never from memory or this repo. If the task or template cannot be read, stop with
    the exact `workflow-constants` failure lines; do not fix against a remembered
    shape.
-3. **Steps, environment, and "Done when" are present.** The template's §8 Steps to
-   Reproduce and §6 Environment are the repro contract; its §13 "Done when" is the
-   scope contract the fix is audited against. If any of the three is missing, **do
-   not fix** — bounce the bug back to QA naming the exact missing template sections.
-   See `references/bug-intake-and-handback.md`. The template is the contract both
-   ways. (§-numbers here are indicative — match sections by their heading, since the
-   template's numbering is not stable.)
+3. **Steps, environment, and "Done when" are present.** The template's Steps to
+   Reproduce and Environment blocks are the repro contract; its "Done when"
+   checklist is the scope contract the fix is audited against. If any of the three
+   is missing, **do not fix** — bounce the bug back to QA naming the exact missing
+   template sections. See `references/bug-intake-and-handback.md`. The template is
+   the contract both ways. (Match sections by their heading — the template's
+   numbering is provisional and not stable.)
 4. **A clean working tree on the bug's branch.** Feature-branch conventions apply
    (below). If the tree is dirty, stop and ask.
 
 ## Run flow
 
-1. **Intake.** Read the bug task against the live Bugs Template. Confirm §6
-   Environment, §8 Steps, and §13 "Done when" are all present. Any of the three
-   missing → bounce to QA (precondition 3). Read the environment from §6 — this is
-   the environment the repro runs in. `references/bug-intake-and-handback.md`.
+1. **Intake.** Read the bug task against the live Bugs Template. Confirm the
+   Environment, Steps to Reproduce, and "Done when" sections are all present. Any of
+   the three missing → bounce to QA (precondition 3). Read the environment from the
+   Environment block — this is the environment the repro runs in.
+   `references/bug-intake-and-handback.md`.
 2. **Reproduce as a failing test — first.** Following superpowers
    `systematic-debugging`, replicate the defect from the templated steps in the
    stated environment, and write a test that fails on it.
@@ -77,7 +78,7 @@ Everything else in this skill serves that order. The mechanics are in
    green, on the branch. If the fix turns **any other test red**, that is a **hard
    stop — fix-first**: never ship a fix that breaks another test
    (`references/fix-loop.md`).
-4. **Scope-guard the fix diff.** Scope is the bug's §13 "Done when" checklist and
+4. **Scope-guard the fix diff.** Scope is the bug's "Done when" checklist and
    nothing else. Run the sibling `raftkit-dev/scope-guard` against the diff; anything
    it flags **BEYOND** is removed or explicitly signed off. Do not reinvent the
    audit — scope-guard owns it.
@@ -85,7 +86,7 @@ Everything else in this skill serves that order. The mechanics are in
    minimalism pass on the fix diff.
 6. **Commit and open the PR** per the shared git conventions (below).
 7. **Fill "Fixed in build ___" — mandatory before hand-back.** Write the build /
-   version into the bug task's §13 field. This is the retest contract; QA cannot
+   version into the bug task's "Done when" section. This is the retest contract; QA cannot
    retest without it. Then hand back with the success line
    (`references/bug-intake-and-handback.md`).
 
@@ -111,15 +112,16 @@ is part of the permanent diff.
 - **Never fix blind** — cannot-reproduce returns to QA with tried steps, the
   environment used, and one focused question; it is never guessed at.
 - **Environment is the bug's, not the dev's** — the repro runs in the environment
-  §6 states, never the developer's local assumption.
-- **Bounce on a broken contract** — missing §6/§8 goes back to QA naming the exact
-  missing sections, before any fix.
+  the Environment block states, never the developer's local assumption.
+- **Bounce on a broken contract** — a missing Environment, Steps to Reproduce, or
+  "Done when" section goes back to QA naming the exact missing sections, before any
+  fix.
 - **Scope = "Done when" only** — adjacent changes are `scope-guard` BEYOND flags,
-  removed or signed off; the fix never expands past §13.
+  removed or signed off; the fix never expands past the "Done when" list.
 - **Breaking another test is a hard stop** — fix-first; a fix that reddens the
   suite never ships.
-- **Fixed-in-build is mandatory** — the hand-back is blocked until §13's
-  `Fixed in build ___` is filled.
+- **Fixed-in-build is mandatory** — the hand-back is blocked until the "Done when"
+  section's `Fixed in build ___` is filled.
 - **Read live, never cache** — the bug task and the Bugs Template are fetched live
   every run; this repo holds zero template text.
 - **Escalate to founders** per `raftkit-core/house-rules` if a fix touches budget,
@@ -130,13 +132,14 @@ is part of the permanent diff.
 - **Filing bugs** — that is `raftkit-qa/file-bug`.
 - **Retesting a fix** — that is `raftkit-qa/retest`; this skill hands back, QA
   retests.
-- **Production incidents** — that is `fix-production-error`; this skill is for
-  templated bug tasks, not live incidents.
+- **Production incidents** — that is the `fix-production-error` skill (a sibling in
+  this same `raftkit-dev` plugin); this skill is for templated bug tasks, not live
+  incidents.
 
 ## Reference files
 
-- `references/bug-intake-and-handback.md` — reading the live Bug Template's §6
-  Environment, §8 Steps, and §13 "Done when" + `Fixed in build ___`; the
+- `references/bug-intake-and-handback.md` — reading the live Bug Template's
+  Environment, Steps to Reproduce, and "Done when" sections + `Fixed in build ___`; the
   environment-default rule; and both hand-back protocols (missing-sections bounce,
   cannot-reproduce return) with their exact wording.
 - `references/fix-loop.md` — the red-before-fix mechanics, the permanent repro test,

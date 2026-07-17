@@ -11,10 +11,12 @@ SKILL.md's Run flow is the canonical sequence; this section only adds the gating
 mechanics for the three steps where the order is load-bearing. Each step gates the
 next, and the fix step is **unreachable** until the repro test is observed red.
 
-- **Intake gate** — §6/§8/§13 must be present or the bug bounces before any fix
-  work begins (`bug-intake-and-handback.md`).
+- **Intake gate** — the Environment, Steps to Reproduce, and "Done when" sections
+  must be present or the bug bounces before any fix work begins
+  (`bug-intake-and-handback.md`).
 - **Reproduce → red test gate** — wrap superpowers `systematic-debugging` to
-  replicate the defect from §8's steps in §6's environment, and encode it as a test.
+  replicate the defect from the templated steps in the bug's stated environment, and
+  encode it as a test.
   The test must be **observed failing for the reason the bug describes** — a test
   that passes, or fails for an unrelated reason, is not a repro; do not proceed.
   Cannot reproduce → hand back to QA (`bug-intake-and-handback.md`); never fix blind.
@@ -46,7 +48,7 @@ line, and the suite is how behaviour is proven.
 
 ## Scope = the bug's "Done when" only
 
-Scope is §13's "Done when" checklist and nothing else. The `scope-guard` sibling
+Scope is the bug's "Done when" checklist and nothing else. The `scope-guard` sibling
 owns the audit — do not reinvent it. Reuse its semantics directly:
 
 - Any changed hunk that maps to no "Done when" item lands in **BEYOND** — removed,
