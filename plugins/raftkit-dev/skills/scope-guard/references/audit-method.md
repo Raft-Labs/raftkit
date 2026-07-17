@@ -13,17 +13,19 @@ method is deterministic and fail-closed: when in doubt, flag.
 
 ## Anchoring the diff
 
-Compute the merge-base of the branch and the PR base branch, then diff from
-there to the branch tip:
+Fetch the base branch first, then compute the merge-base against the freshly
+fetched ref and diff from there to the branch tip:
 
 ```
-git diff "$(git merge-base <base-branch> HEAD)" HEAD
+git fetch origin <base-branch>
+git diff "$(git merge-base FETCH_HEAD HEAD)" HEAD
 ```
 
-`<base-branch>` is the branch the PR will target. This is the same anchor the
-repo's `scripts/validate.sh` version gate uses — so the audit sees exactly the
-branch's own changes and never blames changes that landed on the base after the
-branch diverged. Never diff against a stale local base ref.
+`<base-branch>` is the branch the PR will target. Fetching first and anchoring on
+`FETCH_HEAD` is exactly what the repo's `scripts/validate.sh` version gate does —
+so the audit sees exactly the branch's own changes and never blames changes that
+landed on the base after the branch diverged. Never diff against a stale local
+base ref.
 
 ## Multi-story branch — reject, don't audit
 

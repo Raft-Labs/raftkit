@@ -53,8 +53,16 @@ from BEYOND — the audit trail shows both that it was flagged and who cleared i
 ## Error states — stop, do not audit a partial picture
 
 - **Story unreachable** (Asana connector down, no access, or the task is
-  unreachable) → **stop and name the access problem**, using the
-  `raftkit-core/workflow-constants` stop message. Do not fall back to a
+  unreachable) → **stop and name the access problem** with scope-guard's own
+  fixed line:
+
+  ```
+  Can't read the story — check your Asana connector, then retry.
+  ```
+
+  (Use `raftkit-core/workflow-constants` for the general connector-check
+  guidance, but this line names the *story* — do not reuse the template-worded
+  stop string, which would mislead the dev here.) Do not fall back to a
   remembered story or audit against a partial one.
 - **Diff unavailable** (detached HEAD or otherwise unusable git state) → stop and
   suggest the **exact git remedy**, e.g.:

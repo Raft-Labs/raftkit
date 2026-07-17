@@ -52,9 +52,10 @@ And a flagged item may only survive with the dev's **explicit, logged sign-off**
    `[AC]` subtasks** live via the Asana connector — every run, never from memory
    or this repo. Read the story's "Out of scope / non-goals" section in the
    same fetch (match on the heading, not a section number — the template's
-   numbering is not stable). If the story cannot be read, **stop and name the access problem**
-   using the `workflow-constants` stop message — do not audit against a
-   remembered or partial story (Error state; `references/output-and-signoff.md`).
+   numbering is not stable). If the story cannot be read, **stop with the fixed
+   line** `Can't read the story — check your Asana connector, then retry.` — do
+   not audit against a remembered or partial story (Error state, exact wording in
+   `references/output-and-signoff.md`).
 2. **Take the diff.** Diff the branch against the **merge-base with the PR base
    branch** — the same anchor the repo's `validate.sh` version gate uses, so the
    audit sees exactly the branch's own changes. Large diffs are walked
