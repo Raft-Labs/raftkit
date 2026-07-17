@@ -1,0 +1,93 @@
+# The pack: components, sources, and the version marker
+
+The governance pack is five components. Two kinds of source feed them, and the
+distinction is the whole point of this skill:
+
+- **Content owned by `raftkit-core`** — the protocols, the orchestrator
+  mechanism, and the spec template. Read these **live from the installed
+  `raftkit-core/governance-protocols` skill at install time.** This skill keeps
+  **zero copies** of that text; a copy here would drift from the source, the
+  exact failure the pack exists to prevent.
+- **Artifacts owned by this skill (M3)** — the pre-push hook, the CI
+  quality-guardrail workflow, and the CodeRabbit config. These ship as files
+  under `assets/` here (governance-protocols does not carry them).
+
+## Component table
+
+| # | Component | Source | Installs to |
+|---|---|---|---|
+| 1 | Protocols 1–5 (+ orchestrator mechanism) | `raftkit-core/governance-protocols` → `references/protocols.md` and `references/orchestrator.md` (live) | `CLAUDE.md` (merged) and `.claude/skills/orchestrator/SKILL.md` |
+| 2 | Active-feature spec template | `governance-protocols` → `references/active-feature-template.md` (live) | `<spec_path>` (default `docs/specs/active-feature.md`) |
+| 3 | Pre-push hook | `assets/pre-push` (M3) | `.githooks/pre-push` (tracked, `chmod +x`) + `git config core.hooksPath .githooks` |
+| 4 | CI quality guardrail | `assets/quality-guardrail.yml` (M3) | `.github/workflows/quality-guardrail.yml` |
+| 5 | CodeRabbit config | `assets/coderabbit.yaml` (M3) | `.coderabbit.yaml` |
+
+Success string counts these five: `5 protocols, spec template, hook, CI,
+CodeRabbit`. The orchestrator mechanism travels **with** the protocols component
+(Protocol 2 is inert without it) — it is not a sixth component. It installs as a
+**discoverable skill** at `.claude/skills/orchestrator/SKILL.md` (a bare `.md`
+loose under `skills/` is not a registered skill), still counted inside the
+protocols component.
+
+**Not installed by this per-repo skill:** the governance pack's cheat sheet.
+It installs to the team workspace (pinned), not a repo file, and this installer
+does one repo per run.
+
+## Parameters — from raftkit-core only (AC: parameters sourced from core)
+
+Two values are parameters, not hardcodes. Read both from the
+`governance-protocols` **parameter table** at install time; never hand-edit them
+per repo.
+
+| Parameter | Default | Used by |
+|---|---|---|
+| `decomposition_threshold` | `2` | already baked into the protocol text you install verbatim |
+| `spec_path` | `docs/specs/active-feature.md` | the spec template's install path (component 2) and the hook's spec gate |
+
+The hook asset carries two tokens, substituted at install time before writing
+`.githooks/pre-push`:
+
+- `__SPEC_PATH__` → the `spec_path` value read from core.
+- `__SPEC_TEMPLATE_SENTINEL__` → a distinctive placeholder from the live spec
+  template (default `[Feature Name or Jira Ticket ID]`, the H1 placeholder). The
+  hook's spec gate uses it to reject a spec that still *is* the untouched
+  template — Protocol 2 needs a spec that exists **and** is filled in, so a
+  freshly-installed template alone does not clear the gate.
+
+These two substitutions are the only edits to any asset — every other byte
+installs verbatim. When the spec/threshold decision (Asana `1216550892331152`)
+lands and core's defaults change, a re-run re-installs with the new values; no
+per-repo edit.
+
+## The pre-push hook is a tracked file, not `.git/hooks/`
+
+`.git/hooks/pre-push` is untracked: it cannot join the atomic commit/PR and it
+vanishes for every other clone. So the hook installs to a **tracked**
+`.githooks/pre-push`, and the install flow runs `git config core.hooksPath
+.githooks` to point git at it. That config is **per-clone local state**, so:
+
+- Every teammate cloning fresh must run `git config core.hooksPath .githooks`
+  once (or re-run setup-project, which re-asserts it).
+- A re-run always re-asserts the config even when the file is unchanged.
+
+Document this line in the install summary so fresh clones know how the hook
+activates.
+
+## The version marker (AC: re-run = update in place)
+
+`.raftkit/governance-pack.json` records what was installed so a re-run can tell
+v1 from v2 and update in place. Shape:
+
+```json
+{
+  "pack_version": "<raftkit-core version at install time>",
+  "installed_at": "<ISO date>",
+  "components": ["protocols", "spec-template", "hook", "ci", "coderabbit"]
+}
+```
+
+`pack_version` is the installed **raftkit-core** version (the content source), so
+a repo carrying pack v1 while core ships v2 is detected on the next run. On a
+re-run: if the marker's version differs from the installed core version, update
+every pack component in place, show the diff, write the new marker — and leave
+repo-specific docs untouched (see install-flow.md).

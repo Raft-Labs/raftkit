@@ -1,0 +1,29 @@
+# RaftLabs governance CI quality guardrail — installed by raftkit-dev/setup-project.
+# Managed file: overwritten on the next setup-project run.
+# Node steps run only when a lockfile is present, so non-Node repos get a green
+# (skipped) check — matching the pre-push hook's defensive posture.
+name: Quality guardrail
+on:
+  pull_request:
+jobs:
+  guardrail:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect Node project
+        id: node
+        run: |
+          if [ -f package-lock.json ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/setup-node@v4
+        if: steps.node.outputs.present == 'true'
+        with:
+          node-version: lts/*
+          cache: npm
+      - if: steps.node.outputs.present == 'true'
+        run: npm ci
+      - if: steps.node.outputs.present == 'true'
+        run: npm run --if-present lint
+      - if: steps.node.outputs.present == 'true'
+        run: npm run --if-present typecheck
+      - if: steps.node.outputs.present == 'true'
+        run: npm run --if-present test
