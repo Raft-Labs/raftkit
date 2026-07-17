@@ -5,7 +5,7 @@ make the pass safe: a red suite before it refuses; a red suite after any change
 reverts that change. Nothing here is optional — it is the core guarantee the skill
 exists to provide.
 
-## Pre-flight: refuse on a red suite (acceptance criterion 1)
+## Pre-flight: refuse on a red suite
 
 Before touching a single file, run the **full test suite once**.
 
@@ -25,7 +25,7 @@ Before touching a single file, run the **full test suite once**.
 If there is no runnable suite at all, stop and ask — revert-safety is undefined
 without one, and the pass must not run blind.
 
-## Apply, then verify — auto-revert on red (acceptance criterion 2)
+## Apply, then verify — auto-revert on red
 
 After the developer approves the before/after batch:
 
@@ -57,7 +57,7 @@ green** — no change that turned a test red is ever committed.
   where `N` is the number of removals that survived and `X` is the passing test
   count.
 
-- **Nothing to simplify** (acceptance criterion 5) → say **exactly** that and make
+- **Nothing to simplify** → say **exactly** that and make
   **no commit** — never an empty commit:
 
   ```
@@ -67,7 +67,7 @@ green** — no change that turned a test red is ever committed.
 One pass produces at most one commit. List-only candidates are reported alongside
 the outcome, never committed.
 
-## Scope boundary (acceptance criterion 4)
+## Scope boundary
 
 Every candidate, every applied change, and the single commit stay within the
 **story branch's diff** — the files the story changed, computed against the
