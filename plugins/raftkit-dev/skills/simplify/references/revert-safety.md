@@ -29,7 +29,8 @@ without one, and the pass must not run blind.
 
 After the developer approves the before/after batch:
 
-1. Apply the approved removals.
+1. Apply the approved removals in small batches, ideally one candidate at a time —
+   so the offending change is identifiable when a test goes red.
 2. **Re-run the full suite.**
 3. If any test is now **red**, the change turned behaviour red:
    - **Auto-revert** the offending change (restore the pre-change state).
@@ -40,15 +41,13 @@ After the developer approves the before/after batch:
      ```
 4. Re-run until the applied set is green.
 
-Apply in small batches so a revert is precise: when a batch goes red, narrow to
-the offending change rather than discarding the whole batch. The invariant is that
-**every change that survives the pass leaves the suite green** — no change that
-turned a test red is ever committed.
+The invariant is that **every change that survives the pass leaves the suite
+green** — no change that turned a test red is ever committed.
 
 ## Commit — one dedicated commit, or none
 
 - **Removals survived** → make **one dedicated simplify commit** (conventional
-  form, e.g. `refactor: simplify <area> — remove speculative abstractions`) and
+  form, e.g. `chore: simplify <area> — remove speculative abstractions`) and
   report the success line **exactly**:
 
   ```

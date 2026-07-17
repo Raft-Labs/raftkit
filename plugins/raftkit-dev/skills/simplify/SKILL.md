@@ -11,9 +11,10 @@ over-build: interfaces with one implementation, config nobody sets, comments tha
 narrate the obvious. This pass strips what the story didn't need, so the codebase
 stays **exactly as complex as the product requires — no more** (PRD §5.3).
 
-It orchestrates the **code-simplifier** plugin (which finds and applies the
-simplifications) under the **ponytail lens** (prefer deleting code to
-restructuring it; introduce no new abstractions). This skill rebuilds neither —
+It orchestrates the **code-simplifier** plugin (which *finds* the
+simplifications; this skill *applies* them only after the developer approves)
+under the **ponytail lens** (prefer deleting code to restructuring it; introduce
+no new abstractions). This skill rebuilds neither —
 it is the disciplined driver that adds revert-safety, the diff-only boundary, the
 approval gate, and the reporting contract around them.
 
@@ -59,7 +60,7 @@ by default.
 
 1. **Pre-flight the suite.** Run the full suite once. **Green** → continue.
    **Red** → refuse: report the failing test and stop; nothing is touched
-   (`references/revert-safety.md`). This is acceptance criterion 1.
+   (`references/revert-safety.md`).
 2. **Scope to the diff.** Compute the in-scope file set from the story branch's
    diff. Every candidate and every edit stays inside this set; out-of-diff files
    are never modified.
@@ -76,14 +77,13 @@ by default.
    Nothing changes before approval.
 6. **Apply, then verify — revert on red.** Apply the approved removals, then
    **re-run the full suite**. If any test goes red, **auto-revert** the offending
-   change and report it **naming the failing test** (acceptance criterion 2);
-   behaviour wins. Re-run until the applied set is green. Details and batching in
+   change and report it **naming the failing test**; behaviour wins. Re-run until the applied set is green. Details and batching in
    `references/revert-safety.md`.
 7. **Commit or report empty.**
    - Removals were made → make **one dedicated simplify commit** and report:
      `Simplify: N removals, suite green (X tests), one commit`.
    - Nothing to simplify → say **exactly that** and make **no commit** — no empty
-     commit (acceptance criterion 5). Exact strings in `references/revert-safety.md`.
+     commit. Exact strings in `references/revert-safety.md`.
 8. **Hand back** the list-only candidates (if any) so the developer can decide on
    them separately — they are surfaced, never silently dropped.
 
@@ -100,9 +100,9 @@ by default.
   is never worth a guessed behaviour change.
 - **One dedicated commit per pass**, and no empty commit when there is nothing to
   simplify.
-- **Orchestrate, don't rebuild** — code-simplifier finds and applies; this skill
-  governs safety, scope, approval, and reporting. It reimplements no
-  simplification logic.
+- **Orchestrate, don't rebuild** — code-simplifier finds the simplifications; this
+  skill applies them only after developer approval, and governs safety, scope, and
+  reporting. It reimplements no simplification logic.
 - **Escalate to founders** per `raftkit-core/house-rules` if a proposed removal
   touches budget, contract, or client-commitment surface area rather than pure
   internal cleanup.
