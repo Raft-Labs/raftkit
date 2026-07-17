@@ -1,0 +1,28 @@
+#!/usr/bin/env sh
+# RaftLabs governance pre-push hook — installed by raftkit-dev/setup-project.
+# Managed file: overwritten on the next setup-project run. Put repo-specific
+# checks in your package scripts (lint/typecheck/test), not here.
+# Runs the four pre-flight gates before any push: spec, lint, typecheck, tests.
+set -e
+
+# spec_path is substituted from raftkit-core at install time — never hand-edit.
+SPEC_PATH="__SPEC_PATH__"
+
+fail() { printf '\npre-push blocked: %s\n' "$1" >&2; exit 1; }
+
+# 1. Spec gate (Protocol 2): an active-feature spec must exist before pushing.
+[ -f "$SPEC_PATH" ] || fail "no active-feature spec at $SPEC_PATH — write the spec first (Protocol 2)."
+
+# 2-4. Quality gates. Run each script only if the repo defines it; a defined
+# script that fails blocks the push, an absent script is skipped (not failed).
+if [ -f package.json ]; then
+  has_script() { node -e "process.exit(((require('./package.json').scripts||{})['$1'])?0:1)" 2>/dev/null; }
+  for gate in lint typecheck test; do
+    if has_script "$gate"; then
+      printf 'pre-push: running %s...\n' "$gate"
+      npm run --silent "$gate" || fail "$gate failed."
+    fi
+  done
+fi
+
+exit 0
