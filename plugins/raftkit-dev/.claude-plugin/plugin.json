@@ -1,9 +1,11 @@
 {
   "name": "raftkit-dev",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Developer skills: implement, scope guard, simplify, PR, bug fix, UI creation, project setup, recipes.",
   "author": {
     "name": "RaftLabs"
   },
-  "dependencies": ["raftkit-core"]
+  "dependencies": [
+    "raftkit-core"
+  ]
 }
