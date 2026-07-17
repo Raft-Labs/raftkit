@@ -71,7 +71,9 @@ Run after the post-edit gates are green (`references/execution.md`), before the 
    removal or the dev's explicit logged sign-off; a MISSING item only by being
    built or explained. Silence is not a sign-off.
 2. **CodeRabbit local pass.** Run the CodeRabbit CLI review locally and address or
-   explicitly answer every finding before proceeding to the raise.
+   explicitly answer every finding before proceeding to the raise. This Gate 2
+   pass is the branch's CodeRabbit review — `pr` may reuse it if it is still fresh
+   for this branch rather than re-run an identical review at the raise.
 
 Only when both are satisfied does the run proceed to the `pr` skill
 (`references/close-out.md`).

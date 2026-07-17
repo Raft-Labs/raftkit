@@ -6,20 +6,21 @@ outcome in its own success line.
 
 ## Delegate the raise to `pr`
 
-Hand off to `raftkit-dev/pr`. That skill owns, and this skill does not duplicate:
+Hand off to `raftkit-dev/pr` and let it own its full contract — squash-target
+resolution, the commitlint title, the four description sections, the pre-push
+hook, pr-review-toolkit + CodeRabbit, and the Asana close-out (the `Development`
+tick and the PR-link comment). That contract is defined in `raftkit-dev/pr`; do
+**not** restate or re-implement it here — a copy drifts from the source.
+`implement` invokes `pr`, it does not duplicate it. Merging stays human — neither
+skill merges or approves its own PR.
 
-- **Squash-target resolution** (repo docs → release-train default → refuse); never
-  targets `main` directly, never hardcodes a branch.
-- **The commitlint-valid title** — the changelog line for this story.
-- **The four description sections** — story link · AC checklist · out-of-scope
-  confirmation · test summary.
-- **The pre-push hook** (surfaced verbatim on failure; never bypassed) and
-  pr-review-toolkit + CodeRabbit before a human reviewer is requested.
-- **The Asana close-out** — ticking the story's `Development` subtask **and**
-  commenting the PR link on the story (`write-protocol`: draft → approve → push).
+Two seams matter to `implement`:
 
-`implement` invokes `pr` and lets it own those; it does not re-implement any of
-them. Merging stays human — neither skill merges or approves its own PR.
+- **No double CodeRabbit run.** Gate 2 already ran CodeRabbit on this branch; `pr`
+  may reuse that fresh Gate 2 pass instead of re-running an identical review
+  (`references/gates.md`, Gate 2).
+- **The close-out is `pr`'s; confirming it is `implement`'s** — see the fallback
+  below.
 
 ## Success line
 
@@ -35,10 +36,15 @@ Fill `n` with the PR number and `X` with the suite's passing-test count.
 
 ## Asana write-failure fallback (error state)
 
-If the Asana write fails — the `Development` tick or the PR-link comment cannot be
-written (connector down, no access) — **the PR still completes.** A failed Asana
-write never rolls back a raised PR. Instead, tell the dev exactly what to paste
-manually, self-contained enough to act on without re-deriving anything:
+`implement` confirms the close-out after the hand-off: `pr` surfaces its
+close-out result — the `Development` tick and the PR-link comment. **If either
+write failed, or its status comes back unknown, `implement` emits the manual-link
+fallback.** That is the AC's deterministic trigger — confirmation after the
+hand-off, not an implicit hope that `pr` succeeded. A failed Asana write never
+rolls back the raised PR; **the PR still completes.**
+
+The fallback tells the dev exactly what to paste manually, self-contained enough
+to act on without re-deriving anything:
 
 - the **story task URL** to open,
 - the **PR URL** to paste as a comment,
