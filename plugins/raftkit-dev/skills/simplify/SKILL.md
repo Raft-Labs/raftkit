@@ -1,0 +1,126 @@
+---
+name: simplify
+description: This skill should be used when a RaftLabs developer wants a post-implementation minimalism pass on a completed story — e.g. "simplify this", "run the simplify pass", "strip the over-engineering", "remove speculative abstractions", "clean up before the PR", or when /implement finishes its phases and hands off for a minimalism pass. It is a behaviour-preserving cleanup that removes speculative abstractions, dead flexibility, unused config, and narration comments from the files the story changed — orchestrating the code-simplifier plugin under the ponytail lens (prefer deleting code to restructuring it; add no new abstractions). Revert-safety is the core guarantee — it refuses to start on a red suite, and auto-reverts any change that turns a test red, naming the failing test. Runs only on the story branch's in-scope diff. Not a linter (style is the linter's job), not a refactor tool, and never a performance pass.
+user-invocable: true
+---
+
+# simplify
+
+The best code is the code never written. AI implementations look clean but
+over-build: interfaces with one implementation, config nobody sets, comments that
+narrate the obvious. This pass strips what the story didn't need, so the codebase
+stays **exactly as complex as the product requires — no more** (PRD §5.3).
+
+It orchestrates the **code-simplifier** plugin (which finds and applies the
+simplifications) under the **ponytail lens** (prefer deleting code to
+restructuring it; introduce no new abstractions). This skill rebuilds neither —
+it is the disciplined driver that adds revert-safety, the diff-only boundary, the
+approval gate, and the reporting contract around them.
+
+## The one rule that governs everything
+
+**Behaviour wins over beauty.** The test suite must be green **before** the pass
+and green **after** it — a red suite anywhere stops or reverts the work:
+
+- **Red before** → the pass **refuses to start**. Fix the failing test first.
+- **Red after any candidate** → that change is **auto-reverted** and reported,
+  **naming the failing test**. The pass never ships a change that turned the suite
+  red.
+
+This is the guarantee the whole skill exists to provide. The full ordering,
+commit mechanics, and exact output strings are in `references/revert-safety.md`.
+
+It rests on two standing house rules this skill inherits, both non-negotiable:
+
+1. **Diff-only.** Only files in the **story branch's diff** are ever touched.
+   Files outside the diff are off-limits — reading them for context is fine,
+   editing them is not.
+2. **Draft → approve → apply.** Removals are shown to the developer as
+   before/after and applied only on approval — per `raftkit-core/write-protocol`.
+   The skill proposes; the developer approves; only then is anything changed.
+
+And never guess: an uncertain candidate is **listed, not applied** — conservative
+by default.
+
+## Preconditions — check before proposing anything
+
+1. **A story branch with a diff.** The pass operates on the files the story
+   changed. Determine the in-scope set from the branch's diff against its base. No
+   diff / not on a story branch → **stop and say so**; there is nothing to
+   simplify.
+2. **A runnable test suite, green.** Run it first (pre-flight). If it is **red**,
+   **refuse to start** — name the failing test and stop; the fix comes first
+   (`references/revert-safety.md`). If there is no suite to run at all, stop and
+   ask — revert-safety cannot be guaranteed without one.
+3. **One pass per story branch** by default. If a simplify commit already exists on
+   this branch, say so and stop rather than stacking a second pass.
+
+## Run flow
+
+1. **Pre-flight the suite.** Run the full suite once. **Green** → continue.
+   **Red** → refuse: report the failing test and stop; nothing is touched
+   (`references/revert-safety.md`). This is acceptance criterion 1.
+2. **Scope to the diff.** Compute the in-scope file set from the story branch's
+   diff. Every candidate and every edit stays inside this set; out-of-diff files
+   are never modified.
+3. **Find candidates.** Run **code-simplifier** across the in-scope files and read
+   its findings through the **ponytail lens** — see `references/candidate-catalog.md`
+   for what counts: single-caller abstractions, dead flexibility / unused config,
+   and narration comments (removed) vs WHY-comments (preserved). Prefer deletion
+   over restructuring; the pass introduces no new abstractions of its own.
+4. **Triage — conservative by default.** Sort candidates into **apply** (clear
+   removals) and **list-only** (uncertain — reported for the developer to judge,
+   never auto-applied). When in doubt, list it.
+5. **Show before/after and get approval.** Present the apply batch as before/after
+   pairs; the developer approves the batch (`raftkit-core/write-protocol`).
+   Nothing changes before approval.
+6. **Apply, then verify — revert on red.** Apply the approved removals, then
+   **re-run the full suite**. If any test goes red, **auto-revert** the offending
+   change and report it **naming the failing test** (acceptance criterion 2);
+   behaviour wins. Re-run until the applied set is green. Details and batching in
+   `references/revert-safety.md`.
+7. **Commit or report empty.**
+   - Removals were made → make **one dedicated simplify commit** and report:
+     `Simplify: N removals, suite green (X tests), one commit`.
+   - Nothing to simplify → say **exactly that** and make **no commit** — no empty
+     commit (acceptance criterion 5). Exact strings in `references/revert-safety.md`.
+8. **Hand back** the list-only candidates (if any) so the developer can decide on
+   them separately — they are surfaced, never silently dropped.
+
+## Guardrails
+
+- **Green before and after** — refuse on a red pre-flight suite; auto-revert any
+  candidate that turns a test red, naming it. The core guarantee
+  (`references/revert-safety.md`).
+- **Diff-only** — only files in the story branch's diff are touched; out-of-diff
+  refactors are out of scope, full stop.
+- **Ponytail lens** — prefer deleting code to restructuring it; the pass
+  introduces no new abstractions of its own.
+- **Conservative default** — uncertain candidates are listed, not applied. Beauty
+  is never worth a guessed behaviour change.
+- **One dedicated commit per pass**, and no empty commit when there is nothing to
+  simplify.
+- **Orchestrate, don't rebuild** — code-simplifier finds and applies; this skill
+  governs safety, scope, approval, and reporting. It reimplements no
+  simplification logic.
+- **Escalate to founders** per `raftkit-core/house-rules` if a proposed removal
+  touches budget, contract, or client-commitment surface area rather than pure
+  internal cleanup.
+
+## Out of scope
+
+- **Refactors beyond the story's diff** — the pass never reaches into files the
+  story did not change.
+- **Style-guide / formatting enforcement** — linters and formatters own that; this
+  pass is about removing what isn't needed, not restyling what is.
+- **Performance optimization** — behaviour-preserving minimalism only; speed work
+  is a separate, measured effort.
+
+## Reference files
+
+- `references/candidate-catalog.md` — what counts as a simplification candidate
+  (single-caller abstractions, dead flexibility / unused config, the narration-vs-
+  WHY-comment taxonomy), the ponytail lens, and the conservative-default rule.
+- `references/revert-safety.md` — the pre-flight refuse-on-red, batch-then-verify,
+  auto-revert-on-red naming the failing test, the one dedicated simplify commit,
+  and the exact success and empty-state output strings.
