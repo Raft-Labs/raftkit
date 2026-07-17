@@ -47,10 +47,14 @@ When defaults, a recipe, the story, and a Project Profile all speak to the same
 decision, resolve in this order — highest wins:
 
 1. **Project Profile override.** A project may override a default or a recipe
-   choice **only** through an explicit entry in its Project Profile. Silent
+   **choice only** through an explicit entry in its Project Profile. Silent
    per-repo divergence is not allowed. When an override applies, it wins and the
    **deviation is noted in the plan**. (Where the Project Profile lives is owned
-   by onboarding/core — reference it abstractly; never hardcode a path.)
+   by onboarding/core — reference it abstractly; never hardcode a path.) A Project
+   Profile overrides recipe/default *choices* only — it **never** overrides an
+   explicit story requirement or `[AC]`. If a Profile entry contradicts the story,
+   the **story wins** and the clash is surfaced exactly like a story-vs-recipe
+   conflict (below). The story is source-of-truth #1.
 2. **The story's explicit requirements.** On a **direct conflict between the story
    and a recipe, the STORY wins** — the recipe never overrides an explicit story
    requirement. Surface the conflict to the PM as a **possible recipe update**, so

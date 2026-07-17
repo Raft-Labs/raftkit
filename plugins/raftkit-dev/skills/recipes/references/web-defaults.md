@@ -17,10 +17,8 @@ default, the override wins and the **deviation is noted in the plan**.
 | Decision | Default | Why |
 |---|---|---|
 | Web framework | React with **Next.js** | The RaftLabs web stack |
-| Language | **TypeScript** across the codebase | Type safety is a house standard, not a per-project call |
 | Backend runtime | **Node.js** | The RaftLabs backend stack |
 | Hosting / compute | **AWS Serverless** | The RaftLabs delivery model |
-| Localization | User-facing strings are **localized, never hardcoded** | House rule — the story's exact strings are the source language |
 
 ## Default-with-override (starting points, not fixed law)
 
@@ -33,6 +31,8 @@ settles them — expect a Project Profile to override per project.
 | Data access | A single typed data layer; no ad-hoc fetches scattered through components | Project Profile |
 | Auth pattern | Server-enforced (never UI-only gating), matching the project's chosen provider | Project Profile |
 | Styling | The project's design tokens style the UI; recipes define structure, not brand | Project Profile |
+| Language | **TypeScript** across the codebase | Project Profile |
+| Localization | User-facing strings localized, not hardcoded; the story's exact strings are the source language | Project Profile |
 
 If a decision is not covered here and no source states it, decide it for the story
 at hand and, if it looks reusable, **propose it as a default by PR** — do not

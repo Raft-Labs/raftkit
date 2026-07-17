@@ -31,9 +31,11 @@ rated?" survives reinstalls and is consistent across a user's devices.
   rated → **do not prompt**. If not → prompt, and on a rating record the new state
   to the backend.
 - **Side effect (documented):** the review prompt **syncs rating state to the
-  backend** (read before prompting, write after rating). Treat a rating-state
-  write as best-effort-durable; never show the prompt to a user the backend says
-  has already rated.
+  backend** (read before prompting, write after rating). Never show the prompt to
+  a user the backend says has already rated. If the post-rating write fails, **queue
+  and retry it locally and suppress the prompt locally until it succeeds**, so a
+  rated user is still never re-asked; the only acceptable failure is a missed
+  suppression across a simultaneous reinstall — never a routine re-ask.
 - Optionally throttle re-prompts for users who dismissed without rating, per the
   story — but a user who *rated* is out of the pool permanently.
 
