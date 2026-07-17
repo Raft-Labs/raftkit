@@ -24,8 +24,12 @@ message and write **nothing** — no marker, no file, no config.
    and the target paths. Detect conflicts now (existing hook, existing CLAUDE.md,
    existing CodeRabbit config) so they are handled in Phase 2, not discovered
    mid-write.
-4. **Branch/write mode.** Determine whether the current branch is protected (a
-   direct commit will be rejected). This selects commit vs. PR in Phase 3.
+4. **Branch/write mode.** Determine whether the current branch is protected.
+   Prefer `gh api` (the branch-protection endpoint) when `gh` is available and
+   authenticated; if it reports protection, plan the PR path. When `gh` is
+   absent or the query is inconclusive, do not assume — attempt the direct
+   commit in Phase 3 and treat a **rejected push** as the trigger for the PR
+   fallback. This selects commit vs. PR in Phase 3.
 
 All-or-nothing means Phase 1 gates the whole run: any single component that
 cannot be installed aborts here, before anything is written.
@@ -42,32 +46,40 @@ Build the full change set without committing:
   a file the developer authored (the marker tells you whether a prior *pack*
   install owns it; a pack-owned managed file is replaced, a foreign one is a
   conflict to resolve).
-- **orchestrator.md, spec template:** write from the live core content.
-- **hook, CI, CodeRabbit:** write the three assets; substitute `__SPEC_PATH__` in
-  the hook.
+- **orchestrator, spec template:** write from the live core content — the
+  orchestrator to `.claude/skills/orchestrator/SKILL.md` (discoverable-skill
+  form), the spec template to `spec_path`.
+- **hook, CI, CodeRabbit:** write the three assets; substitute `__SPEC_PATH__`
+  and `__SPEC_TEMPLATE_SENTINEL__` in the hook (see `components.md`), then
+  `chmod +x .githooks/pre-push` — git ignores a non-executable hook under
+  `core.hooksPath`.
 - **version marker:** stage `.raftkit/governance-pack.json`.
 
 If anything here fails, discard the staged work — nothing is committed.
 
 ## Phase 3 — Apply atomically
 
-- **Unprotected branch:** stage all pack paths and make **one commit**
-  (conventional-commit title). `git config core.hooksPath .githooks`.
-- **Protected branch (AC: protected → PR):** create a branch, commit the same
-  change set there, and **open a PR** instead of committing to the protected
-  branch. The change set is identical; only the delivery differs. This is a
-  client-side fallback — it never edits GitHub org settings or branch rulesets
-  (out of scope).
+- **Unprotected branch:** stage all pack paths (the hook staged with its
+  executable bit — `git update-index --chmod=+x .githooks/pre-push` if needed)
+  and make **one commit** (conventional-commit title). Set `git config
+  core.hooksPath .githooks`.
+- **Protected branch (AC: protected → PR):** the fallback when protection is
+  detected in Phase 1 **or** a direct push is rejected — create a branch, commit
+  the same change set there, and **open a PR** instead of committing to the
+  protected branch. The change set is identical; only the delivery differs. This
+  is a client-side fallback — it never edits GitHub org settings or branch
+  rulesets (out of scope).
 
 ## Phase 4 — Verify (mandatory)
 
 The install is not done until it is verified:
 
-- **Hook fires:** confirm `core.hooksPath` is `.githooks` and the hook is
-  executable; trigger it on a test push (or `git push --dry-run` path) and
-  confirm it runs.
+- **Hook fires:** confirm `core.hooksPath` is `.githooks` and the hook file is
+  executable (`test -x .githooks/pre-push`), then fire it with
+  `git push --dry-run` **only** — that runs the pre-push hook with zero side
+  effects. This skill never performs a real push to verify.
 - **Protocols agent-readable:** confirm the merged `CLAUDE.md` and
-  `.claude/skills/orchestrator.md` are present and readable.
+  `.claude/skills/orchestrator/SKILL.md` are present and readable.
 
 On success emit exactly (with `<X>` = the installed raftkit-core version):
 

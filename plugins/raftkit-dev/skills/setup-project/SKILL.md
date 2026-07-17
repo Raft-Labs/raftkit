@@ -48,17 +48,19 @@ Work `references/install-flow.md` in order — it is the transaction:
    failure aborts here before a single write.
 2. **Assemble — staged, reversible.** Build the whole change set without
    committing: merge the protocols into CLAUDE.md via `claude-md-management`
-   (never clobber), write the orchestrator and spec template from live core
-   content, write the three assets (substituting `spec_path` for `__SPEC_PATH__`
-   in the hook), and stage the version marker.
-3. **Apply atomically.** Unprotected branch → one commit + `git config
-   core.hooksPath .githooks`. Protected branch → open a PR with the identical
-   change set instead of committing (client-side only — never touches org
-   settings).
-4. **Verify — mandatory.** Confirm the hook fires on a test push and the merged
-   protocols / orchestrator are agent-readable. Only then emit the exact success
-   string, then print the one-time `git config core.hooksPath .githooks` line for
-   fresh clones.
+   (never clobber), write the orchestrator (to `.claude/skills/orchestrator/SKILL.md`)
+   and spec template from live core content, write the three assets (substituting
+   `spec_path` and the template sentinel in the hook, then `chmod +x` it), and
+   stage the version marker.
+3. **Apply atomically.** Unprotected branch → one commit (hook staged with its
+   executable bit) + `git config core.hooksPath .githooks`. Protected branch —
+   detected via `gh api`, or on a rejected direct push — → open a PR with the
+   identical change set instead of committing (client-side only — never touches
+   org settings).
+4. **Verify — mandatory.** Confirm `.githooks/pre-push` is executable and fires
+   via `git push --dry-run` (never a real push), and the merged protocols /
+   orchestrator are agent-readable. Only then emit the exact success string, then
+   print the one-time `git config core.hooksPath .githooks` line for fresh clones.
 
 See `references/components.md` for the five components, their sources, install
 targets, the parameter substitution, and the version-marker shape.

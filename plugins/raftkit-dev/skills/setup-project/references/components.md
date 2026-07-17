@@ -16,15 +16,18 @@ distinction is the whole point of this skill:
 
 | # | Component | Source | Installs to |
 |---|---|---|---|
-| 1 | Protocols 1–5 (+ orchestrator mechanism) | `raftkit-core/governance-protocols` → `references/protocols.md` and `references/orchestrator.md` (live) | `CLAUDE.md` (merged) and `.claude/skills/orchestrator.md` |
+| 1 | Protocols 1–5 (+ orchestrator mechanism) | `raftkit-core/governance-protocols` → `references/protocols.md` and `references/orchestrator.md` (live) | `CLAUDE.md` (merged) and `.claude/skills/orchestrator/SKILL.md` |
 | 2 | Active-feature spec template | `governance-protocols` → `references/active-feature-template.md` (live) | `<spec_path>` (default `docs/specs/active-feature.md`) |
-| 3 | Pre-push hook | `assets/pre-push` (M3) | `.githooks/pre-push` (tracked) + `git config core.hooksPath .githooks` |
+| 3 | Pre-push hook | `assets/pre-push` (M3) | `.githooks/pre-push` (tracked, `chmod +x`) + `git config core.hooksPath .githooks` |
 | 4 | CI quality guardrail | `assets/quality-guardrail.yml` (M3) | `.github/workflows/quality-guardrail.yml` |
 | 5 | CodeRabbit config | `assets/coderabbit.yaml` (M3) | `.coderabbit.yaml` |
 
 Success string counts these five: `5 protocols, spec template, hook, CI,
 CodeRabbit`. The orchestrator mechanism travels **with** the protocols component
-(Protocol 2 is inert without it) — it is not a sixth component.
+(Protocol 2 is inert without it) — it is not a sixth component. It installs as a
+**discoverable skill** at `.claude/skills/orchestrator/SKILL.md` (a bare `.md`
+loose under `skills/` is not a registered skill), still counted inside the
+protocols component.
 
 **Not installed by this per-repo skill:** the governance pack's cheat sheet.
 It installs to the team workspace (pinned), not a repo file, and this installer
@@ -41,11 +44,20 @@ per repo.
 | `decomposition_threshold` | `2` | already baked into the protocol text you install verbatim |
 | `spec_path` | `docs/specs/active-feature.md` | the spec template's install path (component 2) and the hook's spec gate |
 
-The hook asset carries the token `__SPEC_PATH__`. At install time, substitute the
-`spec_path` value read from core for that token before writing `.githooks/pre-push`.
-This is the only substitution — every other byte of every asset installs verbatim.
-When the spec/threshold decision (Asana `1216550892331152`) lands and core's
-defaults change, a re-run re-installs with the new values; no per-repo edit.
+The hook asset carries two tokens, substituted at install time before writing
+`.githooks/pre-push`:
+
+- `__SPEC_PATH__` → the `spec_path` value read from core.
+- `__SPEC_TEMPLATE_SENTINEL__` → a distinctive placeholder from the live spec
+  template (default `[Feature Name or Jira Ticket ID]`, the H1 placeholder). The
+  hook's spec gate uses it to reject a spec that still *is* the untouched
+  template — Protocol 2 needs a spec that exists **and** is filled in, so a
+  freshly-installed template alone does not clear the gate.
+
+These two substitutions are the only edits to any asset — every other byte
+installs verbatim. When the spec/threshold decision (Asana `1216550892331152`)
+lands and core's defaults change, a re-run re-installs with the new values; no
+per-repo edit.
 
 ## The pre-push hook is a tracked file, not `.git/hooks/`
 
