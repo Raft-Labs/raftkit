@@ -34,8 +34,10 @@ nothing to raise — branch has no commits beyond target
 
 ## Gate 2 — scope-guard is clean
 
-The PR is blocked while scope is open. Require `raftkit-dev/scope-guard` to report
-its clean-pass line **verbatim** before proceeding:
+The PR is blocked while scope is open. **Run `raftkit-dev/scope-guard`** and
+require its clean-pass line **verbatim** before proceeding (a standalone run
+invokes it; an `/implement` run may reuse the Gate 2 result if it is still fresh
+for this branch):
 
 ```
 Scope-guard: clean — 0 beyond, 0 missing
@@ -53,7 +55,8 @@ pass conventional-commit / commitlint rules **before** the PR is raised:
 - Shape: `type(scope): summary` — `type` one of the conventional set
   (`feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `build`, `ci`, `perf`,
   `style`, `revert`); `scope` optional; a non-empty imperative summary; the header
-  within the repo's max length; no trailing period.
+  within the max length (read from the repo's commitlint config when present, else
+  the commitlint default of 100 chars); no trailing period.
 - The summary reads as a changelog line for the story (what shipped, not "WIP").
 
 If the draft title fails, **do not raise**. Propose a compliant title derived from
@@ -82,7 +85,7 @@ A missing or empty section is a fail — do not raise a PR with an incomplete bo
   hook result; it never installs or edits the hook (that is `setup-project`).
 - **Open the PR** against the resolved squash target with the validated title and
   the four-section body (GitHub tooling / `gh pr create`).
-- **Reviewers** default to the repo's CODEOWNERS when present; honour existing
-  branch protections.
+- **Reviewers** default to the repo's CODEOWNERS when present; when absent, leave
+  reviewers unset and note it in the run output. Honour existing branch protections.
 
 One PR per story — stacked / multi-story PRs are out of scope in v1.

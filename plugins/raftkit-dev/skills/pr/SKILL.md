@@ -34,8 +34,10 @@ Each is a hard stop with a fixed message; do not raise until all pass.
    nothing to raise — branch has no commits beyond target
    ```
 
-2. **scope-guard is clean.** The PR is blocked while scope is open. Proceed only
-   when `raftkit-dev/scope-guard` reports its clean-pass line **verbatim**:
+2. **scope-guard is clean.** The PR is blocked while scope is open. **Run
+   `raftkit-dev/scope-guard` and require its clean-pass line** — a standalone run
+   invokes it; an `/implement` run may reuse the Gate 2 result if it is still fresh
+   for this branch. Proceed only when it reports the line **verbatim**:
 
    ```
    Scope-guard: clean — 0 beyond, 0 missing
@@ -72,7 +74,8 @@ Work `references/raise-flow.md` then `references/automated-review.md` in order.
 6. **Push + raise.** The push runs the repo pre-push hook; if it rejects, surface
    the failing layer **verbatim** (spec / lint / typecheck / tests) and stop — never
    bypass with `--no-verify`. Then open the PR against the squash target, assigning
-   reviewers from CODEOWNERS when present.
+   reviewers from CODEOWNERS when present; when absent, leave reviewers unset and
+   note it in the run output.
 7. **Automated review before humans.** Run pr-review-toolkit (always) and CodeRabbit
    (when present); address or explicitly answer every finding, then request the
    human reviewer with the success line (`references/automated-review.md`):
@@ -81,10 +84,10 @@ Work `references/raise-flow.md` then `references/automated-review.md` in order.
    automated layers clean — requesting human review
    ```
 
-8. **Close the loop** per `raftkit-core/write-protocol`: comment the PR link on the
-   story task. (Ticking the story's Development subtask and the PR-link comment are
-   the only Asana writes; `[AC]`/Testing ticks and the merge are downstream human
-   gates.)
+8. **Close the loop** per `raftkit-core/write-protocol` (draft → approve): tick the
+   story's `Development` subtask complete AND comment the PR link on the story task.
+   These two are the only Asana writes; `[AC]`/Testing ticks and the merge stay
+   downstream human gates.
 
 ## Guardrails
 
