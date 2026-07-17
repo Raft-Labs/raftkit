@@ -72,8 +72,9 @@ every run — never cache its text. Then:
 5. **Verify the full suite.** Run the whole suite. A fix that turns any *other*
    test red is a **hard stop** — fix that before proceeding; the incident is not
    resolved while the suite is red (`references/incident-loop.md`).
-6. **Prepare — do not deploy.** Prepare the branch/PR and **suggest** deploy steps
-   only. End with the exact success line:
+6. **Prepare — do not deploy.** Prepare the branch/PR — via the `raftkit-dev/pr`
+   sibling when present, falling back to the shared PR conventions when it is
+   absent — and **suggest** deploy steps only. End with the exact success line:
    `Crash replicated red → fixed green. Regression test permanent. PR #n ready — deploy per the train.`
    Deploy stays human + release-train governed.
 

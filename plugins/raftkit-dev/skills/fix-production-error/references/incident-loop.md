@@ -61,9 +61,11 @@ separately. This skill adds neither; it stays on the incident.
 
 ## 7 · Prepare — never deploy
 
-Prepare the branch and PR (regression test + containment fix), and **suggest** the
-deploy steps only. Deploy stays human and release-train governed — the skill has
-no deploy action. Close with the exact success line, verbatim:
+Prepare the branch and PR (regression test + containment fix) **via the
+`raftkit-dev/pr` sibling when present, falling back to the shared PR conventions
+when it is absent**, and **suggest** the deploy steps only. Deploy stays human and
+release-train governed — the skill has no deploy action. Close with the exact
+success line, verbatim:
 
 ```
 Crash replicated red → fixed green. Regression test permanent. PR #n ready — deploy per the train.

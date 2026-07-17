@@ -10,11 +10,18 @@ fourth path handles a systemic root cause discovered mid-loop.
 A production incident starts from a **raw artifact**, never from a description.
 
 - **Trigger:** the developer describes a crash ("checkout is throwing", "users
-  are hitting a 500") but pastes no stack trace or log.
+  are hitting a 500") **and claims it is a live production / live-users incident**,
+  but pastes no stack trace or log.
 - **Action:** ask for the **raw stack trace or the log excerpt** — from Sentry,
   CloudWatch, or Crashlytics — and stop until it arrives.
 - **Never:** proceed on the verbal description alone. A described crash is a
   hypothesis, not a trace; acting on it fabricates the failing line.
+- **Tiebreaker (Empty vs Misuse):** this gate and the Misuse gate below both look
+  like "a crash described, no trace pasted." The discriminator is the **production
+  claim**, and the branch is deterministic on it: if the description asserts a
+  production / live-users incident, take **this** path — ask for the raw artifact.
+  If there is **no production claim at all** (a QA bug task, a typed-up repro, "can
+  you also fix…"), take the **Misuse** path instead.
 
 ## Ambiguous — the trace does not localize
 
@@ -34,9 +41,11 @@ A trace that cannot be traced to a line is not yet workable.
 This skill is the production feedback loop, not a shortcut around the ordinary bug
 flow. It refuses that misuse by name.
 
-- **Trigger:** a defect with **no production trace** — a QA bug task, a manually
-  written reproduction, a "can you also fix…" with no Sentry/CloudWatch/Crashlytics
-  artifact behind it.
+- **Trigger:** a defect with **no production claim and no production trace** — a
+  QA bug task, a manually written reproduction, a "can you also fix…" with no
+  Sentry/CloudWatch/Crashlytics artifact behind it. (If a production incident *is*
+  claimed but the trace is merely missing, that is the **Empty** gate above, not
+  this one — see its tiebreaker.)
 - **Action:** **refuse and route**, stating the reason: an ordinary bug goes
   through **`file-bug` → `fix-bug`**, not through the incident loop. The incident
   loop's red-first, feature-halting discipline is for real production breakage;
