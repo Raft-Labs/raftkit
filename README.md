@@ -34,6 +34,19 @@ Installing any role plugin automatically installs `raftkit-core` alongside it. I
 
 v1 ships exactly these four plugins. PM and QA plugins target the Claude apps/Cowork runtime; the install path there is pending the org-wide install decision (Asana task 1216551001583573) — until it lands, use Claude Code with the commands above.
 
+## Getting help
+
+Every plugin ships a help command — run it inside a Claude Code session:
+
+```
+/raftkit-pm:help        # PM workflow: profiles, stories, readiness, updates
+/raftkit-dev:help       # Dev workflow: implement → PR, bugs, setup
+/raftkit-qa:help        # QA workflow: suites, run sheets, bugs, retest
+/raftkit-core:help      # Shared rules, constants, governance protocols
+```
+
+Pass a skill name or question for a focused answer, e.g. `/raftkit-dev:help scope-guard` or `/raftkit-pm:help how do I onboard a project`.
+
 ## Updates
 
 New versions arrive automatically via Claude Code's plugin refresh, or on demand:
