@@ -8,16 +8,18 @@
 #   AC-1  happy path all-ready line ......... T3            + eval routing-all-ready
 #   AC-2  five readiness states ............. T3,T4,T5,T10  + eval routing-installed-but-disabled
 #   AC-3  verified-dependency gate .......... network suite (per-candidate proof) + T7 (declared set)
-#   AC-4  component semantics exact ......... T2 (independent oracle, not providers.md echo)
+#   AC-4  component semantics exact ......... T2 incl. T2f scoped dispatch (independent oracle)
 #   AC-5  Asana core-owned .................. T2,T7
 #   AC-6  permission boundary ............... T6,T12        + evals routing-missing-proposal, optional-never-dep
-#   AC-7  post-approval verification ........ T5 (mismatch detection) + network suite
+#   AC-7  post-approval verification ........ T5 (mismatch detection; T5c per-plugin isolation) + network suite
 #   AC-8  skill discovery ................... T12           + eval skill-discovery-suggest-only
 #   AC-9  error copy / declared-unresolved .. T4,T12        + evals refusal-after-no, declared-unresolved
 #   AC-10 setup-project integration ......... T13
 #   AC-11 isolated-config tests ............. network suite (temp CLAUDE_CONFIG_DIR); this suite is offline
 #   AC-12 manifests green + lockstep ........ T7,T8 (+ scripts/validate.sh in CI)
-#   AC-13 plugin evals ...................... T11 (suite present) + run_evals (gated: early access)
+#   AC-13 plugin evals ...................... T11 (suite present) — EXECUTION PENDING: the
+#         plugin/no-plugin arms have not run (runner is early-access gated, exit 1,
+#         recorded in isolated config); AC-13 is authored + structurally verified only
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
@@ -61,6 +63,8 @@ grep -Eq 'pr-review-toolkit.*inventory-at-verification' "$REGISTRY" 2>/dev/null
 check "T2d pr-review-toolkit inventory is discovered at verification" ok $?
 grep -Eq '[Aa]sana.*raftkit-core \(inherited\)' "$REGISTRY" 2>/dev/null
 check "T2e Asana ownership stays raftkit-core (inherited)" ok $?
+grep -qF 'code-simplifier:code-simplifier' "$REGISTRY" 2>/dev/null
+check "T2f registry records the scoped agent dispatch type (bare name collides with pr-review-toolkit)" ok $?
 
 # T3 · happy path: every required capability ready -> exact all-ready line, no plan
 run_classify plugins-all-ready.json --details "$FIX/details-ok"
@@ -89,6 +93,12 @@ run_classify plugins-all-ready.json --details "$FIX/details-mismatch"
 check "T5a mismatch run exits nonzero" fail $?
 grep -qF 'incompatible' <<<"$OUT" && grep -qE 'code-simplifier.*missing component.*agent: code-simplifier' <<<"$OUT"
 check "T5b incompatible names the absent component" ok $?
+# Regression: pr-review-toolkit's SAME-NAMED code-simplifier agent is present in
+# this details dir; it must never satisfy the code-simplifier plugin's component
+# check — inventories are strictly per-plugin (scoped dispatch, no cross-bleed).
+grep -q 'code-simplifier' "$FIX/details-mismatch/pr-review-toolkit.txt" \
+  && grep -qF 'incompatible' <<<"$OUT"
+check "T5c another plugin's same-named agent cannot satisfy the component check" ok $?
 
 # T6 · the classifier is a pure reader: it never executes anything
 grep -qE 'exec|spawn|execSync|child_process' "$CLASSIFY" 2>/dev/null

@@ -1,0 +1,10 @@
+pr-review-toolkit 1.0.0
+  Comprehensive PR review agents specializing in comments, tests, error handling
+  Source: pr-review-toolkit@claude-plugins-official
+
+Component inventory
+  Skills (1)  review-pr
+  Agents (6)  code-reviewer, silent-failure-hunter, code-simplifier, comment-analyzer, pr-test-analyzer, type-design-analyzer
+  Hooks (0)
+  MCP servers (0)
+  LSP servers (0)
