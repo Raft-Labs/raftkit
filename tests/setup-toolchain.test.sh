@@ -41,6 +41,22 @@ DETECT=$SETUP/scripts/detect-toolchain.mjs
 RENDER=$SETUP/scripts/render-assets.mjs
 FIX=tests/fixtures/toolchain
 
+# Scope-check mode: explicit, validated, argument-array git — never inferred.
+if [[ "${1:-}" == "--scope-check" ]]; then
+  base="${2:-}"; head="${3:-}"
+  allow_sc=$(grep "^allow=" "$0" | head -1 | sed "s/^allow='//;s/'$//")
+  [[ -n "$base" && -n "$head" && "$base" != -* && "$head" != -* ]] || { echo "scope-check requires <base> <head> commits"; exit 2; }
+  git rev-parse --verify --quiet "$base^{commit}" >/dev/null || { echo "scope-check: invalid or unreachable base '$base'"; exit 2; }
+  git rev-parse --verify --quiet "$head^{commit}" >/dev/null || { echo "scope-check: invalid or unreachable head '$head'"; exit 2; }
+  git merge-base --is-ancestor "$base" "$head" || { echo "scope-check: reversed or disjoint range $base..$head"; exit 2; }
+  changed="$(git diff --name-only "$base" "$head" --)"
+  echo "scope-check $base..$head — changed files:"; printf '%s\n' "$changed"
+  viol="$(grep -Ev "$allow_sc" <<<"$changed" || true)"
+  if [[ -n "$viol" ]]; then printf 'ALLOWLIST VIOLATIONS:\n%s\nscope-check: FAIL\n' "$viol"; exit 1; fi
+  echo "scope-check: PASS — every changed file is inside the approved allowlist"
+  exit 0
+fi
+
 # Fully isolated git configuration (amendment 1): temp HOME + XDG + explicit
 # temp global file + NOSYSTEM. The developer's real git config is never read
 # or mutated; the temp global file is byte-compared where the test demands it.
@@ -195,12 +211,18 @@ grep -q 'raftkit-dev:capability-preflight' "$SETUP/SKILL.md" 2>/dev/null \
 check "S40 Story A preflight seam untouched (provider ownership preserved)" ok $?
 
 # ---- S41–S43 · allowlist + version ------------------------------------------
-BASE=5028963
-allow='^(tests/setup-toolchain\.test\.sh|tests/fixtures/toolchain/|plugins/raftkit-dev/evals/setup-toolchain/|plugins/raftkit-dev/\.claude-plugin/plugin\.json|\.claude-plugin/marketplace\.json|plugins/raftkit-dev/skills/setup-project/(SKILL\.md|references/(install-flow|components)\.md|references/assets/(pre-push|quality-guardrail\.yml)|scripts/(detect-toolchain|render-assets)\.mjs))'
-viol=$(git diff --name-only "$BASE"..HEAD -- | grep -Ev "$allow" || true)
-[[ -z "$viol" ]] || echo "allowlist violations: $viol"
-[[ -z "$viol" ]]
-check "S41 Story D diff stays inside the approved file allowlist" ok $?
+# Persistent suite tests the allowlist ALGORITHM synthetically (no branch SHAs —
+# squash-safe); the real PR range audit is explicit:
+#   bash tests/setup-toolchain.test.sh --scope-check <base> <head>
+# tests/workflow-integration.test.sh is allowed solely for the separately
+# approved squash-safe scope-check refactor (cross-story test maintenance).
+allow='^(tests/setup-toolchain\.test\.sh|tests/workflow-integration\.test\.sh|tests/fixtures/toolchain/|plugins/raftkit-dev/evals/setup-toolchain/|plugins/raftkit-dev/\.claude-plugin/plugin\.json|\.claude-plugin/marketplace\.json|plugins/raftkit-dev/skills/setup-project/(SKILL\.md|references/(install-flow|components)\.md|references/assets/(pre-push|quality-guardrail\.yml)|scripts/(detect-toolchain|render-assets)\.mjs))'
+syn_ok=$'tests/setup-toolchain.test.sh\ntests/workflow-integration.test.sh\ntests/fixtures/toolchain/npm/package.json\nplugins/raftkit-dev/skills/setup-project/scripts/render-assets.mjs\nplugins/raftkit-dev/.claude-plugin/plugin.json'
+[[ -z "$(grep -Ev "$allow" <<<"$syn_ok" || true)" ]]
+check "S41a allowlist admits approved Story D paths (synthetic)" ok $?
+syn_bad=$'plugins/raftkit-dev/skills/implement/SKILL.md\nplugins/raftkit-dev/skills/docs/scripts/validate-docs.mjs\ntests/capability-preflight.test.sh'
+[[ "$(grep -Ev "$allow" <<<"$syn_bad" | wc -l | tr -d ' ')" == 3 ]]
+check "S41b allowlist flags every out-of-scope path (synthetic)" ok $?
 node -e '
   const v = JSON.parse(require("fs").readFileSync("plugins/raftkit-dev/.claude-plugin/plugin.json","utf8")).version.split(".").map(Number);
   const min = [0, 15, 0];

@@ -40,15 +40,34 @@ DEV=plugins/raftkit-dev/skills
 # the next heading matching the end regex (exclusive-ish; sed range semantics).
 sec() { sed -n "/$2/,/$3/p" "$1" 2>/dev/null; }
 
-# W1 · diff allowlist: Story C (base 9c6c2b5) may touch ONLY the approved files.
+# W1 · Story C file allowlist. The persistent suite tests the ALGORITHM against
+# synthetic changed-file lists (no branch SHAs — squash-safe). The real PR range
+# audit is explicit and caller-supplied:
+#   bash tests/workflow-integration.test.sh --scope-check <base> <head>
 # tests/docs-scripts.test.sh is allowed solely for the human-approved D22a
 # integration-branch compatibility fix (exact 0.13.0 pin -> semantic >= 0.13.0).
-BASE=9c6c2b5
 allow='^(tests/workflow-integration\.test\.sh|tests/docs-scripts\.test\.sh|plugins/raftkit-dev/evals/workflow-integration/|plugins/raftkit-dev/\.claude-plugin/plugin\.json|\.claude-plugin/marketplace\.json|plugins/raftkit-dev/skills/implement/(SKILL\.md|references/(gates|execution)\.md)|plugins/raftkit-dev/skills/pr/(SKILL\.md|references/(raise-flow|automated-review)\.md)|plugins/raftkit-dev/skills/fix-bug/(SKILL\.md|references/(fix-loop|bug-intake-and-handback)\.md)|plugins/raftkit-dev/skills/fix-production-error/(SKILL\.md|references/(incident-loop|triage-and-refusal)\.md)|plugins/raftkit-dev/skills/ui-creation/(SKILL\.md|references/(build-flow|guardrails)\.md)|plugins/raftkit-dev/skills/simplify/(SKILL\.md|references/candidate-catalog\.md)|plugins/raftkit-dev/skills/scope-guard/(SKILL\.md|references/(audit-method|output-and-signoff)\.md))'
-viol=$(git diff --name-only "$BASE"..HEAD -- | grep -Ev "$allow" || true)
-[[ -z "$viol" ]] || echo "allowlist violations: $viol"
-[[ -z "$viol" ]]
-check "W1 Story C diff stays inside the approved file allowlist" ok $?
+# Scope-check mode: explicit, validated, argument-array git — never inferred.
+if [[ "${1:-}" == "--scope-check" ]]; then
+  base="${2:-}"; head="${3:-}"
+  [[ -n "$base" && -n "$head" && "$base" != -* && "$head" != -* ]] || { echo "scope-check requires <base> <head> commits"; exit 2; }
+  git rev-parse --verify --quiet "$base^{commit}" >/dev/null || { echo "scope-check: invalid or unreachable base '$base'"; exit 2; }
+  git rev-parse --verify --quiet "$head^{commit}" >/dev/null || { echo "scope-check: invalid or unreachable head '$head'"; exit 2; }
+  git merge-base --is-ancestor "$base" "$head" || { echo "scope-check: reversed or disjoint range $base..$head"; exit 2; }
+  changed="$(git diff --name-only "$base" "$head" --)"
+  echo "scope-check $base..$head — changed files:"; printf '%s\n' "$changed"
+  viol="$(grep -Ev "$allow" <<<"$changed" || true)"
+  if [[ -n "$viol" ]]; then printf 'ALLOWLIST VIOLATIONS:\n%s\nscope-check: FAIL\n' "$viol"; exit 1; fi
+  echo "scope-check: PASS — every changed file is inside the approved allowlist"
+  exit 0
+fi
+
+syn_ok=$'tests/workflow-integration.test.sh\ntests/docs-scripts.test.sh\nplugins/raftkit-dev/skills/implement/references/gates.md\nplugins/raftkit-dev/evals/workflow-integration/case/prompt.md\nplugins/raftkit-dev/.claude-plugin/plugin.json'
+[[ -z "$(grep -Ev "$allow" <<<"$syn_ok" || true)" ]]
+check "W1a allowlist admits approved Story C paths (synthetic)" ok $?
+syn_bad=$'plugins/raftkit-dev/skills/docs/SKILL.md\nplugins/raftkit-core/skills/house-rules/SKILL.md\nplugins/raftkit-dev/skills/setup-project/SKILL.md'
+[[ "$(grep -Ev "$allow" <<<"$syn_bad" | wc -l | tr -d ' ')" == 3 ]]
+check "W1b allowlist flags every out-of-scope path (synthetic)" ok $?
 
 # W2 · implement: capability preflight placed BEFORE Gate 0 (assumes/preflight
 # area of SKILL.md and the top of gates.md Gate 0 section), with repair-guidance stop.
