@@ -1,0 +1,10 @@
+code-simplifier 9.9.9
+  Agent provider whose agent was renamed upstream
+  Source: code-simplifier@claude-plugins-official
+
+Component inventory
+  Skills (1)  simplify-helper
+  Agents (0)
+  Hooks (0)
+  MCP servers (0)
+  LSP servers (0)

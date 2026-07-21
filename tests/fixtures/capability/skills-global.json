@@ -1,0 +1,4 @@
+[
+  { "name": "envx", "path": "/home/user/.agents/skills/envx", "scope": "global" },
+  { "name": "find-skills", "path": "/home/user/.agents/skills/find-skills", "scope": "global" }
+]
