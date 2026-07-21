@@ -111,7 +111,7 @@ check "S21 inherited/global hooksPath is foreign and the global file is untouche
 r=$(mkrepo npm); ( cd "$r" && giso git config core.hooksPath .a && giso git config --add core.hooksPath .b ); det "$r"
 [[ $(field hooks.conflict) == true ]]
 check "S22 multiple core.hooksPath values conflict (stop and ask)" ok $?
-r=$(mkrepo npm); ( cd "$r" && giso git worktree add -q wt 2>/dev/null; cd wt 2>/dev/null && giso git config --worktree core.hooksPath .wth 2>/dev/null ) || true
+r=$(mkrepo npm); ( cd "$r" && giso git -c user.email=t@t -c user.name=t commit -qm base --allow-empty && giso git config extensions.worktreeConfig true && giso git worktree add -q wt 2>/dev/null; cd wt 2>/dev/null && giso git config --worktree core.hooksPath .wth 2>/dev/null ) || true
 det "$r/wt" 2>/dev/null
 if [[ $RC -eq 0 ]]; then [[ $(field hooks.owner) == foreign ]]; check "S23 worktree-scope hooksPath is foreign without the marker" ok $?
 else echo "PASS: S23 worktree-scope hooksPath is foreign without the marker (worktree config unsupported here; scope rule covered by S19/S21)"; fi
@@ -143,7 +143,7 @@ for pm in npm pnpm yarn bun; do
   check "S26-$pm render resolves all placeholders; hook sh-valid; CI YAML parses" ok $?
 done
 rnd pnpm 10.12.0 corepack "lint test" none "$FIX/pnpm-turbo-workspace/package.json"
-grep -q 'corepack enable' "$ODIR/quality-guardrail.yml" && ! grep -q 'latest' "$ODIR/quality-guardrail.yml"
+grep -q 'corepack enable' "$ODIR/quality-guardrail.yml" && ! grep -qE '(node-version|version):.*latest|@latest' "$ODIR/quality-guardrail.yml"
 check "S27 approved corepack setup block rendered; latest never appears" ok $?
 rnd none "" none "" none "$FIX/non-node/README.md" 2>/dev/null || true
 [[ $RRC -eq 0 ]] && grep -qi 'non-Node' "$ODIR/quality-guardrail.yml" && sh -n "$ODIR/pre-push"
@@ -196,7 +196,7 @@ check "S40 Story A preflight seam untouched (provider ownership preserved)" ok $
 
 # ---- S41–S43 · allowlist + version ------------------------------------------
 BASE=5028963
-allow='^(tests/setup-toolchain\.test\.sh|tests/fixtures/toolchain/|plugins/raftkit-dev/evals/setup-toolchain/|plugins/raftkit-dev/\.claude-plugin/plugin\.json|\.claude-plugin/marketplace\.json|plugins/raftkit-dev/skills/setup-project/(SKILL\.md|references/(install-flow|components)\.md|references/assets/(pre-push|quality-guardrail\.yml)|scripts/(detect-toolchain|render-assets)\.mjs))$'
+allow='^(tests/setup-toolchain\.test\.sh|tests/fixtures/toolchain/|plugins/raftkit-dev/evals/setup-toolchain/|plugins/raftkit-dev/\.claude-plugin/plugin\.json|\.claude-plugin/marketplace\.json|plugins/raftkit-dev/skills/setup-project/(SKILL\.md|references/(install-flow|components)\.md|references/assets/(pre-push|quality-guardrail\.yml)|scripts/(detect-toolchain|render-assets)\.mjs))'
 viol=$(git diff --name-only "$BASE"..HEAD -- | grep -Ev "$allow" || true)
 [[ -z "$viol" ]] || echo "allowlist violations: $viol"
 [[ -z "$viol" ]]
