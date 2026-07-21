@@ -43,9 +43,11 @@ Work `references/install-flow.md` in order — it is the transaction:
 
 1. **Preflight — validate all, write nothing.** Confirm the git repo, confirm
    `raftkit-core/governance-protocols` is readable, read the parameter table
-   (`decomposition_threshold`, `spec_path`), resolve every component's source and
-   target, detect conflicts, and determine whether the branch is protected. Any
-   failure aborts here before a single write.
+   (`decomposition_threshold`, `spec_path`), run `raftkit-dev/capability-preflight`
+   (an unresolved declared dependency stops the run with its repair guidance;
+   provider installs happen only for a plan the developer explicitly approved),
+   resolve every component's source and target, detect conflicts, and determine
+   whether the branch is protected. Any failure aborts here before a single write.
 2. **Assemble — staged, reversible.** Build the whole change set without
    committing: merge the protocols into CLAUDE.md via `claude-md-management`
    (never clobber), write the orchestrator (to `.claude/skills/orchestrator/SKILL.md`)

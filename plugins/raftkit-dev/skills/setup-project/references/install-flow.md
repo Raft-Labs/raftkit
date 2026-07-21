@@ -19,12 +19,20 @@ message and write **nothing** — no marker, no file, no config.
    skill and its `references/` are readable, and read the parameter table
    (`decomposition_threshold`, `spec_path`). If core is missing, stop — the pack
    content has no source. Never substitute remembered protocol text.
-3. **Resolve every component's plan** (see `components.md`): the live content for
+3. **Capability preflight.** Run `raftkit-dev/capability-preflight` and read its
+   report. An **unresolved declared dependency** of raftkit-dev stops the run
+   with its repair guidance — resolve it through a
+   human-approved RaftKit install/update of raftkit-dev; setup-project never
+   installs a declared dependency itself, manually or silently. Optional/conditional providers the
+   preflight proposes may join this install **only** after the developer
+   explicitly approves that exact plan; unapproved items are skipped, never
+   installed.
+4. **Resolve every component's plan** (see `components.md`): the live content for
    1–2, the three M3 assets for 3–5, the `spec_path` substitution for the hook,
    and the target paths. Detect conflicts now (existing hook, existing CLAUDE.md,
    existing CodeRabbit config) so they are handled in Phase 2, not discovered
    mid-write.
-4. **Branch/write mode.** Determine whether the current branch is protected.
+5. **Branch/write mode.** Determine whether the current branch is protected.
    Prefer `gh api` (the branch-protection endpoint) when `gh` is available and
    authenticated; if it reports protection, plan the PR path. When `gh` is
    absent or the query is inconclusive, do not assume — attempt the direct
@@ -70,9 +78,18 @@ If anything here fails, discard the staged work — nothing is committed.
   is a client-side fallback — it never edits GitHub org settings or branch
   rulesets (out of scope).
 
+Approved provider installs from the Phase 1 preflight run here as part of the
+same all-or-nothing transaction: a failed approved install aborts the run like
+any other component failure.
+
 ## Phase 4 — Verify (mandatory)
 
 The install is not done until it is verified:
+
+- **Approved providers verified by component:** for each provider installed in
+  Phase 3, confirm the exact components from the capability-preflight registry
+  exist (named skills / agent / hooks — not just the plugin name); name any that
+  are missing.
 
 - **Hook fires:** confirm `core.hooksPath` is `.githooks` and the hook file is
   executable (`test -x .githooks/pre-push`), then fire it with
