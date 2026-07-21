@@ -1,0 +1,1 @@
+{"name":"sgh","scripts":{"test":"x"},"simple-git-hooks":{"pre-push":"npm test"},"devDependencies":{"simple-git-hooks":"^2"}}

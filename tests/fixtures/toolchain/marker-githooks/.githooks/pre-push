@@ -1,0 +1,3 @@
+#!/bin/sh
+# raftkit-governance-pack managed file
+npm test

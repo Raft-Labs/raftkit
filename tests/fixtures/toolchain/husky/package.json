@@ -1,0 +1,1 @@
+{"name":"h","scripts":{"prepare":"husky","test":"vitest run"},"devDependencies":{"husky":"^9"}}
