@@ -50,6 +50,19 @@ or hunk — decide:
 Then walk the other direction: for every `[AC]`, is there a corresponding change
 or test in the diff? An AC with none → **MISSING**.
 
+## Documentation edits map like code
+
+Documentation changes in the diff follow the same fail-closed mapping, with one
+extra pass list: a docs edit is in scope when it maps to an `[AC]` **or** to an
+item on the story's Gate-1-approved **Docs Impact Plan** (the plan `implement`
+carried through Gate 1). An unmapped docs edit lands in **BEYOND** for a human
+call — regenerated churn and "while we were in there" rewrites included — each
+named with its files. And when the approved Docs Impact Plan requires docs for
+an AC, an AC whose required doc is untouched counts toward **MISSING**. This is
+presence/absence against the plan only — the audit is **not** a docs-quality
+reviewer: wording, structure, and style stay with the docs skill's own
+verification and the human reviewer.
+
 ## Fail-closed default
 
 An item that cannot be confidently mapped to an AC does **not** get the benefit

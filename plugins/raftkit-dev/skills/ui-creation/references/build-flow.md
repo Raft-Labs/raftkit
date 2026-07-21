@@ -28,7 +28,8 @@ state for this skill — a clean, correct outcome, not a failure.
 
 For each screen in the story's UI scope:
 
-1. **Designs.** If §7 links frames, build to them via `frontend-design`. If §7
+1. **Designs.** If §7 links frames, build to them via
+   `frontend-design:frontend-design`. If §7
    instead **describes the layout in words** (no frames), follow that description
    and the platform defaults — and add **no flourishes beyond the description**.
    A described layout is a constraint, not a licence to embellish.

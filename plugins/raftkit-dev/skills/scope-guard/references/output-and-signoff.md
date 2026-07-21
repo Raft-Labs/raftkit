@@ -14,9 +14,10 @@ MISSING FROM THE STORY
 ```
 
 - **BEYOND THE STORY** — one entry per flagged item, **each naming its file(s)**.
-  Includes additions that map to no `[AC]` and every Out-of-scope item that
-  appears in the diff. Blocks the PR until the item is **removed** or **explicitly
-  signed off** (sign-off logged, below).
+  Includes additions that map to no `[AC]`, every Out-of-scope item that
+  appears in the diff, and documentation edits that map to neither an `[AC]`
+  nor the Gate-1-approved Docs Impact Plan. Blocks the PR until the item is
+  **removed** or **explicitly signed off** (sign-off logged, below).
 - **MISSING FROM THE STORY** — one entry per uncovered `[AC]`, **quoting the AC
   verbatim**. Blocks the PR until the item is **built** or **explained**.
 

@@ -50,6 +50,24 @@ accessibility; do not replace an accessible native control with a custom
 look-alike that drops screen-reader support, focus order, or minimum tap-target
 size.
 
+## Provider adoption policy — adopted is required, unadopted is noted
+
+Conditional providers around the build (the `impeccable:impeccable` audit/polish
+skill, browser validation, the Expo stack pack) follow one policy, with
+readiness always reported through `raftkit-dev:capability-preflight`:
+
+- **Not adopted by the project** → the state is optional-not-selected; proceed
+  and say so with an explicit note — no silent omission.
+- **Adopted by the project/Profile or required by the story** → readiness is
+  REQUIRED. Missing or installed-but-disabled reports through the preflight and
+  the flow stops/asks per its policy. **Never silently continue without an
+  adopted provider,** never silently enable or install one, never substitute
+  something else.
+- **Browser validation** runs only when the story's ACs are browser-visible.
+- **The Impeccable audit, when it runs,** is post-implementation polish at most
+  once per build — it may not override the story's designs, its exact copy, the
+  Project Profile's tokens, or the scope contract. The story stays the spec.
+
 ## Why these are hard stops
 
 At AI velocity the tempting failure is to keep momentum by filling a gap — a

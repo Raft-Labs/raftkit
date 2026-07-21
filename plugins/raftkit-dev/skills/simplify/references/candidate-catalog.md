@@ -1,20 +1,13 @@
-# Candidate catalog — what counts, under the ponytail lens
+# Candidate catalog — how the two engines' findings become candidates
 
 What this pass looks for in the in-scope diff, and how it decides. The
-**code-simplifier** plugin does the finding and the mechanical change; this
-catalog is how its findings are read and triaged. Everything here is
-behaviour-preserving — a candidate that would change behaviour is not a
-simplification, it is a bug (and the suite catches it: see `revert-safety.md`).
-
-## The ponytail lens
-
-- **Prefer deleting code to restructuring it.** The cheapest simplification is
-  removal. Reach for a rewrite only when deletion is impossible.
-- **Introduce no new abstractions.** The pass never adds an interface, a helper, a
-  layer, or a config to "clean up" — that trades one form of over-building for
-  another. It only removes.
-- **Complexity must earn its place.** Anything present for a future that the story
-  did not ask for is a candidate for removal.
+**`code-simplifier:code-simplifier` agent** does the finding and the mechanical
+change, and **`ponytail:ponytail-review`** supplies the minimalism read of the
+same diff — the lens is that provider's method, invoked there, never restated
+here. This catalog is how their findings are triaged into RaftKit's approval
+buckets. Everything here is behaviour-preserving — a candidate that would
+change behaviour is not a simplification, it is a bug (and the suite catches
+it: see `revert-safety.md`).
 
 ## What counts as a candidate
 

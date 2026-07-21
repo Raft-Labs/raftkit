@@ -65,7 +65,9 @@ And a flagged item may only survive with the dev's **explicit, logged sign-off**
    - **BEYOND THE STORY** — every changed item (feature, field, screen, file)
      that maps to no `[AC]`, **each listed with its files**; plus any item that
      matches the story's **Out-of-scope** list — those are automatic BEYOND
-     flags, a fail condition, not a judgment.
+     flags, a fail condition, not a judgment. Documentation edits map the same
+     way: to an `[AC]` or the Gate-1-approved Docs Impact Plan, else BEYOND
+     (`references/audit-method.md`).
    - **MISSING FROM THE STORY** — every `[AC]` with no corresponding change or
      test, **the uncovered AC quoted verbatim**.
    - Fail-closed: anything that cannot be mapped to an AC lands in BEYOND.
