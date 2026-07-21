@@ -131,9 +131,15 @@ node -e '
 '
 check "T7c description lockstep includes capability preflight" ok $?
 
-# T8 · version bumped for this story
-node -e 'process.exit(JSON.parse(require("fs").readFileSync("plugins/raftkit-dev/.claude-plugin/plugin.json","utf8")).version === "0.12.0" ? 0 : 1)'
-check "T8 raftkit-dev version is 0.12.0" ok $?
+# T8 · version bumped at least to this story's release (0.12.0); later program
+# stories bump further on the shared integration branch, so assert >=, not ==.
+node -e '
+  const v = JSON.parse(require("fs").readFileSync("plugins/raftkit-dev/.claude-plugin/plugin.json","utf8")).version.split(".").map(Number);
+  const min = [0, 12, 0];
+  const cmp = v[0] - min[0] || v[1] - min[1] || v[2] - min[2];
+  process.exit(cmp >= 0 ? 0 : 1);
+'
+check "T8 raftkit-dev version is at least 0.12.0 (story A bump held)" ok $?
 
 # T9 · scope uncertainty: no parent plugin entry -> ask, never assume
 run_classify plugins-no-parent.json
