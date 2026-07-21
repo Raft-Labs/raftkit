@@ -14,9 +14,11 @@ hard gates — scope creep, missing edge cases, compounding errors — so this
 orchestrator chains the guardrails into one disciplined flow.
 
 `implement` is the conductor; the siblings are the orchestra. It **rebuilds
-nothing** — Gate 0 is `raftkit-pm/story-readiness`, planning is `superpowers:brainstorming`,
-the post-edit layers are `simplify` + `security-guidance` + the suite, Gate 2 is
-`scope-guard` + CodeRabbit, and the raise + close-out are the `pr` skill. It owns
+nothing** — Gate 0 is `raftkit-pm/story-readiness`, planning is
+`superpowers:brainstorming` + `superpowers:writing-plans`, the post-edit layers
+are `simplify` + the security-guidance hook evidence + the suite, Gate 2 is
+`raftkit-dev:docs` verify + `scope-guard` + CodeRabbit, and the raise +
+close-out are the `pr` skill. It owns
 only the **gate sequencing**, the **spec-file lifecycle**, the **pre-edit
 baseline hard stop**, the **decomposition + scoped-subagent discipline**, the
 **progress streaming**, and its own **success line** and **write-failure
@@ -40,11 +42,15 @@ governance pack's `❌ ORCHESTRATION REJECTED` string (see `references/execution
 - `raftkit-core` is installed — `workflow-constants` (GIDs, live-template fetch),
   `house-rules` (gates, escalation), `write-protocol` (draft→approve, Asana HTML).
 - The sibling skills exist: `story-readiness` (pm), `scope-guard`, `simplify`,
-  `pr`, and — when a phase needs them — `recipes` and `ui-creation`.
-- `superpowers`, `security-guidance`, and the CodeRabbit CLI are reachable.
+  `pr`, `docs`, and — when a phase needs them — `recipes` and `ui-creation`.
+- Provider readiness is `raftkit-dev:capability-preflight`'s call, run before
+  Gate 0: it reports the required capabilities with evidence. An unresolved
+  declared dependency stops the run with the preflight's repair guidance (a
+  human-approved RaftKit install/update) — this skill never improvises an
+  install and never degrades silently.
 
-If any is missing, stop and say which — use the exact `workflow-constants` stop
-messages for a missing constant or an unreachable core; never guess a GID.
+If a constant or core piece is missing, stop and say which — use the exact
+`workflow-constants` stop messages; never guess a GID.
 
 ## Parameters (read live, never hardcoded)
 
@@ -67,26 +73,30 @@ back on the story for the PM. See `references/gates.md`.
 
 ### Gate 1 · Plan  → PLAN-APPROVAL GATE
 Run plan mode with `superpowers:brainstorming`, dev in the loop. The plan states
-the **scope contract** (in scope = the ACs; everything else = out) and the
+the **scope contract** (in scope = the ACs; everything else = out), the
 **decomposition table** (phase · subagent · target files · target model ·
-dependency) of atomic units that compile in isolation. On dev approval, post the
-plan as a comment on the story **and** write it to `spec_path`. See
-`references/gates.md`.
+dependency) of atomic units that compile in isolation, and the **Docs Impact
+Plan** (a concrete affected-doc list, an evidence-backed no-impact, or an
+unknown mapping — a planning blocker, not docs-write approval). On dev
+approval, post the plan as a comment on the story **and** write it to
+`spec_path`. See `references/gates.md`.
 
 ### Build · baseline → phases → post-edit gates
 Confirm a **green pre-edit baseline** (failing build/typecheck is a hard stop —
 fix the baseline first, touch no code), branch per conventions, then execute each
 phase with a **scoped subagent** (narrow context, model per the table, test-first
-red→green). Then run the post-edit layers: `simplify` → `security-guidance` →
-lint + full suite. See `references/execution.md`.
+red→green). Then the post-edit layers: the `simplify` pass, the
+security-guidance hook evidence (hook-only — nothing to invoke), and lint +
+full suite. See `references/execution.md`.
 
 ### Gate 2 · Scope + review  → BLOCK-OR-PROCEED
-Run `scope-guard` and require its verbatim clean line (or a logged sign-off),
-then the CodeRabbit local pass. See `references/gates.md`.
+Run `raftkit-dev:docs` verify against the story's explicit change set (docs
+parity is required), then `scope-guard` with its verbatim clean line (or a
+logged sign-off), then the CodeRabbit local pass. See `references/gates.md`.
 
 ### Close out · raise + link
 Hand the raise to the `pr` skill (it owns the squash target, commitlint title,
-the four description sections, and the Asana close-out). Report the success line;
+the five description sections including the Docs result, and the Asana close-out). Report the success line;
 on an Asana write failure, give the dev the exact manual-link text. See
 `references/close-out.md`.
 

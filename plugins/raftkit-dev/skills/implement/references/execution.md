@@ -44,10 +44,12 @@ Execute the decomposition table one phase at a time.
   and its sub-prompt — never the root chat history.** Context hygiene between
   phases is the point: a subagent that sees the whole conversation drifts.
 - **Model per phase** from the table; **Sonnet is the default workhorse.**
-- **Test-first (TDD is mandatory).** Each phase starts **red**: write the failing
-  tests derived from the phase's `[AC]`s, then write only the code that turns them
-  **green**. `[AC]`s map **1:1 to tests** — one acceptance criterion, one test (or
-  named test group) that proves it.
+- **Test-first (TDD is mandatory), per `superpowers:test-driven-development`.**
+  Each phase starts **red**: write the failing tests derived from the phase's
+  `[AC]`s, then write only the code that turns them **green**. `[AC]`s map
+  **1:1 to tests** — one acceptance criterion, one test (or named test group)
+  that proves it. When a phase's failure resists the quick fix, switch to
+  `superpowers:systematic-debugging` before burning attempts.
 - **Small logical commits** as each phase goes green — conventional-commit titles,
   one concern per commit.
 - **Loop protection.** If a subagent fails to self-fix a compile/lint/test error
@@ -71,7 +73,14 @@ story's "Waiting" edge case, made visible.
 After every phase is green, run these in order — each must pass before the next:
 
 1. **`raftkit-dev/simplify`** — the code-quality simplify pass.
-2. **`security-guidance`** — the security check.
+2. **Security evidence — hook-based, nothing to invoke.** security-guidance is
+   hook-only: capability preflight confirmed it installed and enabled; its
+   PostToolUse hooks may have given feedback during the edits, and its Stop
+   review runs when the session reaches the stop boundary. Consume only the
+   security evidence the hooks actually emitted so far — address any warnings —
+   and **never fabricate or pre-claim a Stop review** that has not run.
 3. **Lint + the full test suite** — green, not just the phase tests.
 
-Only when all three pass does the run reach **Gate 2** (`references/gates.md`).
+Then walk the result with `superpowers:verification-before-completion` before
+claiming the build is Gate-2-ready. Only when all of the above pass does the
+run reach **Gate 2** (`references/gates.md`).

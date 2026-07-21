@@ -9,6 +9,12 @@ explicit human decision, or blocks — **silence is never approval**. Templates,
 
 The Definition-of-Ready gate, run on the dev side before a single edit.
 
+0. **Capability preflight first.** Before the story fetch, consult
+   `raftkit-dev:capability-preflight` for the run's required capabilities. It
+   owns the readiness contract; this gate only consumes its result. An
+   **unresolved declared dependency** stops the run with the preflight's repair
+   guidance — resolve it through a human-approved RaftKit install/update of
+   raftkit-dev; never install anything from here.
 1. **Fetch live.** Resolve the workspace GID from `workflow-constants` and fetch
    the story **and all its `[AC]` subtasks** through the Asana connector. If the
    story cannot be read, stop with the `workflow-constants` connector message —
@@ -30,8 +36,9 @@ read-only by design; the comment is `implement`'s close of the loop).
 
 ## Gate 1 · Plan (plan-approval gate)
 
-1. **Brainstorm + plan.** Run plan mode with `superpowers:brainstorming`, the dev
-   in the loop. Do not skip to a decomposition table before the approach is agreed.
+1. **Brainstorm + plan.** Run plan mode with `superpowers:brainstorming`, then
+   shape the written plan with `superpowers:writing-plans`, the dev in the loop.
+   Do not skip to a decomposition table before the approach is agreed.
 2. **State the scope contract.** In scope = the story's `[AC]`s, verbatim;
    everything else = out, echoing the story's Out-of-scope / non-goals list. This
    contract is exactly what `scope-guard` audits at Gate 2 — write it precisely.
@@ -45,9 +52,22 @@ read-only by design; the comment is `implement`'s close of the loop).
    files (read the value live from `governance-protocols`). Model per phase from
    the table — **Sonnet is the default workhorse**; reserve a stronger model for
    phases that genuinely need it and say why in the row.
-4. **Approval is a hard stop.** Present the scope contract + table and wait for the
-   dev's explicit "go". Silence is not approval.
-5. **On approval, persist the plan two ways** (both required — this is the AC):
+4. **Docs Impact Plan.** The plan carries the story's documentation impact,
+   built on `raftkit-dev:docs` discovery (ownership evidence, never guessed):
+   - a **concrete affected-doc list**, or
+   - an **evidence-backed expected no-impact**, or
+   - an **unknown mapping** — flagged for human resolution. An unknown mapping
+     may be approved only as a **planning blocker**: it is not approval to
+     write documentation. It must be resolved into an approved concrete
+     affected-doc list before any docs mutation.
+
+   Gate 1 approval of a concrete list (or no-impact) satisfies the docs
+   lifecycle's confirm step for exactly that list; if the impact expands during
+   implementation, the additions regain approval before any extra doc is
+   written.
+5. **Approval is a hard stop.** Present the scope contract + table + Docs
+   Impact Plan and wait for the dev's explicit "go". Silence is not approval.
+6. **On approval, persist the plan two ways** (both required — this is the AC):
    - Post the approved plan as a **comment on the story** (`write-protocol`: draft
      → approve → push; Asana HTML rules — single `<body>` root, no `<p>`, links
      only as `<a>`, escape `&`/`<`/`>`, no named entities).
@@ -59,6 +79,16 @@ read-only by design; the comment is `implement`'s close of the loop).
 
 Run after the post-edit gates are green (`references/execution.md`), before the PR.
 
+0. **Docs parity via `raftkit-dev:docs` verify.** Invoke verify with the
+   story's **explicit change set** — the branch diff against the fetched
+   merge-base anchor (the same anchor scope-guard uses), or the dev-confirmed
+   current diff — so the resolved commit evidence, the exact changed files, and
+   the documentation roots and ownership evidence examined are all reported.
+   The docs skill is never handed an arbitrary Git range to choose from — it
+   never claims no impact without naming what it inspected. Gate 2 proceeds only with its
+   owner strings: `Docs: updated and verified — …` or an evidence-backed
+   `Docs: not impacted — <reason>`. Code and approved docs land as one logical
+   change set — docs are never deferred to a later cleanup pass.
 1. **`scope-guard` clean.** Run `raftkit-dev/scope-guard` against this story and
    require its verbatim clean line — that string is scope-guard's, checked here,
    never re-derived:
