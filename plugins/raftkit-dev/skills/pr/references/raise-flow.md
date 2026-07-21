@@ -63,7 +63,7 @@ If the draft title fails, **do not raise**. Propose a compliant title derived fr
 the story title and branch, show why the draft failed, and require a passing title
 before raising. Rejecting without a proposal is not enough.
 
-## Build the description — four mandatory sections, all named
+## Build the description — five mandatory sections, all named
 
 The description template is fixed; every section is present and labelled:
 
@@ -73,6 +73,11 @@ The description template is fixed; every section is present and labelled:
    not built (mirrors the scope-guard audit).
 4. **Test summary** — what was tested and the result (the gates that ran, the ACs
    walked).
+5. **Docs** — the story's documentation result, carried from `raftkit-dev:docs`
+   verify: the updated files with their verification result, or the
+   evidence-backed `Docs: not impacted — <reason>` line (the owner's string,
+   reproduced, with its inspected change set). Never fabricate a docs result to
+   fill the section.
 
 A missing or empty section is a fail — do not raise a PR with an incomplete body.
 
@@ -84,7 +89,7 @@ A missing or empty section is a fail — do not raise a PR with an incomplete bo
   paraphrase, summarise, or hide which layer failed — and stop. `pr` surfaces the
   hook result; it never installs or edits the hook (that is `setup-project`).
 - **Open the PR** against the resolved squash target with the validated title and
-  the four-section body (GitHub tooling / `gh pr create`).
+  the five-section body (GitHub tooling / `gh pr create`).
 - **Reviewers** default to the repo's CODEOWNERS when present; when absent, leave
   reviewers unset and note it in the run output. Honour existing branch protections.
 

@@ -1,6 +1,6 @@
 ---
 name: pr
-description: This skill should be used when a RaftLabs developer wants to raise a pull request the house way — e.g. "raise the PR", "open a PR for this story", "run the pr skill", or when /implement reaches its final step after scope-guard is clean. It raises ONE squash-target PR (never main directly) with a commitlint-valid title (the future squash commit = the changelog line) and a description carrying the four mandatory sections (story link, AC checklist, out-of-scope confirmation, test summary), then runs pr-review-toolkit — and CodeRabbit when present — and addresses or explicitly answers every finding before a human reviewer is requested. It refuses on an empty branch or while scope-guard flags are open, and surfaces a pre-push hook failure verbatim. It NEVER merges and never approves its own PR — merging is human-only.
+description: This skill should be used when a RaftLabs developer wants to raise a pull request the house way — e.g. "raise the PR", "open a PR for this story", "run the pr skill", or when /implement reaches its final step after scope-guard is clean. It raises ONE squash-target PR (never main directly) with a commitlint-valid title (the future squash commit = the changelog line) and a description carrying the five mandatory sections (story link, AC checklist, out-of-scope confirmation, test summary, Docs result), then runs pr-review-toolkit — and CodeRabbit when present — and addresses or explicitly answers every finding before a human reviewer is requested. It refuses on an empty branch or while scope-guard flags are open, and surfaces a pre-push hook failure verbatim. It NEVER merges and never approves its own PR — merging is human-only.
 user-invocable: true
 ---
 
@@ -68,9 +68,10 @@ Work `references/raise-flow.md` then `references/automated-review.md` in order.
 3. **Run the precondition gate chain** above.
 4. **Build the title** — conventional-commit form, the changelog line for this
    story; propose a compliant one if the draft fails (`references/raise-flow.md`).
-5. **Build the description** — the four mandatory sections, all named and present:
-   story link · AC checklist · out-of-scope confirmation · test summary
-   (`references/raise-flow.md`).
+5. **Build the description** — the five mandatory sections, all named and present:
+   story link · AC checklist · out-of-scope confirmation · test summary · Docs
+   (the verified docs result or evidence-backed no-impact — a missing or empty
+   Docs section blocks the raise) (`references/raise-flow.md`).
 6. **Push + raise.** The push runs the repo pre-push hook; if it rejects, surface
    the failing layer **verbatim** (spec / lint / typecheck / tests) and stop — never
    bypass with `--no-verify`. Then open the PR against the squash target, assigning
@@ -118,7 +119,7 @@ Work `references/raise-flow.md` then `references/automated-review.md` in order.
 
 - `references/raise-flow.md` — squash-target resolution order and refusal string,
   the empty-branch and scope-guard gates, commitlint title validation with a
-  compliant proposal, the four mandatory description sections, CODEOWNERS
+  compliant proposal, the five mandatory description sections, CODEOWNERS
   reviewers, and the verbatim pre-push-failure surfacing.
 - `references/automated-review.md` — pr-review-toolkit (always) and CodeRabbit
   (optional/parameterized), the address-or-answer-before-humans gate, the success
