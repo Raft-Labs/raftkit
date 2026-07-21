@@ -43,11 +43,15 @@ Work `references/install-flow.md` in order — it is the transaction:
 
 1. **Preflight — validate all, write nothing.** Confirm the git repo, confirm
    `raftkit-core/governance-protocols` is readable, read the parameter table
-   (`decomposition_threshold`, `spec_path`), run `raftkit-dev/capability-preflight`
+   (`decomposition_threshold`, `spec_path`), run `raftkit-dev:capability-preflight`
    (an unresolved declared dependency stops the run with its repair guidance;
    provider installs happen only for a plan the developer explicitly approved),
-   resolve every component's source and target, detect conflicts, and determine
-   whether the branch is protected. Any failure aborts here before a single write.
+   run the **toolchain and ownership detection** (`scripts/detect-toolchain.mjs`
+   — collect-all-signals decision table; no writes while conflicting or
+   undetermined; hook/CI owners identified with scope; global/system git config
+   never touched), resolve every component's source and target, detect
+   conflicts, and determine whether the branch is protected. Any failure aborts
+   here before a single write.
 2. **Assemble — staged, reversible.** Build the whole change set without
    committing: merge the protocols into CLAUDE.md via `claude-md-management`
    (never clobber), write the orchestrator (to `.claude/skills/orchestrator/SKILL.md`)
@@ -79,8 +83,9 @@ change re-asserts `core.hooksPath` and reports no file changes. Details in
 ## Guardrails
 
 - **Verbatim from core.** Protocol text, the orchestrator, and the spec template
-  install byte-for-byte from raftkit-core; the only substitution anywhere is
-  `spec_path` into the hook. Never paraphrase or regenerate protocol content.
+  install byte-for-byte from raftkit-core; asset substitutions are exactly the
+  validated tokens in `references/components.md`, rendered fail-closed by
+  `scripts/render-assets.mjs`. Never paraphrase or regenerate protocol content.
 - **Merge, never clobber.** An existing CLAUDE.md keeps all its repo-specific
   content. A conflicting foreign hook or CodeRabbit config is shown side by side
   with a merge proposal for the developer to decide — only pack-managed files
