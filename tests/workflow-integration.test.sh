@@ -41,8 +41,10 @@ DEV=plugins/raftkit-dev/skills
 sec() { sed -n "/$2/,/$3/p" "$1" 2>/dev/null; }
 
 # W1 · diff allowlist: Story C (base 9c6c2b5) may touch ONLY the approved files.
+# tests/docs-scripts.test.sh is allowed solely for the human-approved D22a
+# integration-branch compatibility fix (exact 0.13.0 pin -> semantic >= 0.13.0).
 BASE=9c6c2b5
-allow='^(tests/workflow-integration\.test\.sh|plugins/raftkit-dev/evals/workflow-integration/|plugins/raftkit-dev/\.claude-plugin/plugin\.json|\.claude-plugin/marketplace\.json|plugins/raftkit-dev/skills/implement/(SKILL\.md|references/(gates|execution)\.md)|plugins/raftkit-dev/skills/pr/(SKILL\.md|references/(raise-flow|automated-review)\.md)|plugins/raftkit-dev/skills/fix-bug/(SKILL\.md|references/(fix-loop|bug-intake-and-handback)\.md)|plugins/raftkit-dev/skills/fix-production-error/(SKILL\.md|references/(incident-loop|triage-and-refusal)\.md)|plugins/raftkit-dev/skills/ui-creation/(SKILL\.md|references/(build-flow|guardrails)\.md)|plugins/raftkit-dev/skills/simplify/(SKILL\.md|references/candidate-catalog\.md)|plugins/raftkit-dev/skills/scope-guard/(SKILL\.md|references/(audit-method|output-and-signoff)\.md))'
+allow='^(tests/workflow-integration\.test\.sh|tests/docs-scripts\.test\.sh|plugins/raftkit-dev/evals/workflow-integration/|plugins/raftkit-dev/\.claude-plugin/plugin\.json|\.claude-plugin/marketplace\.json|plugins/raftkit-dev/skills/implement/(SKILL\.md|references/(gates|execution)\.md)|plugins/raftkit-dev/skills/pr/(SKILL\.md|references/(raise-flow|automated-review)\.md)|plugins/raftkit-dev/skills/fix-bug/(SKILL\.md|references/(fix-loop|bug-intake-and-handback)\.md)|plugins/raftkit-dev/skills/fix-production-error/(SKILL\.md|references/(incident-loop|triage-and-refusal)\.md)|plugins/raftkit-dev/skills/ui-creation/(SKILL\.md|references/(build-flow|guardrails)\.md)|plugins/raftkit-dev/skills/simplify/(SKILL\.md|references/candidate-catalog\.md)|plugins/raftkit-dev/skills/scope-guard/(SKILL\.md|references/(audit-method|output-and-signoff)\.md))'
 viol=$(git diff --name-only "$BASE"..HEAD -- | grep -Ev "$allow" || true)
 [[ -z "$viol" ]] || echo "allowlist violations: $viol"
 [[ -z "$viol" ]]
@@ -179,9 +181,16 @@ check "W18a >=10 eval cases each with prompt.md + graders" ok $?
 ! grep -l 'Docs: not impacted —' plugins/raftkit-dev/evals/workflow-integration/*/prompt.md 2>/dev/null | grep -q .
 check "W18b prompts do not leak the expected no-impact copy" ok $?
 
-# W19 · manifests: version + lockstep for Story C.
-node -e 'process.exit(JSON.parse(require("fs").readFileSync("plugins/raftkit-dev/.claude-plugin/plugin.json","utf8")).version === "0.14.0" ? 0 : 1)'
-check "W19a raftkit-dev version is 0.14.0" ok $?
+# W19 · manifests: version + lockstep for Story C. Asserts the story's minimum
+# introduced version (>= 0.14.0, numeric); the repository version gate owns the
+# exact current version — per the program's shared-branch rule.
+node -e '
+  const v = JSON.parse(require("fs").readFileSync("plugins/raftkit-dev/.claude-plugin/plugin.json","utf8")).version.split(".").map(Number);
+  const min = [0, 14, 0];
+  const cmp = v[0] - min[0] || v[1] - min[1] || v[2] - min[2];
+  process.exit(cmp >= 0 ? 0 : 1);
+'
+check "W19a raftkit-dev version is at least 0.14.0 (story C bump held)" ok $?
 node -e '
   const fs = require("fs");
   const m = JSON.parse(fs.readFileSync(".claude-plugin/marketplace.json", "utf8"));
