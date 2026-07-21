@@ -241,9 +241,17 @@ tcount_after=$(find "${TMPDIR:-/tmp}" -maxdepth 1 -name 'docs-skill-*' 2>/dev/nu
 [[ "$tcount_before" -eq "$tcount_after" ]]
 check "D21 no temp files left behind" ok $?
 
-# D22 · manifests: version + description lockstep for Story B
-node -e 'process.exit(JSON.parse(require("fs").readFileSync("plugins/raftkit-dev/.claude-plugin/plugin.json","utf8")).version === "0.13.0" ? 0 : 1)'
-check "D22a raftkit-dev version is 0.13.0" ok $?
+# D22 · manifests: version + description lockstep for Story B. The version
+# check asserts Story B's minimum introduced version (>= 0.13.0, numeric
+# comparison) — later program stories bump further on the shared integration
+# branch, and the repository version gate owns the exact current version.
+node -e '
+  const v = JSON.parse(require("fs").readFileSync("plugins/raftkit-dev/.claude-plugin/plugin.json","utf8")).version.split(".").map(Number);
+  const min = [0, 13, 0];
+  const cmp = v[0] - min[0] || v[1] - min[1] || v[2] - min[2];
+  process.exit(cmp >= 0 ? 0 : 1);
+'
+check "D22a raftkit-dev version is at least 0.13.0 (story B bump held)" ok $?
 node -e '
   const fs = require("fs");
   const m = JSON.parse(fs.readFileSync(".claude-plugin/marketplace.json", "utf8"));
