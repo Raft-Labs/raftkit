@@ -62,6 +62,15 @@ Fix scope is the crash. Before the PR, the diff goes to `raftkit-dev/scope-guard
 Behaviour-preserving cleanup, if wanted, is `raftkit-dev/simplify`, run
 separately. This skill adds neither; it stays on the incident.
 
+## 6b · Docs — containment is never blocked
+
+Documentation work never blocks containment: no broad docs generation runs
+inside the incident loop. A runbook or known-failure-contract update happens in
+this loop **only when the incident's own scope requires it** (the story/incident
+explicitly covers that operational contract); otherwise draft a **follow-up
+docs/architecture task proposal** alongside the systemic follow-up
+(`references/triage-and-refusal.md`) — human-approved, never auto-filed.
+
 ## 7 · Prepare — never deploy
 
 Prepare the branch and PR (regression test + containment fix) **via the

@@ -90,6 +90,13 @@ QA cannot retest a fix without knowing the build it landed in, so the hand-back 
 Red → green: repro test added, fix in PR #n, Fixed in build X — back to QA
 ```
 
+The hand-back report also carries the fix's **docs result with evidence**,
+reproduced from `raftkit-dev:docs`: either the updated doc(s) with their
+verification result (only when the documented contract was wrong or intended
+behavior changed within "Done when"), or `Docs: not impacted — <reason>` naming
+the change set examined. A bug fix never rewrites product docs by default. This
+applies to both paths' close-out.
+
 ## Path B · dev-reported
 
 No task, no template, **no Asana read at intake**. The developer found the defect; the

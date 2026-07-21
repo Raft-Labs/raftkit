@@ -127,8 +127,14 @@ Everything else in this skill serves that order. The mechanics are in
    audit — scope-guard owns it.
 5. **Simplify.** Run the sibling `raftkit-dev/simplify` for a behaviour-preserving
    minimalism pass on the fix diff.
-6. **Commit and open the PR** per the shared git conventions (below).
-7. **Close out.** Gate the claim with `superpowers:verification-before-completion` —
+6. **Docs boundary.** A bug fix does not automatically rewrite product docs.
+   Docs update (via `raftkit-dev:docs`, confirmed lifecycle) **only** when the
+   documented contract was wrong, or the intended behavior changes within the
+   bug's "Done when". Otherwise the fix carries the evidence-backed no-impact
+   result. Behavior change beyond "Done when" routes to a new story — never
+   smuggled into the fix.
+7. **Commit and open the PR** per the shared git conventions (below).
+8. **Close out.** Gate the claim with `superpowers:verification-before-completion` —
    observe the green run before asserting it — then close by path:
    - **Path A** — **fill "Fixed in build ___", mandatory.** Write the build / version
      into the bug task's "Done when" section. This is the retest contract; QA cannot
