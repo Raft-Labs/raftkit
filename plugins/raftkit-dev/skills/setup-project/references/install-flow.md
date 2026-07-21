@@ -19,7 +19,7 @@ message and write **nothing** — no marker, no file, no config.
    skill and its `references/` are readable, and read the parameter table
    (`decomposition_threshold`, `spec_path`). If core is missing, stop — the pack
    content has no source. Never substitute remembered protocol text.
-3. **Capability preflight.** Run `raftkit-dev/capability-preflight` and read its
+3. **Capability preflight.** Run `raftkit-dev:capability-preflight` and read its
    report. An **unresolved declared dependency** of raftkit-dev stops the run
    with its repair guidance — resolve it through a
    human-approved RaftKit install/update of raftkit-dev; setup-project never
@@ -27,12 +27,41 @@ message and write **nothing** — no marker, no file, no config.
    preflight proposes may join this install **only** after the developer
    explicitly approves that exact plan; unapproved items are skipped, never
    installed.
-4. **Resolve every component's plan** (see `components.md`): the live content for
-   1–2, the three M3 assets for 3–5, the `spec_path` substitution for the hook,
-   and the target paths. Detect conflicts now (existing hook, existing CLAUDE.md,
-   existing CodeRabbit config) so they are handled in Phase 2, not discovered
-   mid-write.
-5. **Branch/write mode.** Determine whether the current branch is protected.
+4. **Toolchain and ownership detection** (run `scripts/detect-toolchain.mjs`;
+   the decision table below is the contract it implements). First collect every lockfile-family
+   signal (pnpm-lock.yaml, package-lock.json, yarn.lock,
+   bun.lock/bun.lockb) and parse the `packageManager` field separately,
+   including its declared version — no signal has precedence:
+   - exactly one lockfile family with an agreeing field → **detected**;
+   - multiple lockfile families → **conflict — ask**;
+   - lockfile vs field disagreement → **conflict — ask**;
+   - package.json without a lockfile → **undetermined — ask** (npm is never
+     inferred from package.json alone);
+   - packageManager without a lockfile → **report the signal, ask** before
+     treating it as authoritative;
+   - no Node manifest → **non-Node posture** (green-skip quality steps).
+
+   **No writes occur while detection is conflicting or undetermined.** The
+   detection report also carries: the declared manager version (verbatim, never
+   invented), the repository-declared setup mechanism (e.g. Corepack via
+   `packageManager`) or `none`, any existing CI setup convention, and hook/CI
+   ownership (below). Root orchestration scripts are preferred; quality scripts
+   found only in workspace packages are reported with their locations and
+   require human selection before any command is generated — recursive or
+   filter flags are never invented.
+5. **Resolve every component's plan** (see `components.md`): the live content for
+   1–2, the rendered assets for 3–5 (from the detection + human approvals, via
+   `scripts/render-assets.mjs` — fail-closed), and the target paths. Hook and CI
+   ownership from the detection decides Phase 2 handling: pack-marker-owned
+   files update through the transaction; a foreign owner (Husky,
+   simple-git-hooks, Lefthook, unmarked `.githooks` or workflow, or any
+   `core.hooksPath` from local, worktree, inherited, or global scope without
+   the marker) gets a side-by-side merge proposal — shown with secret-looking
+   values redacted while filenames, line numbers, and command structure remain
+   — and only the developer's decision applies it. Global or system git
+   configuration is never modified. Multiple `core.hooksPath` values → stop
+   and ask.
+6. **Branch/write mode.** Determine whether the current branch is protected.
    Prefer `gh api` (the branch-protection endpoint) when `gh` is available and
    authenticated; if it reports protection, plan the PR path. When `gh` is
    absent or the query is inconclusive, do not assume — attempt the direct
