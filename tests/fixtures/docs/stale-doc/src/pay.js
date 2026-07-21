@@ -1,0 +1,1 @@
+exports.pay = () => 1;
