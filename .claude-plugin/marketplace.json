@@ -5,7 +5,9 @@
     "email": "aravind@raftlabs.com"
   },
   "description": "RaftLabs' private plugin marketplace — the RaftLabs way of shipping software, packaged for Claude Code and Claude apps.",
-  "allowCrossMarketplaceDependenciesOn": ["claude-plugins-official"],
+  "allowCrossMarketplaceDependenciesOn": [
+    "claude-plugins-official"
+  ],
   "plugins": [
     {
       "name": "raftkit-core",
@@ -22,7 +24,7 @@
     {
       "name": "raftkit-dev",
       "source": "./plugins/raftkit-dev",
-      "description": "Developer skills: implement, scope guard, simplify, PR, bug fix, UI creation, project setup, recipes, capability preflight.",
+      "description": "Developer skills: implement, scope guard, simplify, PR, bug fix, UI creation, project setup, recipes, capability preflight, docs.",
       "category": "role"
     },
     {

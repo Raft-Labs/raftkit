@@ -1,16 +1,31 @@
 {
   "name": "raftkit-dev",
   "version": "0.13.0",
-  "description": "Developer skills: implement, scope guard, simplify, PR, bug fix, UI creation, project setup, recipes, capability preflight.",
+  "description": "Developer skills: implement, scope guard, simplify, PR, bug fix, UI creation, project setup, recipes, capability preflight, docs.",
   "author": {
     "name": "RaftLabs"
   },
   "dependencies": [
     "raftkit-core",
-    { "name": "superpowers", "marketplace": "claude-plugins-official" },
-    { "name": "claude-md-management", "marketplace": "claude-plugins-official" },
-    { "name": "code-simplifier", "marketplace": "claude-plugins-official" },
-    { "name": "security-guidance", "marketplace": "claude-plugins-official" },
-    { "name": "pr-review-toolkit", "marketplace": "claude-plugins-official" }
+    {
+      "name": "superpowers",
+      "marketplace": "claude-plugins-official"
+    },
+    {
+      "name": "claude-md-management",
+      "marketplace": "claude-plugins-official"
+    },
+    {
+      "name": "code-simplifier",
+      "marketplace": "claude-plugins-official"
+    },
+    {
+      "name": "security-guidance",
+      "marketplace": "claude-plugins-official"
+    },
+    {
+      "name": "pr-review-toolkit",
+      "marketplace": "claude-plugins-official"
+    }
   ]
 }
