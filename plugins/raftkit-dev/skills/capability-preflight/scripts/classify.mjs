@@ -75,6 +75,9 @@ let ready = 0, missing = 0, disabled = 0, actionRequired = false;
 for (const row of rows) {
   const needed = needs.some((n) => n === row.capability || n === row.provider);
   const declared = /required \(declared\)/.test(row.policy);
+  // A baseline-required capability is always needed for an initialized project:
+  // it is reported missing when absent, never optional-not-selected.
+  const baseline = /baseline-required/.test(row.policy);
   const inherited = /inherited/.test(row.ownership);
   const line = (state, extra = "") =>
     report.push(`${row.capability} · ${row.provider} · ${state}${extra ? ` · ${extra}` : ""} · evidence: plugin list/details`);
@@ -90,7 +93,7 @@ for (const row of rows) {
   if (row.components.startsWith("agent skill:")) {
     const name = row.components.split(":")[1].trim();
     if (skills.some((s) => s.name === name)) { ready++; line("ready", `agent skill ${name}`); }
-    else if (needed) { missing++; actionRequired = true; line("missing"); plan.push(`Discover via: npx skills find ${name} (suggestions only; human approval required to add)`); }
+    else if (needed || baseline) { missing++; actionRequired = true; line("missing", baseline ? "baseline-required" : ""); plan.push(`Discover via: npx skills find ${name} (suggestions only; human approval required to add)`); }
     else line("optional-not-selected");
     continue;
   }
@@ -110,9 +113,9 @@ for (const row of rows) {
     missing++; actionRequired = true;
     report.push(`${row.capability} · ${row.provider} · unresolved declared dependency: ${row.provider} · evidence: plugin list`);
     plan.push(`Repair: resolve the declared dependency ${row.provider} through a human-approved RaftKit install/update of raftkit-dev. This preflight never adds or installs it at runtime.`);
-  } else if (needed || /recommended/.test(row.policy)) {
+  } else if (needed || baseline || /recommended/.test(row.policy)) {
     missing++; actionRequired = true;
-    line("missing", `available from ${row.marketplace}`);
+    line("missing", baseline ? "baseline-required" : `available from ${row.marketplace}`);
     plan.push(`Proposed install command (human approval required): claude plugin install ${row.provider}@${row.marketplace}`);
   } else {
     line("optional-not-selected");

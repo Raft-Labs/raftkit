@@ -136,6 +136,95 @@ Governance pack v<X> installed: 5 protocols, spec template, hook, CI, CodeRabbit
 Then print the one-time per-clone line teammates need:
 `git config core.hooksPath .githooks` (see components.md).
 
+## Baseline capabilities — one consolidated, approved, transactional setup
+
+Every initialized RaftKit project must have its **baseline-required**
+capabilities present, verified, and activated: claude-mem (the exact provider —
+`remember` is never a substitute), task-observer, find-skills (the skill plus
+its Skills CLI seam), frontend-design, superpowers, and envx; impeccable is
+required-available for UI work and never replaces frontend-design.
+capability-preflight classifies each; a missing baseline capability is reported
+**missing**, never `optional-not-selected`.
+
+### The consolidated setup plan (one approval)
+
+Setup first **inventories** across every location: installed Claude plugins,
+global agent skills, project agent skills, and the supported Claude / Codex /
+Cursor agent skill locations — recording each capability's enabled/disabled
+state, exact components, provenance, version, and activation seam. It then
+collects **every** missing baseline capability into **one consolidated setup
+plan** that shows, per item: exact source, version, scope, install command,
+provenance, license, and expected components. Setup waits for **one explicit
+approval** of that whole plan.
+
+### Transactional install with a real boundary
+
+On approval, all approved installs run as **one transaction**. The transaction
+boundary is real, not advisory:
+
+- Work is **staged** in isolation from the working tree until commit.
+- Every write is **journaled with its inverse** so it can be undone exactly.
+- **Verification runs inside the boundary** — every installed component and its
+  activation seam is checked before commit; a failed verification is a
+  **rollback**, not a warning.
+- Any required-install failure rolls back **all** setup-owned writes, leaving
+  **zero residue**, and reports the exact failure with its command evidence.
+- The PR-fallback path (protected branch) is covered by the same journal.
+- The boundary is exercised under an **injected failure at each phase edge**;
+  each injection must leave zero setup-owned residue.
+
+### Decline, substitution, licensing, activation
+
+- If the developer **declines** a required capability, setup **stops** and
+  reports the project **not ready** — a baseline capability is **never** left
+  `optional-not-selected`.
+- `claude-mem` is the exact provider; if only `remember` is present, claude-mem
+  is still reported missing — **no substitution, ever**.
+- Capabilities without a redistribution license (find-skills, envx, impeccable)
+  install through their **verified provider channel** (`npx skills add …`,
+  `envx skill add`, the impeccable CLI) — never a stripped copy. task-observer
+  is **CC BY 4.0**: it may be copied, and its **attribution** (Eoghan Henn /
+  rebelytics.com + the repo link) and LICENSE travel with the copy.
+- task-observer's **activation instruction** is **merged** safely into the
+  project instruction file — appended, never overwriting project-owned content.
+- Copied/installed skills are recorded in **`skills-lock.json`** (or the
+  generalized equivalent) with a content **hash** and **source** per entry.
+
+### Idempotent re-runs
+
+A re-run updates managed capabilities in place, verifies them, and refreshes
+the lockfile; it **never clobbers project-owned files**. A no-change re-run
+reports no changes.
+
+## Companion delivery across runtimes
+
+The project-local docs companion (built by the docs skill,
+`skills/docs/assets/companion/`) is delivered to the developer's agent runtimes.
+Destinations are the current documented locations (verified 2026-07-22):
+
+- **Claude Code** — `.claude/skills/` (project) or `~/.claude/skills/` (user).
+- **Codex** — `.agents/skills/` (current docs). The 2025-12-19 changelog named
+  `.codex/skills`; that conflict is **recorded**, and the installed runtime is
+  verified at install time before choosing.
+- **Cursor** (requires **2.4+**) — `.agents/skills/` or `.cursor/skills/`.
+
+RaftKit **recommends `.agents/skills/`** as the cross-agent location that serves
+Codex and Cursor from one install. Setup **detects** the environment, proposes
+an **exact destination**, and installs only after **human approval**.
+
+Runtime-specific frontmatter is **rendered** per destination by
+`scripts/render-companion.mjs`, never blind-copied: Claude-only fields
+(`user-invocable`, `disable-model-invocation` where unsupported, `allowed-tools`)
+must never leak into a Codex or Cursor artifact, and each rendered artifact is
+validated against that runtime's current native schema before it is written
+(fail-closed: a validation failure writes nothing).
+
+**Truthful fallback:** a runtime that cannot consume a native skill (version
+below requirement, or a docs-vs-installed discrepancy) is reported truthfully,
+and the companion is delivered through that runtime's supported
+project-instruction mechanism instead. An instruction file is **never** reported
+as an installed skill, and there is **no unsupported-format guessing**.
+
 ## Re-run = update (AC: re-run updates in place, shows diff, repo docs untouched)
 
 A re-run is the update path — there is no separate command.

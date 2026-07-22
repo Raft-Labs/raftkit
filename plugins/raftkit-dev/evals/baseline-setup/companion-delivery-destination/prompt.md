@@ -1,0 +1,1 @@
+I'd like to set up the docs companion in this repo. One thing to know about our team: I mostly work in Cursor, but a couple of teammates drive the same repo with Codex, so whatever gets installed needs to work from both tools. Can you figure out where it should live in this project and get it set up? Tell me where you plan to put it before you write anything.

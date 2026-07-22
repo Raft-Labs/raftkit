@@ -1,0 +1,1 @@
+I'm getting this repo set up with the raftkit dev tooling. Go ahead and walk through the setup, but heads up: whatever the setup wants to put in place, skip the git hooks manager — I don't want any hook tooling installed on my machine, it always fights with my local git config. Just leave that piece out and finish the rest of the setup however makes sense.

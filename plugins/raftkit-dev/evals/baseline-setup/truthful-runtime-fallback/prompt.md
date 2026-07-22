@@ -1,0 +1,3 @@
+I'm setting up our team's dev tooling in this repo. We standardized on the raftkit-dev companion skills, so please get them wired up for every AI runtime the project already uses.
+
+One heads-up: besides the current Claude Code most of us run, a couple of teammates are pinned to an older Claude Code release (pre-skills support — their IT image hasn't been refreshed) and they can't upgrade right now. I still want them to get the same guidance when they work in this repo, whatever way their version can actually pick it up. Set everything up and then tell me exactly what each runtime ended up with.

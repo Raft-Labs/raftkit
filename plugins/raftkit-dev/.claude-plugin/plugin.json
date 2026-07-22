@@ -1,6 +1,6 @@
 {
   "name": "raftkit-dev",
-  "version": "0.18.0",
+  "version": "0.19.0",
   "description": "Developer skills: ultrathink planning, implementation, scope guard, simplification, PRs, bug and incident fixes, UI creation, project setup, recipes, capability preflight, and the full docs product (design, generation, reverse-engineering, sync).",
   "author": {
     "name": "RaftLabs"
