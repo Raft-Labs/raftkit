@@ -54,7 +54,7 @@ check "AF5 read-before-write, comments-by-default, explicit-consent description 
 wp=$(joined "$WP")
 grep -qi 'asana-formatting' <<<"$wp" \
   && grep -qi 'single body root\|<body>' <<<"$wp" \
-  && grep -qi 'no <p>\|<p> tag' <<<"$wp" \
+  && grep -qiE 'no .?<p>.? tag' <<<"$wp" \
   && grep -qi 'attributes only on\|only element allowed to carry attributes' <<<"$wp" \
   && grep -qi 'escape' <<<"$wp" \
   && grep -qi 'draft' <<<"$wp" && grep -qi 'approve' <<<"$wp" && grep -qi 'push' <<<"$wp"

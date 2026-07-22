@@ -25,28 +25,28 @@ RENDER=$SETUP/scripts/render-companion.mjs
 DOCS_COMPANION=plugins/raftkit-dev/skills/docs/assets/companion/SKILL.md
 
 pv=$(joined "$PROV")
-grep -qiE 'claude-mem[^|]*baseline-required|baseline-required[^|]*claude-mem' <<<"$pv"
+grep -qiE '\| claude-mem \|.*baseline-required' "$PROV"
 check "BS1 claude-mem is baseline-required (exact provider)" ok $?
 
-grep -qiE 'remember[^|]*(optional|never a substitute|standalone)' <<<"$pv" \
-  && grep -qi 'never a substitute\|not a substitute\|never substitutes' <<<"$pv"
+grep -qiE '\| remember \|.*optional' "$PROV" \
+  && grep -qi 'never a substitute' "$PROV"
 check "BS2 remember is standalone optional, never a substitute for claude-mem" ok $?
 
-grep -qiE 'task-observer[^|]*baseline-required' <<<"$pv"
+grep -qiE '\| task-observer \|.*baseline-required' "$PROV"
 check "BS3 task-observer row added as baseline-required" ok $?
 
-grep -qiE '(find-skills|skill-discovery)[^|]*baseline-required' <<<"$pv" \
-  && grep -qi 'npx skills' <<<"$pv"
+grep -qiE '\| (find-skills|skill-discovery) \|.*baseline-required' "$PROV" \
+  && grep -qi 'npx skills' "$PROV"
 check "BS4 find-skills is baseline-required (skill plus Skills CLI seam)" ok $?
 
-grep -qiE 'frontend-design[^|]*baseline-required' <<<"$pv"
+grep -qiE '\| frontend-design \|.*baseline-required' "$PROV"
 check "BS5 frontend-design is baseline-required" ok $?
 
-grep -qiE 'envx[^|]*baseline-required' <<<"$pv"
+grep -qiE '\| envx \|.*baseline-required' "$PROV"
 check "BS6 envx is baseline-required" ok $?
 
-grep -qiE 'impeccable[^|]*(required-available|baseline-available)' <<<"$pv" \
-  && grep -qi 'never replac' <<<"$pv"
+grep -qiE '\| impeccable \|.*required-available' "$PROV" \
+  && grep -qi 'never replac' "$PROV"
 check "BS7 impeccable required-available for UI work, never replacing frontend-design" ok $?
 
 grep -q 'baseline-required' "$CLS" 2>/dev/null
@@ -74,9 +74,9 @@ grep -qiE 'consolidated|one .*plan|single .*plan' <<<"$ifj" \
 check "BS10 install-flow describes one consolidated setup plan gated on one approval" ok $?
 
 grep -qiE 'transaction|all-or-nothing|atomic' <<<"$ifj" \
-  && grep -qi 'roll ?back' <<<"$ifj" \
+  && grep -qiE 'rollback|roll back|rolls back' <<<"$ifj" \
   && grep -qi 'verif' <<<"$ifj" \
-  && grep -qi 'journal\|inverse\|staging' <<<"$ifj"
+  && grep -qiE 'journal|inverse|staging' <<<"$ifj"
 check "BS11 transactional install with verification, rollback, and journaled/staged boundary" ok $?
 
 grep -qiE 'decline|declined' <<<"$ifj" \

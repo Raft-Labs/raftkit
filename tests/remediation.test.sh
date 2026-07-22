@@ -73,7 +73,7 @@ check "F4 readiness rows name the evidence actually consulted (verified-inventor
 
 # ---- F5 · correctly scoped commands ---------------------------------------
 grep -qiE 'scope' "$CLS" 2>/dev/null \
-  && grep -qiE '--scope|scope flag|explicit scope|enable.*scope|install.*scope' "$CLS" 2>/dev/null
+  && grep -qiE '[-][-]scope|scope flag|explicit scope|enable.*scope|install.*scope|scope pending' "$CLS" 2>/dev/null
 check "F5 proposed enable/install commands carry the correct explicit scope or ask" ok $?
 
 # ---- F6 · Incident PR Handoff (8 elements) --------------------------------
