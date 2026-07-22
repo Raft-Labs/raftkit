@@ -124,3 +124,8 @@ required input is missing, stop and ask — naming exactly what is missing.
 - `references/tag-and-evidence.md` — the evidence-before-tag guarantee, the fresh-
   evidence format, the Retest Failed tag's run-time resolution and create-or-ask,
   and the reopen-and-return-to-dev loop that feeds the PRD §8 reopen-rate metric.
+
+
+## Asana rendering
+
+All Asana output is rendered and verified through core `asana-formatting` (per-surface tag matrix, markdown→HTML conversion, mentions, read-back verification), behind the `write-protocol` draft → approve → push gate.

@@ -1,0 +1,3 @@
+We just reworked the spec for the saved-search feature — the client killed the CSV export part and added shared search links with permission checks instead. The Asana story for it (task 1216559988771234, "Saved searches for the reports page") was written against the old spec, so it's out of date now. Two of its acceptance criteria subtasks are already checked off from work we merged last sprint.
+
+Can you bring the story in line with the new spec? Update the description and the acceptance criteria so they reflect what we're actually building now. Don't lose the history of what was already done — QA still needs to see it.

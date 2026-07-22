@@ -124,3 +124,8 @@ Work `references/raise-flow.md` then `references/automated-review.md` in order.
 - `references/automated-review.md` — pr-review-toolkit (always) and CodeRabbit
   (optional/parameterized), the address-or-answer-before-humans gate, the success
   line, and the never-merge/never-approve guardrail.
+
+
+## Asana rendering
+
+All Asana output is rendered and verified through core `asana-formatting` (per-surface tag matrix, markdown→HTML conversion, mentions, read-back verification), behind the `write-protocol` draft → approve → push gate.

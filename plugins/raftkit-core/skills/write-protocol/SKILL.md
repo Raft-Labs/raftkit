@@ -20,11 +20,22 @@ No skill ever auto-sends, auto-merges, auto-files, or auto-completes. If a workf
 
 ## Asana HTML rules (apply on push)
 
-Asana's rich-text (`html_notes` / `html_text`) is strict. A body that violates these rules is rejected or renders wrong. When pushing formatted content to Asana, apply all of the following:
+Rendering is delegated to the `asana-formatting` skill — it owns the per-surface
+tag matrix, the markdown-to-HTML conversion, object mentions, and the read-back
+verification. This gate always precedes that rendering: draft → approve → push,
+then format and verify per `asana-formatting`.
+
+These four rules are the floor `asana-formatting` refines; a body that violates
+them is rejected or renders wrong:
 
 - **Single body root.** Wrap the whole body in one root node (`<body>…</body>`); do not emit multiple top-level nodes.
 - **No `<p>` tags.** Separate paragraphs with line breaks, not paragraph elements.
 - **Attributes only on links.** The only element allowed to carry attributes is `<a>` (its `href`). Strip attributes from every other tag.
 - **Escape entities.** Escape `&`, `<`, and `>` in text content so they are not parsed as markup.
 
-When in doubt, prefer plain text with line breaks over rich formatting — it always renders and never gets rejected.
+Read before write: the default is comments, never description overwrites; a
+description is overwritten only on an explicit human instruction to do so.
+After the push, read the result back and verify the render (`asana-formatting`
+→ `references/verification.md`); a mismatch is reported, never silently
+rewritten. When in doubt, prefer plain text with line breaks over rich
+formatting — it always renders and never gets rejected.

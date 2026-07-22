@@ -173,6 +173,9 @@ contract; this skill never improvises an install.
 - `references/verification.md` — parity checklist, evidence-backed no-impact,
   the change-set input contract, exact output strings.
 - `references/reverse-engineer.md` — the full code-first restoration flow.
+- `references/story-adapter.md` · `references/bug-adapter.md` — the
+  live-template Asana story and bug adapters (render through core
+  asana-formatting behind draft → approve → push; never cached template text).
 - `assets/companion/` — the project-local companion capability (four runtime
   gates) built here, installed by setup-project.
 - `scripts/audit-docs.mjs` · `scripts/validate-docs.mjs` — deterministic pure

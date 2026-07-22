@@ -89,3 +89,8 @@ If any of these is missing, **ask before doing anything else** (the Empty state)
   and derive the `[AC]` + fixed subtasks from the story's content.
 - **`references/epic-splitting.md`** — the cohesive-vs-epic judgment and how epics
   are structured one sub-story at a time.
+
+
+## Asana rendering
+
+All Asana output is rendered and verified through core `asana-formatting` (per-surface tag matrix, markdown→HTML conversion, mentions, read-back verification), behind the `write-protocol` draft → approve → push gate.

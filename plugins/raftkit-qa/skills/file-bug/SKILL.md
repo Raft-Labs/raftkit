@@ -110,3 +110,8 @@ a required input is missing, stop and ask — naming exactly what is missing.
   evidence tiers, and the no-Jam fallback.
 - `references/filing-rules.md` — title format, the severity-vs-priority axes, the
   pre-submit checklist, one-bug-per-ticket, and Asana placement.
+
+
+## Asana rendering
+
+All Asana output is rendered and verified through core `asana-formatting` (per-surface tag matrix, markdown→HTML conversion, mentions, read-back verification), behind the `write-protocol` draft → approve → push gate.

@@ -128,3 +128,8 @@ that (see Guardrails).
   Project Profile delta (changed / new / now-confirmed, aligned with
   `project-onboarding`'s profile format) and the task batch (assignee resolution,
   the Asana free-tier task shape, and per-task reporting).
+
+
+## Asana rendering
+
+All Asana output is rendered and verified through core `asana-formatting` (per-surface tag matrix, markdown→HTML conversion, mentions, read-back verification), behind the `write-protocol` draft → approve → push gate.
