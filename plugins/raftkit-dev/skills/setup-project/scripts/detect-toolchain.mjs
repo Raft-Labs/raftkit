@@ -73,19 +73,32 @@ if (pkg && pkg["simple-git-hooks"]) managers.push("simple-git-hooks");
 if (has("lefthook.yml") || has("lefthook.yaml")) managers.push("lefthook");
 if (has(".githooks")) managers.push("tracked-githooks");
 
-let hooksPath = null, scope = null, conflict = false, proposal = null;
+// F3: read core.hooksPath with scope AND origin, keeping every value. Multiple
+// values are a conflict that stops and asks with the full evidence preserved.
+let hooksPath = null, scope = null, origin = null, conflict = false, proposal = null;
+let hooksValues = [];
 try {
-  const out = execFileSync("git", ["-C", root, "config", "--show-scope", "--get-all", "core.hooksPath"], { encoding: "utf8" }).trim();
+  const out = execFileSync("git", ["-C", root, "config", "--show-scope", "--show-origin", "--get-all", "core.hooksPath"], { encoding: "utf8" }).trim();
   if (out) {
-    const lines = out.split("\n").map((l) => { const [s, ...v] = l.split(/\s+/); return { scope: s, value: v.join(" ") }; });
-    if (lines.length > 1) conflict = true;
-    hooksPath = lines[0].value; scope = lines[0].scope;
+    // Each line: "<scope>\t<origin>\t<value>" (scope/origin/value tab- or
+    // space-separated depending on git version) — keep all three.
+    hooksValues = out.split("\n").map((l) => {
+      const parts = l.split(/\s+/);
+      return { scope: parts[0], origin: parts[1], value: parts.slice(2).join(" ") };
+    });
+    if (hooksValues.length > 1) conflict = true;
+    hooksPath = hooksValues[0].value; scope = hooksValues[0].scope; origin = hooksValues[0].origin;
   }
 } catch { /* not a repo or unset — hooksPath stays null */ }
 
-const markerOwned = has(".githooks/pre-push") && rd(".githooks/pre-push").includes(MARKER);
+// A symlinked hook file is FOREIGN regardless of what its target contains — a
+// symlink is never a pack-owned tracked file even if the target carries the
+// marker.
+const hookIsSymlink = (() => { try { return lstatSync(path.join(root, ".githooks/pre-push")).isSymbolicLink(); } catch { return false; } })();
+const markerOwned = has(".githooks/pre-push") && !hookIsSymlink && rd(".githooks/pre-push").includes(MARKER);
 let owner = "none";
-if (markerOwned && scope !== "global" && scope !== "system") owner = "pack";
+if (hookIsSymlink) owner = "foreign";
+else if (markerOwned && scope !== "global" && scope !== "system") owner = "pack";
 else if (managers.length || hooksPath) owner = "foreign";
 
 if (owner === "foreign") {
@@ -113,7 +126,11 @@ const report = {
     ? "quality scripts exist only in workspace packages — human selection required before any command is generated"
     : null,
   setupReport,
-  hooks: { hooksPath, scope, owner, managers, conflict, proposal },
+  // F3: origin and every value are preserved; a multi-value conflict carries
+  // its full scope+origin+value evidence for the human to resolve.
+  hooks: { hooksPath, scope, origin, owner, managers, conflict, symlink: hookIsSymlink,
+           values: hooksValues, proposal,
+           conflictNote: conflict ? "multiple core.hooksPath values — stop and ask; do not choose one silently" : null },
   ci,
   writesAllowed: state === "detected" || state === "non-node",
 };

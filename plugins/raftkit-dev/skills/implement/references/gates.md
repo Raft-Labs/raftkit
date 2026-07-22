@@ -107,3 +107,11 @@ Run after the post-edit gates are green (`references/execution.md`), before the 
 
 Only when both are satisfied does the run proceed to the `pr` skill
 (`references/close-out.md`).
+
+## Gate evidence is SHA-bound
+
+Every gate's evidence records the change-set SHA it inspected. A gate refuses
+evidence recorded at a different SHA than the current branch head with
+`evidence stale — inspected <sha-a>, current <sha-b>`, and the evidence must be
+regenerated at the current head — no gate reuses stale evidence from another
+change set.

@@ -173,8 +173,21 @@ function main() {
   const findings = [...d.walkFindings];
 
   if (opts.convention) {
-    if (!within(root, path.resolve(root, opts.convention)) && !existsSync(opts.convention)) bad(`--convention not found: ${opts.convention}`);
-    const desc = JSON.parse(readFileSync(opts.convention, "utf8"));
+    // F2: the descriptor must resolve INSIDE the repository root, symlink-aware,
+    // regardless of whether an out-of-root path happens to exist. A descriptor
+    // outside the root is bad input — never read.
+    const resolved = path.resolve(opts.convention);
+    if (!withinReal(root, resolved)) bad(`--convention must stay inside the repository root: ${opts.convention}`);
+    if (!existsSync(resolved)) bad(`--convention not found: ${opts.convention}`);
+    // Minimal, truthful descriptor schema (F2): the only accepted fields are
+    // `convention` (string — the authoritative documentation convention this
+    // repository uses) and an optional `note` (string — human context). Any
+    // other key is rejected; the descriptor asserts only what it names.
+    const desc = JSON.parse(readFileSync(resolved, "utf8"));
+    const allowed = new Set(["convention", "note"]);
+    const unknown = Object.keys(desc).filter((k) => !allowed.has(k));
+    if (unknown.length) bad(`--convention descriptor has unknown field(s): ${unknown.join(", ")} (schema: convention, note)`);
+    if ("convention" in desc && typeof desc.convention !== "string") bad("--convention descriptor field 'convention' must be a string");
     if (desc.convention && d.convention !== "none" && desc.convention !== d.convention) {
       console.error(`convention conflict:\n  discovered from the repository: ${d.convention}\n  approved descriptor (${opts.convention}): ${desc.convention}\nNo documentation was touched. Decide which convention should be authoritative — ask the human and update the descriptor or the docs, then re-run.`);
       process.exit(2);

@@ -5,6 +5,18 @@
 // remains, and render NOTHING when any validation fails. Deterministic: the
 // same approved inputs always produce byte-identical output.
 //
+// Rendering safety (F1): every substituted value reaches the pre-push hook
+// shell-safe and the CI workflow YAML-safe.
+//   - Shell (pre-push): script/role names are charset-proven by NAME_RE
+//     (no whitespace, quotes, $, backticks, newlines, or leading dash), and the
+//     package-manager identity is an enum plus a control/injection reject — so
+//     values are charset-proven safe in the hook's `$PM run <name>` lines. The
+//     hook additionally quotes each value at use ("$gate"), so even a
+//     charset-proven value is never word-split.
+//   - CI (quality-guardrail.yml): the same charset-proven values are emitted as
+//     single-quoted YAML scalars in every `run:` line, so no value can inject
+//     YAML structure. A value that fails validation renders nothing (exit 3).
+//
 // Usage: node render-assets.mjs --templates <dir> --out-dir <dir>
 //   --pm <pnpm|npm|yarn|bun|none> [--pm-version <x.y.z>]
 //   --setup <none|corepack|setup-node-cache-any|setup-bun>
@@ -73,9 +85,11 @@ const SETUP_BLOCKS = {
 };
 if (!(setup in SETUP_BLOCKS)) fail(`setup option '${setup}' is not one of the documented options (${Object.keys(SETUP_BLOCKS).join("|")})`);
 
+// CI run lines are emitted as single-quoted YAML scalars so a (charset-proven)
+// value can never inject YAML structure — YAML-encoding, defence in depth.
 const qualitySteps = pm === "none"
   ? '      - run: echo "non-Node repository — quality steps skipped (no Node manifest)"'
-  : scripts.map((s) => `      - run: ${pm} run ${s}`).join("\n") || '      - run: echo "no quality scripts approved for this repository"';
+  : scripts.map((s) => `      - run: '${pm} run ${s}'`).join("\n") || '      - run: echo "no quality scripts approved for this repository"';
 
 // --- substitution over the shipped templates --------------------------------
 const subs = {

@@ -51,3 +51,19 @@ All discovery walks are root-confined (out-of-root symlinks refused and
 reported, never followed) and exclusion-aware (VCS metadata, dependency/vendor
 directories, build output, caches, auth state, and secret/env files are skipped
 — secret files are counted as metadata, their contents never read).
+
+## The descriptor schema (minimal and truthful)
+
+A project-owned convention descriptor (proposed, never auto-created) has a
+minimal, documented schema — it asserts only what it names:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `convention` | string | the authoritative documentation convention this repository uses |
+| `note` | string (optional) | human context for the choice |
+
+`scripts/validate-docs.mjs --convention <path>` enforces this: the descriptor
+must resolve **inside** the repository root (symlink-aware — an out-of-root path
+is rejected even if it exists), and **any unknown field is rejected**. The
+descriptor never overrides a discovered repository convention silently; a
+descriptor-vs-discovery clash stops with the conflict reported (exit 2).

@@ -53,3 +53,13 @@ Ownership evidence: <the mapping source(s) consulted>
 Machine output goes to stdout or an explicit `--out` path inside the repository
 root — no unsolicited report files, and temporary artifacts are cleaned after
 verification.
+
+## Incident-evidence branch
+
+When verification runs for a production incident (from the Incident PR Handoff,
+not a story), the operational-docs element is produced against the **explicit
+containment change set** using this skill's ordinary evidence forms: an in-scope
+runbook/known-failure update, an evidence-backed `Docs: not impacted — <reason>`
+naming the inspected incident change set, or a drafted follow-up task. There is
+no second lifecycle and no invented spec; the incident change set (with its SHA)
+is the scope. Story-mode verification is unchanged.

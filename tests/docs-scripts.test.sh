@@ -166,8 +166,10 @@ run_validate --root "$secdir/repo" --json
 ! grep -q 'FAKE-VALUE-FOR-TEST-ONLY' <<<"$OUT" && ! grep -q 'node_modules/pkg/index.js' <<<"$OUT"
 check "D14b secret/vendor contents excluded from validation output" ok $?
 
-# D15 · convention conflict: descriptor vs discovery -> report both, exit 2, ask
-conv="$(mktemp)"; tmpdirs+=("$conv")
+# D15 · convention conflict: descriptor vs discovery -> report both, exit 2, ask.
+# The descriptor is project-owned, so it lives INSIDE the repo root (F2 rejects
+# an out-of-root descriptor); write it into the fixture and clean it up.
+conv="$FIX/module-indexed/.raftkit-docs-convention.json"; tmpdirs+=("$conv")
 printf '{"convention":"flat-ownership-indexed"}\n' > "$conv"
 run_validate --root "$FIX/module-indexed" --convention "$conv"
 [[ $RC -eq 2 ]] && grep -q 'module-indexed' <<<"$OUT" && grep -q 'flat-ownership-indexed' <<<"$OUT" \

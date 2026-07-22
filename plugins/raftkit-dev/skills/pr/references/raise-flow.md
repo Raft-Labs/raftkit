@@ -94,3 +94,33 @@ A missing or empty section is a fail — do not raise a PR with an incomplete bo
   reviewers unset and note it in the run output. Honour existing branch protections.
 
 One PR per story — stacked / multi-story PRs are out of scope in v1.
+
+## Incident mode (activated only by a structured handoff)
+
+`pr` has a bounded **incident mode**, entered **only** through a structured
+Incident PR Handoff from `fix-production-error` (its eight elements are defined
+in that skill's `references/incident-loop.md`). Incident mode is never inferred:
+the normal PR path still **hard-fails without a story**, and there is **no
+silent downgrade** to incident mode ever.
+
+In incident mode `pr`:
+
+1. Validates the handoff is complete — a missing element is a named hard stop.
+2. Builds the description's sections **from the handoff's evidence** — it never
+   invents a story, `[AC]`s, or a spec that a raw incident does not have.
+3. Applies the unchanged squash-target, commitlint, pre-push, and never-merge
+   rules.
+4. States that deployment stays human- and release-train-controlled.
+
+Incident evidence is **SHA-bound** like every other gate (below).
+
+## SHA-bound gate evidence
+
+Every gate's evidence records the exact change-set SHA it inspected
+(`{ gate, sha, timestamp, result }`). Before a gate result is consumed, the
+branch head is compared against the evidence's recorded SHA; if they differ the
+gate **refuses** with the exact line `evidence stale — inspected <sha-a>,
+current <sha-b>` and demands regeneration. **Regeneration is the only cure** —
+no gate ever passes on evidence bound to a different change set. This covers the
+scope-guard clean line, the Docs Impact Plan and docs verify, the automated
+review, and the test summary alike.

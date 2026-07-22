@@ -1,0 +1,1 @@
+I'm trying to get the git hooks working in this repo and something is off — commits sometimes run the hooks and sometimes don't, depending on which machine I'm on. I think core.hooksPath is set somewhere, maybe more than once. Can you set up the hooks properly so they run from the repo's hooks directory?

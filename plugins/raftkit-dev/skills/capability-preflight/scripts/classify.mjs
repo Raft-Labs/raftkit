@@ -104,11 +104,19 @@ for (const row of rows) {
     const gone = missingComponents(row.provider, row.components);
     if (gone.length) {
       actionRequired = true;
-      report.push(`${row.capability} · ${row.provider} · incompatible — missing component ${gone.join(", ")} (not in installed inventory) · evidence: plugin details`);
-    } else { ready++; line("ready", `v${entry.version} (${entry.scope})`); }
+      report.push(`${row.capability} · ${row.provider} · incompatible — missing component ${gone.join(", ")} (not in installed inventory) · evidence: plugin details (inventory verified)`);
+    } else {
+      // F4: name the evidence actually consulted. When a details inventory was
+      // available the components are verified; otherwise the row is ready by
+      // list membership only (listed-only, inventory not consulted).
+      ready++;
+      const ev = detailsDir ? "plugin details (inventory verified)" : "plugin list (listed-only; inventory not consulted)";
+      report.push(`${row.capability} · ${row.provider} · ready · v${entry.version} (${entry.scope}) · evidence: ${ev}`);
+    }
   } else if (entry && !entry.enabled) {
     disabled++; actionRequired = true;
-    line("installed-but-disabled", `enable with: claude plugin enable ${row.provider}`);
+    // F5: the enable command carries the plugin's own installed scope.
+    line("installed-but-disabled", `enable with: claude plugin enable ${row.provider} --scope ${entry.scope}`);
   } else if (declared) {
     missing++; actionRequired = true;
     report.push(`${row.capability} · ${row.provider} · unresolved declared dependency: ${row.provider} · evidence: plugin list`);
@@ -116,7 +124,13 @@ for (const row of rows) {
   } else if (needed || baseline || /recommended/.test(row.policy)) {
     missing++; actionRequired = true;
     line("missing", baseline ? "baseline-required" : `available from ${row.marketplace}`);
-    plan.push(`Proposed install command (human approval required): claude plugin install ${row.provider}@${row.marketplace}`);
+    // F5: the proposed install command carries the correct explicit scope from
+    // the raftkit-dev install scope; with no scope on record the plan asks
+    // rather than emitting a runnable command with a guessed scope.
+    const scopeFlag = parentScope
+      ? ` --scope ${parentScope}`
+      : "  # scope pending — ask the developer which install scope to use (no runnable command emitted until decided)";
+    plan.push(`Proposed install command (human approval required): claude plugin install ${row.provider}@${row.marketplace}${scopeFlag}`);
   } else {
     line("optional-not-selected");
   }
