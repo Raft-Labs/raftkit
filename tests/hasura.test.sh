@@ -29,9 +29,11 @@ PROV=plugins/raftkit-dev/skills/capability-preflight/references/providers.md
   && [[ -f "$H/scripts/lib/common.sh" && -f "$H/scripts/lib/dbml_grep.sh" && -f "$H/scripts/lib/fk_parse.sh" && -f "$H/scripts/lib/perms.sh" && -f "$H/scripts/lib/render.sh" ]]
 check "HR1 core bundle present (SKILL, 3 references, 3 scripts, 5 libs)" ok $?
 
+# The source bundle has 19 .tmpl files (machine-verified from disk; the Phase-0
+# audit's "18" undercounted permission-only, which ships up.sql only).
 tmpl_count=$(find "$H/templates" -name '*.tmpl' 2>/dev/null | wc -l | tr -d ' ')
-[[ "$tmpl_count" -eq 18 ]]
-check "HR2 all 18 migration templates ported" ok $?
+[[ "$tmpl_count" -eq 19 ]]
+check "HR2 all 19 migration templates ported" ok $?
 
 test_count=$(find "$H/scripts/tests" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')
 [[ "$test_count" -ge 8 ]]
@@ -78,7 +80,10 @@ if [[ -f "$DETECT" ]]; then
   d1=$?
   nd=$(mktemp -d); printf '{"name":"x"}' > "$nd/package.json"
   out2=$(node "$DETECT" --root "$nd" 2>/dev/null); dec2=$?
-  ! echo "$out2" | grep -qiE 'detected|activate' && [[ "$dec2" -ne 0 ]]
+  # Non-detection is signalled by exit code and the "no Hasura signals" line;
+  # the message intentionally says "does not activate", so match the negative
+  # signal precisely rather than the word "activate".
+  echo "$out2" | grep -qi 'no Hasura signals' && [[ "$dec2" -ne 0 ]]
   d2=$?
   [[ "$d1" -eq 0 && "$d2" -eq 0 ]]
   check "HR9 detection activates on Hasura signals and stays silent on non-Hasura repos" ok $?

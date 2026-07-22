@@ -1,0 +1,1 @@
+We need a new table on our Hasura project for tracking customer feedback. Call it `feedback` — it should have an `id`, a `comment` text field, a `rating` integer, and the usual timestamps. Set it up the way we do the rest of our tables, migrations and all, so I can review it before it goes anywhere.

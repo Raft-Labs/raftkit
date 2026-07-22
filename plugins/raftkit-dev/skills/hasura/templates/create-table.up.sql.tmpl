@@ -1,0 +1,15 @@
+CREATE TABLE public.{{TABLE}} (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+{{COLUMNS_SQL}}
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  deleted_at timestamptz
+);
+
+CREATE TRIGGER set_{{TABLE}}_updated_at
+  BEFORE UPDATE ON public.{{TABLE}}
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+{{INDEXES_SQL}}
+CREATE INDEX idx_{{TABLE}}_deleted_at_null
+  ON public.{{TABLE}}(id) WHERE deleted_at IS NULL;

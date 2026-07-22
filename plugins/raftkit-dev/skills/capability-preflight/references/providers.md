@@ -27,6 +27,7 @@ classifier (`scripts/classify.mjs`) parses this table verbatim.
 | browser-validation | playwright | claude-plugins-official | browser tools | conditional: browser-visible ACs | raftkit-dev |
 | mobile-stack | expo | claude-plugins-official | stack pack | conditional: mobile scope | raftkit-dev |
 | neon-db | neon | claude-plugins-official | database skills/tools | conditional: Neon usage detected or profiled | raftkit-dev |
+| hasura-migrations | raftkit-dev:hasura | — | skill: hasura (migration/metadata/permission workflow) | conditional: Hasura project detected (config.yaml / metadata / migrations dir) | raftkit-dev |
 | encrypted-env | envx | — | agent skill: envx | baseline-required | raftkit-dev |
 | memory | claude-mem | — | agent skill: claude-mem | baseline-required (exact provider; remember is never a substitute) | raftkit-dev |
 | memory-alt | remember | — | agent skill: remember | optional (standalone; never a substitute for claude-mem) | raftkit-dev |
