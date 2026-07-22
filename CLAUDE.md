@@ -28,8 +28,9 @@ plugins/
   raftkit-core/   # house rules, workflow constants, governance protocols pack
   raftkit-pm/     # onboarding, user-story, story-skill-generator, story-readiness,
                   # status-update, meeting-decisions, estimation        (Cowork)
-  raftkit-dev/    # implement, scope-guard, simplify, pr, fix-bug, ui-creation,
-                  # setup-project, fix-production-error, recipes   (Claude Code)
+  raftkit-dev/    # ultrathink, implement, scope-guard, simplify, pr, fix-bug,
+                  # ui-creation, setup-project, fix-production-error, recipes,
+                  # capability-preflight, docs                     (Claude Code)
   raftkit-qa/     # test-suite, test-run-sheet, file-bug, retest        (Cowork)
 ```
 

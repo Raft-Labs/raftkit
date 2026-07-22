@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ultrathink"
+  short_description: "Evidence-backed thinking and planning"
+  default_prompt: "Use $ultrathink to think this request through and produce a verification-aware plan."
