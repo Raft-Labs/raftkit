@@ -1,6 +1,6 @@
 ---
 name: story-readiness
-description: This skill should be used when a RaftLabs PM wants to check whether a story is ready to hand to a developer — e.g. "is this story ready?", "run the readiness gate on this task", "audit this story against the template", "Definition-of-Ready check", or before handing any story to the dev plugin. Fetches the live User Story Template and the story from Asana, audits the story's completeness against it, and returns a binary PASS / NOT READY verdict with an actionable gap list. It is strictly read-only — it never edits or fixes the story.
+description: This skill should be used when a RaftLabs PM wants to check whether a story is ready to hand to a developer — e.g. "is this story ready?", "run the readiness gate on this task", "audit this story against the template", "Definition-of-Ready check", or before handing any story to the dev plugin. Fetches the live Feature Template and the story from Asana, audits the story's completeness against it, and returns a binary PASS / NOT READY verdict with an actionable gap list. It is strictly read-only — it never edits or fixes the story.
 user-invocable: true
 ---
 
@@ -37,7 +37,7 @@ both sides. Building that dev-side enforcement is out of scope here.
 ## Run flow
 
 1. **Resolve constants and fetch the live template.** Get the workspace GID and the
-   User Story Template GID from `raftkit-core/workflow-constants`, then fetch the
+   Feature Template GID from `raftkit-core/workflow-constants`, then fetch the
    template task **live** via the Asana connector — every run, never from memory or
    this repo. The freshly fetched template is the sole authority for what a complete
    story looks like this run (its section list, its WEESLD rows, its required

@@ -13,7 +13,7 @@ Before declaring a freshly emitted `<project>-user-story` skill ready:
    On a first generation that is the just-emitted skill; on a regeneration it is the **candidate
    specifically** (by its distinct staging identity), never a co-resident prior version. Confirm
    the story was produced by the skill under test before trusting the result.
-2. **Compare against the live template.** Fetch the live User Story Template
+2. **Compare against the live template.** Fetch the live Feature Template
    (`raftkit-core/workflow-constants`) and check the validation story matches it: every
    template section present, the WEESLD rows covered, and the `[AC]` / `Development` /
    `Testing` / `Bugs` subtasks shaped per the conventions.

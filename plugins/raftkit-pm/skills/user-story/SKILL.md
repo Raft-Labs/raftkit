@@ -1,6 +1,6 @@
 ---
 name: user-story
-description: This skill should be used when a RaftLabs PM wants to write, generate, or draft a user story for a project into an Asana task — e.g. "write a user story", "draft the story for password reset", "turn this scope into a RaftLabs story", "generate the user-story for this feature". Reads the live User Story Template from Asana as the format authority, grounds every claim in the PM-supplied source of truth, and writes only after approval.
+description: This skill should be used when a RaftLabs PM wants to write, generate, or draft a user story for a project into an Asana task — e.g. "write a user story", "draft the story for password reset", "turn this scope into a RaftLabs story", "generate the user-story for this feature". Reads the live Feature Template from Asana as the format authority, grounds every claim in the PM-supplied source of truth, and writes only after approval.
 user-invocable: true
 ---
 
@@ -39,7 +39,7 @@ If any of these is missing, **ask before doing anything else** (the Empty state)
 ## Run flow
 
 1. **Resolve constants and fetch the live template.** Get the workspace GID and
-   the User Story Template GID from `raftkit-core/workflow-constants`, then fetch
+   the Feature Template GID from `raftkit-core/workflow-constants`, then fetch
    the template task live via the Asana connector — every run, never from memory
    or this repo. The template (and its comments) is the format authority; its
    comments are guidance for this skill only and are never copied into a story.

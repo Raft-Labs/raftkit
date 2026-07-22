@@ -14,7 +14,7 @@ Methodology of everything RaftKit produces (and of building RaftKit itself): **S
 ## Workflow constants (never cache the content — read live by GID)
 
 - Asana workspace: `1194107417268910`
-- User Story Template (format authority): task `1215247022658928`
+- Feature Template (format authority): task `1216778429401199`
 - Bugs Template (format authority): task `1215260732424760`
 - raftkit board: project `1216551447756315`
 - Release train / git model: task `1216207700369490`
@@ -62,7 +62,6 @@ Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Veri
 | Marketplace repo home (`1216551001744293`) | This repo may move orgs — avoid hardcoded repo URLs |
 | Project Profile home (`1216550765662503`) | Where onboarding writes / skills read profiles |
 | CodeRabbit licensing (`1216551482947559`) | pr + setup-project stories reference it |
-| Merged template w/ Ebrahim (`1216550717291989`) | Template GIDs in core constants may change |
 | Spec path + decomposition threshold (`1216550892331152`) | Governance pack ships these as parameters with defaults |
 
 ## Build order

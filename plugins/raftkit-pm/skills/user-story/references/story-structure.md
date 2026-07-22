@@ -1,6 +1,6 @@
 # Story structure — mirror the live template, derive the subtasks
 
-The generated story must match the **live** User Story Template exactly. The
+The generated story must match the **live** Feature Template exactly. The
 template is fetched fresh every run (see `raftkit-core/workflow-constants`); it is
 the sole authority for structure. Never reproduce a section list from memory —
 read it off the freshly fetched template each time.

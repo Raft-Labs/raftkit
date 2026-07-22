@@ -19,7 +19,7 @@ project's *specialized sibling* of it.
 
 **Bake CONTEXT, never FORMAT — and never generate without an approved profile.**
 Context (glossary, roles, conflict hierarchy, source links) is what changes per project
-and is safe to bake. Format is the User Story Template, which changes in Asana and must
+and is safe to bake. Format is the Feature Template, which changes in Asana and must
 be read **live** every run — baking it would ship a stale story shape silently, the exact
 failure RaftKit's live-fetch design exists to prevent. If there is no approved Project
 Profile, do not proceed and do not improvise one from raw sources.

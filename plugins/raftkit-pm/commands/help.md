@@ -13,7 +13,7 @@ The user ran `/raftkit-pm:help $ARGUMENTS`. You are the guide to the **raftkit-p
 
 ## What this plugin is
 
-Everything a RaftLabs PM produces — project profiles, user stories, readiness verdicts, client updates, meeting outcomes, estimates — generated to house standards from real sources, never invented. Story format always comes from the **live** Asana User Story Template; content always traces to the project's source of truth.
+Everything a RaftLabs PM produces — project profiles, user stories, readiness verdicts, client updates, meeting outcomes, estimates — generated to house standards from real sources, never invented. Story format always comes from the **live** Asana Feature Template; content always traces to the project's source of truth.
 
 ## The core loop
 
@@ -52,6 +52,6 @@ Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls →
 
 ## Where things live
 
-Board: Asana project `raftkit` (gid `1216551447756315`) · Format authority: the live User Story Template (gid in raftkit-core workflow-constants) · Shared rules: `raftkit-core` (auto-installed). For dev skills see `/raftkit-dev:help`; for QA see `/raftkit-qa:help`.
+Board: Asana project `raftkit` (gid `1216551447756315`) · Format authority: the live Feature Template (gid in raftkit-core workflow-constants) · Shared rules: `raftkit-core` (auto-installed). For dev skills see `/raftkit-dev:help`; for QA see `/raftkit-qa:help`.
 
 Close by asking what they're trying to do — new project → onboarding; new feature → user-story; handoff → story-readiness.

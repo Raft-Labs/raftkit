@@ -1,6 +1,6 @@
 ---
 name: workflow-constants
-description: This skill should be used whenever a RaftKit skill needs a workflow constant — the Asana workspace GID, the User Story or Bugs template task GID, or the subtask naming conventions — or must fetch a live template from Asana. Consult it before reading, creating, or formatting any Asana task, even when the constant is not named explicitly. It is the single source of these identifiers; never guess them or reuse remembered template content.
+description: This skill should be used whenever a RaftKit skill needs a workflow constant — the Asana workspace GID, the Feature or Bugs template task GID, or the subtask naming conventions — or must fetch a live template from Asana. Consult it before reading, creating, or formatting any Asana task, even when the constant is not named explicitly. It is the single source of these identifiers; never guess them or reuse remembered template content.
 user-invocable: false
 ---
 
@@ -13,11 +13,11 @@ This is the one place RaftKit stores the identifiers every role plugin (pm / dev
 | Constant | GID / value |
 |---|---|
 | Asana workspace | `1194107417268910` |
-| User Story Template (format authority) | `1215247022658928` |
+| Feature Template (format authority) | `1216778429401199` |
 | Bugs Template (format authority) | `1215260732424760` |
 | Subtask conventions | `[AC] …` acceptance criteria, plus `Development` / `Testing` / `Bugs` |
 
-This set is **provisional pending the merged-template decision** (Asana task `1216550717291989`). Treat the template GIDs as values that can change when that decision lands — read them from this table, do not hardcode them into a skill's own instructions.
+Read template GIDs from this table — never hardcode them into a skill's own instructions.
 
 ## Resolving a constant
 

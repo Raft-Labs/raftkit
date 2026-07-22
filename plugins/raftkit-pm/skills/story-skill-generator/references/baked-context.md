@@ -9,7 +9,7 @@ out the other end.
 
 - **CONTEXT — bake it.** What is true about *this project* and stable run to run: its
   vocabulary, its people, its rules of precedence, its sources. Baking this is the point.
-- **FORMAT — never bake it.** The User Story Template: section list, WEESLD rows, `[AC]`
+- **FORMAT — never bake it.** The Feature Template: section list, WEESLD rows, `[AC]`
   and `Development` / `Testing` / `Bugs` subtask conventions. This lives in Asana, changes
   there, and is read **live** by GID (`raftkit-core/workflow-constants`) every run. A baked
   format is a stale format shipped silently.
@@ -45,7 +45,7 @@ sources directly; the profile is the vetted, approved distillation.
 skill-creator authors a **self-contained** skill (the flowhoney pattern — not a wrapper
 around `user-story`). Its SKILL.md must:
 
-- **Read the live template every run.** Resolve the workspace + User Story Template GIDs
+- **Read the live template every run.** Resolve the workspace + Feature Template GIDs
   from `raftkit-core/workflow-constants` and fetch the template live; stop with the exact
   `workflow-constants` message if it cannot be read. Never carry template text.
 - **Carry the baked context** — the glossary, roles, conflict hierarchy, and source links

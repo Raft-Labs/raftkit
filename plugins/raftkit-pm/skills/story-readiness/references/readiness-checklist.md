@@ -1,6 +1,6 @@
 # Readiness checklist — derive from the live template, audit, report
 
-The checklist is **derived from the live User Story Template every run**, never
+The checklist is **derived from the live Feature Template every run**, never
 reproduced from memory. Read the template's structure off the freshly fetched task
 (see `raftkit-core/workflow-constants`) and audit the story against *that*. If the
 template gains, loses, renames, or renumbers a section, the gate follows

@@ -20,7 +20,7 @@ raftkit-core carries no day-to-day workflow of its own — it is the rulebook th
 | Skill | What it holds | A human uses it when |
 | --- | --- | --- |
 | `house-rules` | Where project facts live (Project Profiles, never plugins), Asana free-tier constraints, human approval gates, founder-escalation triggers, find-skills governance | "What's the rule on estimates?" / "Can I use Asana dependencies?" |
-| `workflow-constants` | The Asana workspace GID, User Story + Bugs Template GIDs, subtask naming conventions — the single source; templates are always fetched LIVE | "What's the story template GID?" / "How do I fetch the live template?" |
+| `workflow-constants` | The Asana workspace GID, Feature + Bugs Template GIDs, subtask naming conventions — the single source; templates are always fetched LIVE | "What's the story template GID?" / "How do I fetch the live template?" |
 | `write-protocol` | The draft → approve → push gate for every Asana/client-facing write, plus Asana's rich-text HTML rules | "Why won't my html_notes push?" / before any skill writes anywhere |
 | `governance-protocols` | Ashit's protocols 1–5 (model triage, decomposition, pre-flight gates, cost hygiene, production alerts), the spec template, the team cheat sheet — the pack `raftkit-dev:setup-project` installs per repo | "What's the exact efficiency warning string?" / "What's the decomposition threshold default?" |
 
