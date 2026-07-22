@@ -1,0 +1,257 @@
+# Skill Observation Log
+
+Observations captured during task-oriented work.
+
+**Status key:** OPEN = not yet actioned | ACTIONED (YYYY-MM-DD) = skill
+updated/created | DECLINED (YYYY-MM-DD) = user decided not to pursue —
+resolved statuses always carry their resolution date
+
+---
+
+## 2026-07-21
+
+### Observation 1: Documentation skills need adaptive structure
+
+**Status:** OPEN
+**Date:** 2026-07-21
+**Session context:** Comparing a reusable documentation skill with two mature repositories that adopted it differently.
+**Skill:** New skill candidate: docs
+**Type:** open-source
+**Phase/Area:** Discovery and information architecture
+
+**Issue:** A documentation skill can work well in one repository while its fixed folder tree, stack taxonomy, and code-to-doc path table become stale or incorrect in another repository with an established documentation system.
+
+**Suggested improvement:** Discover the repository's existing documentation roots and ownership map first, preserve them by default, and require explicit human approval before introducing or restructuring a documentation schema. Keep stack-specific mappings in project-owned configuration rather than in the reusable skill.
+
+**Principle:** Reusable documentation automation should enforce lifecycle invariants while treating each repository's information architecture as discovered input.
+
+### Observation 2: Preserve cross-surface lifecycle boundaries
+
+**Status:** OPEN
+**Date:** 2026-07-21
+**Session context:** Reconciling a documentation architecture guide with a developer-plugin implementation prompt.
+**Skill:** New skill candidate: docs
+**Type:** open-source
+**Phase/Area:** Architecture and handoff
+
+**Issue:** Collapsing a planning skill and a code-synchronization skill into one implementation can erase the deliberate handoff between product discovery and code-aware enforcement, creating overlapping sources of truth and duplicated gates.
+
+**Suggested improvement:** Model the end-to-end lifecycle first, assign each phase to the environment or plugin that owns it, and define an explicit handoff contract. Preserve shared invariants such as approval, spec-first work, change tracking, and verification without duplicating each surface's implementation.
+
+**Principle:** When a workflow spans multiple surfaces, reuse the lifecycle contract but keep planning, execution, and verification ownership explicit.
+
+- Checkpoint after third plan completion: Observation 2 captures the architecture insight; no additional observations pending.
+
+### Observation 3: Handed audit baselines must be re-verified live, not trusted
+
+**Status:** OPEN
+**Date:** 2026-07-21
+**Session context:** Phase 1 audit of raftkit-dev (capability seams, docs skill program)
+**Skill:** story-driver
+**Type:** open-source
+**Phase/Area:** evidence-gathering / survey phase
+
+**Issue:** The task briefing shipped a "verified baseline" list of ~15 claims. Live checks refuted or materially sharpened several: Husky was claimed present in a reference repo (entirely absent — no hook manager at all), a suggested eval format (evals.json) was superseded by an official CLI runner, and a provider claimed hook-based turned out to have zero invocable components (stronger than claimed). Building on the handed baseline without re-checking would have produced wrong story ACs and fixtures.
+
+**Suggested improvement:** story-driver's survey step should treat any caller-supplied "verified facts" as audit leads with a mandatory re-verification pass (live CLI/file checks), and record a corrections table (claim → verdict) in the plan output.
+
+**Principle:** A briefing's "verified" claims are hypotheses with provenance, not facts; re-verify each against the live system and publish the corrections table — refuted assumptions change scope more often than new discoveries do.
+
+### Observation 4: Official plugin eval runner supersedes ad-hoc evals.json assumptions
+
+**Status:** OPEN
+**Date:** 2026-07-21
+**Session context:** Phase 1 audit of raftkit-dev; designing eval plans for new plugin skills
+**Skill:** story-driver
+**Type:** open-source
+**Phase/Area:** verification / eval planning
+
+**Issue:** Claude Code CLI (2.1.216) ships `claude plugin eval` consuming `evals/**/case.yaml` or `evals/**/prompt.md` + `graders/*.md`, with an automatic no-plugin baseline arm. Skill-authoring flows here still assume a bespoke `evals/evals.json` shape.
+
+**Suggested improvement:** When a story's ACs demand skill evals, check `claude plugin eval --help` first and emit cases in the official format so CI can run them; keep evals.json only where a tool explicitly consumes it (skill-creator's viewer).
+
+**Principle:** Before inventing a test-harness format, check whether the platform CLI already ships one — an official runner with a baseline arm beats a bespoke format that nothing executes.
+
+### Observation 5: Verify authored files by content, not by write success
+
+**Status:** OPEN
+**Date:** 2026-07-21
+**Session context:** Story A implementation — authoring eval case files in a parallel Write batch
+**Skill:** story-driver
+**Type:** open-source
+**Phase/Area:** file authoring / verification
+
+**Issue:** During a parallel batch of new-file writes, two files came back "already exists" and turned out to contain plausible-but-foreign content (a grader judging different providers than its paired prompt named). Something raced the writes. Existence and write-success were both misleading; only reading the content back caught the mismatch, which would have silently broken an eval pair.
+
+**Suggested improvement:** After authoring a batch of paired/coupled files (eval prompt+grader, fixture+test), spot-check each file for a distinctive authored phrase before committing — treat write success as delivery, not integrity.
+
+**Principle:** In any environment where multiple writers may touch the same tree, authored artifacts are verified by content markers, not by tool success codes — especially files whose correctness depends on pairing with another file.
+
+### Observation 6: Provider verification must cover the invocation seam, not just inventory
+
+**Status:** OPEN
+**Date:** 2026-07-21
+**Session context:** Story A — code-simplifier agent-name collision with pr-review-toolkit
+**Skill:** story-driver
+**Type:** open-source
+**Phase/Area:** dependency/provider verification
+
+**Issue:** Two declared providers each shipped an agent with the same bare name. Install + inventory checks both passed, but the invocation seam (which provider a dispatch actually selects) was initially unproven — human review caught it. Runtime probing showed dispatch is deterministic only via scoped provider-qualified names.
+
+**Suggested improvement:** A provider-verification gate should end with an invocation-seam proof (dispatch the component and confirm provider identity), and any registry of components should record fully-qualified dispatch names whenever two providers can collide on a bare name.
+
+**Principle:** "Installed and listed" is not "invocable as intended" — verification is complete only when the addressing scheme that downstream callers will use has been exercised against a real collision case.
+
+### Observation 7: Unicode escape sequences can land as raw bytes through file-write tools
+
+**Status:** OPEN
+**Date:** 2026-07-21
+**Session context:** Story B — authoring validate-docs.mjs with backslash-u escape placeholders in source
+**Skill:** story-driver
+**Type:** open-source
+**Phase/Area:** file authoring / code generation
+
+**Issue:** A JavaScript source file written through the file-write tool ended up containing literal control bytes where a textual backslash-u escape sequence was intended, silently corrupting a regex chain; a later exact-match edit then failed because the on-disk bytes differed from the authored text. Caught only because the suite failed and the file was re-inspected.
+
+**Suggested improvement:** After writing source that contains escape sequences, control characters, or unusual literals, verify the on-disk bytes (grep for the literal escape text or run a syntax check) before building on it; prefer patching such lines programmatically (node/python writing the exact string) over inline authoring.
+
+**Principle:** Authored text and on-disk bytes are not guaranteed identical across tool boundaries — verify byte-level fidelity whenever content meaning depends on exact escapes, and validate generated source with the language's own parser before trusting it.
+
+## 2026-07-22
+
+### Observation 8: Contract suites need adversarial checks at every write boundary
+
+**Status:** OPEN
+**Date:** 2026-07-22
+**Session context:** Independent review of the raftkit-dev strengthening program on PR #23
+**Skill:** story-driver
+**Type:** open-source
+**Phase/Area:** verification / adversarial testing
+
+**Issue:** All deterministic suites passed, but targeted checks still found unvalidated template substitutions that generate executable shell, an in-root output symlink that writes outside the repository, and a symlinked hook misclassified as pack-owned. The tests exercised adversarial script names and a symlinked CI target, but not every value and filesystem boundary consumed by the same production scripts.
+
+**Suggested improvement:** Derive a boundary matrix from each executable script: every external string substituted into shell or YAML gets injection-shaped cases; every read/write path gets absolute, traversal, existing-symlink, broken-symlink, and symlink-cycle cases; every ownership classifier tests regular files and symlinks symmetrically. Assert both the exit code and that no out-of-bound target changed.
+
+**Principle:** A fail-closed contract is only proven when every input and filesystem boundary that can reach a write or executable artifact receives the same adversarial treatment, not when one representative field passes it.
+
+- Checkpoint after third plan completion: Observation 8 records the implementation-audit finding; the prior observations remain OPEN and unreviewed.
+
+### Observation 9: Generalization must preserve explicitly requested capabilities
+
+**Status:** OPEN
+**Date:** 2026-07-22
+**Session context:** Reviewing whether a rewritten documentation skill still matched the original source skill and user brief
+**Skill:** story-driver
+**Type:** open-source
+**Phase/Area:** scope translation / story drafting
+
+**Issue:** The audit correctly found that two reference repositories used different documentation trees, but the story translated “do not copy one tree blindly” into exclusions for the source skill's templates, planning phases, companion-skill scaffolding, and project-management integration. The resulting implementation passed every approved AC while failing the higher-level request to adapt the source capability. Story approval hid the drift because the omitted capabilities had already been removed from the story draft.
+
+**Suggested improvement:** Before requesting story approval, story-driver should produce a source-capability traceability table: each explicitly requested source capability must map to preserve, adapt, replace, or intentionally exclude, with an explicit rationale and human approval for every exclusion. Repository-specific structure and reusable workflow behavior must be evaluated separately.
+
+**Principle:** Generalizing an implementation means separating variable conventions from invariant capabilities; never use structural variation as justification to silently discard explicitly requested behavior, and never let downstream AC compliance substitute for traceability to the original brief.
+
+### Observation 10: Project setup needs baseline and conditional capability classes
+
+**Status:** OPEN
+**Date:** 2026-07-22
+**Session context:** Correcting a plugin setup design after the user distinguished skills required in every project from stack-specific skills
+**Skill:** story-driver
+**Type:** open-source
+**Phase/Area:** capability modeling / project initialization
+
+**Issue:** The provider registry treated several explicitly required everyday capabilities as optional or suggestion-only, while a stack-specific database skill was not packaged as a conditional project capability. That collapsed two different requirements: a baseline toolbelt that setup must ensure is ready, and specialized skills that setup should activate only when repository or profile evidence selects their stack.
+
+**Suggested improvement:** Require every setup story to define a capability policy table with at least `baseline-required` and `stack-conditional` classes, plus provider, provenance, installation scope, approval mechanism, activation check, and post-install verification. A baseline capability must not be silently downgraded to optional; a conditional capability must name deterministic selection signals and remain absent when those signals do not apply.
+
+**Principle:** Project initialization should guarantee the team's baseline working method while adding specialized capabilities only from explicit stack evidence; optionality is a product decision, not a convenient default for unresolved installation design.
+
+### Observation 11: Large methodology sources need thin, verifiable skill wrappers
+
+**Status:** OPEN
+**Date:** 2026-07-22
+**Session context:** Turning a read-only reasoning playbook into a distributable thinking and planning skill
+**Skill:** skill-creator
+**Type:** open-source
+**Phase/Area:** skill authoring / progressive disclosure
+
+**Issue:** Converting a large methodology document directly into a SKILL.md would bloat every invocation and invite accidental semantic drift, while pointing at the repository-root source would make the installed plugin depend on a local file it does not ship. The skill also risked copying an existing brainstorming method instead of invoking its provider.
+
+**Suggested improvement:** When an approved methodology source must remain unchanged, bundle a byte-identical, hash-verified reference snapshot and keep SKILL.md as a thin runtime contract that routes to relevant headings. Make existing provider capabilities explicit invocation seams, and test both source parity and invocation order.
+
+**Principle:** Ship large methodologies as verified references, keep skills as lean orchestrators, and delegate existing engines rather than reimplementing them.
+
+### Observation 12: Skill names are cross-surface contracts
+
+**Status:** OPEN
+**Date:** 2026-07-22
+**Session context:** Renaming a newly created skill after its initial implementation
+**Skill:** skill-creator
+**Type:** open-source
+**Phase/Area:** skill maintenance / renaming
+
+**Issue:** A skill name appears in discovery frontmatter, the folder path, user invocation, UI metadata, mode names, tests, eval locations, and plugin or marketplace descriptions. Updating only the visible title leaves a partially renamed capability that can pass superficial review while discovery, invocation, or verification still uses the previous identity.
+
+**Suggested improvement:** Treat renaming as an atomic contract migration. Inventory every old-name occurrence first, make a deterministic test expect the new identity before moving files, update all discovery and distribution surfaces, and finish with a repository-wide absence check for the old identifier.
+
+**Principle:** A capability rename is complete only when discovery, invocation, storage, verification, and distribution agree on one identity and the old identity is mechanically absent.
+
+### Observation 13: Skill names can be runtime control tokens
+
+**Status:** OPEN
+**Date:** 2026-07-22
+**Session context:** Reviewing a cross-runtime story for a skill renamed to a term with documented runtime semantics
+**Skill:** skill-creator
+**Type:** open-source
+**Phase/Area:** naming / runtime compatibility
+
+**Issue:** A skill name that looks like branding can also be a platform-recognized control token. In this case the selected word requests deeper reasoning in one runtime, while the story simultaneously described the skill as having no resource-related side effect and mixed that runtime's slash invocation with another runtime's dollar-prefixed invocation.
+
+**Suggested improvement:** Before approving a skill name, check current official documentation for reserved words, invocation controls, and frontmatter differences on every claimed runtime. Record any effort, latency, or token implications explicitly and test each surface with its native invocation syntax and validator.
+
+**Principle:** Treat skill names as executable interface design: verify whether the platform assigns them behavior, cost, visibility, or invocation semantics before promising cross-runtime parity.
+
+### Observation 14: Exact allowlists must enumerate files, not directory shorthand
+
+**Status:** OPEN
+**Date:** 2026-07-22
+**Session context:** Reviewing a story implementation plan before authorizing staging and commit
+**Skill:** story-driver
+**Type:** open-source
+**Phase/Area:** implementation planning / scope control
+
+**Issue:** An implementation plan labeled its boundary an exact final file allowlist while representing a multi-file eval bundle as one directory entry. That shorthand communicates scope to a reader but cannot prove that an unexpected file inside the directory was authorized, weakening the later scope-check gate.
+
+**Suggested improvement:** Require plans to expand every created, updated, moved, or deleted path to a literal file entry before approval. Generate the allowlist mechanically where helpful, then compare both the staged file list and committed range against that same file-level set.
+
+**Principle:** A scope allowlist is enforceable only at the same granularity as the mutation it authorizes; directory prefixes are inventories, not exact file contracts.
+
+### Observation 15: Deterministic file-list assertions need LC_ALL=C and machine-cache pruning
+
+**Status:** OPEN
+**Date:** 2026-07-22
+**Session context:** R0 ultrathink reconciliation — P22 ships-only-these-files check failed twice for non-product reasons
+**Skill:** New skill candidate: none (test-authoring practice; applies to raftkit-dev test suites)
+**Type:** open-source
+**Phase/Area:** deterministic bash test suites
+
+**Issue:** A ships-exactly-these-files assertion failed first because macOS default-locale sort collates case-insensitively (./agents before ./SKILL.md), then because an editor PostToolUse hook wrote .impeccable/hook.cache.json inside the asserted directory seconds after an edit.
+
+**Suggested improvement:** File-list assertions in shared test suites must pipe through LC_ALL=C sort and prune known machine-local caches (.impeccable/, .DS_Store) with an in-file comment explaining why; assert shippable content, not working-tree residue.
+
+**Principle:** A determinism check must itself be deterministic across locales and immune to tooling side effects — otherwise it reports environment, not product.
+
+### Observation 16: Asana task name field is plain text — HTML-escaping titles corrupts them
+
+**Status:** OPEN
+**Date:** 2026-07-22
+**Session context:** R-story pushes — a task created with an HTML-escaped ampersand in its name rendered the literal escape in the title
+**Skill:** asana write practice (future raftkit-core asana-formatting capability)
+**Type:** open-source
+**Phase/Area:** Asana MCP writes
+
+**Issue:** html_notes requires entity escaping, but the sibling name parameter is plain text; reusing the escaped string for both corrupted a task title (fixed by rename + read-back).
+
+**Suggested improvement:** The formatting capability must treat name/plain-text fields and html fields as different encoding domains: escape only HTML-domain fields; read-back verification must cover titles, not just descriptions.
+
+**Principle:** Per-field encoding domains must be tracked separately in one write payload; a shared pre-escaped string silently corrupts the plain-text fields.

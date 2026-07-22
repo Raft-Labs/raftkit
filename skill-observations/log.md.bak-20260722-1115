@@ -1,0 +1,152 @@
+# Skill Observation Log
+
+Observations captured during task-oriented work.
+
+**Status key:** OPEN = not yet actioned | ACTIONED (YYYY-MM-DD) = skill
+updated/created | DECLINED (YYYY-MM-DD) = user decided not to pursue —
+resolved statuses always carry their resolution date
+
+---
+
+## 2026-07-21
+
+### Observation 1: Documentation skills need adaptive structure
+
+**Status:** OPEN
+**Date:** 2026-07-21
+**Session context:** Comparing a reusable documentation skill with two mature repositories that adopted it differently.
+**Skill:** New skill candidate: docs
+**Type:** open-source
+**Phase/Area:** Discovery and information architecture
+
+**Issue:** A documentation skill can work well in one repository while its fixed folder tree, stack taxonomy, and code-to-doc path table become stale or incorrect in another repository with an established documentation system.
+
+**Suggested improvement:** Discover the repository's existing documentation roots and ownership map first, preserve them by default, and require explicit human approval before introducing or restructuring a documentation schema. Keep stack-specific mappings in project-owned configuration rather than in the reusable skill.
+
+**Principle:** Reusable documentation automation should enforce lifecycle invariants while treating each repository's information architecture as discovered input.
+
+### Observation 2: Preserve cross-surface lifecycle boundaries
+
+**Status:** OPEN
+**Date:** 2026-07-21
+**Session context:** Reconciling a documentation architecture guide with a developer-plugin implementation prompt.
+**Skill:** New skill candidate: docs
+**Type:** open-source
+**Phase/Area:** Architecture and handoff
+
+**Issue:** Collapsing a planning skill and a code-synchronization skill into one implementation can erase the deliberate handoff between product discovery and code-aware enforcement, creating overlapping sources of truth and duplicated gates.
+
+**Suggested improvement:** Model the end-to-end lifecycle first, assign each phase to the environment or plugin that owns it, and define an explicit handoff contract. Preserve shared invariants such as approval, spec-first work, change tracking, and verification without duplicating each surface's implementation.
+
+**Principle:** When a workflow spans multiple surfaces, reuse the lifecycle contract but keep planning, execution, and verification ownership explicit.
+
+- Checkpoint after third plan completion: Observation 2 captures the architecture insight; no additional observations pending.
+
+### Observation 3: Handed audit baselines must be re-verified live, not trusted
+
+**Status:** OPEN
+**Date:** 2026-07-21
+**Session context:** Phase 1 audit of raftkit-dev (capability seams, docs skill program)
+**Skill:** story-driver
+**Type:** open-source
+**Phase/Area:** evidence-gathering / survey phase
+
+**Issue:** The task briefing shipped a "verified baseline" list of ~15 claims. Live checks refuted or materially sharpened several: Husky was claimed present in a reference repo (entirely absent — no hook manager at all), a suggested eval format (evals.json) was superseded by an official CLI runner, and a provider claimed hook-based turned out to have zero invocable components (stronger than claimed). Building on the handed baseline without re-checking would have produced wrong story ACs and fixtures.
+
+**Suggested improvement:** story-driver's survey step should treat any caller-supplied "verified facts" as audit leads with a mandatory re-verification pass (live CLI/file checks), and record a corrections table (claim → verdict) in the plan output.
+
+**Principle:** A briefing's "verified" claims are hypotheses with provenance, not facts; re-verify each against the live system and publish the corrections table — refuted assumptions change scope more often than new discoveries do.
+
+### Observation 4: Official plugin eval runner supersedes ad-hoc evals.json assumptions
+
+**Status:** OPEN
+**Date:** 2026-07-21
+**Session context:** Phase 1 audit of raftkit-dev; designing eval plans for new plugin skills
+**Skill:** story-driver
+**Type:** open-source
+**Phase/Area:** verification / eval planning
+
+**Issue:** Claude Code CLI (2.1.216) ships `claude plugin eval` consuming `evals/**/case.yaml` or `evals/**/prompt.md` + `graders/*.md`, with an automatic no-plugin baseline arm. Skill-authoring flows here still assume a bespoke `evals/evals.json` shape.
+
+**Suggested improvement:** When a story's ACs demand skill evals, check `claude plugin eval --help` first and emit cases in the official format so CI can run them; keep evals.json only where a tool explicitly consumes it (skill-creator's viewer).
+
+**Principle:** Before inventing a test-harness format, check whether the platform CLI already ships one — an official runner with a baseline arm beats a bespoke format that nothing executes.
+
+### Observation 5: Verify authored files by content, not by write success
+
+**Status:** OPEN
+**Date:** 2026-07-21
+**Session context:** Story A implementation — authoring eval case files in a parallel Write batch
+**Skill:** story-driver
+**Type:** open-source
+**Phase/Area:** file authoring / verification
+
+**Issue:** During a parallel batch of new-file writes, two files came back "already exists" and turned out to contain plausible-but-foreign content (a grader judging different providers than its paired prompt named). Something raced the writes. Existence and write-success were both misleading; only reading the content back caught the mismatch, which would have silently broken an eval pair.
+
+**Suggested improvement:** After authoring a batch of paired/coupled files (eval prompt+grader, fixture+test), spot-check each file for a distinctive authored phrase before committing — treat write success as delivery, not integrity.
+
+**Principle:** In any environment where multiple writers may touch the same tree, authored artifacts are verified by content markers, not by tool success codes — especially files whose correctness depends on pairing with another file.
+
+### Observation 6: Provider verification must cover the invocation seam, not just inventory
+
+**Status:** OPEN
+**Date:** 2026-07-21
+**Session context:** Story A — code-simplifier agent-name collision with pr-review-toolkit
+**Skill:** story-driver
+**Type:** open-source
+**Phase/Area:** dependency/provider verification
+
+**Issue:** Two declared providers each shipped an agent with the same bare name. Install + inventory checks both passed, but the invocation seam (which provider a dispatch actually selects) was initially unproven — human review caught it. Runtime probing showed dispatch is deterministic only via scoped provider-qualified names.
+
+**Suggested improvement:** A provider-verification gate should end with an invocation-seam proof (dispatch the component and confirm provider identity), and any registry of components should record fully-qualified dispatch names whenever two providers can collide on a bare name.
+
+**Principle:** "Installed and listed" is not "invocable as intended" — verification is complete only when the addressing scheme that downstream callers will use has been exercised against a real collision case.
+
+### Observation 7: Unicode escape sequences can land as raw bytes through file-write tools
+
+**Status:** OPEN
+**Date:** 2026-07-21
+**Session context:** Story B — authoring validate-docs.mjs with backslash-u escape placeholders in source
+**Skill:** story-driver
+**Type:** open-source
+**Phase/Area:** file authoring / code generation
+
+**Issue:** A JavaScript source file written through the file-write tool ended up containing literal control bytes where a textual backslash-u escape sequence was intended, silently corrupting a regex chain; a later exact-match edit then failed because the on-disk bytes differed from the authored text. Caught only because the suite failed and the file was re-inspected.
+
+**Suggested improvement:** After writing source that contains escape sequences, control characters, or unusual literals, verify the on-disk bytes (grep for the literal escape text or run a syntax check) before building on it; prefer patching such lines programmatically (node/python writing the exact string) over inline authoring.
+
+**Principle:** Authored text and on-disk bytes are not guaranteed identical across tool boundaries — verify byte-level fidelity whenever content meaning depends on exact escapes, and validate generated source with the language's own parser before trusting it.
+
+## 2026-07-22
+
+### Observation 8: Contract suites need adversarial checks at every write boundary
+
+**Status:** OPEN
+**Date:** 2026-07-22
+**Session context:** Independent review of the raftkit-dev strengthening program on PR #23
+**Skill:** story-driver
+**Type:** open-source
+**Phase/Area:** verification / adversarial testing
+
+**Issue:** All deterministic suites passed, but targeted checks still found unvalidated template substitutions that generate executable shell, an in-root output symlink that writes outside the repository, and a symlinked hook misclassified as pack-owned. The tests exercised adversarial script names and a symlinked CI target, but not every value and filesystem boundary consumed by the same production scripts.
+
+**Suggested improvement:** Derive a boundary matrix from each executable script: every external string substituted into shell or YAML gets injection-shaped cases; every read/write path gets absolute, traversal, existing-symlink, broken-symlink, and symlink-cycle cases; every ownership classifier tests regular files and symlinks symmetrically. Assert both the exit code and that no out-of-bound target changed.
+
+**Principle:** A fail-closed contract is only proven when every input and filesystem boundary that can reach a write or executable artifact receives the same adversarial treatment, not when one representative field passes it.
+
+- Checkpoint after third plan completion: Observation 8 records the implementation-audit finding; the prior observations remain OPEN and unreviewed.
+
+### Observation 9: Generalization must preserve explicitly requested capabilities
+
+**Status:** OPEN
+**Date:** 2026-07-22
+**Session context:** Reviewing whether a rewritten documentation skill still matched the original source skill and user brief
+**Skill:** story-driver
+**Type:** open-source
+**Phase/Area:** scope translation / story drafting
+
+**Issue:** The audit correctly found that two reference repositories used different documentation trees, but the story translated “do not copy one tree blindly” into exclusions for the source skill's templates, planning phases, companion-skill scaffolding, and project-management integration. The resulting implementation passed every approved AC while failing the higher-level request to adapt the source capability. Story approval hid the drift because the omitted capabilities had already been removed from the story draft.
+
+**Suggested improvement:** Before requesting story approval, story-driver should produce a source-capability traceability table: each explicitly requested source capability must map to preserve, adapt, replace, or intentionally exclude, with an explicit rationale and human approval for every exclusion. Repository-specific structure and reusable workflow behavior must be evaluated separately.
+
+**Principle:** Generalizing an implementation means separating variable conventions from invariant capabilities; never use structural variation as justification to silently discard explicitly requested behavior, and never let downstream AC compliance substitute for traceability to the original brief.
