@@ -26,6 +26,7 @@ export function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--json") opts.json = true;
+    else if (a === "--graded") opts.graded = true;
     else if (a === "--root") opts.root = argv[++i];
     else if (a === "--changed") opts.changed = argv[++i];
     else if (a === "--base") opts.base = argv[++i];
@@ -219,14 +220,25 @@ function main() {
     }
   }
 
+  // --graded classifies each finding deterministically: P0 = parity-breaking
+  // (broken/escaping links, refused symlinks), P1 = staleness against the
+  // change set, P2 = everything else. Default output and exit codes unchanged.
+  const grade = (f) =>
+    /broken link|escapes the repository root|out-of-root symlink/.test(f) ? "P0"
+      : /stale candidate/.test(f) ? "P1" : "P2";
+  const graded = opts.graded ? findings.map((f) => ({ severity: grade(f), finding: f })) : null;
   const result = { convention: d.convention, branch: d.branch, docsRoot: d.docsRoot, adrSeam: d.adrSeam,
     unresolvedConflicts: d.unresolvedConflicts, excludedFiles: d.excludedFiles.length,
-    changeSet: changeSet || null, findings, verdict, evidence };
+    changeSet: changeSet || null, findings, ...(graded ? { graded } : {}), verdict, evidence };
   const text = [
     `convention: ${d.convention} · branch: ${d.branch} · docs root: ${d.docsRoot}`,
     changeSet ? `inspected change set (${changeSet.source}): ${changeSet.files.join(", ")}` : null,
     changeSet?.renames?.length ? `renames: ${changeSet.renames.map((r) => `${r.from} -> ${r.to}`).join(", ")}` : null,
-    ...findings.map((f) => `finding: ${f}`), verdict, ...evidence,
+    ...(graded
+      ? [...graded.map((g) => `${g.severity} finding: ${g.finding}`),
+         `graded: P0=${graded.filter((g) => g.severity === "P0").length} P1=${graded.filter((g) => g.severity === "P1").length} P2=${graded.filter((g) => g.severity === "P2").length}`]
+      : findings.map((f) => `finding: ${f}`)),
+    verdict, ...evidence,
   ].filter(Boolean).join("\n");
   const output = opts.json ? JSON.stringify(result, null, 2) : text;
   if (opts.out) writeFileSync(path.resolve(root, opts.out), output + "\n"); else console.log(output);

@@ -31,10 +31,28 @@ Ask the developer only what repository evidence cannot establish — intent,
 policy, product decisions. Never re-ask what the handoff already answers
 (story, Profile, spec) and never ask questions a file read would answer.
 
-## Method
+## Method — the full code-first flow
 
-Read the code the docs would describe — entry points, routes, schema,
-workflows — compose evidence before proposing structure, and propose the docs
-organization that matches the repo's own shape (or its existing convention if
-one is discovered). Parallel readers may be used for breadth; their outputs are
-evidence to compose, not text to paste.
+1. **Static audit** — infer the stack/archetype and modifiers from repository
+   signals; flag instruction-file drift.
+2. **Foundation reads** — entry points, routes, schema, workflows, configs.
+3. **Module grouping proposal** — group what the code actually contains
+   (URL prefixes, package layout); the developer confirms the grouping.
+4. **Per-module walk, run code-first** — the same 20+1-step decomposition as
+   design mode, but inferred from code first; the interview covers only the
+   gaps code cannot answer (intent, role policy, edge-case policy, telemetry
+   wishes). Every statement carries its mark. Parallel readers may be used
+   for breadth; their outputs are evidence to compose, not text to paste.
+5. **Cross-cuts inferred** — async, webhooks, observability, compliance
+   posture, from the code that implements them.
+6. **Reconciliation report** — code-but-no-doc and doc-but-no-code lists,
+   presented before anything is generated.
+7. **Approval, then generation** — the approved docs are generated in the
+   discovered (or approved-proposed) convention with frontmatter
+   `Status: Implemented`, inferred-vs-confirmed markers intact.
+8. **Initial history entry** — an initial changes-log entry (or the
+   convention's equivalent) records the code-state snapshot, the generation
+   date, and the stated limitations.
+9. **Handoff** — normal change tracking owns every subsequent edit.
+
+Never document dead code, never over-document, never fabricate edge cases.

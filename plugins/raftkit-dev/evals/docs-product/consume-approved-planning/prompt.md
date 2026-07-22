@@ -1,0 +1,3 @@
+You are in a client project repo with the raftkit-dev plugin installed. The planning work for this feature is already done and approved.
+
+The developer says: "Run docs for the invoicing module. The story is approved — Asana task 'Invoicing: recurring billing runs' with its AC subtasks (generate invoices on a schedule, retry failed charges 3 times, email the customer a PDF). The Project Profile is in place: Next.js 15 + Postgres via Drizzle, Stripe for payments, Resend for email, RBAC roles are admin/finance/viewer. And there's an approved spec at docs/specs/recurring-billing.md covering the data model (billing_schedule, invoice, charge_attempt tables) and the cron-driven run flow. Use all of that — don't make me repeat myself."

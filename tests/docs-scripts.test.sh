@@ -45,7 +45,7 @@ run_audit()    { OUT=$(node "$AUDIT" "$@" 2>&1); RC=$?; }
 run_validate() { OUT=$(node "$VALIDATE" "$@" 2>&1); RC=$?; }
 
 # D1 · fixture directories match the approved neutral names exactly
-expected="architectural-adr broken-links code-no-docs excluded-secret-paths flat-ownership-indexed greenfield-handoff module-indexed no-impact out-of-root-symlink routine-no-adr stale-doc unknown-inference"
+expected="architectural-adr broken-links code-no-docs excluded-secret-paths flat-ownership-indexed greenfield-handoff hybrid module-indexed no-impact out-of-root-symlink routine-no-adr stale-doc unknown-inference"
 actual=$(find "$FIX" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort | tr '\n' ' ' | sed 's/ $//')
 [[ "$actual" == "$expected" ]]
 check "D1 fixture set matches the approved neutral names" ok $?

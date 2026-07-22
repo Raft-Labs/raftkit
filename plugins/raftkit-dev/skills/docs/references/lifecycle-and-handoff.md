@@ -1,10 +1,14 @@
 # Lifecycle and handoff
 
-The two-surface split is preserved: planning, product decisions, and story
-approval live with raftkit-pm in Cowork; this skill owns the repository side —
-preflight, discovery, reverse engineering, spec-first enforcement,
-synchronization, change history, and completion verification. Neither side
-re-does the other's work.
+One product, two surfaces: PM (raftkit-pm in Cowork) can originate Project
+Profiles, decisions, stories, and approved planning; this skill consumes those
+outputs when they exist and runs the full design/generation workflow when invoked directly
+by a developer. Both surfaces share the same templates, references, and
+lifecycle semantics. Confirmed facts are consumed, never re-asked; neither
+surface loses a capability because the other also provides it. This skill owns
+the repository side end to end — preflight, discovery, design and generation,
+reverse engineering, spec-first enforcement, synchronization, change history,
+and completion verification.
 
 ## The handoff inputs (read, never re-asked)
 
