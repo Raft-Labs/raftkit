@@ -218,6 +218,15 @@ node -e '
 '
 check "W19b description lockstep holds" ok $?
 
+docs_all=$(cat plugins/raftkit-dev/skills/docs/SKILL.md plugins/raftkit-dev/skills/docs/references/*.md 2>/dev/null | tr '\n' ' ' | tr -s ' ')
+! grep -q 'the Cowork surface plans, this skill synchronizes' <<<"$docs_all" \
+  && ! grep -q "re-does the other's work" <<<"$docs_all"
+check "WR1a the PM-plans/Dev-synchronizes ownership split is removed from the docs skill" ok $?
+
+grep -qiE 'design/generation workflow when invoked directly|full design.*workflow when invoked directly' <<<"$docs_all" \
+  && grep -qiE 'consumed.*never re-asked|never re-asks confirmed' <<<"$docs_all"
+check "WR1b the corrected PM/Dev ownership contract is present (Dev-direct design; planning never re-asked)" ok $?
+
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures test(s) failed"
   exit 1
