@@ -1,6 +1,6 @@
 ---
 name: fix-production-error
-description: This skill should be used when a RaftLabs developer pastes a production stack trace or error log — from Sentry, AWS CloudWatch, or Crashlytics — and needs it resolved with incident discipline, e.g. "fix this production error", "here's a Sentry trace", "CloudWatch is alerting", "prod is crash-looping", or a raw stack trace dropped into the session. It halts all feature work, traces the exact failing line by wrapping superpowers systematic-debugging, writes a failing regression test replicating the crash BEFORE any fix, drives the fix to green with the full suite verified, and prepares the PR — it only suggests deploy steps and never deploys. It is Protocol 5 made executable. NOT for ordinary bugs (a QA bug task, a defect with no production trace) — those go file-bug → fix-bug, and this skill refuses that misuse by name.
+description: This skill should be used when a RaftLabs developer pastes a production stack trace or error log — from Sentry, AWS CloudWatch, or Crashlytics — and needs it resolved with incident discipline, e.g. "fix this production error", "here's a Sentry trace", "CloudWatch is alerting", "prod is crash-looping", or a raw stack trace dropped into the session. It halts all feature work, traces the exact failing line by wrapping superpowers:systematic-debugging, writes a failing regression test replicating the crash BEFORE any fix, drives the fix to green with the full suite verified, and prepares the PR — it only suggests deploy steps and never deploys. It is Protocol 5 made executable. NOT for ordinary bugs (a QA bug task, a defect with no production trace) — those go file-bug → fix-bug, and this skill refuses that misuse by name.
 user-invocable: true
 ---
 
@@ -14,8 +14,10 @@ verified, and the PR is prepared for a human to deploy per the release train. Th
 skill prepares; it never deploys.
 
 This is governance **Protocol 5** made executable (PRD §5.3). It wraps
-`superpowers/systematic-debugging` for the diagnosis and reuses the `scope-guard`
-and `simplify` siblings for the loop — it rebuilds none of them.
+`superpowers:systematic-debugging` for the diagnosis,
+`superpowers:test-driven-development` for the red-first regression test, and
+`superpowers:verification-before-completion` for the full-suite proof, and reuses
+the `scope-guard` and `simplify` siblings for the loop — it rebuilds none of them.
 
 ## The one rule that governs everything
 
@@ -56,22 +58,25 @@ every run — never cache its text. Then:
 
 1. **Halt feature work.** State that the session is now an incident; feature work
    is suspended until resolved or handed off (the one rule, above).
-2. **Trace the exact failing line/path.** Wrap `superpowers/systematic-debugging`
+2. **Trace the exact failing line/path.** Wrap `superpowers:systematic-debugging`
    — find the precise line raising the exception or unhandled rejection. If tracing
    stalls, drop to the ambiguous-trace gate and ask for the named artifact rather
    than guessing (`references/triage-and-refusal.md`).
 3. **Write the failing regression test first.** Encode the exact crash conditions
-   as a test, run it, and **confirm it fails red** before touching any fix. If the
-   crash cannot be replicated in a test, say **exactly what is missing** and ask —
-   do not fabricate a fix (`references/incident-loop.md`).
+   as a test per `superpowers:test-driven-development`, run it, and **confirm it
+   fails red** before touching any fix. If the crash cannot be replicated in a
+   test, say **exactly what is missing** and ask — do not fabricate a fix
+   (`references/incident-loop.md`).
 4. **Fix to green — containment, not refactor.** Implement the smallest fix that
    turns the red test green. If the root cause is systemic, ship a **containment
    fix + the regression test** and draft a **follow-up task proposal** for the
    structural work — never refactor architecture under incident pressure
    (`references/triage-and-refusal.md`).
-5. **Verify the full suite.** Run the whole suite. A fix that turns any *other*
-   test red is a **hard stop** — fix that before proceeding; the incident is not
-   resolved while the suite is red (`references/incident-loop.md`).
+5. **Verify the full suite.** Run the whole suite and confirm the output per
+   `superpowers:verification-before-completion` — evidence before the success
+   line. A fix that turns any *other* test red is a **hard stop** — fix that
+   before proceeding; the incident is not resolved while the suite is red
+   (`references/incident-loop.md`).
 6. **Prepare — do not deploy.** Prepare the branch/PR — via the `raftkit-dev/pr`
    sibling when present, falling back to the shared PR conventions when it is
    absent — and **suggest** deploy steps only. End with the exact success line:
@@ -114,10 +119,10 @@ every run — never cache its text. Then:
 ## Reference files
 
 - `references/incident-loop.md` — the trace → red → green loop in detail: halting
-  feature work, wrapping systematic-debugging, the red-first regression test and
-  the can't-replicate stop, the full-suite verification and the hard-stop on a
-  broken test, the scope-guard hand-off, and the exact success line + deploy
-  hand-off.
+  feature work, wrapping `superpowers:systematic-debugging`, the red-first
+  regression test and the can't-replicate stop, the full-suite verification and
+  the hard-stop on a broken test, the scope-guard hand-off, and the exact success
+  line + deploy hand-off.
 - `references/triage-and-refusal.md` — the front gates and the exact wording: the
   empty-trace ask, the ambiguous-trace artifact-by-name ask, the ordinary-bug
   misuse refusal and its `file-bug` → `fix-bug` routing, and the systemic

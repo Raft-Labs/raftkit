@@ -14,7 +14,7 @@ before starting it. Severity is **S1 until triage** says otherwise.
 
 ## 2 · Trace the exact failing line
 
-Wrap `superpowers/systematic-debugging` — do not reimplement diagnosis. Drive it
+Wrap `superpowers:systematic-debugging` — do not reimplement diagnosis. Drive it
 to the precise line raising the runtime exception or unhandled promise rejection,
 following the trace through the frames it points at. If the frames do not localize
 (minified stack, missing request context), stop and return to the ambiguous-trace
@@ -24,9 +24,10 @@ guess a line.
 ## 3 · Write the failing regression test — first, and permanent
 
 Before writing any fix, encode the **exact crash conditions** from the trace as a
-regression test, run it, and **confirm it fails red**. This is red-first TDD under
-incident pressure: the test proves the crash is captured, and it stays in the
-suite permanently so the same crash can never regress silently.
+regression test, run it, and **confirm it fails red**. This is
+`superpowers:test-driven-development`'s red-first discipline under incident
+pressure: the test proves the crash is captured, and it stays in the suite
+permanently so the same crash can never regress silently.
 
 **Cannot replicate the crash in a test** — say **exactly what is missing** (the
 input, the state, the environment the trace implies but you cannot reconstruct)
@@ -47,8 +48,10 @@ proposal** for the structural work per `references/triage-and-refusal.md`.
 ## 5 · Verify the full suite — hard stop on breakage
 
 Run the **whole** suite, not just the new test. The regression test must be green
-**and** every previously passing test must stay green. A fix that turns any other
-test red is a **hard stop**: the incident is not resolved while the suite is red.
+**and** every previously passing test must stay green. Confirm it per
+`superpowers:verification-before-completion` — observe the passing run before any
+resolution claim. A fix that turns any other test red is a **hard stop**: the
+incident is not resolved while the suite is red.
 Fix the regression first; do not proceed, do not prepare a PR, and never suggest
 deploy on a red suite.
 
