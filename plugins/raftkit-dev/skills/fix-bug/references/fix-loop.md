@@ -11,15 +11,19 @@ SKILL.md's Run flow is the canonical sequence; this section only adds the gating
 mechanics for the three steps where the order is load-bearing. Each step gates the
 next, and the fix step is **unreachable** until the repro test is observed red.
 
-- **Intake gate** — the Environment, Steps to Reproduce, and "Done when" sections
-  must be present or the bug bounces before any fix work begins
-  (`bug-intake-and-handback.md`).
+- **Intake gate** — the Environment, Steps to Reproduce, and "Done when" contracts must
+  be in hand, and with them the **expected vs actual** the red test will assert:
+  **present on the task** (Path A) or **confirmed in chat as the four asks** (Path B).
+  On Path A a missing section bounces the bug to QA before any fix work begins; on Path
+  B a refused ask stops the run. Either way the fix step is not reachable on a
+  half-known defect (`bug-intake-and-handback.md`).
 - **Reproduce → red test gate** — wrap `superpowers:systematic-debugging` to
-  replicate the defect from the templated steps in the bug's stated environment, and
+  replicate the defect from the **confirmed** steps in the stated environment, and
   encode it as a test per `superpowers:test-driven-development`.
   The test must be **observed failing for the reason the bug describes** — a test
   that passes, or fails for an unrelated reason, is not a repro; do not proceed.
-  Cannot reproduce → hand back to QA (`bug-intake-and-handback.md`); never fix blind.
+  Cannot reproduce → hand back per path — to QA on Path A, to the dev in session on
+  Path B (`bug-intake-and-handback.md`); never fix blind.
 - **Fix → green gate** — only once the repro is red, implement the **smallest**
   change that turns it green. Nothing speculative, nothing adjacent. The whole suite
   must then be green (the hard stop below). Prove it per
@@ -50,8 +54,11 @@ line, and the suite is how behaviour is proven.
 
 ## Scope = the bug's "Done when" only
 
-Scope is the bug's "Done when" checklist and nothing else. The `scope-guard` sibling
-owns the audit — do not reinvent it. Reuse its semantics directly:
+Scope is the bug's "Done when" checklist and nothing else — the task's on Path A, the
+**dev's confirmed one** on Path B. The two carry identical force: a dev-stated "Done
+when" is the boundary a dev-reported fix is held to, and it is why Path B is not a way
+to ship unbounded change without a ticket. The `scope-guard` sibling owns the audit —
+do not reinvent it. Reuse its semantics directly:
 
 - Any changed hunk that maps to no "Done when" item lands in **BEYOND** — removed,
   or kept only with an explicit logged sign-off (silence is not approval).
