@@ -42,7 +42,9 @@ sources directly; the profile is the vetted, approved distillation.
   opens Drive, Gmail, or Fathom for project content, so the fetch cost is paid once per
   generation instead of once per story.
 - **Every snapshot opens with a provenance header**: its **as-of date** (the generation
-  date) and its **source URL** (or source location, when the original is not linkable).
+  date) and its **source URL** (or source location, when the original is not linkable —
+  an uploaded source is headed "uploaded file, as-of \<date\>"; a synced-folder doc is
+  headed with its Drive link).
   An undated or unsourced snapshot is forbidden — the header is what makes staleness
   visible and a refresh an obvious next step.
 - **Live URLs are provenance, not runtime dependencies.** They stay in the snapshot
@@ -66,7 +68,9 @@ directory of bundled source snapshots (the flowhoney shape — not a wrapper aro
 - **Ground story content in the bundled snapshots.** The only live calls in a story run
   are the Feature Template fetch and the target task's own Asana reads/writes; a story
   run that opens Drive, Gmail, or Fathom for project content is malfunctioning — that
-  content belongs in `references/`.
+  content belongs in `references/`. Reading the bundled snapshots from disk — including
+  when the emitted skill lives in a Drive-synced folder — is a local read, not a
+  connector call.
 - **Tell the PM when to regenerate.** The emitted SKILL.md's own text instructs: after a
   major change to the project's sources or profile, re-run
   `raftkit-pm:story-skill-generator` — the snapshots' as-of dates show exactly what a

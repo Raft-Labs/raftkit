@@ -1,6 +1,6 @@
 ---
 name: project-onboarding
-description: This skill should be used when a RaftLabs PM wants to turn everything they have about a project — PRD, SOW, master doc, email threads, meeting recordings — into one Project Profile that downstream skills treat as the source of truth. Trigger on "onboard this project", "build the project profile", "set up the source of truth for project X", "ingest my PRD and emails into one profile", or a re-run with a new source. It reads only the sources the PM names across the Cowork connectors (Google Drive, Gmail, Fathom, Asana), tags and cites every fact, surfaces conflicts without resolving them, and writes only after PM approval. For generating a per-project story skill from an approved profile, use story-skill-generator instead.
+description: This skill should be used when a RaftLabs PM wants to turn everything they have about a project — PRD, SOW, master doc, email threads, meeting recordings — into one Project Profile that downstream skills treat as the source of truth. Trigger on "onboard this project", "build the project profile", "set up the source of truth for project X", "ingest my PRD and emails into one profile", or a re-run with a new source. It reads only the sources the PM names — through a connector (Google Drive, Gmail, Fathom, Asana), an uploaded file, a pasted link, or a synced local folder — tags and cites every fact, surfaces conflicts without resolving them, and writes only after PM approval. For generating a per-project story skill from an approved profile, use story-skill-generator instead.
 user-invocable: true
 ---
 
@@ -44,8 +44,9 @@ the success-summary format are in `references/profile-format.md`.
 ## Inputs
 
 1. **At least one source** the PM names — a PRD, SOW, master doc, email thread, or
-   meeting recording, reachable through the Cowork connectors (Google Drive, Gmail,
-   Fathom, Asana).
+   meeting recording, reachable by any access path the session provides
+   (`raftkit-core/house-rules`): a connector (Google Drive, Gmail, Fathom, Asana),
+   an uploaded file, a pasted Drive link, or a file in a synced Drive folder.
 2. **Where the profile lives** — its home is an open decision, so the PM points at
    it; see the parameterized home in `references/profile-format.md`. Never hardcode
    a location.
@@ -63,8 +64,8 @@ I need at least one source — a PRD, SOW, master doc, email thread, or meeting 
    above. Detect whether a profile already exists at the named home: none →
    first-run build; one exists → a delta re-run (step 5).
 
-2. **Ingest the named sources, reporting progress.** Read each source through its
-   connector, announcing progress per source ("read 3 of 5 sources"). The source
+2. **Ingest the named sources, reporting progress.** Read each source through
+   whatever path it arrived on, announcing progress per source ("read 3 of 5 sources"). The source
    set is bounded by what fits a single run's context; when the named set will not
    fit, say so and split the ingestion into batches. See
    `references/ingestion-and-deltas.md`.
@@ -87,8 +88,9 @@ I need at least one source — a PRD, SOW, master doc, email thread, or meeting 
 
 6. **Draft in chat, write only after approval.** Show the drafted profile (or
    delta) and name the exact profile home it lands on; wait for explicit PM
-   approval (silence is not approval), then write it — applying the Asana HTML rules
-   if the home is an Asana resource (`raftkit-core/write-protocol`).
+   approval (silence is not approval), then write it per
+   `raftkit-core/write-protocol` — Asana HTML rules only when the home is an Asana
+   resource; a Drive-doc or synced-file home gets the approved content as-is.
 
 7. **Report and offer the next step.** Summarize with the exact success-count shape
    defined in `references/profile-format.md`, then **offer to run
@@ -112,7 +114,7 @@ I need at least one source — a PRD, SOW, master doc, email thread, or meeting 
   citation · date), the ✅/⚠️/❓ tag legend and the default-to-⚠️ rule, the
   parameterized profile home (open decision + recommended default), and the
   success-summary format.
-- **`references/ingestion-and-deltas.md`** — reading sources across the connectors,
+- **`references/ingestion-and-deltas.md`** — reading sources across the access paths,
   per-source progress and the per-run context bound, the unreadable-source error
   behaviour, conflict surfacing with both citations, and the delta re-run rules
   (changed / new / now-confirmed vs. a rewrite).

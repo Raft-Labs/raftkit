@@ -12,7 +12,8 @@ Every entry in the profile is one **fact** carrying exactly four things:
 - **Statement** — the fact itself, in plain language.
 - **Tag** — exactly one of ✅ Confirmed / ⚠️ Partial / ❓ Missing (below).
 - **Citation** — the source it came from and where in it (doc + section, email +
-  date, meeting + timestamp, task GID). A ✅ or ⚠️ fact without a citation is not
+  date, meeting + timestamp, task GID, or uploaded file + as-of date — an upload
+  has no live URL). A ✅ or ⚠️ fact without a citation is not
   allowed; a ❓ fact cites the gap, not a value.
 - **Date** — when the fact was last confirmed against a source (as-of date), so a
   re-run can tell fresh facts from stale ones.
@@ -51,8 +52,11 @@ single connector.
 
 **Recommended default**, if the PM has no preference: a Google Drive doc for the
 profile plus a pinned Asana resource task that links it, so every skill can reach
-it by link. Offer this default, note it is provisional pending the decision, and
-record wherever the profile actually lands so re-runs find the same home.
+it by link. The Drive doc may be created and updated via the Drive connector **or**
+as a file in the PM's synced Drive folder — same doc, either path, both through the
+write-protocol gate. Offer this default, note it is provisional pending the
+decision, and record wherever the profile actually lands so re-runs find the same
+home.
 
 ## Reporting back (success summary)
 

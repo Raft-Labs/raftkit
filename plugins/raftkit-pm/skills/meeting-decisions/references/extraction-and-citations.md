@@ -35,6 +35,10 @@ from the call — carries a citation in this single form:
   item was said. Fathom returns these when the recording URL is passed to the
   transcript call, so always pass the URL when reading the transcript.
 
+Timestamped deep links exist only for Fathom-connector reads. An **uploaded
+transcript** cites its own inline timestamps without links, and `<meeting>` becomes
+"uploaded transcript, as-of \<date\>" — never manufacture a deep link for an upload.
+
 **No citation, no claim.** An item that cannot be tied to a specific transcript
 moment is not asserted as fact — either drop it, or raise it to the PM as a question
 ("did we actually decide X? I can't find it in the transcript"). Never manufacture a

@@ -21,12 +21,12 @@ raftkit-core carries no day-to-day workflow of its own — it is the rulebook th
 | --- | --- | --- |
 | `house-rules` | Where project facts live (Project Profiles, never plugins), Asana free-tier constraints, human approval gates, founder-escalation triggers, find-skills governance | "What's the rule on estimates?" / "Can I use Asana dependencies?" |
 | `workflow-constants` | The Asana workspace GID, Feature + Bugs Template GIDs, subtask naming conventions — the single source; templates are always fetched LIVE | "What's the story template GID?" / "How do I fetch the live template?" |
-| `write-protocol` | The draft → approve → push gate for every Asana/client-facing write, plus Asana's rich-text HTML rules | "Why won't my html_notes push?" / before any skill writes anywhere |
+| `write-protocol` | The draft → approve → push gate for every outward write (Asana, Drive docs, files, client-facing), plus Asana's rich-text HTML rules | "Why won't my html_notes push?" / before any skill writes anywhere |
 | `governance-protocols` | Ashit's protocols 1–5 (model triage, decomposition, pre-flight gates, cost hygiene, production alerts), the spec template, the team cheat sheet — the pack `raftkit-dev:setup-project` installs per repo | "What's the exact efficiency warning string?" / "What's the decomposition threshold default?" |
 
 ## The three rules everyone hits eventually
 
-1. **Draft → approve → push.** No skill writes to Asana or anything client-facing without explicit human approval of the exact content.
+1. **Draft → approve → push.** No skill makes an outward write — Asana, a Drive doc, a file, anything client-facing — without explicit human approval of the exact content.
 2. **Live templates, never cached.** Story and bug formats come from the live Asana template tasks at run time; editing the template updates every project instantly.
 3. **Free-tier Asana only.** No dependencies, custom fields, milestones, or start dates — relationships are task links in descriptions.
 

@@ -1,6 +1,6 @@
 ---
 name: meeting-decisions
-description: This skill should be used when a RaftLabs PM wants to turn a client call into cited decisions, a Project Profile update, and Asana tasks — e.g. "extract the decisions from this Fathom call", "run meeting-decisions on <recording>", "turn this call into action items and tasks", "what did we decide and who owns what on that call". It reads one Fathom transcript, extracts decisions / scope changes / action items each cited to a transcript timestamp, flags out-of-scope requests as SCOPE CHANGE, and proposes a Project Profile delta and an Asana task batch as two separately PM-approved gates. Requires an existing Project Profile (routes to project-onboarding if missing); writes and creates nothing without approval.
+description: This skill should be used when a RaftLabs PM wants to turn a client call into cited decisions, a Project Profile update, and Asana tasks — e.g. "extract the decisions from this Fathom call", "run meeting-decisions on <recording>", "turn this call into action items and tasks", "what did we decide and who owns what on that call", or an uploaded transcript file to process. It reads one transcript (Fathom recording or uploaded file), extracts decisions / scope changes / action items each cited to a transcript timestamp, flags out-of-scope requests as SCOPE CHANGE, and proposes a Project Profile delta and an Asana task batch as two separately PM-approved gates. Requires an existing Project Profile (routes to project-onboarding if missing); writes and creates nothing without approval.
 user-invocable: true
 ---
 
@@ -35,9 +35,11 @@ that (see Guardrails).
 
 ## Inputs — gather before extracting
 
-1. **One Fathom recording** — a recording link or a meeting name the PM points at.
-   One meeting per run; never blend two. A name is resolved by listing/searching
-   Fathom meetings; a link resolves directly. If none is given → ask which meeting.
+1. **One meeting transcript** — a Fathom recording (a link or a meeting name the PM
+   points at) **or an uploaded transcript file**. One meeting per run; never blend
+   two. A name is resolved by listing/searching Fathom meetings; a link resolves
+   directly; an upload is used as-is and cited as "uploaded transcript, as-of
+   \<date\>". If none is given → ask which meeting.
    Resolution failures are handled under Edge cases (Error).
 2. **The Project Profile** — its home is **an open decision on the raftkit board**,
    so the PM points at where the profile lives (the same parameterized home
@@ -52,10 +54,13 @@ that (see Guardrails).
 ## Run flow
 
 1. **Resolve the recording.** Turn the link or meeting name into one Fathom
-   recording. If it cannot be resolved, handle it per Edge cases (Error) — never
+   recording — or take the uploaded transcript file as the meeting. If it cannot be
+   resolved, handle it per Edge cases (Error) — never
    guess which meeting was meant.
-2. **Read the transcript live.** Fetch the transcript through the Fathom connector,
-   passing the recording URL so citations become timestamped deep links. Long
+2. **Read the transcript.** Fetch it through the Fathom connector,
+   passing the recording URL so citations become timestamped deep links; an uploaded
+   transcript is read directly and cites its own inline timestamps
+   (`references/extraction-and-citations.md`). Long
    transcripts are processed in chunks with a progress note per chunk
    (see `references/extraction-and-citations.md`); never truncate a transcript
    silently.

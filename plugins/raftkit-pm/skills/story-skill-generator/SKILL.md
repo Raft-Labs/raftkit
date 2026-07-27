@@ -44,7 +44,8 @@ Run project-onboarding first — I need an approved Project Profile to bake from
    elements per `references/baked-context.md`: the project **glossary**, the **roles**
    (who is allowed / not allowed to do what), the **conflict hierarchy** (which source
    wins when sources disagree), and the **sources**. Fetch each source once — the profile
-   included — and snapshot it as markdown for the emitted skill's `references/`, headed by
+   included, by whatever access path it arrives on (connector, upload, link, or synced
+   folder) — and snapshot it as markdown for the emitted skill's `references/`, headed by
    its **as-of date** and **source URL**: story runs then read these local snapshots
    instead of re-opening Drive/Gmail/Fathom every time. Never bake the template format.
 
@@ -61,8 +62,10 @@ Run project-onboarding first — I need an approved Project Profile to bake from
    - tells the PM in its own text to re-run this generator after a major change to the
      project's sources or profile.
 
-   Emit it to the operator's skill location — never into this marketplace repo (generated
-   skills are per-project artifacts, not marketplace plugins).
+   Emit it to the operator's skill location — the PM names it; a Drive-synced skills
+   folder is a valid location and is what makes the generated skill visible to teammates —
+   never into this marketplace repo (generated skills are per-project artifacts, not
+   marketplace plugins).
 
 3. **Validate before handover.** Run one validation story against a scratch task per
    `references/validation-and-regeneration.md`, and show the PM the result before declaring

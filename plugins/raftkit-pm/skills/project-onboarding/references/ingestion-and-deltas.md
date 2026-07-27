@@ -6,12 +6,18 @@ how it surfaces disagreements, and how a re-run stays a delta instead of a rewri
 ## Reading the named sources
 
 Read only the sources the PM named — never reach for one they did not ask for —
-each through its Cowork connector:
+each through whatever access path it arrives on:
 
 - **Google Drive** — PRD, SOW, master doc, and other project documents.
 - **Gmail** — email threads.
 - **Fathom** — meeting recordings and their transcripts.
 - **Asana** — tasks and prior stories.
+- **Uploaded files** — a PRD, SOW, or transcript dropped into the conversation;
+  cite as "uploaded file, as-of \<date\>".
+- **Synced local folder** — Drive mounted via Google Drive for Desktop: reading the
+  doc is a local file read; the citation still names the doc.
+- **Pasted links** — resolve via the Drive connector, or via the synced folder when
+  mounted.
 
 **Progress (Waiting).** Long ingests report progress per source as they go, e.g.
 "read 3 of 5 sources", so a slow run stays legible.
@@ -24,7 +30,8 @@ source produces false ⚠️/❓ tags.
 
 ## Unreadable source — name it, never drop it
 
-If a source cannot be read — connector down, no access, missing or moved file — do
+If a source cannot be read — connector down, no access, missing or moved file, or a
+link or upload that cannot be resolved — do
 **not** fail the whole run and do **not** silently skip it:
 
 1. Name the **exact source** that failed and the **access that is missing** (for

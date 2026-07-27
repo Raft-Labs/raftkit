@@ -33,6 +33,8 @@ something the PM provided.
 3. **The source(s) of truth** — the Project Profile and/or the project's own
    sources (spec, PRD, designs, prior stories). The Project Profile home is not
    fixed; the PM points at whatever sources exist. There is no default source.
+   Sources arrive by any access path the session provides — connector, uploaded
+   file, pasted link, or synced local file (`raftkit-core/house-rules`).
 
 If any of these is missing, **ask before doing anything else** (the Empty state).
 

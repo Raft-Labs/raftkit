@@ -22,7 +22,9 @@ Before declaring a freshly emitted `<project>-user-story` skill ready:
 3. **Check the connector budget.** During the validation run, the only live calls are the
    Feature Template fetch and the scratch task's own Asana calls. Any Drive / Gmail / Fathom
    read for project content is a failed gate — it means the snapshots are incomplete and the
-   token-efficiency promise is broken. Fix the bundle, not the story.
+   token-efficiency promise is broken. Fix the bundle, not the story. The budget counts
+   **connector calls**; reading the bundled snapshots from the filesystem — a Drive-synced
+   folder included — never counts.
 4. **Compare against the live template.** Fetch the live Feature Template
    (`raftkit-core/workflow-constants`) and check the validation story matches it: every
    template section present, the WEESLD rows covered, and the `[AC]` / `Development` /

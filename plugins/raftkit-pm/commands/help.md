@@ -39,12 +39,12 @@ Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls →
 | `story-skill-generator` | A project needs its own baked story skill | "generate the story skill for project X" |
 | `story-readiness` | Checking a story before dev handoff | "is this story ready? \<url\>" |
 | `status-update` | Weekly client update from the board | "draft the client update for project X" |
-| `meeting-decisions` | Turning a Fathom call into decisions + tasks | "extract decisions from \<recording\>" |
+| `meeting-decisions` | Turning a call (Fathom or uploaded transcript) into decisions + tasks | "extract decisions from \<recording\>" |
 | `estimation` | Task-level effort for a ready story | "estimate this story: \<url\>" |
 
 ## Rules that always apply
 
-- **Nothing is written without your approval** — every Asana write and client-facing draft is draft → approve → push.
+- **Nothing is written without your approval** — every outward write (Asana, Drive docs, files) and client-facing draft is draft → approve → push.
 - **No invented facts** — every claim cites a source; gaps stay ❓ and get asked, not guessed.
 - **Scope changes are flagged, never absorbed** — out-of-scope client asks are labelled SCOPE CHANGE.
 - **Estimates are never client commitments** — every estimation output opens with the founder-review watermark.
