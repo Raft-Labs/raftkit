@@ -47,7 +47,9 @@ flow. It refuses that misuse by name.
   claimed but the trace is merely missing, that is the **Empty** gate above, not
   this one — see its tiebreaker.)
 - **Action:** **refuse and route**, stating the reason: an ordinary bug goes
-  through **`file-bug` → `fix-bug`**, not through the incident loop. The incident
+  through **`fix-bug`** — which takes it with a filed bug task or straight from the
+  dev's own report, so this routing never leaves them stuck — not through the
+  incident loop. The incident
   loop's red-first, feature-halting discipline is for real production breakage;
   applying it to an ordinary bug both misprioritizes the bug and cheapens the
   incident path.

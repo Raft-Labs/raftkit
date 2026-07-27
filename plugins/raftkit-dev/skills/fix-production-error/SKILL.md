@@ -1,6 +1,6 @@
 ---
 name: fix-production-error
-description: This skill should be used when a RaftLabs developer pastes a production stack trace or error log — from Sentry, AWS CloudWatch, or Crashlytics — and needs it resolved with incident discipline, e.g. "fix this production error", "here's a Sentry trace", "CloudWatch is alerting", "prod is crash-looping", or a raw stack trace dropped into the session. It halts all feature work, traces the exact failing line by wrapping superpowers:systematic-debugging, writes a failing regression test replicating the crash BEFORE any fix, drives the fix to green with the full suite verified, and prepares the PR — it only suggests deploy steps and never deploys. It is Protocol 5 made executable. NOT for ordinary bugs (a QA bug task, a defect with no production trace) — those go file-bug → fix-bug, and this skill refuses that misuse by name.
+description: This skill should be used when a RaftLabs developer pastes a production stack trace or error log — from Sentry, AWS CloudWatch, or Crashlytics — and needs it resolved with incident discipline, e.g. "fix this production error", "here's a Sentry trace", "CloudWatch is alerting", "prod is crash-looping", or a raw stack trace dropped into the session. It halts all feature work, traces the exact failing line by wrapping superpowers:systematic-debugging, writes a failing regression test replicating the crash BEFORE any fix, drives the fix to green with the full suite verified, and prepares the PR — it only suggests deploy steps and never deploys. It is Protocol 5 made executable. NOT for ordinary bugs (a QA bug task, a defect with no production trace) — those go to fix-bug, and this skill refuses that misuse by name.
 user-invocable: true
 ---
 
@@ -45,7 +45,7 @@ are in `references/triage-and-refusal.md`.
    log excerpt**. Never proceed on a verbal description of the crash alone.
 2. **This is a production incident, not an ordinary bug.** A defect with no
    production trace — a QA bug task, a reproduction someone typed up — is **refused
-   and routed to `file-bug` → `fix-bug`**, stating the exact reason. This skill is
+   and routed to `fix-bug`**, stating the exact reason. This skill is
    not a shortcut around the ordinary bug loop.
 3. **The trace localizes.** A trace that does not point to a line (minified frames,
    missing context) → ask for the **specific missing artifact by name** (sourcemap,
@@ -95,7 +95,7 @@ every run — never cache its text. Then:
 - **Ambiguous trace asks, never guesses** — request the specific artifact
   (sourcemap, request ID, log window) by name.
 - **Refuse the misuse** — an ordinary bug (no production trace) is routed to
-  `file-bug` → `fix-bug` with the reason stated; this skill is not a bypass.
+  `fix-bug` with the reason stated; this skill is not a bypass.
 - **Fix scope = the crash** — opportunistic changes are scope-guard violations;
   hand the diff to `raftkit-dev/scope-guard`. Behaviour-preserving cleanup is
   `raftkit-dev/simplify`, separately.
@@ -112,8 +112,8 @@ every run — never cache its text. Then:
 - **Wiring the alerting** — connecting Sentry / CloudWatch / Slack is infra and
   release-train rollout, not this skill; it consumes a pasted trace, it does not
   configure the pipeline.
-- **The ordinary bug flow** — a defect with no production trace goes `file-bug` →
-  `fix-bug`; this skill refuses it.
+- **The ordinary bug flow** — a defect with no production trace goes to `fix-bug`
+  (with a bug task or without one); this skill refuses it.
 - **Deploying** — preparation and suggested steps only; the release train deploys.
 
 ## Reference files
@@ -125,5 +125,5 @@ every run — never cache its text. Then:
   line + deploy hand-off.
 - `references/triage-and-refusal.md` — the front gates and the exact wording: the
   empty-trace ask, the ambiguous-trace artifact-by-name ask, the ordinary-bug
-  misuse refusal and its `file-bug` → `fix-bug` routing, and the systemic
+  misuse refusal and its `fix-bug` routing, and the systemic
   root-cause containment + follow-up-proposal path.

@@ -38,7 +38,7 @@ Merging is always human. The skills never merge, never close stories.
 | `scope-guard` | Auditing your diff against the story before a PR | "run scope-guard" |
 | `simplify` | Stripping over-engineering after phases complete | "run the simplify pass" |
 | `pr` | Raising the house-convention PR + automated review | "raise the PR" |
-| `fix-bug` | A templated Asana bug is assigned to you | "fix this bug: \<bug-url\>" |
+| `fix-bug` | A bug needs fixing — an assigned Asana bug, or one you found yourself | "fix this bug: \<bug-url\>" · "I found a bug — \<what's broken\>" |
 | `fix-production-error` | You have a Sentry/CloudWatch/Crashlytics stack trace | paste the trace + "fix this production error" |
 | `ui-creation` | Building the UI phase of a story with UI scope | "build the UI for this story" |
 | `setup-project` | New repo needs the governance pack (or a pack update) | "set up this repo" |
