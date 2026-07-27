@@ -14,15 +14,17 @@ next, and the fix step is **unreachable** until the repro test is observed red.
 - **Intake gate** — the Environment, Steps to Reproduce, and "Done when" sections
   must be present or the bug bounces before any fix work begins
   (`bug-intake-and-handback.md`).
-- **Reproduce → red test gate** — wrap superpowers `systematic-debugging` to
+- **Reproduce → red test gate** — wrap `superpowers:systematic-debugging` to
   replicate the defect from the templated steps in the bug's stated environment, and
-  encode it as a test.
+  encode it as a test per `superpowers:test-driven-development`.
   The test must be **observed failing for the reason the bug describes** — a test
   that passes, or fails for an unrelated reason, is not a repro; do not proceed.
   Cannot reproduce → hand back to QA (`bug-intake-and-handback.md`); never fix blind.
 - **Fix → green gate** — only once the repro is red, implement the **smallest**
   change that turns it green. Nothing speculative, nothing adjacent. The whole suite
-  must then be green (the hard stop below).
+  must then be green (the hard stop below). Prove it per
+  `superpowers:verification-before-completion` — the green run is observed, never
+  assumed.
 
 ## The repro test is permanent
 
@@ -71,6 +73,8 @@ feature implementation:
 
 ## The seam in one line
 
-`systematic-debugging` reproduces and diagnoses → the repro test makes the defect
-red → the fix turns it green → `scope-guard` proves the diff didn't exceed the bug →
-`simplify` proves it isn't over-built → the squash PR carries it to a human merge.
+`superpowers:systematic-debugging` reproduces and diagnoses → the repro test makes
+the defect red → the fix turns it green → `scope-guard` proves the diff didn't
+exceed the bug → `simplify` proves it isn't over-built →
+`superpowers:verification-before-completion` proves the green was observed → the
+squash PR carries it to a human merge.

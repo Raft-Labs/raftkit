@@ -1,6 +1,6 @@
 ---
 name: fix-bug
-description: This skill should be used when a RaftLabs developer is handed a templated Asana bug task to fix — e.g. "fix this bug", "run fix-bug on <bug-url>", "work this bug ticket", or when a bug is assigned and needs a defect turned into a failing regression test and then fixed to green. It reads the bug task live from Asana, reproduces the defect as a FAILING test BEFORE any fix is written (the order is enforced — no red test, no fix), then fixes to green on a branch through the same scope-guard → simplify → commit → squash-PR loop as feature work, fills "Fixed in build ___" on the bug task, and hands back to QA. It bounces bugs missing steps or environment back to QA naming the exact missing template sections, and returns cannot-reproduce bugs with what was tried, the environment used, and one focused question — it never fixes blind. Not for filing bugs (raftkit-qa file-bug), retesting fixes (raftkit-qa retest), or production incidents (fix-production-error).
+description: This skill should be used when a RaftLabs developer is handed a templated Asana bug task to fix — e.g. "fix this bug", "run fix-bug on <bug-url>", "work this bug ticket", or when a bug is assigned and needs a defect turned into a failing regression test and then fixed to green. It reads the bug task live from Asana, reproduces the defect as a FAILING test BEFORE any fix is written by wrapping superpowers:systematic-debugging (the order is enforced — no red test, no fix), then fixes to green on a branch through the same scope-guard → simplify → commit → squash-PR loop as feature work, fills "Fixed in build ___" on the bug task, and hands back to QA. It bounces bugs missing steps or environment back to QA naming the exact missing template sections, and returns cannot-reproduce bugs with what was tried, the environment used, and one focused question — it never fixes blind. Not for filing bugs (raftkit-qa file-bug), retesting fixes (raftkit-qa retest), or production incidents (fix-production-error).
 user-invocable: true
 ---
 
@@ -16,10 +16,12 @@ Template's environment and steps exist precisely so a failing test can be writte
 first (PRD §5.3). A bug fixed without a repro test can silently return; a bug fixed
 after a repro test cannot.
 
-This skill **orchestrates** — it rebuilds nothing. It wraps superpowers
-`systematic-debugging` for the reproduce-and-diagnose work, and reuses the sibling
-skills `raftkit-dev/scope-guard` (the BEYOND audit) and `raftkit-dev/simplify` (the
-minimalism pass). Reach for them by name.
+This skill **orchestrates** — it rebuilds nothing. It wraps
+`superpowers:systematic-debugging` for the reproduce-and-diagnose work,
+`superpowers:test-driven-development` for the red-before-fix order, and
+`superpowers:verification-before-completion` for the evidence gate at hand-back,
+and reuses the sibling skills `raftkit-dev/scope-guard` (the BEYOND audit) and
+`raftkit-dev/simplify` (the minimalism pass). Reach for them by name.
 
 ## The one rule that governs everything
 
@@ -67,9 +69,10 @@ Everything else in this skill serves that order. The mechanics are in
    the three missing → bounce to QA (precondition 3). Read the environment from the
    Environment block — this is the environment the repro runs in.
    `references/bug-intake-and-handback.md`.
-2. **Reproduce as a failing test — first.** Following superpowers
-   `systematic-debugging`, replicate the defect from the templated steps in the
-   stated environment, and write a test that fails on it.
+2. **Reproduce as a failing test — first.** Following
+   `superpowers:systematic-debugging`, replicate the defect from the templated
+   steps in the stated environment, and write a test that fails on it per
+   `superpowers:test-driven-development` (red first).
    - **Test observed red** → continue.
    - **Cannot reproduce** → return the bug to QA with what was tried, the
      environment used, and **one** focused question — never fix blind
@@ -87,8 +90,9 @@ Everything else in this skill serves that order. The mechanics are in
 6. **Commit and open the PR** per the shared git conventions (below).
 7. **Fill "Fixed in build ___" — mandatory before hand-back.** Write the build /
    version into the bug task's "Done when" section. This is the retest contract; QA cannot
-   retest without it. Then hand back with the success line
-   (`references/bug-intake-and-handback.md`).
+   retest without it. Gate the claim with `superpowers:verification-before-completion`
+   — observe the green run before asserting it — then hand back with the success
+   line (`references/bug-intake-and-handback.md`).
 
 ## Git conventions (same as feature work)
 
@@ -143,5 +147,5 @@ is part of the permanent diff.
   environment-default rule; and both hand-back protocols (missing-sections bounce,
   cannot-reproduce return) with their exact wording.
 - `references/fix-loop.md` — the red-before-fix mechanics, the permanent repro test,
-  the `systematic-debugging` → `scope-guard` → `simplify` orchestration seam, the
+  the `superpowers:systematic-debugging` → `scope-guard` → `simplify` orchestration seam, the
   git conventions, and the fix-breaks-another-test hard stop.
