@@ -30,7 +30,7 @@ read-only by design; the comment is `implement`'s close of the loop).
 
 ## Gate 1 · Plan (plan-approval gate)
 
-1. **Brainstorm + plan.** Run plan mode with `superpowers` brainstorming, the dev
+1. **Brainstorm + plan.** Run plan mode with `superpowers:brainstorming`, the dev
    in the loop. Do not skip to a decomposition table before the approach is agreed.
 2. **State the scope contract.** In scope = the story's `[AC]`s, verbatim;
    everything else = out, echoing the story's Out-of-scope / non-goals list. This

@@ -1,6 +1,6 @@
 ---
 name: implement
-description: This skill should be used when a RaftLabs developer wants to take one Asana story from URL to a review-ready PR the house way — e.g. "run /implement <story-url>", "implement this story", "build this task end to end", or when a dev hands over a ready raftkit story to code. It fetches the story and its live [AC] subtasks, refuses any story that fails the Gate 0 readiness audit (no override), runs plan mode with superpowers brainstorming, writes the approved plan as the spec file (no spec, no code), then drives test-first phases through scoped subagents and the post-edit review layers (simplify, security, lint + suite), clears Gate 2 (scope-guard + CodeRabbit), and delegates the raise + Asana close-out to the pr skill. It orchestrates existing engines and rebuilds none of them; it never merges and never ticks [AC]/Testing or closes the story.
+description: This skill should be used when a RaftLabs developer wants to take one Asana story from URL to a review-ready PR the house way — e.g. "run /implement <story-url>", "implement this story", "build this task end to end", or when a dev hands over a ready raftkit story to code. It fetches the story and its live [AC] subtasks, refuses any story that fails the Gate 0 readiness audit (no override), runs plan mode with superpowers:brainstorming, writes the approved plan as the spec file (no spec, no code), then drives test-first phases through scoped subagents and the post-edit review layers (simplify, security, lint + suite), clears Gate 2 (scope-guard + CodeRabbit), and delegates the raise + Asana close-out to the pr skill. It orchestrates existing engines and rebuilds none of them; it never merges and never ticks [AC]/Testing or closes the story.
 user-invocable: true
 ---
 
@@ -14,7 +14,7 @@ hard gates — scope creep, missing edge cases, compounding errors — so this
 orchestrator chains the guardrails into one disciplined flow.
 
 `implement` is the conductor; the siblings are the orchestra. It **rebuilds
-nothing** — Gate 0 is `raftkit-pm/story-readiness`, planning is `superpowers`,
+nothing** — Gate 0 is `raftkit-pm/story-readiness`, planning is `superpowers:brainstorming`,
 the post-edit layers are `simplify` + `security-guidance` + the suite, Gate 2 is
 `scope-guard` + CodeRabbit, and the raise + close-out are the `pr` skill. It owns
 only the **gate sequencing**, the **spec-file lifecycle**, the **pre-edit
@@ -66,7 +66,7 @@ do not reinvent them. **NOT READY → refuse, no override**, and post the gap li
 back on the story for the PM. See `references/gates.md`.
 
 ### Gate 1 · Plan  → PLAN-APPROVAL GATE
-Run plan mode with `superpowers` brainstorming, dev in the loop. The plan states
+Run plan mode with `superpowers:brainstorming`, dev in the loop. The plan states
 the **scope contract** (in scope = the ACs; everything else = out) and the
 **decomposition table** (phase · subagent · target files · target model ·
 dependency) of atomic units that compile in isolation. On dev approval, post the
