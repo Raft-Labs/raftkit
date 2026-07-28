@@ -34,6 +34,7 @@ Merging is always human. The skills never merge, never close stories.
 
 | Skill | Use it when | Say |
 | --- | --- | --- |
+| `init` | First time opening a repo with raftkit-dev — or checking one for drift | "init this repo" |
 | `ultrathink` | Thinking through a decision or planning work before implementation (invoke: `/raftkit-dev:ultrathink`) | "ultrathink this" / "make a plan" |
 | `implement` | Taking one ready Asana story to a review-ready PR | "implement this story: \<url\>" |
 | `scope-guard` | Auditing your diff against the story before a PR | "run scope-guard" |

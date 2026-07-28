@@ -24,7 +24,7 @@
     {
       "name": "raftkit-dev",
       "source": "./plugins/raftkit-dev",
-      "description": "Developer skills: ultrathink planning, implementation, scope guard, simplification, PRs, bug and incident fixes, UI creation, project setup, recipes, capability preflight, the full docs product, and generalized Hasura migrations.",
+      "description": "Developer skills: repo init, ultrathink planning, implementation, scope guard, simplification, PRs, bug and incident fixes, UI creation, project setup, recipes, capability preflight, the full docs product, and generalized Hasura migrations.",
       "category": "role"
     },
     {
