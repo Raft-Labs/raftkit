@@ -1,11 +1,31 @@
 {
   "name": "raftkit-dev",
-  "version": "0.14.0",
-  "description": "Developer skills: init, implement, scope guard, simplify, PR, bug fix, UI creation, project setup, recipes.",
+  "version": "0.21.0",
+  "description": "Developer skills: repo init, ultrathink planning, implementation, scope guard, simplification, PRs, bug and incident fixes, UI creation, project setup, recipes, capability preflight, the full docs product, and generalized Hasura migrations.",
   "author": {
     "name": "RaftLabs"
   },
   "dependencies": [
-    "raftkit-core"
+    "raftkit-core",
+    {
+      "name": "superpowers",
+      "marketplace": "claude-plugins-official"
+    },
+    {
+      "name": "claude-md-management",
+      "marketplace": "claude-plugins-official"
+    },
+    {
+      "name": "code-simplifier",
+      "marketplace": "claude-plugins-official"
+    },
+    {
+      "name": "security-guidance",
+      "marketplace": "claude-plugins-official"
+    },
+    {
+      "name": "pr-review-toolkit",
+      "marketplace": "claude-plugins-official"
+    }
   ]
 }

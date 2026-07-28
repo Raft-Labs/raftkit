@@ -17,9 +17,9 @@ transaction and adds nothing else.
 
 1. **Orchestrates, rebuilds nothing.** The governance pack is `setup-project`'s
    — init calls it and never reimplements a byte of it. Capability checking is
-   `raftkit-dev:capability-preflight`'s when that skill is installed — init
-   delegates to it entirely. Init's own scope is exactly one thing nothing else
-   owns: repo-level Claude Code configuration.
+   `raftkit-dev:capability-preflight`'s — init delegates to it entirely and
+   never re-derives readiness itself. Init's own scope is exactly one thing
+   nothing else owns: repo-level Claude Code configuration.
 2. **Fail-closed, human-gated.** Every write goes through
    `scripts/merge-settings.mjs`, which never partially writes: a conflict or a
    malformed input aborts with nothing written. A missing capability produces
@@ -39,10 +39,9 @@ Work `references/run-flow.md` in order:
 
 1. **Preflight — validate all, write nothing.** Confirm the git repo, resolve
    every write target, detect conflicts.
-2. **Capability check.** Delegate to `raftkit-dev:capability-preflight` when
-   installed; otherwise run the interim fallback in `references/repo-config.md`
-   — one consolidated plan, one approval, no piecemeal installs. A required
-   capability that stays missing after a declined plan stops the run.
+2. **Capability check.** Delegate to `raftkit-dev:capability-preflight` and use
+   its verdict verbatim — its exact strings, its plan format, its hard stop on
+   a refused or unanswered plan. Init adds nothing here.
 3. **Governance pack.** Delegate to `raftkit-dev:setup-project` unchanged. If it
    aborts, init writes nothing further and stops.
 4. **Repo config.** Run `scripts/merge-settings.mjs` against
@@ -85,15 +84,13 @@ diff and changes only what the developer explicitly approves. See
 - **The governance pack itself** — owned by `setup-project`; delegated to, never
   duplicated.
 - **The capability registry and its classifier** — owned by
-  `capability-preflight`; init's own fallback exists only until that skill
-  merges (see the removal note in `references/repo-config.md`).
+  `capability-preflight`; init only consumes its verdict.
 
 ## Reference files
 
 - `references/run-flow.md` — the five-phase transaction, the exact strings,
   and the doctor re-run.
 - `references/repo-config.md` — the managed settings-key table, the merge and
-  conflict rules, the marker shape, and the interim capability-check fallback
-  with its removal condition.
+  conflict rules, and the marker shape.
 - `scripts/merge-settings.mjs` — the only write path to `.claude/settings.json`;
   deterministic, fail-closed, byte-identical on an unchanged re-run.

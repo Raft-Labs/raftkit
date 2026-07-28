@@ -1,0 +1,4 @@
+# raftkit-governance-pack managed file
+name: Quality guardrail
+on: [pull_request]
+jobs: {}

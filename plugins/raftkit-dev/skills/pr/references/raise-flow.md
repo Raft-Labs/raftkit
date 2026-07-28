@@ -63,7 +63,7 @@ If the draft title fails, **do not raise**. Propose a compliant title derived fr
 the story title and branch, show why the draft failed, and require a passing title
 before raising. Rejecting without a proposal is not enough.
 
-## Build the description — four mandatory sections, all named
+## Build the description — five mandatory sections, all named
 
 The description template is fixed; every section is present and labelled:
 
@@ -73,6 +73,13 @@ The description template is fixed; every section is present and labelled:
    not built (mirrors the scope-guard audit).
 4. **Test summary** — what was tested and the result (the gates that ran, the ACs
    walked).
+5. **Docs** — the story's documentation result, carried from `raftkit-dev:docs`
+   verify: the updated files with their verification result, the
+   evidence-backed `Docs: not impacted — <reason>` line, or — on a repo with no
+   recognized documentation convention — that outcome stated plainly (this is
+   the tool's own documented, approved result for a docs-less repo, not a
+   missing section). Reproduce whichever is true, with its inspected change
+   set. Never fabricate a docs result to fill the section.
 
 A missing or empty section is a fail — do not raise a PR with an incomplete body.
 
@@ -84,8 +91,40 @@ A missing or empty section is a fail — do not raise a PR with an incomplete bo
   paraphrase, summarise, or hide which layer failed — and stop. `pr` surfaces the
   hook result; it never installs or edits the hook (that is `setup-project`).
 - **Open the PR** against the resolved squash target with the validated title and
-  the four-section body (GitHub tooling / `gh pr create`).
+  the five-section body (GitHub tooling / `gh pr create`).
 - **Reviewers** default to the repo's CODEOWNERS when present; when absent, leave
   reviewers unset and note it in the run output. Honour existing branch protections.
 
 One PR per story — stacked / multi-story PRs are out of scope in v1.
+
+## Incident mode (activated only by a structured handoff)
+
+`pr` has a bounded **incident mode**, entered **only** through a structured
+Incident PR Handoff from `fix-production-error` (its eight elements are defined
+in that skill's `references/incident-loop.md`). Incident mode is never inferred:
+the normal PR path still **hard-fails without a story**, and there is **no
+silent downgrade** to incident mode ever.
+
+In incident mode `pr`:
+
+1. Validates the handoff is complete — a missing element is a named hard stop.
+2. Builds the description's sections **from the handoff's evidence** — it never
+   invents a story, `[AC]`s, or a spec that a raw incident does not have.
+3. Applies the unchanged squash-target, commitlint, pre-push, and never-merge
+   rules.
+4. States that deployment stays human- and release-train-controlled.
+
+Incident evidence is **SHA-bound** like every other gate (below).
+
+## SHA-bound gate evidence
+
+Every gate's evidence line names the exact change-set SHA it inspected (e.g.
+`scope-guard: clean — verified at a1b2c3d`) — this is an agent responsibility
+carried in the reported line, not a separately stored record. Before a gate
+result is consumed, re-derive the current branch head (`git rev-parse HEAD`)
+and compare it against the SHA the cited evidence names; if they differ the
+gate **refuses** with the exact line `evidence stale — inspected <sha-a>,
+current <sha-b>` and demands regeneration. **Regeneration is the only cure** —
+no gate ever passes on evidence bound to a different change set. This covers the
+scope-guard clean line, the Docs Impact Plan and docs verify, the automated
+review, and the test summary alike.

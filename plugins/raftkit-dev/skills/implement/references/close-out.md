@@ -52,3 +52,8 @@ to act on without re-deriving anything:
 
 The run is not a failure in this state: the code shipped and the PR is open; only
 the bookkeeping needs a manual hand. Report it plainly with the paste-ready text.
+
+
+## Asana rendering
+
+All Asana output is rendered and verified through core `asana-formatting` (per-surface tag matrix, markdown→HTML conversion, mentions, read-back verification), behind the `write-protocol` draft → approve → push gate.

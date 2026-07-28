@@ -1,0 +1,1 @@
+{"name":"ym","workspaces":["packages/*"],"scripts":{"lint":"yarn workspaces foreach run lint"}}

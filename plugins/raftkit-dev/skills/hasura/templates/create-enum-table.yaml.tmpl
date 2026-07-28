@@ -1,0 +1,21 @@
+table:
+  name: {{TABLE}}
+  schema: public
+is_enum: true
+array_relationships: []
+select_permissions:
+  - role: user
+    permission:
+      columns: [value, description]
+      filter: {}
+      allow_aggregations: true
+  - role: service
+    permission:
+      columns: [value, description]
+      filter: {}
+      allow_aggregations: true
+  - role: anonymous
+    permission:
+      columns: [value, description]
+      filter: {}
+      allow_aggregations: true

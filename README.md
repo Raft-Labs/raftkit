@@ -21,7 +21,7 @@ Marketplace added — now install your role plugin: raftkit-pm, raftkit-dev, or 
 claude plugin install raftkit-dev@raftkit   # or raftkit-pm / raftkit-qa
 ```
 
-Installing any role plugin automatically installs `raftkit-core` alongside it. Inside a Claude Code session, the same commands work as `/plugin marketplace add` and `/plugin install`. Verify with `claude plugin list` — you should see your role plugin and `raftkit-core`.
+Installing any role plugin automatically installs `raftkit-core` alongside it. `raftkit-dev` additionally auto-installs five declared dependencies from the official Claude marketplace — `superpowers`, `code-simplifier`, `claude-md-management`, `security-guidance`, `pr-review-toolkit` — the engines its skills call by name. Inside a Claude Code session, the same commands work as `/plugin marketplace add` and `/plugin install`. Verify with `claude plugin list` — you should see your role plugin, `raftkit-core`, and (for `raftkit-dev`) the five auto-installed engines.
 
 ## Plugins
 
@@ -29,7 +29,7 @@ Installing any role plugin automatically installs `raftkit-core` alongside it. I
 | --- | --- | --- |
 | `raftkit-core` | everyone (auto-installed) | House rules, workflow constants, governance protocols |
 | `raftkit-pm` | PMs | Onboarding, user stories, story readiness, status updates, meeting decisions, estimation |
-| `raftkit-dev` | Developers | Init, implement, scope guard, simplify, PR, bug fix, UI creation, project setup, recipes |
+| `raftkit-dev` | Developers | Init, ultrathink planning, implement, scope guard, simplify, PR, bug fix, UI creation, project setup, recipes, capability preflight, docs, Hasura |
 | `raftkit-qa` | QA | Test suites, test run sheets, bug filing, retest |
 
 v1 ships exactly these four plugins. PM and QA plugins target the Claude apps/Cowork runtime; the install path there is pending the org-wide install decision (Asana task 1216551001583573) — until it lands, use Claude Code with the commands above.

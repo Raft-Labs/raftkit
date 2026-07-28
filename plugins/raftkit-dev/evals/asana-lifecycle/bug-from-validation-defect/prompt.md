@@ -1,0 +1,3 @@
+I just ran the checkout flow against the spec for story "Guest checkout with saved cards" and found a real defect in what we shipped: the spec says that when a saved card's billing address is missing, the checkout page should show the address form pre-expanded with an inline notice — instead the page just disables the Pay button with no message. I reproduced it twice on staging (add a saved card via the account page, delete its billing address in the admin panel, then start a guest checkout with that card selected).
+
+File a bug for this on the board so QA can pick it up. Set up as much of the ticket as you can from what I've told you and the story spec, and flag anything you need from me before it goes up.

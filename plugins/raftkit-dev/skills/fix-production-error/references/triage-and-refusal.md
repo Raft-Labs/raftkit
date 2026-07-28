@@ -68,4 +68,7 @@ gate, but it lives here because it is a discipline decision, not a mechanical on
   for **human approval per `raftkit-core/write-protocol`** — draft → approve →
   file. It is never auto-filed.
 - **Never:** refactor architecture under incident pressure. Incident time is for
-  containment; the structural fix is deliberate, reviewed work that follows.
+  containment; the structural fix is deliberate, reviewed work that follows. The
+  same discipline covers documentation: a runbook/known-failure update ships in
+  the incident only when its scope requires it — everything broader goes into
+  the drafted follow-up proposal.

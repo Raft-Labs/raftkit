@@ -1,0 +1,22 @@
+[
+  {
+    "name": "envx",
+    "path": "/home/user/.agents/skills/envx",
+    "scope": "global"
+  },
+  {
+    "name": "find-skills",
+    "path": "/home/user/.agents/skills/find-skills",
+    "scope": "global"
+  },
+  {
+    "name": "claude-mem",
+    "path": "/home/user/.agents/skills/claude-mem",
+    "scope": "global"
+  },
+  {
+    "name": "task-observer",
+    "path": "/home/user/.agents/skills/task-observer",
+    "scope": "global"
+  }
+]

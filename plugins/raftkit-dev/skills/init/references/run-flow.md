@@ -21,18 +21,11 @@ Phase 1 does.
 
 ## Phase 2 — Capability check
 
-If `raftkit-dev:capability-preflight` is installed, run it and use its verdict
-verbatim — its exact strings, its plan format, its hard stop on a refused or
-unanswered plan. Init adds nothing here.
-
-Otherwise (interim, until that skill merges — see `repo-config.md` for the
-fallback and its removal condition): check for the engines the dev workflow
-actually calls (`superpowers`, `code-simplifier`, `claude-md-management`,
-`security-guidance`, `pr-review-toolkit`) via `claude plugin list --json`.
-Missing ones are collected into **one plan, one approval** — provenance
-(marketplace, version when available) and the exact install command per item.
-Never install as each gap is found. A required engine that is still missing
-after a declined or unanswered plan stops the run with:
+Run `raftkit-dev:capability-preflight` and use its verdict verbatim — its
+exact strings, its plan format, its hard stop on a refused or unanswered plan.
+Init adds nothing here and never re-derives readiness itself. A required
+capability that stays missing after a declined or unanswered plan stops the
+run with capability-preflight's own refusal string:
 
 ```
 Required capability unavailable: <capability>. Proposed install command (human approval required): <exact command>. Stopping — no fallback.

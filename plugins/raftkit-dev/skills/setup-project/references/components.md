@@ -44,20 +44,35 @@ per repo.
 | `decomposition_threshold` | `2` | already baked into the protocol text you install verbatim |
 | `spec_path` | `docs/specs/active-feature.md` | the spec template's install path (component 2) and the hook's spec gate |
 
-The hook asset carries two tokens, substituted at install time before writing
-`.githooks/pre-push`:
+Components 3–4 (the hook, the CI workflow) are **templates rendered
+fail-closed** by `scripts/render-assets.mjs` — the exact substitution rules
+live here and the script executes them; there is no other rendering path for
+those two. Component 5 (`coderabbit.yaml`) has no tokens and installs
+byte-verbatim, unrendered — `render-assets.mjs` does not touch it. Tokens:
 
-- `__SPEC_PATH__` → the `spec_path` value read from core.
-- `__SPEC_TEMPLATE_SENTINEL__` → a distinctive placeholder from the live spec
-  template (default `[Feature Name or Jira Ticket ID]`, the H1 placeholder). The
-  hook's spec gate uses it to reject a spec that still *is* the untouched
-  template — Protocol 2 needs a spec that exists **and** is filled in, so a
-  freshly-installed template alone does not clear the gate.
+| Token | Value | Validation |
+|---|---|---|
+| `__SPEC_PATH__` | the `spec_path` value read from core | as before |
+| `__SPEC_TEMPLATE_SENTINEL__` | the live spec template's H1 placeholder | as before |
+| `__PM__` | detected package manager | enum `pnpm|npm|yarn|bun|none` only |
+| `__QUALITY_SCRIPTS__` | approved, present script names | each matches `[A-Za-z0-9][A-Za-z0-9:_.-]*` and exists as a key in the approved manifest; names only — script bodies are never copied into assets |
+| `__ABSENT_ROLES__` | quality roles with no script | same charset, or `none`; reported by the hook, never executed |
+| `__SETUP_BLOCK__` | a named, documented option | one of `none` · `corepack` · `setup-node-cache-any` · `setup-bun`, emitted verbatim from this table — chosen by the human from the detection report; no mechanism is ever assumed per manager family |
+| `__QUALITY_STEPS__` | one CI run-line per approved script | derived from validated names only |
 
-These two substitutions are the only edits to any asset — every other byte
-installs verbatim. When the spec/threshold decision (Asana `1216550892331152`)
-lands and core's defaults change, a re-run re-installs with the new values; no
-per-repo edit.
+Rules: a declared `packageManager` version is honored via the repo-supported
+mechanism and validated as an explicit `x.y.z` — `latest` is rejected and a
+version is never invented from a lockfile. Newlines, control characters,
+command substitutions, backticks, and leading-dash/option-like values are
+rejected. **Any validation failure means the renderer emits a reason and must render nothing** — no partial output, ever. After substitution no `__…__`
+token may remain. Identical approved inputs render byte-identical assets, so an
+unchanged re-run produces no file changes.
+
+**Ownership marker:** rendered assets carry the literal marker
+`raftkit-governance-pack` in their header. Marker-owned hook and workflow files
+are the only files the transaction replaces silently; an unmarked or symlinked
+`.githooks/pre-push` or `quality-guardrail.yml` is foreign — show the diff,
+propose, and let the developer decide.
 
 ## The pre-push hook is a tracked file, not `.git/hooks/`
 

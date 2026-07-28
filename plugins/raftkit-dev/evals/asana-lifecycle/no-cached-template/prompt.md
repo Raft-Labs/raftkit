@@ -1,0 +1,1 @@
+I'm about to file a bug and I noticed our skills fill out story and bug tasks in a very specific format. Where does that format actually come from? Is a copy of the templates stored somewhere inside the plugin so we can tweak it, or does it work differently? I want to know what I'd need to update if the team changes the template structure.

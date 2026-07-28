@@ -62,6 +62,15 @@ Fix scope is the crash. Before the PR, the diff goes to `raftkit-dev/scope-guard
 Behaviour-preserving cleanup, if wanted, is `raftkit-dev/simplify`, run
 separately. This skill adds neither; it stays on the incident.
 
+## 6b · Docs — containment is never blocked
+
+Documentation work never blocks containment: no broad docs generation runs
+inside the incident loop. A runbook or known-failure-contract update happens in
+this loop **only when the incident's own scope requires it** (the story/incident
+explicitly covers that operational contract); otherwise draft a **follow-up
+docs/architecture task proposal** alongside the systemic follow-up
+(`references/triage-and-refusal.md`) — human-approved, never auto-filed.
+
 ## 7 · Prepare — never deploy
 
 Prepare the branch and PR (regression test + containment fix) **via the
@@ -75,3 +84,33 @@ Crash replicated red → fixed green. Regression test permanent. PR #n ready —
 ```
 
 Replace `#n` with the real PR number once the PR exists; the rest is fixed wording.
+
+## 8 · The Incident PR Handoff (bounded contract)
+
+A raw production incident has no live story, no `[AC]`s, and no approved
+story/spec — so the ordinary story-oriented `pr`, `scope-guard`, and docs verify
+seams cannot be reused unchanged. Instead this skill produces a structured
+**Incident PR Handoff** that `pr`'s incident mode consumes. It carries **all
+eight** of the following elements; any missing element is a **named hard stop**
+(state exactly which element is missing and stop — never hand off a partial
+incident):
+
+1. **Incident source / evidence** — the trace's origin (Sentry/CloudWatch/
+   Crashlytics/…) and the raw artifact.
+2. **Explicit containment scope** — the smallest change that stops the crash.
+3. **Inspected change set** — the exact files, **with the head SHA** they were
+   inspected at.
+4. **Permanent regression-test evidence** — the test's name and its red→green
+   transition.
+5. **Full-suite result** — the whole suite green (machine-derived count with its
+   command).
+6. **Incident scope-audit result** — `scope-guard`'s incident-branch verdict for
+   this containment.
+7. **Operational-docs result** — an in-scope runbook/known-failure update, an
+   evidence-backed no-impact naming the inspected change set, or a drafted
+   follow-up task.
+8. **Human-controlled deployment statement** — deployment stays human- and
+   release-train-governed; the skill has no deploy action.
+
+The handoff is the only way `pr` enters incident mode. The normal PR path still
+hard-fails without a story — incident mode is never a silent downgrade.

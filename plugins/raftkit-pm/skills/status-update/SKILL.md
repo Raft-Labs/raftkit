@@ -88,3 +88,8 @@ message from `raftkit-core/workflow-constants` rather than proceeding.
 - **`references/update-format.md`** — the draft's section structure, the
   blocked-line shape (blocker + owner + next step), the one-ask ranking rule, the
   traceability rule, and how empty / thin weeks are handled.
+
+
+## Asana rendering
+
+All Asana output is rendered and verified through core `asana-formatting` (per-surface tag matrix, markdown→HTML conversion, mentions, read-back verification), behind the `write-protocol` draft → approve → push gate.

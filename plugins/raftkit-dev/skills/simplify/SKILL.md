@@ -1,6 +1,6 @@
 ---
 name: simplify
-description: This skill should be used when a RaftLabs developer wants a post-implementation minimalism pass on a completed story — e.g. "simplify this", "run the simplify pass", "strip the over-engineering", "remove speculative abstractions", "clean up before the PR", or when /implement finishes its phases and hands off for a minimalism pass. It is a behaviour-preserving cleanup that removes speculative abstractions, dead flexibility, unused config, and narration comments from the files the story changed — orchestrating the code-simplifier plugin under the ponytail lens (prefer deleting code to restructuring it; add no new abstractions). Revert-safety is the core guarantee — it refuses to start on a red suite, and auto-reverts any change that turns a test red, naming the failing test. Runs only on the story branch's in-scope diff. Not a linter (style is the linter's job), not a refactor tool, and never a performance pass.
+description: This skill should be used when a RaftLabs developer wants a post-implementation minimalism pass on a completed story — e.g. "simplify this", "run the simplify pass", "strip the over-engineering", "remove speculative abstractions", "clean up before the PR", or when /implement finishes its phases and hands off for a minimalism pass. It is a behaviour-preserving cleanup that removes speculative abstractions, dead flexibility, unused config, and narration comments from the files the story changed — dispatching the code-simplifier:code-simplifier agent and the ponytail:ponytail-review minimalism pass (the lens is the provider's, invoked, never restated). Revert-safety is the core guarantee — it refuses to start on a red suite, and auto-reverts any change that turns a test red, naming the failing test. Runs only on the story branch's in-scope diff. Not a linter (style is the linter's job), not a refactor tool, and never a performance pass.
 user-invocable: true
 ---
 
@@ -11,12 +11,14 @@ over-build: interfaces with one implementation, config nobody sets, comments tha
 narrate the obvious. This pass strips what the story didn't need, so the codebase
 stays **exactly as complex as the product requires — no more** (PRD §5.3).
 
-It orchestrates the **code-simplifier** plugin (which *finds* the
-simplifications; this skill *applies* them only after the developer approves)
-under the **ponytail lens** (prefer deleting code to restructuring it; introduce
-no new abstractions). This skill rebuilds neither —
-it is the disciplined driver that adds revert-safety, the diff-only boundary, the
-approval gate, and the reporting contract around them.
+It orchestrates two scoped engines and rebuilds neither: the
+**`code-simplifier:code-simplifier` agent** — dispatched by that scoped type,
+never the bare name, which is ambiguous while pr-review-toolkit is enabled —
+*finds* the simplifications, and the **`ponytail:ponytail-review`** skill reads
+the in-scope diff through the minimalism lens (the lens is ponytail's method,
+owned there, not restated here). This skill *applies* candidates only after the
+developer approves — it is the disciplined driver that adds revert-safety, the
+diff-only boundary, the approval gate, and the reporting contract around them.
 
 ## The one rule that governs everything
 
@@ -64,11 +66,13 @@ by default.
 2. **Scope to the diff.** Compute the in-scope file set from the story branch's
    diff. Every candidate and every edit stays inside this set; out-of-diff files
    are never modified.
-3. **Find candidates.** Run **code-simplifier** across the in-scope files and read
-   its findings through the **ponytail lens** — see `references/candidate-catalog.md`
-   for what counts: single-caller abstractions, dead flexibility / unused config,
-   and narration comments (removed) vs WHY-comments (preserved). Prefer deletion
-   over restructuring; the pass introduces no new abstractions of its own.
+3. **Find candidates.** Dispatch the `code-simplifier:code-simplifier` agent
+   across the in-scope files, then run `ponytail:ponytail-review` on the same
+   diff for the minimalism read — see `references/candidate-catalog.md` for how
+   the two engines' findings are triaged into candidates: single-caller
+   abstractions, dead flexibility / unused config, and narration comments
+   (removed) vs WHY-comments (preserved). The pass introduces no new
+   abstractions of its own.
 4. **Triage — conservative by default.** Sort candidates into **apply** (clear
    removals) and **list-only** (uncertain — reported for the developer to judge,
    never auto-applied). When in doubt, list it.
@@ -94,8 +98,9 @@ by default.
   (`references/revert-safety.md`).
 - **Diff-only** — only files in the story branch's diff are touched; out-of-diff
   refactors are out of scope, full stop.
-- **Ponytail lens** — prefer deleting code to restructuring it; the pass
-  introduces no new abstractions of its own.
+- **Minimalism via `ponytail:ponytail-review`** — the lens is the provider's
+  method, invoked, never restated; the pass introduces no new abstractions of
+  its own.
 - **Conservative default** — uncertain candidates are listed, not applied. Beauty
   is never worth a guessed behaviour change.
 - **One dedicated commit per pass**, and no empty commit when there is nothing to
@@ -120,7 +125,7 @@ by default.
 
 - `references/candidate-catalog.md` — what counts as a simplification candidate
   (single-caller abstractions, dead flexibility / unused config, the narration-vs-
-  WHY-comment taxonomy), the ponytail lens, and the conservative-default rule.
+  WHY-comment taxonomy), the two scoped engine seams, and the conservative-default rule.
 - `references/revert-safety.md` — the pre-flight refuse-on-red, batch-then-verify,
   auto-revert-on-red naming the failing test, the one dedicated simplify commit,
   and the exact success and empty-state output strings.

@@ -1,7 +1,7 @@
 {
   "name": "raftkit-core",
-  "version": "0.5.0",
-  "description": "House rules, workflow constants, and governance protocols shared by every RaftKit role plugin.",
+  "version": "0.6.0",
+  "description": "RaftKit house rules, workflow constants, governance protocols pack, the Asana write-protocol gate, and the asana-formatting rendering capability.",
   "author": {
     "name": "RaftLabs"
   }

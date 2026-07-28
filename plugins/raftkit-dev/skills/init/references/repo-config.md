@@ -1,4 +1,4 @@
-# Repo config — managed keys, merge rules, marker, and the interim capability seam
+# Repo config — managed keys, merge rules, and the version marker
 
 ## Managed settings-key table
 
@@ -62,25 +62,10 @@ a managed key since the last `init`) — one mechanism, not two.
     "attribution",
     "permissions.allow"
   ],
-  "capability_check": "capability-preflight | fallback"
+  "capability_check": "capability-preflight"
 }
 ```
 
 `init_version` is the installed **raftkit-dev** version, so a repo initialized
 under one version is comparable against a later one on re-run, the same way
 the pack marker compares against raftkit-core.
-
-## The interim capability-check fallback — and its removal condition
-
-`feat/m3-capability-preflight` (unmerged at the time this skill shipped) adds
-`raftkit-dev:capability-preflight` — full inventory, five-state classification,
-verified evidence. Building `init` against `development` means that skill is
-not yet installed anywhere `init` runs. Phase 2's fallback (a plain
-`claude plugin list --json` check over the five engines in the table above,
-one consolidated plan, one approval) exists **only** to cover that gap.
-
-**Removal condition:** the moment `capability-preflight` merges to
-`development`, delete the fallback branch in `references/run-flow.md` Phase 2
-and in this file, and call `capability-preflight` unconditionally. Leaving both
-paths alive past that point is exactly the kind of drift RaftKit exists to
-prevent — this note is the tripwire so it doesn't get missed.

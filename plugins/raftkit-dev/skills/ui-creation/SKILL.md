@@ -43,8 +43,12 @@ tempt a shortcut — they are **hard stops**, detailed in
 
 - `raftkit-core` is installed (this skill obeys `workflow-constants`,
   `house-rules`, `write-protocol`); the `recipes` skill and the project's stack
-  pack are available; `frontend-design` is installed. If any is missing, stop and
-  say which — do not substitute.
+  pack are available. The implementation provider is
+  `frontend-design:frontend-design` (the plugin's only component) — its
+  readiness, like every provider's here, is `raftkit-dev:capability-preflight`'s
+  call. If a required capability is missing, stop with the preflight's report —
+  do not substitute. Adoption policy for the audit/browser/mobile providers is
+  in `references/guardrails.md`.
 - **A story with UI scope.** From `/implement` the story and phase are in hand;
   standalone, take the task link/GID. Read the story **live** via the Asana
   connector every run (GIDs from `workflow-constants`) — never from memory or

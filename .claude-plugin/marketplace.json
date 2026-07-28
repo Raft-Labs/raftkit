@@ -5,11 +5,14 @@
     "email": "aravind@raftlabs.com"
   },
   "description": "RaftLabs' private plugin marketplace — the RaftLabs way of shipping software, packaged for Claude Code and Claude apps.",
+  "allowCrossMarketplaceDependenciesOn": [
+    "claude-plugins-official"
+  ],
   "plugins": [
     {
       "name": "raftkit-core",
       "source": "./plugins/raftkit-core",
-      "description": "House rules, workflow constants, and governance protocols shared by every RaftKit role plugin.",
+      "description": "RaftKit house rules, workflow constants, governance protocols pack, the Asana write-protocol gate, and the asana-formatting rendering capability.",
       "category": "core"
     },
     {
@@ -21,7 +24,7 @@
     {
       "name": "raftkit-dev",
       "source": "./plugins/raftkit-dev",
-      "description": "Developer skills: init, implement, scope guard, simplify, PR, bug fix, UI creation, project setup, recipes.",
+      "description": "Developer skills: repo init, ultrathink planning, implementation, scope guard, simplification, PRs, bug and incident fixes, UI creation, project setup, recipes, capability preflight, the full docs product, and generalized Hasura migrations.",
       "category": "role"
     },
     {

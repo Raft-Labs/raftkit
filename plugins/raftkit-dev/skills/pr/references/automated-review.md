@@ -6,8 +6,14 @@ first (PRD §2 #18: hundred-file AI diffs can't be audited by humans alone).
 
 ## The layers
 
-- **pr-review-toolkit — always.** This is the layer `pr` always runs on the raised
-  PR. It is not optional.
+- **pr-review-toolkit — the declared dependency, always.** Invoke its verified
+  entry component `pr-review-toolkit:review-pr` on the raised PR; its reviewer
+  agents are dispatched by their scoped names from the verified inventory.
+  Readiness is `raftkit-dev:capability-preflight`'s call — "always" holds
+  because the plugin is a declared dependency of raftkit-dev; if preflight
+  reports it unresolved, stop with the repair guidance (a human-approved
+  RaftKit install/update) rather than skipping the layer or improvising an
+  install.
 - **CodeRabbit — when present.** Wrap the CodeRabbit PR app when it is
   licensed/installed for the repo. When it is **not** present, skip it with an
   explicit note in the run output (e.g. "CodeRabbit not installed — skipped");
