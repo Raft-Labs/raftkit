@@ -21,7 +21,7 @@
     {
       "name": "raftkit-dev",
       "source": "./plugins/raftkit-dev",
-      "description": "Developer skills: implement, scope guard, simplify, PR, bug fix, UI creation, project setup, recipes.",
+      "description": "Developer skills: init, implement, scope guard, simplify, PR, bug fix, UI creation, project setup, recipes.",
       "category": "role"
     },
     {

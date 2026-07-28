@@ -18,7 +18,7 @@ The RaftLabs way of building: **Spec-Driven + Test-Driven, human-in-the-loop at 
 ## The core loop
 
 ```
-setup-project  (once per repo — installs the governance pack)
+init  (once per repo — capability check, governance pack, repo config)
    ↓
 implement <story-url>
    Gate 0 story readiness → plan + decomposition table → Gate 1 dev approves
@@ -34,6 +34,7 @@ Merging is always human. The skills never merge, never close stories.
 
 | Skill | Use it when | Say |
 | --- | --- | --- |
+| `init` | First time opening a repo with raftkit-dev — or checking one for drift | "init this repo" |
 | `implement` | Taking one ready Asana story to a review-ready PR | "implement this story: \<url\>" |
 | `scope-guard` | Auditing your diff against the story before a PR | "run scope-guard" |
 | `simplify` | Stripping over-engineering after phases complete | "run the simplify pass" |
@@ -41,7 +42,7 @@ Merging is always human. The skills never merge, never close stories.
 | `fix-bug` | A bug needs fixing — an assigned Asana bug, or one you found yourself | "fix this bug: \<bug-url\>" · "I found a bug — \<what's broken\>" |
 | `fix-production-error` | You have a Sentry/CloudWatch/Crashlytics stack trace | paste the trace + "fix this production error" |
 | `ui-creation` | Building the UI phase of a story with UI scope | "build the UI for this story" |
-| `setup-project` | New repo needs the governance pack (or a pack update) | "set up this repo" |
+| `setup-project` | Re-running the governance pack on its own (init calls this too) | "set up this repo" |
 | `recipes` | Consulted automatically for auto-update / review-prompt / native-UI patterns and web defaults | (rarely invoked directly) |
 
 ## Rules that always apply

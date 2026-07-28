@@ -29,7 +29,7 @@ Installing any role plugin automatically installs `raftkit-core` alongside it. I
 | --- | --- | --- |
 | `raftkit-core` | everyone (auto-installed) | House rules, workflow constants, governance protocols |
 | `raftkit-pm` | PMs | Onboarding, user stories, story readiness, status updates, meeting decisions, estimation |
-| `raftkit-dev` | Developers | Implement, scope guard, simplify, PR, bug fix, UI creation, project setup, recipes |
+| `raftkit-dev` | Developers | Init, implement, scope guard, simplify, PR, bug fix, UI creation, project setup, recipes |
 | `raftkit-qa` | QA | Test suites, test run sheets, bug filing, retest |
 
 v1 ships exactly these four plugins. PM and QA plugins target the Claude apps/Cowork runtime; the install path there is pending the org-wide install decision (Asana task 1216551001583573) — until it lands, use Claude Code with the commands above.
@@ -68,17 +68,7 @@ You need access to the RaftLabs GitHub org — ask in #raftkit.
 
 ## For project repos
 
-To prompt teammates to install raftkit when they trust a project folder, add to that repo's `.claude/settings.json`:
-
-```json
-{
-  "extraKnownMarketplaces": {
-    "raftkit": {
-      "source": { "source": "github", "repo": "Raft-Labs/raftkit" }
-    }
-  }
-}
-```
+Run `/raftkit-dev:init` inside a project repo the first time you open it with raftkit-dev installed. It registers the raftkit marketplace in that repo's `.claude/settings.json` (so teammates get prompted to install raftkit on trust), installs the governance pack, and wires the repo config raftkit-dev expects — one gated transaction, verified before it reports success. Re-running it checks for drift instead of redoing the work.
 
 ## Releasing (maintainers)
 
