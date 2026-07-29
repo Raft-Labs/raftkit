@@ -13,14 +13,23 @@ The branch is deterministic, the same way `fix-bug`'s Path A/B split is
 
 - **Path A · ready.** `story-readiness` returns PASS. Unchanged — proceed straight to
   Gate 1.
-- **Path B · gaps.** `story-readiness` returns NOT READY on a story that already has
-  `[AC]` subtasks. Run the clarification round below.
-- **Path C · dev-shaped.** The story is a title-only stub — no `[AC]` subtasks, an
-  empty description, or both. Do not run a readiness audit against nothing; instead
-  the dev states the contract in session, it is written to Asana as a real
-  description plus `[AC]` subtasks (draft → approve → push, per `write-protocol`),
-  and **only then** is the now-real story re-audited by `story-readiness` before
-  planning proceeds. A stub that gets waved through on the conversation alone, with
+- **Path B · gaps.** `story-readiness` returns NOT READY on a story that has a real
+  body — a description with actual content, per `story-readiness`'s own "empty
+  description" test (`readiness-checklist.md` step 2). This is Path B **even when
+  the gap is "no `[AC]` subtasks at all"** — a PM-authored story missing its ACs is
+  still a PM-authored story; the dev-answered-and-drafted `[AC]` mechanism below
+  handles it exactly like any other coverage hole. Never mistake "no ACs yet" for
+  "no story" — only an empty (or placeholder-only) description makes it Path C.
+- **Path C · dev-shaped.** The story is a **title-only stub — an empty description,
+  full stop** (whatever its `[AC]` count, which is normally also zero). A story with
+  real narrative content is never Path C merely because it lacks ACs — that is Path
+  B, above; rewriting a described story's contract from a dev's say-so would be the
+  exact description-overwrite `write-protocol` forbids without explicit instruction.
+  For a genuine stub: do not run a readiness audit against nothing; instead the dev
+  states the contract in session, it is written to Asana as a real description plus
+  `[AC]` subtasks (draft → approve → push, per `write-protocol`), and **only then**
+  is the now-real story re-audited by `story-readiness` before planning proceeds. A
+  stub that gets waved through on the conversation alone, with
   no re-audit, is exactly the failure this path exists to prevent.
 
 ## Gap classification — ask, escalate, refuse, or reject as scope

@@ -19,9 +19,11 @@ The Definition-of-Ready gate, run on the dev side before a single edit.
    the story **and all its `[AC]` subtasks** through the Asana connector. If the
    story cannot be read, stop with the `workflow-constants` connector message —
    never audit a remembered story.
-2. **Route on shape.** A title-only stub — no `[AC]` subtasks, an empty
-   description, or both — is **Path C**, not an audit target: see
-   `references/clarification.md`. Otherwise continue to the audit below.
+2. **Route on shape.** A title-only stub — an **empty description**, full stop — is
+   **Path C**, not an audit target: see `references/clarification.md`. A story with
+   real narrative content but zero `[AC]` subtasks is not a stub — it audits
+   normally below, and a missing-ACs verdict is an ordinary NOT READY gap for Path
+   B to clarify, never a reason to let the dev rewrite the story from scratch.
 3. **Audit with `raftkit-pm/story-readiness`.** Reuse that skill's criteria — the
    same story must pass the same gate on both the PM and dev sides. Do **not**
    reinvent a readiness checklist here.
@@ -37,8 +39,9 @@ The Definition-of-Ready gate, run on the dev side before a single edit.
    - **READY (clarified) — `<n>` gap(s) closed in session, `<m>` satisfied by the
      story** → every gap was either already satisfied or cleared through a logged
      clarification (naming its Decision Log permalink). Proceed to Gate 1.
-   - **Empty story — no `[AC]` subtasks** → **Path C**, not a refusal by default;
-     see `references/clarification.md`.
+   - **Empty story — empty description** → **Path C**, not a refusal by default;
+     see `references/clarification.md`. (A described story with zero `[AC]`s is
+     the NOT READY case above, not this one.)
 
 Gate 0 is read-only except for the gap-list comment on a refusal, the Decision Log
 comment on a clarified gap, and — Path C only — the initial story write. It never
