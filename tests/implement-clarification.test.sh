@@ -119,11 +119,19 @@ check "C7a exact hard-stop string present" ok $?
 grep -qi 'no.*proceed.*without.*log\|no proceed-without-logging' <<<"$clar"
 check "C7b no proceed-without-logging override stated" ok $?
 
-# C8 · Path C: a title-only / zero-AC stub is written to Asana before code,
-# then re-audited by story-readiness.
-grep -qi 'path c' <<<"$clar" && grep -qi 'title-only\|zero.\[AC\]\|no \[AC\]' <<<"$clar" \
+# C8 · Path C: a title-only (empty-description) stub is written to Asana before
+# code, then re-audited by story-readiness.
+grep -qi 'path c' <<<"$clar" && grep -qi 'title-only\|empty description' <<<"$clar" \
   && grep -qi 'before any code\|before code' <<<"$clar" && grep -qi 'story-readiness' <<<"$clar"
 check "C8 Path C writes the stub to Asana before code, then re-audits" ok $?
+
+# C8b · misclassification guard: a story with real narrative content but zero
+# [AC]s is Path B (clarify + draft the missing ACs), never Path C (dev
+# rewrites the whole story) — Path C requires an empty description, full stop.
+g0=$(sec "$DEV/implement/references/gates.md" '^## Gate 0' '^## Gate 1')
+grep -qi 'never Path C merely because it lacks' <<<"$clar" \
+  && grep -qi 'not a stub' <<<"$g0" && grep -qi 'not this one' <<<"$g0"
+check "C8b real-content-zero-AC story is Path B, not Path C" ok $?
 
 # C9 · Gate 1's scope contract + the spec file's Clarifications section carry
 # logged clarifications by permalink.
