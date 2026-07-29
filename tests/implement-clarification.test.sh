@@ -133,6 +133,14 @@ grep -qi 'never Path C merely because it lacks' <<<"$clar" \
   && grep -qi 'not a stub' <<<"$g0" && grep -qi 'not this one' <<<"$g0"
 check "C8b real-content-zero-AC story is Path B, not Path C" ok $?
 
+# C8c · the two files' Path C tests must not diverge — clarification.md may
+# not loosen gates.md's byte-empty test with a "placeholder-only" (or any
+# other fuzzy) carve-out; both must state the same "full stop" test.
+! grep -qi 'or placeholder-only\|placeholder-only) description' <<<"$clar"
+check "C8c clarification.md carries no placeholder-only carve-out on Path C" ok $?
+grep -qi 'full stop' <<<"$clar" && grep -qi 'full stop' <<<"$g0"
+check "C8d both files state the same byte-empty \"full stop\" test for Path C" ok $?
+
 # C9 · Gate 1's scope contract + the spec file's Clarifications section carry
 # logged clarifications by permalink.
 g1=$(sec "$DEV/implement/references/gates.md" '^## Gate 1' '^## Gate 2')
