@@ -65,11 +65,15 @@ they are parameters pending Asana decision `1216550892331152`, not facts to bake
 
 Work the three gates in order; the mechanics live in the references.
 
-### Gate 0 · Readiness  → REFUSE-OR-PROCEED
+### Gate 0 · Readiness  → CLARIFY-REFUSE-OR-PROCEED
 Fetch the story and **all** its `[AC]` subtasks live (workspace GID from
 `workflow-constants`). Run `raftkit-pm/story-readiness` and reuse its criteria —
-do not reinvent them. **NOT READY → refuse, no override**, and post the gap list
-back on the story for the PM. See `references/gates.md`.
+do not reinvent them. A dev-answerable gap is asked back to the dev and, once
+confirmed, logged to the story before any code — a NOT READY with no dev-answerable
+gaps, or a gap the dev cannot or will not answer, **still refuses with no override**,
+and the gap list is posted back on the story for the PM. A title-only stub with no
+`[AC]`s is a dev-shaped path, not an automatic refusal. See `references/gates.md` and
+`references/clarification.md`.
 
 ### Gate 1 · Plan  → PLAN-APPROVAL GATE
 Run plan mode with `superpowers:brainstorming`, dev in the loop. The plan states
@@ -104,7 +108,10 @@ on an Asana write failure, give the dev the exact manual-link text. See
 
 - **No spec, no code** — the spec derives from the approved story + plan; a
   missing spec after Gate 1 stops the run with `❌ ORCHESTRATION REJECTED`.
-- **Gate 0 has no override** — a story that fails readiness is refused, full stop.
+- **Gate 0 has no override** — a gap that is not dev-answerable (commercial impact,
+  or the dev cannot or will not answer it) is refused, full stop. A dev-answerable
+  gap may be cleared, but only once its answer is logged to the story — an unlogged
+  answer never clears anything (`references/clarification.md`).
 - **Silence is not approval** — Gate 1 and Gate 2 each wait for an explicit human
   decision; Gate 0 proceeds only on a readiness pass.
 - **Scope is a hard line** — the Gate 1 scope contract is exactly what Gate 2's
@@ -131,6 +138,10 @@ on an Asana write failure, give the dev the exact manual-link text. See
 - `references/gates.md` — the three human gates: Gate 0 readiness seam + refusal
   and gap-post, Gate 1 plan → approval → spec-write + story comment, Gate 2
   scope-guard clean line + CodeRabbit local.
+- `references/clarification.md` — Gate 0's three entry paths, gap classification
+  (dev-answerable vs. escalate vs. refuse vs. scope-change), the one-round
+  interview, the Decision Log write and its hard stop, and how clarifications
+  propagate to Gate 1, `scope-guard`, and `pr`.
 - `references/execution.md` — spec lifecycle and `❌ ORCHESTRATION REJECTED`, the
   pre-edit baseline hard stop, the decomposition table, scoped-subagent discipline
   (narrow context, model-per-phase, the 3-attempt `⚠️ SUBAGENT LOOP WARNING`),

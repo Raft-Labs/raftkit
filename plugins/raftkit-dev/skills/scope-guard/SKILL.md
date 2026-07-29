@@ -63,10 +63,12 @@ And a flagged item may only survive with the dev's **explicit, logged sign-off**
    (`references/audit-method.md`).
 3. **Audit into the two lists** (`references/audit-method.md`):
    - **BEYOND THE STORY** — every changed item (feature, field, screen, file)
-     that maps to no `[AC]`, **each listed with its files**; plus any item that
-     matches the story's **Out-of-scope** list — those are automatic BEYOND
-     flags, a fail condition, not a judgment. Documentation edits map the same
-     way: to an `[AC]` or the Gate-1-approved Docs Impact Plan, else BEYOND
+     that maps to no `[AC]`, no Gate-1-approved Docs Impact Plan, and no
+     permalink-cited Gate-0 clarification (`implement/references/clarification.md`)
+     — **each listed with its files**; plus any item that matches the story's
+     **Out-of-scope** list — those are automatic BEYOND flags, a fail condition,
+     not a judgment. A clarification is only ever admitted by its Decision Log
+     permalink, supplied with the run — never accepted from chat alone
      (`references/audit-method.md`).
    - **MISSING FROM THE STORY** — every `[AC]` with no corresponding change or
      test, **the uncovered AC quoted verbatim**.

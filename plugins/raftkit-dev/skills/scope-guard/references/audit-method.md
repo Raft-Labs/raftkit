@@ -42,10 +42,16 @@ so nothing is skipped). For every changed item — a feature, field, screen, fil
 or hunk — decide:
 
 1. Does it map to at least one `[AC]`? If yes, it is in scope — no flag.
-2. Does it match an item in the story's **Out-of-scope** list? If yes → it is an
+2. Does it match a **permalink-cited Gate-0 clarification**
+   (`implement/references/clarification.md`)? The permalink to the story's
+   Decision Log comment must be supplied with the run — a clarification asserted
+   only in chat, with no permalink, does not count and the item falls through to
+   the next check.
+3. Does it match an item in the story's **Out-of-scope** list? If yes → it is an
    **automatic BEYOND flag**. Out-of-scope items appearing in the diff are a fail
    condition, not a judgment call.
-3. Otherwise — it maps to no AC → **BEYOND** (fail-closed default).
+4. Otherwise — it maps to no AC, no cited clarification, and no plan → **BEYOND**
+   (fail-closed default).
 
 Then walk the other direction: for every `[AC]`, is there a corresponding change
 or test in the diff? An AC with none → **MISSING**.

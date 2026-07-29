@@ -21,7 +21,8 @@ The RaftLabs way of building: **Spec-Driven + Test-Driven, human-in-the-loop at 
 init  (once per repo — capability check, governance pack, repo config)
    ↓
 implement <story-url>
-   Gate 0 story readiness → plan + decomposition table → Gate 1 dev approves
+   Gate 0 story readiness (dev-answerable gaps clarified + logged, not just
+   refused) → plan + decomposition table → Gate 1 dev approves
    → spec file written (no spec, no code) → TDD phases via scoped subagents
    → simplify → security → lint + suite → Gate 2 scope-guard + CodeRabbit
    ↓
@@ -36,7 +37,7 @@ Merging is always human. The skills never merge, never close stories.
 | --- | --- | --- |
 | `init` | First time opening a repo with raftkit-dev — or checking one for drift | "init this repo" |
 | `ultrathink` | Thinking through a decision or planning work before implementation (invoke: `/raftkit-dev:ultrathink`) | "ultrathink this" / "make a plan" |
-| `implement` | Taking one ready Asana story to a review-ready PR | "implement this story: \<url\>" |
+| `implement` | Taking an Asana story (ready, or with dev-answerable gaps to clarify) to a review-ready PR | "implement this story: \<url\>" |
 | `scope-guard` | Auditing your diff against the story before a PR | "run scope-guard" |
 | `simplify` | Stripping over-engineering after phases complete | "run the simplify pass" |
 | `pr` | Raising the house-convention PR + automated review | "raise the PR" |
