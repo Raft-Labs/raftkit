@@ -67,7 +67,11 @@ before raising. Rejecting without a proposal is not enough.
 
 The description template is fixed; every section is present and labelled:
 
-1. **Story link** — the Asana story URL/permalink (read live this run).
+1. **Story link** — the Asana story URL/permalink (read live this run). When Gate 0
+   cleared a gap by clarification or ran Path C
+   (`implement/references/clarification.md`), also name the Decision Log
+   comment's permalink here, so a reviewer sees the decision trail alongside the
+   story.
 2. **AC checklist** — every `[AC]` subtask from the live story, as a checklist.
 3. **Out-of-scope confirmation** — the story's Out-of-scope items, each confirmed
    not built (mirrors the scope-guard audit).

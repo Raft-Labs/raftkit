@@ -85,6 +85,13 @@ both sides. Building that dev-side enforcement is out of scope here.
 - **Escalate to founders** (`raftkit-core/house-rules`) on budget, contracts,
   relationship risk, or anything that reads as a client commitment — the gate flags,
   it never decides these.
+- **The dev-side Gate 0 may clear a gap without a PM round-trip.** `raftkit-dev:implement`
+  can ask the developer to answer a dev-answerable gap and log the confirmed answer
+  to the story before proceeding — but this gate's own verdict is unaffected: it
+  stays **binary, read-only**, and reports exactly what it finds in the story at
+  audit time. It never asks the developer anything itself, and a logged clarification
+  does not change what counts as PASS here — the story would need the gap actually
+  filled (or the corresponding `[AC]` added) to pass this audit on a later run.
 
 ## Reference file
 

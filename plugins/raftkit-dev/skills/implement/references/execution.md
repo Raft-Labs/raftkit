@@ -11,6 +11,11 @@ at `spec_path` (read live from `governance-protocols`; default
 `docs/specs/active-feature.md`). The spec derives from the approved story + plan;
 the **story stays the single source of truth** behind it.
 
+If Gate 0 cleared any gaps by clarification, the spec carries a
+`## Clarifications (Gate 0)` section listing each entry plus the Decision Log's
+permalink (`references/clarification.md`) — the same entries the Gate 1 story
+comment cites, not restated from memory.
+
 If the spec file is absent at **any** point after Gate 1 — before the first edit,
 or if it goes missing mid-run — stop with the governance pack's verbatim string:
 
