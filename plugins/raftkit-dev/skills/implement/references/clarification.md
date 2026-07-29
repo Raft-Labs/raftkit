@@ -19,12 +19,18 @@ The branch is deterministic, the same way `fix-bug`'s Path A/B split is
   the gap is "no `[AC]` subtasks at all"** — a PM-authored story missing its ACs is
   still a PM-authored story; the dev-answered-and-drafted `[AC]` mechanism below
   handles it exactly like any other coverage hole. Never mistake "no ACs yet" for
-  "no story" — only an empty (or placeholder-only) description makes it Path C.
+  "no story" — the test below is the only thing that makes it Path C, nothing looser.
 - **Path C · dev-shaped.** The story is a **title-only stub — an empty description,
-  full stop** (whatever its `[AC]` count, which is normally also zero). A story with
-  real narrative content is never Path C merely because it lacks ACs — that is Path
-  B, above; rewriting a described story's contract from a dev's say-so would be the
-  exact description-overwrite `write-protocol` forbids without explicit instruction.
+  full stop**, the same byte-empty test `story-readiness` itself uses
+  (`readiness-checklist.md` step 2: "the task has no story body") — not "thin,"
+  not "mostly placeholders," not any other judgment call on how filled-in it looks.
+  A duplicated-template story whose fields are still `{...}` is **not** empty and
+  is **not** Path C either — it has bytes, so it audits normally below and comes
+  back NOT READY with a gap for every unfilled section, which Path B's one-round
+  interview then works through like any other gap set. A story with real narrative
+  content is never Path C merely because it lacks ACs — that is Path B, above;
+  rewriting a described story's contract from a dev's say-so would be the exact
+  description-overwrite `write-protocol` forbids without explicit instruction.
   For a genuine stub: do not run a readiness audit against nothing; instead the dev
   states the contract in session, it is written to Asana as a real description plus
   `[AC]` subtasks (draft → approve → push, per `write-protocol`), and **only then**
