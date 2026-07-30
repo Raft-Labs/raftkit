@@ -38,7 +38,11 @@ The Definition-of-Ready gate, run on the dev side before a single edit.
      the PM can fix them.
    - **READY (clarified) — `<n>` gap(s) closed in session, `<m>` satisfied by the
      story** → every gap was either already satisfied or cleared through a logged
-     clarification (naming its Decision Log permalink). Proceed to Gate 1.
+     clarification (naming its Decision Log permalink). On Path B this is Gate 0's
+     **own reconciliation** against the confirmed log entries — it does not re-run
+     `story-readiness`, which never reads comments and would see the same
+     untouched description every time (`references/clarification.md`). Proceed to
+     Gate 1.
    - **Empty story — empty description** → **Path C**, not a refusal by default;
      see `references/clarification.md`. (A described story with zero `[AC]`s is
      the NOT READY case above, not this one.)

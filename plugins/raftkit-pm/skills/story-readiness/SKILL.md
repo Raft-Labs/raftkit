@@ -90,8 +90,12 @@ both sides. Building that dev-side enforcement is out of scope here.
   to the story before proceeding — but this gate's own verdict is unaffected: it
   stays **binary, read-only**, and reports exactly what it finds in the story at
   audit time. It never asks the developer anything itself, and a logged clarification
-  does not change what counts as PASS here — the story would need the gap actually
-  filled (or the corresponding `[AC]` added) to pass this audit on a later run.
+  does not change what counts as PASS here — a gap answered only in a story comment
+  is invisible to this audit (it reads the description and subtasks, never comments),
+  so this gate would report the same NOT READY forever. That is by design: Gate 0
+  reconciles a comment-only clarification **itself** and never asks this gate to
+  re-bless a state it structurally cannot see. Only a real description edit or an
+  added `[AC]` subtask moves this audit's verdict on a later run.
 
 ## Reference file
 
