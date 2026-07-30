@@ -23,7 +23,7 @@
 #   AC-15 eval bundle authored ............. C15 (structural + no-leak)
 #   AC-16 manifests / diff allowlist ....... C14, C16 (+ scripts/validate.sh)
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 2
 
 failures=0
 check() { # <name> <expected: ok|fail> <actual exit code>
@@ -44,7 +44,7 @@ sec() { sed -n "/$2/,/$3/p" "$1" 2>/dev/null; }
 # synthetic changed-file lists (no branch SHAs — squash-safe). The real PR
 # range audit is explicit and caller-supplied:
 #   bash tests/implement-clarification.test.sh --scope-check <base> <head>
-allow='^(tests/implement-clarification\.test\.sh|plugins/raftkit-dev/evals/clarification/|plugins/raftkit-dev/\.claude-plugin/plugin\.json|plugins/raftkit-pm/\.claude-plugin/plugin\.json|plugins/raftkit-dev/commands/help\.md|plugins/raftkit-dev/skills/implement/(SKILL\.md|references/(clarification|gates|execution)\.md)|plugins/raftkit-dev/skills/scope-guard/(SKILL\.md|references/audit-method\.md)|plugins/raftkit-dev/skills/pr/references/raise-flow\.md|plugins/raftkit-pm/skills/story-readiness/SKILL\.md)'
+allow='^(tests/implement-clarification\.test\.sh|plugins/raftkit-dev/evals/clarification/.*|plugins/raftkit-dev/\.claude-plugin/plugin\.json|plugins/raftkit-pm/\.claude-plugin/plugin\.json|plugins/raftkit-dev/commands/help\.md|plugins/raftkit-dev/skills/implement/(SKILL\.md|references/(clarification|gates|execution)\.md)|plugins/raftkit-dev/skills/scope-guard/(SKILL\.md|references/audit-method\.md)|plugins/raftkit-dev/skills/pr/references/raise-flow\.md|plugins/raftkit-pm/skills/story-readiness/SKILL\.md)$'
 if [[ "${1:-}" == "--scope-check" ]]; then
   base="${2:-}"; head="${3:-}"
   [[ -n "$base" && -n "$head" && "$base" != -* && "$head" != -* ]] || { echo "scope-check requires <base> <head> commits"; exit 2; }
@@ -140,6 +140,20 @@ check "C8b real-content-zero-AC story is Path B, not Path C" ok $?
 check "C8c clarification.md carries no placeholder-only carve-out on Path C" ok $?
 grep -qi 'full stop' <<<"$clar" && grep -qi 'full stop' <<<"$g0"
 check "C8d both files state the same byte-empty \"full stop\" test for Path C" ok $?
+
+# C8e · Path B's READY (clarified) verdict must be Gate 0's own reconciliation,
+# never a claimed story-readiness re-audit — story-readiness reads only the
+# description and subtasks, never comments, and Path B never touches the
+# description, so a re-audit there would loop on NOT READY forever.
+grep -qi 'does not.*re-run.*story-readiness\|does \*\*not\*\* re-run' <<<"$clar" \
+  && grep -qi 'never reads comments' <<<"$clar" \
+  && grep -qi 'own reconciliation' <<<"$g0"
+check "C8e Path B verdict is Gate 0's own reconciliation, not a story-readiness re-audit" ok $?
+
+# C17 · the allowlist regex is anchored — an approved path with an extra
+# suffix (e.g. a stray .bak file) must NOT slip through as an approved path.
+! grep -E "$allow" <<<"tests/implement-clarification.test.sh.bak" | grep -q .
+check "C17 allowlist regex rejects a suffixed variant of an approved path" ok $?
 
 # C9 · Gate 1's scope contract + the spec file's Clarifications section carry
 # logged clarifications by permalink.

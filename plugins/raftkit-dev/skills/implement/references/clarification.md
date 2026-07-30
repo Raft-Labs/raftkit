@@ -112,8 +112,19 @@ Three verdicts, replacing the old two:
 
 - **READY** — the story passed `story-readiness` on its own (Path A).
 - **READY (clarified) — `<n>` gap(s) closed in session, `<m>` satisfied by the
-  story** — the Decision Log's permalink is named alongside it (Path B or C, once
-  the log is pushed and the story re-audited).
+  story** — the Decision Log's permalink is named alongside it. Reached two
+  different ways, and only one of them re-runs `story-readiness`:
+  - **Path B** — Gate 0 reconciles this **itself**, directly from the confirmed,
+    permalink-cited log entries plus any coverage-closing `[AC]` subtasks drafted
+    alongside it. It does **not** re-run `story-readiness` to get here:
+    `story-readiness` never reads comments, and Path B never touches the
+    description, so a gap answered only in the Decision Log would fail that audit
+    forever — asking it to bless a state it structurally cannot see is not a gate,
+    it is a deadlock. Gate 0's own reconciliation, not a second binary pass, is
+    what turns NOT READY into READY (clarified) here.
+  - **Path C** — the stub's real description and `[AC]`s were just written, so a
+    `story-readiness` re-audit is meaningful and required: it is auditing content
+    that now actually exists.
 - **NOT READY** — refused, gap list posted for the PM. Unchanged.
 
 ## Propagation — without this, clarifying is decorative
