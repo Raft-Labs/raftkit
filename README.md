@@ -66,6 +66,16 @@ You need access to the RaftLabs GitHub org — ask in #raftkit.
 
 **Claude Code too old:** dependency auto-install needs v2.1.143+. Run `claude update`, then retry.
 
+**`/raftkit-dev:help` (or any `raftkit-*` command) not found:** your marketplace cache may predate the four-plugin split — an old install can be pinned to a single `raftkit` plugin with no `help` command at all. `claude plugin marketplace update` cannot recover a cache pinned to a rewritten history; remove and re-add instead:
+
+```bash
+claude plugin marketplace remove raftkit
+claude plugin marketplace add Raft-Labs/raftkit
+claude plugin install raftkit-dev@raftkit   # or raftkit-pm / raftkit-qa
+```
+
+Confirm with `claude plugin list` — you should see `raftkit-core` plus your role plugin.
+
 ## For project repos
 
 Run `/raftkit-dev:init` inside a project repo the first time you open it with raftkit-dev installed. It registers the raftkit marketplace in that repo's `.claude/settings.json` (so teammates get prompted to install raftkit on trust), installs the governance pack, and wires the repo config raftkit-dev expects — one gated transaction, verified before it reports success. Re-running it checks for drift instead of redoing the work.
