@@ -1,6 +1,6 @@
 # RaftKit — Project Context
 
-RaftKit is RaftLabs' private Claude plugin **marketplace**: one repo shipping four plugins that package the RaftLabs way of delivering software. The plugins **orchestrate** proven third-party plugins (superpowers, code-simplifier, ponytail, pr-review-toolkit, security-guidance, CodeRabbit, find-skills, asana, claude-md-management, remember, frontend-design, playwright/chrome-devtools, expo, neon) — **they rebuild nothing**. Asana is the workflow spine: work enters as a templated user story and exits as a squash-merged PR with QA-verified acceptance criteria.
+RaftKit is RaftLabs' private Claude plugin **marketplace**: one repo shipping four plugins that package the RaftLabs way of delivering software. The plugins **orchestrate** proven third-party plugins (superpowers, code-simplifier, pr-review-toolkit, security-guidance, find-skills, asana, claude-md-management, remember, frontend-design, playwright/chrome-devtools, expo, neon) — **they rebuild nothing**. Asana is the workflow spine: work enters as a templated user story and exits as a squash-merged PR with QA-verified acceptance criteria.
 
 Methodology of everything RaftKit produces (and of building RaftKit itself): **Spec-Driven + Test-Driven Development, combined.** The spec derives from the approved story; ACs become failing tests; code exists only to turn them green. No spec → no code. No failing test → no implementation. Human-in-the-loop at every gate: story approval, plan approval, PR merge, bug close.
 
@@ -42,7 +42,7 @@ Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Veri
 2. **Plan before code.** Restate the scope contract (in scope = the ACs; everything else = out), propose the approach, get approval.
 3. **TDD for anything executable** — CI checks, hooks, scripts, validation tooling: failing test first, then green. Skills are mostly markdown; their "tests" are the story's ACs — walk them one by one before calling a story done.
 4. **Scope is a hard line.** Nothing beyond the story, nothing missing from it. Improvements you spot go to the board as proposals, not into the diff.
-5. **Keep it lean** (ponytail lens): the best code is the code never written. No speculative abstractions, no over-commenting, skills as short as correctness allows.
+5. **Keep it lean** (the minimalism lens — see `raftkit-dev/simplify`): the best code is the code never written. No speculative abstractions, no over-commenting, skills as short as correctness allows.
 6. **Commits/PRs:** small logical commits; conventional-commit titles (`feat:`, `fix:`, `docs:`, `chore:`); one story = one branch = one squash-PR whose title reads as a changelog line.
 7. **Close the loop in Asana:** on completion tick the story's `Development` subtask and comment what shipped (PR link). Draft → approve → push applies to every Asana write.
 
@@ -62,7 +62,6 @@ Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Veri
 | Org-wide install path P0 (`1216551001583573`) | Distribution assumptions for pm/qa (Cowork installs) |
 | Marketplace repo home (`1216551001744293`) | This repo may move orgs — avoid hardcoded repo URLs |
 | Project Profile home (`1216550765662503`) | Where onboarding writes / skills read profiles |
-| CodeRabbit licensing (`1216551482947559`) | pr + setup-project stories reference it |
 | Spec path + decomposition threshold (`1216550892331152`) | Governance pack ships these as parameters with defaults |
 
 ## Build order

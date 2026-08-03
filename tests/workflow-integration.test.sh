@@ -141,12 +141,14 @@ grep -q 'impeccable:impeccable' <<<"$guard" && grep -q 'optional-not-selected' <
   && grep -qi 'adopted.*required\|adopted by the project' <<<"$guard" && grep -qi 'never silently' <<<"$guard"
 check "W11b guardrails carry the adopted-vs-unadopted provider policy" ok $?
 
-# W12 · simplify: scoped dispatch + ponytail review; duplicated method removed.
+# W12 · simplify: scoped dispatch of its one engine; no external minimalism
+# provider (ponytail is not installed and is in no registered marketplace —
+# the dead seam was removed; candidate-catalog.md is RaftKit's own lens now).
 grep -q 'code-simplifier:code-simplifier' "$DEV/simplify/SKILL.md" 2>/dev/null \
-  && grep -q 'ponytail:ponytail-review' "$DEV/simplify/SKILL.md" 2>/dev/null
-check "W12a simplify names both scoped engines" ok $?
+  && ! grep -qi 'ponytail' "$DEV/simplify/SKILL.md" 2>/dev/null
+check "W12a simplify names its one scoped engine and no longer depends on ponytail" ok $?
 ! grep -riE 'prefer deleting code to restructuring|introduce no new abstractions|complexity must earn its place' "$DEV/simplify" 2>/dev/null | grep -q .
-check "W12b duplicated ponytail method text removed from simplify" ok $?
+check "W12b no external provider's methodology text duplicated in simplify" ok $?
 grep -q 'diff-only\|Diff-only' "$DEV/simplify/SKILL.md" && grep -qi 'revert' "$DEV/simplify/SKILL.md"
 check "W12c RaftKit's diff-only + revert-safety governance retained" ok $?
 

@@ -8,7 +8,7 @@ outcome in its own success line.
 
 Hand off to `raftkit-dev/pr` and let it own its full contract — squash-target
 resolution, the commitlint title, the four description sections, the pre-push
-hook, pr-review-toolkit + CodeRabbit, and the Asana close-out (the `Development`
+hook, pr-review-toolkit, and the Asana close-out (the `Development`
 tick and the PR-link comment). That contract is defined in `raftkit-dev/pr`; do
 **not** restate or re-implement it here — a copy drifts from the source.
 `implement` invokes `pr`, it does not duplicate it. Merging stays human — neither
@@ -16,9 +16,10 @@ skill merges or approves its own PR.
 
 Two seams matter to `implement`:
 
-- **No double CodeRabbit run.** Gate 2 already ran CodeRabbit on this branch; `pr`
-  may reuse that fresh Gate 2 pass instead of re-running an identical review
-  (`references/gates.md`, Gate 2).
+- **Code review runs once, in `pr`.** Gate 2 checks docs parity and scope
+  only; automated code review (pr-review-toolkit) happens downstream as part
+  of `pr`'s own flow (`pr/references/automated-review.md`) — `implement` does
+  not run it a second time.
 - **The close-out is `pr`'s; confirming it is `implement`'s** — see the fallback
   below.
 
