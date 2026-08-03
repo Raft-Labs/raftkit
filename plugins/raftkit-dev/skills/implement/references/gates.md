@@ -97,7 +97,7 @@ close its own loop).
    "go". Silence is not approval. A Design Approach that fails
    `references/design-approach.md`'s approvable test is sent back inside this
    gate — it does not reach this step until it clears.
-7. **On approval, persist the plan three ways** (all required — this is the AC):
+7. **On approval, persist the plan two ways** (both required — this is the AC):
    - Post the approved plan as a **comment on the story** (`write-protocol`: draft
      → approve → push; Asana HTML rules — single `<body>` root, no `<p>`, links
      only as `<a>`, escape `&`/`<`/`>`, no named entities).

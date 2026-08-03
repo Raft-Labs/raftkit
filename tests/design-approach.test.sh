@@ -33,6 +33,7 @@ EXEC="$DEV/implement/references/execution.md"
 IMPLSKILL="$DEV/implement/SKILL.md"
 AM="$DEV/scope-guard/references/audit-method.md"
 SGSKILL="$DEV/scope-guard/SKILL.md"
+OS="$DEV/scope-guard/references/output-and-signoff.md"
 
 [[ -f "$DA" ]] || { echo "FATAL: $DA not found"; exit 2; }
 
@@ -66,10 +67,11 @@ g1=$(sec "$GATES" '^## Gate 1' '^## Gate 2')
 grep -qi 'Design Approach' <<<"$g1" && grep -q 'design-approach.md' <<<"$g1"
 check "GATES1 Gate 1 presents a Design Approach step, referencing design-approach.md" ok $?
 
-! grep -qi 'persist the plan two ways' <<<"$g1"
-check "GATES2a old 'two ways' persistence language is gone" ok $?
-grep -qi 'persist the plan three ways' <<<"$g1"
-check "GATES2b Gate 1 now persists the plan three ways" ok $?
+persist=$(sec "$GATES" 'persist the plan' '^## Gate 2')
+! grep -qi 'persist the plan three ways' <<<"$persist" && grep -qi 'persist the plan two ways' <<<"$persist"
+check "GATES2a the persistence claim says two ways, not three" ok $?
+[[ "$(grep -cE '^[[:space:]]+- ' <<<"$persist")" -eq 2 ]]
+check "GATES2b exactly 2 bullets follow the persistence claim (the count matches the claim)" ok $?
 
 spec_bullet=$(sec "$GATES" 'Write it to the spec file' '^## Gate 2')
 grep -qF '## Design Approach' <<<"$spec_bullet" && grep -qi 'section' <<<"$spec_bullet"
@@ -107,6 +109,11 @@ check "AM3 the reverse MISSING walk quotes an unbuilt decision by its decision n
 grep -qE '^5\. Otherwise' <<<"$map"
 check "AM4 the fail-closed default is renumbered (now item 5, after the new surface)" ok $?
 
+inputs=$(sec "$AM" '^## Inputs' '^## Anchoring the diff')
+grep -qi 'Design Approach decision rows' <<<"$inputs" && grep -qi 'decomposition table' <<<"$inputs" \
+  && grep -q 'spec_path' <<<"$inputs" && grep -q 'governance-protocols' <<<"$inputs"
+check "AM5 Inputs names the spec at spec_path as the source of the decision rows + decomposition table" ok $?
+
 # --- SGSKILL: scope-guard's own mirror + the CodeRabbit follow-through ---
 
 grep -qi 'Design Approach decision' "$SGSKILL"
@@ -117,6 +124,27 @@ check "SGSKILL2 scope-guard/SKILL.md's MISSING description quotes decision numbe
 check "SGSKILL3 scope-guard/SKILL.md carries zero CodeRabbit mentions (S2's decision applied here too)" ok $?
 grep -q 'references/audit-method.md' "$SGSKILL" && grep -qi 'Design Approach' "$SGSKILL"
 check "SGSKILL4 the audit-method.md reference bullet mentions the Design Approach" ok $?
+
+rf=$(sec "$SGSKILL" '^## Run flow' '^## Guardrails')
+grep -q 'spec_path' <<<"$rf" && grep -q 'governance-protocols' <<<"$rf" \
+  && grep -qF '## Design Approach' <<<"$rf"
+check "SGSKILL5a the run flow resolves spec_path from governance-protocols and reads the '## Design Approach' section" ok $?
+grep -qi 'live' <<<"$rf" && grep -qi 'never hardcode' <<<"$rf"
+check "SGSKILL5b the run flow reads the path live and never hardcodes it" ok $?
+
+grep -qi 'No new structure' <<<"$rf" && grep -qi 'valid pass' <<<"$rf" \
+  && grep -qi 'stale-spec stop' <<<"$rf"
+check "SGSKILL6 'No new structure' is an explicit pass; a missing section is a stale-spec stop" ok $?
+
+# --- OS: the two-list output contract carries the fourth surface ---
+
+miss=$(sec "$OS" 'one entry per uncovered' '^## Verdict')
+grep -qi 'Design Approach decision' <<<"$miss" && grep -qi 'quoted by its decision number' <<<"$miss"
+check "OS1 MISSING includes an approved decision with no corresponding structure, quoted by decision number" ok $?
+
+empty=$(sec "$OS" '^## Empty diff' '^## Sign-off log')
+grep -qi 'Design Approach decision' <<<"$empty" && grep -qi 'decision number' <<<"$empty"
+check "OS2 the empty-diff rule puts every approved decision in MISSING too" ok $?
 
 # --- eval bundle ---
 

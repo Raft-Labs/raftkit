@@ -9,6 +9,13 @@ method is deterministic and fail-closed: when in doubt, flag.
   section (the hard exclusion list) — both from the live Asana fetch this run.
   Match the exclusion section on its heading, not a section number; the template's
   numbering is not stable (merged-template decision, still open).
+- The **Design Approach decision rows and the decomposition table** from the live
+  story's spec at `spec_path` (read live from
+  `raftkit-core/governance-protocols`; default `docs/specs/active-feature.md` —
+  never hardcoded). The decision numbers and their **Phases** column are what the
+  fourth mapping surface below joins against. No spec, or a spec with no
+  `## Design Approach` section, is a **stale-spec stop** — not a zero-decision
+  pass.
 - The branch diff against the **merge-base with the PR base branch**.
 
 ## Anchoring the diff

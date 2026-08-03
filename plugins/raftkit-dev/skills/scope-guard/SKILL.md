@@ -56,12 +56,22 @@ And a flagged item may only survive with the dev's **explicit, logged sign-off**
    line** `Can't read the story — check your Asana connector, then retry.` — do
    not audit against a remembered or partial story (Error state, exact wording in
    `references/output-and-signoff.md`).
-2. **Take the diff.** Diff the branch against the **merge-base with the PR base
+2. **Resolve `spec_path` and read the Design Approach.** Read the `spec_path`
+   parameter **live** from `raftkit-core/governance-protocols` every run —
+   **never hardcode the path** (default `docs/specs/active-feature.md`). From
+   that spec, read the **`## Design Approach`** section and the decomposition
+   table beside it: the decision rows and their **Phases** column are what the
+   fourth mapping surface joins against (`references/audit-method.md`). An
+   explicit **"No new structure"** / zero-decision answer is a **valid pass** —
+   no fourth-surface work this run. A missing spec, or a spec with no
+   `## Design Approach` section at all, is a **stale-spec stop** — halt and say
+   so; never proceed as a silent zero-decision pass.
+3. **Take the diff.** Diff the branch against the **merge-base with the PR base
    branch** — the same anchor the repo's `validate.sh` version gate uses, so the
    audit sees exactly the branch's own changes. Large diffs are walked
    **file-group by file-group with progress** so nothing is skipped
    (`references/audit-method.md`).
-3. **Audit into the two lists** (`references/audit-method.md`):
+4. **Audit into the two lists** (`references/audit-method.md`):
    - **BEYOND THE STORY** — every changed item (feature, field, screen, file)
      that maps to no `[AC]`, no Gate-1-approved Docs Impact Plan, no
      Gate-1-approved Design Approach decision, and no permalink-cited
@@ -77,7 +87,7 @@ And a flagged item may only survive with the dev's **explicit, logged sign-off**
      **quoted by its decision number** (`references/audit-method.md`).
    - Fail-closed: anything that cannot be mapped to an AC or an approved
      decision lands in BEYOND.
-4. **Verdict** (`references/output-and-signoff.md` for the exact strings):
+5. **Verdict** (`references/output-and-signoff.md` for the exact strings):
    - **Both lists empty** → emit the clean-pass line and mark the PR unblocked.
    - **Either list non-empty** → block. A BEYOND item clears only by removal or
      an explicit logged sign-off; a MISSING item clears only by being built or
