@@ -111,9 +111,12 @@ And a flagged item may only survive with the dev's **explicit, logged sign-off**
 
 ## Out of scope
 
-- **Code-quality judgments** — readability, duplication, style, security review.
-  Those are `raftkit-dev/simplify` and pr-review-toolkit; scope-guard
-  only checks the diff against the story's ACs.
+- **Code-quality judgments** — readability, duplication, style, security
+  review, and the SOLID/design-pattern bar. Those are `raftkit-dev/simplify`,
+  pr-review-toolkit (scored against `raftkit-core/design-standard` when
+  installed), and `raftkit-dev/implement`'s design-review layer; scope-guard
+  only checks the diff against the story's ACs and approved Design Approach
+  decisions.
 - **Auto-removing flagged code** — scope-guard reports and blocks; a human
   removes or signs off. It never edits the diff.
 

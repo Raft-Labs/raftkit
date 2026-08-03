@@ -95,6 +95,8 @@ Each module folder contains:
 - Never put PII in URL query strings
 - Never expose oRPC procedures to integrators — use REST `/api/v1/*`
 - Never combine a realtime voice worker with the CRUD API in one process
+- Module Design Standard (MDS-1…MDS-10) — installed as its own CLAUDE.md
+  section by `raftkit-dev:setup-project`; do not restate it here
 - See full list: `docs/project/_templates/08-anti-patterns.md`
 
 ## Change protocol
