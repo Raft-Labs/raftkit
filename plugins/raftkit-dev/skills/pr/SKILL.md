@@ -112,8 +112,11 @@ Work `references/raise-flow.md` then `references/automated-review.md` in order.
   `raftkit-dev/setup-project`; `pr` only *surfaces* the hook's result, never
   installs or edits it.
 - **Stacked / multi-story PRs** — one branch = one story = one PR in v1.
-- **Code-quality judgments** — owned by `simplify` and pr-review-toolkit; `pr`
-  orchestrates those layers, it does not second-guess them.
+- **Code-quality judgments, including the SOLID/design-pattern bar** — owned
+  by `simplify`, pr-review-toolkit (scored against
+  `raftkit-core/design-standard` when installed), and `implement`'s
+  design-review layer; `pr` orchestrates those layers, it does not
+  second-guess them.
 
 ## Reference files
 

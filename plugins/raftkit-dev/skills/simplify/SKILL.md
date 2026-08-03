@@ -124,7 +124,8 @@ by default.
 
 - `references/candidate-catalog.md` — what counts as a simplification candidate
   (single-caller abstractions, dead flexibility / unused config, the narration-vs-
-  WHY-comment taxonomy), the one scoped engine seam, and the conservative-default rule.
+  WHY-comment taxonomy), the MDS-7 test-gated seam exception, the one scoped
+  engine seam, and the conservative-default rule.
 - `references/revert-safety.md` — the pre-flight refuse-on-red, batch-then-verify,
   auto-revert-on-red naming the failing test, the one dedicated simplify commit,
   and the exact success and empty-state output strings.

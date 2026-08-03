@@ -12,7 +12,7 @@
     {
       "name": "raftkit-core",
       "source": "./plugins/raftkit-core",
-      "description": "RaftKit house rules, workflow constants, governance protocols pack, the Asana write-protocol gate, and the asana-formatting rendering capability.",
+      "description": "RaftKit house rules, workflow constants, governance protocols pack, the Module Design Standard, the Asana write-protocol gate, and the asana-formatting rendering capability.",
       "category": "core"
     },
     {

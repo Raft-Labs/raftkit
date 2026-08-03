@@ -75,14 +75,15 @@ cannot be installed aborts here, before anything is written.
 
 Build the full change set without committing:
 
-- **CLAUDE.md (component 1, protocols):** delegate to `claude-md-management` to
-  **merge** the protocols, never clobber. An existing CLAUDE.md keeps all its
-  repo-specific content; protocols are appended/merged. On a conflicting existing
-  pre-push hook or CodeRabbit config, show the incoming vs. existing side by side
-  with a merge proposal and let the developer decide — do not silently overwrite
-  a file the developer authored (the marker tells you whether a prior *pack*
-  install owns it; a pack-owned managed file is replaced, a foreign one is a
-  conflict to resolve).
+- **CLAUDE.md (components 1 and 6 — protocols and the Module Design
+  Standard):** delegate to `claude-md-management` to **merge** both blocks,
+  never clobber. An existing CLAUDE.md keeps all its repo-specific content;
+  the protocol block and the MDS block are appended/merged as their own
+  sections. On a conflicting existing pre-push hook or CodeRabbit config, show
+  the incoming vs. existing side by side with a merge proposal and let the
+  developer decide — do not silently overwrite a file the developer authored
+  (the marker tells you whether a prior *pack* install owns it; a pack-owned
+  managed file is replaced, a foreign one is a conflict to resolve).
 - **orchestrator, spec template:** write from the live core content — the
   orchestrator to `.claude/skills/orchestrator/SKILL.md` (discoverable-skill
   form), the spec template to `spec_path`.
@@ -124,13 +125,14 @@ The install is not done until it is verified:
   executable (`test -x .githooks/pre-push`), then fire it with
   `git push --dry-run` **only** — that runs the pre-push hook with zero side
   effects. This skill never performs a real push to verify.
-- **Protocols agent-readable:** confirm the merged `CLAUDE.md` and
+- **Protocols and MDS agent-readable:** confirm the merged `CLAUDE.md`
+  (protocol block **and** Module Design Standard block) and
   `.claude/skills/orchestrator/SKILL.md` are present and readable.
 
 On success emit exactly (with `<X>` = the installed raftkit-core version):
 
 ```
-Governance pack v<X> installed: 5 protocols, spec template, hook, CI, CodeRabbit — verified
+Governance pack v<X> installed: 5 protocols, spec template, hook, CI, CodeRabbit, design standard — verified
 ```
 
 Then print the one-time per-clone line teammates need:
@@ -224,7 +226,8 @@ A re-run is the update path — there is no separate command.
    changed, and rewrite the marker.
 4. **Leave repo-specific docs untouched** — `branching.md`, any non-protocol
    CLAUDE.md content, and every file not in the component manifest. The
-   CLAUDE.md merge (via `claude-md-management`) updates only the protocol block.
+   CLAUDE.md merge (via `claude-md-management`) updates only the protocol
+   block and the Module Design Standard block — nothing else in the file.
 
 Idempotent: re-running with no version change re-asserts `core.hooksPath` and
 reports no file changes.

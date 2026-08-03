@@ -1,6 +1,6 @@
 ---
 name: implement
-description: This skill should be used when a RaftLabs developer wants to take one Asana story from URL to a review-ready PR the house way — e.g. "run /implement <story-url>", "implement this story", "build this task end to end", or when a dev hands over a ready raftkit story to code. It fetches the story and its live [AC] subtasks, refuses any story that fails the Gate 0 readiness audit (no override), runs plan mode with superpowers:brainstorming, writes the approved plan as the spec file (no spec, no code), then drives test-first phases through scoped subagents and the post-edit review layers (simplify, security, lint + suite), clears Gate 2 (scope-guard), and delegates the raise + Asana close-out to the pr skill. It orchestrates existing engines and rebuilds none of them; it never merges and never ticks [AC]/Testing or closes the story.
+description: This skill should be used when a RaftLabs developer wants to take one Asana story from URL to a review-ready PR the house way — e.g. "run /implement <story-url>", "implement this story", "build this task end to end", or when a dev hands over a ready raftkit story to code. It fetches the story and its live [AC] subtasks, refuses any story that fails the Gate 0 readiness audit (no override), runs plan mode with superpowers:brainstorming, writes the approved plan as the spec file (no spec, no code), then drives test-first phases through scoped subagents and the post-edit review layers (simplify, design review against the Module Design Standard, security, lint + suite), clears Gate 2 (scope-guard), and delegates the raise + Asana close-out to the pr skill. It orchestrates existing engines and rebuilds none of them; it never merges and never ticks [AC]/Testing or closes the story.
 user-invocable: true
 ---
 
@@ -16,7 +16,9 @@ orchestrator chains the guardrails into one disciplined flow.
 `implement` is the conductor; the siblings are the orchestra. It **rebuilds
 nothing** — Gate 0 is `raftkit-pm/story-readiness`, planning is
 `superpowers:brainstorming` + `superpowers:writing-plans`, the post-edit layers
-are `simplify` + the security-guidance hook evidence + the suite, Gate 2 is
+are `simplify` + the design review (`pr-review-toolkit:code-reviewer` +
+`type-design-analyzer`, scored against `raftkit-core/design-standard`) + the
+security-guidance hook evidence + the suite, Gate 2 is
 `raftkit-dev:docs` verify + `scope-guard`, and the raise +
 close-out are the `pr` skill. It owns
 only the **gate sequencing**, the **spec-file lifecycle**, the **pre-edit
@@ -91,7 +93,8 @@ approval, post the plan as a comment on the story **and** write it to
 Confirm a **green pre-edit baseline** (failing build/typecheck is a hard stop —
 fix the baseline first, touch no code), branch per conventions, then execute each
 phase with a **scoped subagent** (narrow context, model per the table, test-first
-red→green). Then the post-edit layers: the `simplify` pass, the
+red→green). Then the post-edit layers: the `simplify` pass, the **design
+review** (MDS + Design Approach conformance, on the post-simplify diff), the
 security-guidance hook evidence (hook-only — nothing to invoke), and lint +
 full suite. See `references/execution.md`.
 

@@ -1,15 +1,15 @@
 ---
 name: setup-project
-description: This skill should be used when a developer or tech lead wants to install, set up, update, or re-run RaftLabs' governance pack on a repository — CLAUDE.md protocols 1–5, the active-feature spec template, the pre-push hook, the CI quality-guardrail workflow, and the CodeRabbit config — idempotently and all-or-nothing. Trigger on "set up this repo", "install the governance pack", "add the protocols to this repo", "update the governance pack", "run setup-project". It reads the protocol content and parameters live from raftkit-core (never hand-edited per repo), merges rather than clobbers an existing CLAUDE.md, falls back to a PR on protected branches, records a pack version for update runs, and verifies the install before reporting success.
+description: This skill should be used when a developer or tech lead wants to install, set up, update, or re-run RaftLabs' governance pack on a repository — CLAUDE.md protocols 1–5, the Module Design Standard, the active-feature spec template, the pre-push hook, the CI quality-guardrail workflow, and the CodeRabbit config — idempotently and all-or-nothing. Trigger on "set up this repo", "install the governance pack", "add the protocols to this repo", "update the governance pack", "run setup-project". It reads the protocol content, the design standard, and parameters live from raftkit-core (never hand-edited per repo), merges rather than clobbers an existing CLAUDE.md, falls back to a PR on protected branches, records a pack version for update runs, and verifies the install before reporting success.
 user-invocable: true
 ---
 
 # setup-project
 
 Install the full RaftLabs governance pack on any repo with one command:
-CLAUDE.md protocols 1–5, the spec template, the pre-push hook, the CI
-quality-guardrail workflow, and CodeRabbit config — so the rules live in files
-the repo carries, not in anyone's memory (PRD §5.3).
+CLAUDE.md protocols 1–5, the Module Design Standard, the spec template, the
+pre-push hook, the CI quality-guardrail workflow, and CodeRabbit config — so
+the rules live in files the repo carries, not in anyone's memory (PRD §5.3).
 
 Hand-copying protocols drifts. This installer versions the pack and makes an
 update a re-run: the same command that installs v1 upgrades it to v2 in place,
@@ -22,9 +22,11 @@ shows the diff, and leaves every repo-specific file untouched.
    Any component that cannot be installed aborts the run with nothing written.
 2. **Content comes live from raftkit-core, never from here.** The protocols, the
    orchestrator mechanism, and the spec template are read from the installed
-   `raftkit-core/governance-protocols` skill at install time. This skill keeps
-   **zero copies** of that text — a copy would drift from the source. It authors
-   only its own three artifacts (hook, CI, CodeRabbit config).
+   `raftkit-core/governance-protocols` skill at install time; the Module Design
+   Standard is read the same way from `raftkit-core/design-standard`. This
+   skill keeps **zero copies** of any of that text — a copy would drift from
+   the source. It authors only its own three artifacts (hook, CI, CodeRabbit
+   config).
 
 And: parameters (`decomposition_threshold`, `spec_path`) come from raftkit-core's
 parameter table — never hand-edited per repo.
@@ -34,8 +36,9 @@ parameter table — never hand-edited per repo.
 - **A git repository.** If the working directory is not a git repo, stop with the
   exact non-git message (see `references/install-flow.md`, Phase 1) and write
   nothing.
-- **raftkit-core installed.** It is the source of the protocol content and the
-  parameters. If it is missing, stop — there is nothing faithful to install.
+- **raftkit-core installed.** It is the source of the protocol content, the
+  Module Design Standard, and the parameters. If it is missing, stop — there
+  is nothing faithful to install.
 
 ## Run flow
 
@@ -53,9 +56,10 @@ Work `references/install-flow.md` in order — it is the transaction:
    conflicts, and determine whether the branch is protected. Any failure aborts
    here before a single write.
 2. **Assemble — staged, reversible.** Build the whole change set without
-   committing: merge the protocols into CLAUDE.md via `claude-md-management`
-   (never clobber), write the orchestrator (to `.claude/skills/orchestrator/SKILL.md`)
-   and spec template from live core content, write the three assets (substituting
+   committing: merge the protocols and the Module Design Standard into
+   CLAUDE.md via `claude-md-management` (never clobber), write the
+   orchestrator (to `.claude/skills/orchestrator/SKILL.md`) and spec template
+   from live core content, write the three assets (substituting
    `spec_path` and the template sentinel in the hook, then `chmod +x` it), and
    stage the version marker.
 3. **Apply atomically.** Unprotected branch → one commit (hook staged with its
@@ -82,10 +86,12 @@ change re-asserts `core.hooksPath` and reports no file changes. Details in
 
 ## Guardrails
 
-- **Verbatim from core.** Protocol text, the orchestrator, and the spec template
-  install byte-for-byte from raftkit-core; asset substitutions are exactly the
-  validated tokens in `references/components.md`, rendered fail-closed by
-  `scripts/render-assets.mjs`. Never paraphrase or regenerate protocol content.
+- **Verbatim from core.** Protocol text, the orchestrator, the spec template,
+  and the Module Design Standard install byte-for-byte from raftkit-core;
+  asset substitutions are exactly the validated tokens in
+  `references/components.md`, rendered fail-closed by
+  `scripts/render-assets.mjs`. Never paraphrase or regenerate any of this
+  content.
 - **Merge, never clobber.** An existing CLAUDE.md keeps all its repo-specific
   content. A conflicting foreign hook or CodeRabbit config is shown side by side
   with a merge proposal for the developer to decide — only pack-managed files

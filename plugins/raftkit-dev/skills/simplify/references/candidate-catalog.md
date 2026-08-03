@@ -14,6 +14,13 @@ catches it: see `revert-safety.md`).
   indirection that serves exactly one concrete case. Inline it back to the one
   call site. This is the happy-path candidate (Scenario 1) — inlined after
   approval, suite green before and after.
+  - **One counter-clause, from the Module Design Standard's MDS-7** — an
+    inversion seam kept only so a domain rule is unit-testable without I/O,
+    and only if **a test in the same diff exercises it** (no test, no seam —
+    `raftkit-core/design-standard`, Precedence). A seam meeting that bar is
+    **list-only**, never auto-applied — this pass never adjudicates the
+    design question, it hands the candidate to the developer named as an
+    MDS-7 exception instead of inlining it silently.
 - **Dead flexibility / unused config.** Parameters never passed a non-default,
   options nobody sets, feature flags with one branch, extension points with no
   extension. Remove the unused path and the knob that fed it.

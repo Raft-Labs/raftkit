@@ -4,8 +4,9 @@ The governance pack is five components. Two kinds of source feed them, and the
 distinction is the whole point of this skill:
 
 - **Content owned by `raftkit-core`** — the protocols, the orchestrator
-  mechanism, and the spec template. Read these **live from the installed
-  `raftkit-core/governance-protocols` skill at install time.** This skill keeps
+  mechanism, the spec template, and the Module Design Standard. Read these
+  **live from the installed `raftkit-core/governance-protocols` and
+  `raftkit-core/design-standard` skills at install time.** This skill keeps
   **zero copies** of that text; a copy here would drift from the source, the
   exact failure the pack exists to prevent.
 - **Artifacts owned by this skill (M3)** — the pre-push hook, the CI
@@ -21,9 +22,10 @@ distinction is the whole point of this skill:
 | 3 | Pre-push hook | `assets/pre-push` (M3) | `.githooks/pre-push` (tracked, `chmod +x`) + `git config core.hooksPath .githooks` |
 | 4 | CI quality guardrail | `assets/quality-guardrail.yml` (M3) | `.github/workflows/quality-guardrail.yml` |
 | 5 | CodeRabbit config | `assets/coderabbit.yaml` (M3) | `.coderabbit.yaml` |
+| 6 | Module Design Standard (MDS) | `raftkit-core/design-standard` → `references/standard.md` (live) | `CLAUDE.md` (merged) |
 
-Success string counts these five: `5 protocols, spec template, hook, CI,
-CodeRabbit`. The orchestrator mechanism travels **with** the protocols component
+Success string counts these six: `5 protocols, spec template, hook, CI,
+CodeRabbit, design standard`. The orchestrator mechanism travels **with** the protocols component
 (Protocol 2 is inert without it) — it is not a sixth component. It installs as a
 **discoverable skill** at `.claude/skills/orchestrator/SKILL.md` (a bare `.md`
 loose under `skills/` is not a registered skill), still counted inside the
@@ -97,7 +99,7 @@ v1 from v2 and update in place. Shape:
 {
   "pack_version": "<raftkit-core version at install time>",
   "installed_at": "<ISO date>",
-  "components": ["protocols", "spec-template", "hook", "ci", "coderabbit"]
+  "components": ["protocols", "spec-template", "hook", "ci", "coderabbit", "design-standard"]
 }
 ```
 

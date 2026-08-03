@@ -85,13 +85,27 @@ story's "Waiting" edge case, made visible.
 After every phase is green, run these in order — each must pass before the next:
 
 1. **`raftkit-dev/simplify`** — the code-quality simplify pass.
-2. **Security evidence — hook-based, nothing to invoke.** security-guidance is
+2. **Design review — MDS + Design Approach conformance.** Dispatch
+   `pr-review-toolkit:code-reviewer` and `pr-review-toolkit:type-design-analyzer`
+   against the **post-simplify** diff, anchored at the branch's merge-base — the
+   same range `pr`'s automated review uses (`pr/references/automated-review.md`),
+   never the tools' empty unstaged default. `code-reviewer` scores against the
+   repo's `CLAUDE.md`, which carries the Module Design Standard
+   (`raftkit-core/design-standard`) when the governance pack is installed;
+   `type-design-analyzer` covers encapsulation and invariants at the type level.
+   Also confirm the diff against the Gate 1 **Design Approach**
+   (`references/design-approach.md`): every approved decision is either built
+   or explained, and no undeclared structural decision appears. Findings are
+   **addressed or explicitly answered** — the same gate semantics `pr` already
+   uses (`pr/references/automated-review.md`); this introduces no new grading
+   vocabulary.
+3. **Security evidence — hook-based, nothing to invoke.** security-guidance is
    hook-only: capability preflight confirmed it installed and enabled; its
    PostToolUse hooks may have given feedback during the edits, and its Stop
    review runs when the session reaches the stop boundary. Consume only the
    security evidence the hooks actually emitted so far — address any warnings —
    and **never fabricate or pre-claim a Stop review** that has not run.
-3. **Lint + the full test suite** — green, not just the phase tests.
+4. **Lint + the full test suite** — green, not just the phase tests.
 
 Then walk the result with `superpowers:verification-before-completion` before
 claiming the build is Gate-2-ready. Only when all of the above pass does the
