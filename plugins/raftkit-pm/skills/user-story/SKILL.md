@@ -51,24 +51,34 @@ If any of these is missing, **ask before doing anything else** (the Empty state)
 2. **Confirm the preconditions above.** Missing target task or scope or source of
    truth → stop and ask, naming what is missing.
 
-3. **Judge cohesive vs. epic.** Lean to a single cohesive story. When genuinely
+3. **Confirm the sources before drafting.** Before any drafting begins, list the
+   specific sources gathered in step 2 by name (document title, link, or task
+   GID — never a generic label like "various sources"). Show: "Before I draft
+   this, here are the sources I'll use: [list]. Confirm these, or tell me what
+   to change." Wait for explicit confirmation or a correction; silence is not
+   confirmation. If the PM corrects a source, update the list and proceed with
+   the corrected set — do not re-show the checkpoint again this run. No Asana
+   task is created or modified before this step completes. This checkpoint runs
+   once per run, not once per section drafted.
+
+4. **Judge cohesive vs. epic.** Lean to a single cohesive story. When genuinely
    unsure whether the scope is one story or several, ask one focused question
    before structuring. See `references/epic-splitting.md`.
 
-4. **Draft the story, grounded and conflict-resolved.** Ground every claim in the
+5. **Draft the story, grounded and conflict-resolved.** Ground every claim in the
    supplied sources. Resolve conflicting facts by the hierarchy: the Project
    Profile wins → else sources that agree → else **stop and ask, naming the exact
    conflict**. Mirror the live template's structure exactly and derive the `[AC]`
    subtasks per `references/story-structure.md`. Announce section progress in chat
    for long drafts.
 
-5. **Draft in chat, then push only after approval.** Follow
+6. **Draft in chat, then push only after approval.** Follow
    `raftkit-core/write-protocol`: show the full drafted story and name the exact
    target task; wait for explicit approval (silence is not approval). Only then
    write `html_notes` (applying the Asana HTML rules) and create the `[AC]` +
    `Development` / `Testing` / `Bugs` subtasks.
 
-6. **Confirm back** with the task link and a one-line summary
+7. **Confirm back** with the task link and a one-line summary
    ("story + N `[AC]`s + Dev/Testing/Bugs created").
 
 ## Guardrails
@@ -77,6 +87,9 @@ If any of these is missing, **ask before doing anything else** (the Empty state)
   something only the product knows — ask instead.
 - **No cached template text.** The format comes from the live fetch, so a template
   change in Asana is reflected the same day with no plugin release.
+- **Sources are confirmed before drafting, every run** — this checkpoint precedes
+  the existing draft → approve → push gate for the story body and does not
+  replace or duplicate it.
 - **Asana free tier only** (`raftkit-core/house-rules`): no dependencies, custom
   fields, milestones, start dates, or approval tasks. Express relationships (epic
   ↔ sub-story, depends-on) as task links in the description.
