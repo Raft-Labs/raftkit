@@ -19,17 +19,31 @@ FLUSH="$HOOKS/flush.mjs"
 BLOCKER="$HOOKS/blocker.mjs"
 
 failures=0
-tmpdirs=()
+
+# Every sandbox lives under one root, and cleanup removes the root.
+#
+# The previous version tracked directories in an array, but new_sandbox is
+# called as `d="$(new_sandbox)"` — the append ran in a command-substitution
+# subshell and never reached the parent. Cleanup therefore saw nothing: stub
+# servers were never killed and every temp dir leaked. A single root needs no
+# bookkeeping and cannot drift out of sync.
+TEST_ROOT="$(mktemp -d)"
 cleanup() {
-  # Stub servers first — their PID file lives inside one of the tmpdirs.
-  for d in "${tmpdirs[@]:-}"; do
-    [[ -n "$d" && -f "$d/pids" ]] && while read -r pid; do
+  # Stub servers first, while their PID files are still readable.
+  local pidfile
+  for pidfile in "$TEST_ROOT"/*/pids; do
+    [[ -f "$pidfile" ]] || continue
+    while read -r pid; do
       [[ -n "$pid" ]] && kill "$pid" 2>/dev/null
-    done < "$d/pids"
+    done < "$pidfile"
   done
-  for d in "${tmpdirs[@]:-}"; do [[ -n "$d" ]] && rm -rf "$d"; done
+  rm -rf "$TEST_ROOT"
 }
 trap cleanup EXIT
+
+new_sandbox() { # echoes a fresh telemetry dir under TEST_ROOT
+  mktemp -d "$TEST_ROOT/sbx.XXXXXX"
+}
 
 # Make the suite hermetic.
 #
@@ -40,8 +54,7 @@ trap cleanup EXIT
 #
 # Individual tests that care about `gh` behaviour prepend their own stub, which
 # takes precedence over this one.
-STUB_BIN="$(mktemp -d)"
-tmpdirs+=("$STUB_BIN")
+STUB_BIN="$(new_sandbox)"
 cat > "$STUB_BIN/gh" <<'STUB'
 #!/usr/bin/env bash
 # Hermetic default: succeed instantly, return nothing useful.
@@ -80,13 +93,6 @@ expect_eq() { # <name> <expected> <actual>
     echo "FAIL: $1 (expected '$2', got '$3')"
     failures=$((failures + 1))
   fi
-}
-
-new_sandbox() { # echoes a fresh telemetry dir
-  local d
-  d="$(mktemp -d)"
-  tmpdirs+=("$d")
-  echo "$d"
 }
 
 # A fake `gh` that records its arguments instead of touching GitHub.
@@ -233,7 +239,15 @@ RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop < /dev/null >/dev/null 2>&1
 check "closed stdin exits 0" ok $?
 echo '{}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" bogus_mode >/dev/null 2>&1
 check "unknown mode exits 0" ok $?
-echo '{"session_id":"x"}' | RAFTKIT_TELEMETRY_DIR=/proc/nonexistent/nope node "$RECORD" stop >/dev/null 2>&1
+# An unwritable data dir, portably: a regular FILE where a directory is
+# expected fails with ENOTDIR instantly everywhere.
+#
+# The previous version used /proc/nonexistent/nope, which fails fast on macOS
+# (no /proc) but makes mkdirSync hang forever on Linux — it never throws. That
+# hung CI until the job timed out while passing locally.
+blocked="$(new_sandbox)"
+: > "$blocked/not-a-dir"
+echo '{"session_id":"x"}' | RAFTKIT_TELEMETRY_DIR="$blocked/not-a-dir/spool" node "$RECORD" stop >/dev/null 2>&1
 check "unwritable spool dir exits 0" ok $?
 node -e '
   const fs = require("fs");
@@ -299,6 +313,10 @@ const srv = createServer((req, res) => {
   req.on("end", () => { res.writeHead(code); res.end("{}"); });
 });
 srv.listen(0, () => console.log(srv.address().port));
+// Self-destruct. The EXIT trap also kills these, but a stub that outlives its
+// run is a process leak that compounds across invocations and starves later
+// runs — so it must not depend on cleanup working.
+setTimeout(() => process.exit(0), 120000);
 STUB
 
 start_stub() { # <code> -> echoes port
