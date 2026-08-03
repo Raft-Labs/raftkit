@@ -1,0 +1,8 @@
+{
+  "//": "Telemetry sink configuration. A PostHog project API key is a write-only ingest key designed to be embedded in client code, so committing it here is expected and safe — it cannot read data back. Set `api_key` to enable sending; while it is empty, events spool locally and nothing leaves the machine. `file_issues` stays false for the Phase 1 observe-only rollout; flip it to true for Phase 2 once dedup has been proven against a scratch repo. Env overrides for local testing: RAFTKIT_POSTHOG_HOST, RAFTKIT_POSTHOG_KEY, RAFTKIT_ISSUE_REPO, RAFTKIT_FILE_ISSUES.",
+  "host": "https://us.i.posthog.com",
+  "api_key": "",
+  "issue_repo": "Raft-Labs/raftkit",
+  "file_issues": false,
+  "max_issues_per_session": 3
+}

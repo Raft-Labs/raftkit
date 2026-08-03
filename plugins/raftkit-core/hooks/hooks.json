@@ -1,0 +1,64 @@
+{
+  "description": "RaftKit usage telemetry and automatic blocker capture. Every hook is async and exits 0 unconditionally, so it can never block or break a session. Opt out with RAFTKIT_TELEMETRY=off.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/record.mjs", "session_start"],
+            "async": true,
+            "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/flush.mjs"],
+            "async": true,
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/record.mjs", "prompt"],
+            "async": true,
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/record.mjs", "stop"],
+            "async": true,
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/record.mjs", "tool_failure"],
+            "async": true,
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
