@@ -20,6 +20,7 @@ import {
   readStdin,
   safeExec,
   safeExecOk,
+  safeExecResult,
   sha,
   spoolDir,
   stateFile,
@@ -66,6 +67,57 @@ function overStormLimit(sessionId, limit) {
 // so this must test the exit code — stdout is empty either way.
 function ghAvailable() {
   return safeExecOk("gh", ["auth", "status"], { timeout: 5000 });
+}
+
+/**
+ * Local record of fingerprints this machine has already filed.
+ *
+ * GitHub's code/issue search index is eventually consistent — an issue created
+ * seconds ago is not yet findable by `--search`. Relying on search alone means
+ * two occurrences of the same blocker in quick succession each open their own
+ * issue. This is the first-line check; GitHub search remains the cross-machine
+ * fallback.
+ */
+function knownLocally(fp) {
+  try {
+    const path = stateFile("filed-issues.json");
+    if (!existsSync(path)) return null;
+    const filed = parseJson(readFileSync(path, "utf8"));
+    return filed[fp] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function rememberLocally(fp, issueNumber) {
+  try {
+    const path = stateFile("filed-issues.json");
+    const filed = existsSync(path) ? parseJson(readFileSync(path, "utf8")) : {};
+    filed[fp] = issueNumber;
+    // Keep the file bounded; the oldest entries matter least.
+    const trimmed = Object.fromEntries(Object.entries(filed).slice(-500));
+    writeFileSync(path, JSON.stringify(trimmed));
+  } catch {
+    /* a lost cache entry costs one duplicate, never a crash */
+  }
+}
+
+/** Comment on an existing issue, reopening it if a closed problem recurred. */
+function addOccurrence(repo, number, props) {
+  const note = [
+    `+1 occurrence — ${new Date().toISOString()}`,
+    "",
+    `- Repo: \`${props.repo || "unknown"}\` (hashed)`,
+    `- Branch kind: ${props.branch_kind || "?"}`,
+    `- Versions: ${
+      Object.entries(props.plugin_versions || {})
+        .map(([k, v]) => `${k}@${v}`)
+        .join(", ") || "unknown"
+    }`,
+  ].join("\n");
+  safeExec("gh", ["issue", "comment", String(number), "--repo", repo, "--body", note], {
+    timeout: 15000,
+  });
 }
 
 function issueBody(event, fp) {
@@ -139,8 +191,17 @@ async function main() {
   const fp = fingerprint(props);
   const repo = cfg.issue_repo;
 
-  // Search body text for the fingerprint marker across open AND closed issues —
-  // a recurrence of something already closed is important signal.
+  // 1. Local cache — catches the case GitHub search cannot: an issue filed
+  //    moments ago that the search index has not picked up yet.
+  const cached = knownLocally(fp)
+  if (cached) {
+    addOccurrence(repo, cached, props);
+    return;
+  }
+
+  // 2. GitHub search across open AND closed issues — a recurrence of something
+  //    already closed is important signal, and this is what dedups across
+  //    different developers' machines.
   const found = safeExec(
     "gh",
     ["issue", "list", "--repo", repo, "--state", "all", "--search", `${fp} in:body`, "--json", "number,state", "--limit", "5"],
@@ -150,32 +211,37 @@ async function main() {
   const hit = Array.isArray(matches) ? matches[0] : null;
 
   if (hit && hit.number) {
-    const note = [
-      `+1 occurrence — ${new Date().toISOString()}`,
-      "",
-      `- Repo: \`${props.repo || "unknown"}\` (hashed)`,
-      `- Branch kind: ${props.branch_kind || "?"}`,
-      `- Versions: ${Object.entries(props.plugin_versions || {}).map(([k, v]) => `${k}@${v}`).join(", ") || "unknown"}`,
-    ].join("\n");
-    safeExec("gh", ["issue", "comment", String(hit.number), "--repo", repo, "--body", note], { timeout: 15000 });
+    addOccurrence(repo, hit.number, props);
     if (hit.state === "CLOSED") {
       safeExec("gh", ["issue", "reopen", String(hit.number), "--repo", repo], { timeout: 15000 });
     }
+    rememberLocally(fp, hit.number);
     return;
   }
 
-  safeExec(
+  // 3. Nothing found — file it. `gh issue create` fails outright if a label is
+  //    missing from the repo, so a labelling problem must not cost us the
+  //    report: fall back to an unlabelled issue rather than filing nothing.
+  const base = [
+    "issue", "create",
+    "--repo", repo,
+    "--title", shortTitle(props),
+    "--body", issueBody(event, fp),
+  ];
+  // Retry on the exit code, never on empty output — `gh` can succeed quietly,
+  // and treating that as failure would file the issue twice.
+  let res = safeExecResult(
     "gh",
-    [
-      "issue", "create",
-      "--repo", repo,
-      "--title", shortTitle(props),
-      "--body", issueBody(event, fp),
-      "--label", "raftkit-blocker",
-      "--label", "auto-filed",
-    ],
+    [...base, "--label", "raftkit-blocker", "--label", "auto-filed"],
     { timeout: 20000 },
   );
+  if (!res.ok) res = safeExecResult("gh", base, { timeout: 20000 });
+  if (!res.ok) return;
+
+  // `gh issue create` prints the new issue's URL; the trailing segment is its
+  // number, which is what the local cache needs to comment on next time.
+  const number = Number(res.stdout.split("/").pop());
+  if (Number.isInteger(number) && number > 0) rememberLocally(fp, number);
 }
 
 main()

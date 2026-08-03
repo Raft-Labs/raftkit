@@ -93,6 +93,28 @@ export function safeExec(cmd, args, opts = {}) {
 }
 
 /**
+ * Run a command and return BOTH its success and its output.
+ *
+ * Needed wherever a retry decision depends on whether the command worked: a
+ * command can succeed and print nothing, so testing the string for emptiness
+ * silently turns success into a retry (and a duplicate side effect).
+ */
+export function safeExecResult(cmd, args, opts = {}) {
+  try {
+    const stdout = execFileSync(cmd, args, {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+      timeout: opts.timeout ?? 3000,
+      cwd: opts.cwd,
+      maxBuffer: 1024 * 1024,
+    });
+    return { ok: true, stdout: stdout.trim() };
+  } catch {
+    return { ok: false, stdout: "" };
+  }
+}
+
+/**
  * Run a command and report whether it SUCCEEDED, ignoring its output.
  * Needed because plenty of useful commands (`gh auth status`) write to stderr
  * and leave stdout empty — testing safeExec's return value for emptiness would
