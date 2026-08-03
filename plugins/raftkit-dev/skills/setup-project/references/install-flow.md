@@ -61,6 +61,24 @@ message and write **nothing** — no marker, no file, no config.
    — and only the developer's decision applies it. Global or system git
    configuration is never modified. Multiple `core.hooksPath` values → stop
    and ask.
+5a. **pr-auto-review opt-in ask (component 8).** First check
+   `.raftkit/governance-pack.json` (if it exists, i.e. this is a re-run —
+   see "Re-run and component 8's decline state" below for the exact field
+   names and read/write rules): if `pr-auto-review` is already recorded as
+   accepted or declined there, skip straight to that recorded outcome
+   without asking again. Otherwise (first run, or the developer has asked
+   to reconsider), ask explicitly, separate from the rest of the plan:
+   "Also install the PR auto-fix workflow? It runs pr-review-toolkit in CI
+   on every PR, auto-commits fixes for Critical findings only (one commit
+   per fix, auto-reverted if a fix breaks a check), and comments the rest.
+   Requires manually adding an ANTHROPIC_API_KEY repo secret afterward —
+   this installer cannot do that step for you." A **declined** answer
+   excludes component 8 entirely from Phase 2/3 — the other seven proceed
+   unaffected. An **accepted** answer adds it to the same all-or-nothing
+   transaction (render via `pr-auto-review/scripts/render-pr-auto-review.mjs`,
+   stage, commit/PR, verify — same phases as components 3–5 and 7), with the
+   manual-secret step printed prominently in the Phase 4 success output,
+   not buried.
 6. **Branch/write mode.** Determine whether the current branch is protected.
    Prefer `gh api` (the branch-protection endpoint) when `gh` is available and
    authenticated; if it reports protection, plan the PR path. When `gh` is
@@ -93,7 +111,12 @@ Build the full change set without committing:
   non-executable hook under `core.hooksPath`. The MDS ESLint config writes to
   `.raftkit/mds-eslint.config.mjs`, a new file, never merged into any existing
   eslint config the repo already has.
-- **version marker:** stage `.raftkit/governance-pack.json`.
+- **pr-auto-review workflow, if accepted at step 5a:** render via
+  `pr-auto-review/scripts/render-pr-auto-review.mjs` and stage
+  `.github/workflows/pr-auto-review.yml`. If declined, this file is not
+  staged and nothing else in this phase changes.
+- **version marker:** stage `.raftkit/governance-pack.json`, including
+  `optional_components: ["pr-auto-review"]` only if accepted.
 
 If anything here fails, discard the staged work — nothing is committed.
 
@@ -134,11 +157,27 @@ The install is not done until it is verified:
   exists and is readable. A write that silently failed or was skipped is a
   failed install for this component, not a pass — never claim it "verified"
   in the success line without having actually read the file back.
+- **pr-auto-review, if accepted at step 5a:** confirm the rendered
+  `.github/workflows/pr-auto-review.yml` contains no unresolved `__…__`
+  token (same fail-closed check as components 3–4). This installer
+  **cannot** verify the `ANTHROPIC_API_KEY` secret exists — GitHub does not
+  expose secret presence to `gh api` reads — so the success output instead
+  prints the exact manual step as a **required next action**.
 
-On success emit exactly (with `<X>` = the installed raftkit-core version):
+On success emit exactly (with `<X>` = the installed raftkit-core version),
+declined component 8:
 
 ```
 Governance pack v<X> installed: 5 protocols, spec template, hook, CI, CodeRabbit, design standard, MDS ESLint config — verified
+```
+
+Accepted component 8, append additively (never renumber "5" to anything else —
+the count-word stays attached to "protocols", and the seven required components
+keep their exact wording):
+
+```
+Governance pack v<X> installed: 5 protocols, spec template, hook, CI, CodeRabbit, design standard, MDS ESLint config, pr-auto-review workflow — verified
+Required next step: add ANTHROPIC_API_KEY to this repo's Actions secrets — Settings → Secrets and variables → Actions → New repository secret.
 ```
 
 Then print the two one-time lines the dev needs: the per-clone
@@ -229,7 +268,11 @@ written (fail-closed: a validation failure writes nothing).
 
 ## Re-run = update (AC: re-run updates in place, shows diff, repo docs untouched)
 
-A re-run is the update path — there is no separate command.
+A re-run is the update path — there is no separate command: it still
+executes Phase 1 → 2 → 3 → 4 in full, including Phase 1's step 5a. The four
+steps below describe what changes inside those phases once a marker
+already exists — they are not a separate, shorter re-run sequence that
+bypasses Phase 1.
 
 1. Read `.raftkit/governance-pack.json`. Compare its `pack_version` to the
    installed raftkit-core version.
@@ -244,3 +287,23 @@ A re-run is the update path — there is no separate command.
 
 Idempotent: re-running with no version change re-asserts `core.hooksPath` and
 reports no file changes.
+
+### Re-run and component 8's decline state
+
+**Component 8's opt-in ask is not repeated on every re-run.** The marker
+records a prior decline in its own field,
+`optional_components_declined` (e.g. `["pr-auto-review"]`), parallel to —
+and never overlapping with — `optional_components` (accepted items only,
+per `components.md`). This is read as part of step 1 above (reading the
+marker), and it gates Phase 1 step 5a directly (see step 5a's own text):
+if `pr-auto-review` is already in `optional_components`, treat it as
+accepted and re-resolve/update it like any other component via step 2; if
+it is already in `optional_components_declined`, step 5a skips the ask
+silently and leaves it uninstalled; otherwise (neither array mentions it —
+first run, or the developer asked to reconsider) step 5a asks normally. A
+fresh decline writes `pr-auto-review` into `optional_components_declined`;
+a fresh acceptance moves it into `optional_components` and removes it from
+`optional_components_declined` if present. The developer can force the ask
+again at any time by asking explicitly to reconsider component 8 — that
+request removes it from `optional_components_declined` before step 5a
+runs, so it fires again.

@@ -1,6 +1,6 @@
 ---
 name: setup-project
-description: This skill should be used when a developer or tech lead wants to install, set up, update, or re-run RaftLabs' governance pack on a repository — CLAUDE.md protocols 1–5, the Module Design Standard, the active-feature spec template, the pre-push hook, the CI quality-guardrail workflow, the CodeRabbit config, and the MDS ESLint config (the deterministic subset of the design standard) — idempotently and all-or-nothing. Trigger on "set up this repo", "install the governance pack", "add the protocols to this repo", "update the governance pack", "run setup-project". It reads the protocol content, the design standard, and parameters live from raftkit-core (never hand-edited per repo), merges rather than clobbers an existing CLAUDE.md, falls back to a PR on protected branches, records a pack version for update runs, and verifies the install before reporting success.
+description: This skill should be used when a developer or tech lead wants to install, set up, update, or re-run RaftLabs' governance pack on a repository — CLAUDE.md protocols 1–5, the Module Design Standard, the active-feature spec template, the pre-push hook, the CI quality-guardrail workflow, the CodeRabbit config, and the MDS ESLint config (the deterministic subset of the design standard) — idempotently and all-or-nothing, plus an opt-in eighth component (the pr-auto-review CI workflow) offered as a separate, explicitly-confirmed choice. Trigger on "set up this repo", "install the governance pack", "add the protocols to this repo", "update the governance pack", "run setup-project". It reads the protocol content, the design standard, and parameters live from raftkit-core (never hand-edited per repo), merges rather than clobbers an existing CLAUDE.md, falls back to a PR on protected branches, records a pack version for update runs, and verifies the install before reporting success.
 user-invocable: true
 ---
 
@@ -10,7 +10,10 @@ Install the full RaftLabs governance pack on any repo with one command:
 CLAUDE.md protocols 1–5, the Module Design Standard, the spec template, the
 pre-push hook, the CI quality-guardrail workflow, CodeRabbit config, and the
 MDS ESLint config — so the rules live in files the repo carries, not in
-anyone's memory (PRD §5.3).
+anyone's memory (PRD §5.3). An eighth component, the `pr-auto-review` CI
+workflow, is offered separately as an **explicit opt-in** — see
+`references/install.md` in that skill and `components.md` here for why it
+isn't bundled with the other seven.
 
 Hand-copying protocols drifts. This installer versions the pack and makes an
 update a re-run: the same command that installs v1 upgrades it to v2 in place,
@@ -74,7 +77,8 @@ Work `references/install-flow.md` in order — it is the transaction:
    orchestrator are agent-readable. Only then emit the exact success string, then
    print the one-time `git config core.hooksPath .githooks` line for fresh clones.
 
-See `references/components.md` for the five components, their sources, install
+See `references/components.md` for the seven required components plus the
+opt-in eighth, their sources, install
 targets, the parameter substitution, and the version-marker shape.
 
 ## Re-run is the update path
@@ -122,7 +126,8 @@ change re-asserts `core.hooksPath` and reports no file changes. Details in
 - `references/install-flow.md` — the four-phase transaction (preflight →
   assemble → apply → verify), the exact non-git and success strings, the
   protected-branch PR fallback, and the re-run/update path.
-- `references/components.md` — the five components, live-vs-M3 sources, install
+- `references/components.md` — the seven required components plus the
+  opt-in eighth, live-vs-M3 sources, install
   targets, the `spec_path` substitution, the tracked-hook rationale, and the
   version-marker shape.
 - `references/assets/` — the four M3-owned artifacts installed verbatim:

@@ -1,0 +1,8 @@
+{
+  "name": "tier2-fixture",
+  "private": true,
+  "scripts": {
+    "build": "echo built",
+    "lint": "echo linted"
+  }
+}

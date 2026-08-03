@@ -45,6 +45,7 @@ Merging is always human. The skills never merge, never close stories.
 | `fix-production-error` | You have a Sentry/CloudWatch/Crashlytics stack trace | paste the trace + "fix this production error" |
 | `ui-creation` | Building the UI phase of a story with UI scope | "build the UI for this story" |
 | `setup-project` | Re-running the governance pack on its own (init calls this too) | "set up this repo" |
+| `pr-auto-review` | Installing/updating the opt-in CI workflow that reviews and auto-fixes Critical PR findings | "add pr-auto-review to CI" / "install pr-auto-review" |
 | `recipes` | Consulted automatically for auto-update / review-prompt / native-UI patterns and web defaults | (rarely invoked directly) |
 | `capability-preflight` | Before a workflow invokes a third-party capability — inventories installed plugins/skills, classifies readiness, drafts install plans | Not user-invocable — consulted automatically before Gate 0 and before setup-project installs |
 | `docs` | Designing, documenting, or keeping a project's docs synced and verified against the code | "document this codebase" / "do the docs still match the code?" |

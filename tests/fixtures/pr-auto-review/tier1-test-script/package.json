@@ -1,0 +1,7 @@
+{
+  "name": "tier1-fixture",
+  "private": true,
+  "scripts": {
+    "test": "echo ok"
+  }
+}

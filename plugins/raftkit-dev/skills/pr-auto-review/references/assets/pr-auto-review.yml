@@ -1,0 +1,72 @@
+# raftkit-governance-pack managed file (pr-auto-review component) — rendered
+# by pr-auto-review's scripts/render-pr-auto-review.mjs. Never hand-edit;
+# re-run setup-project (or pr-auto-review directly) to update.
+#
+# SECURITY: this deliberately uses `pull_request`, never `pull_request_target`.
+# `pull_request` never grants a fork PR write-scoped secrets or tokens — that
+# is what makes `secrets.ANTHROPIC_API_KEY` and `contents: write` safe to use
+# here. Switching to `pull_request_target` would hand a fork PR author's
+# unreviewed code a token that can push and access secrets — the exact
+# "pwn request" class of vulnerability. Do not change this trigger type.
+name: PR auto-review (Critical findings)
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+concurrency:
+  group: pr-auto-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: __TIMEOUT_MINUTES__
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Check last commit is not our own fix
+        id: guard
+        run: |
+          AUTHOR_EMAIL="$(git log -1 --pretty=format:'%ae')"
+          if [ "$AUTHOR_EMAIL" = "__BOT_COMMIT_EMAIL__" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Last commit is pr-auto-review's own fix commit — skipping to avoid a self-trigger loop."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure bot git identity
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          git config user.name "__BOT_COMMIT_NAME__"
+          git config user.email "__BOT_COMMIT_EMAIL__"
+
+      - name: Fetch base branch for diff anchoring
+        if: steps.guard.outputs.skip != 'true'
+        run: git fetch origin "${{ github.event.pull_request.base.ref }}"
+
+      - uses: anthropics/claude-code-action@v1
+        if: steps.guard.outputs.skip != 'true'
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugins: "__PR_REVIEW_TOOLKIT_PLUGIN_REF__"
+          # __FIX_LOOP_PROMPT__ is substituted with the full multi-line
+          # content of fix-loop-prompt.md — the renderer MUST emit it as a
+          # YAML block scalar (this "prompt: |" line followed by every
+          # substituted line re-indented to match), never a naive inline
+          # string replace, or the multi-line prompt (colons, dashes, code
+          # fences) will break YAML parsing or corrupt the workflow.
+          prompt: |
+            __FIX_LOOP_PROMPT__
+          claude_args: |
+            --max-turns __MAX_TURNS__
+            --allowedTools "Bash,Read,Edit"
