@@ -8,6 +8,7 @@
 #   5. refusal patterns are valid regexes that match their documented examples
 #   6. blocker detection classifies stops and leaves normal turns alone
 #   7. flush clears the spool on 2xx and RETAINS it on failure
+#      (plus: every flushed event carries the event_id the server dedups on)
 #   8. issue filing dedups by fingerprint and honours the storm guard
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -96,6 +97,24 @@ echo "{\"session_id\":\"s1\",\"hook_event_name\":\"SessionStart\",\"source\":\"s
 check "session_start exits 0" ok $?
 expect_eq "session_start spools one event" "1" "$(wc -l < "$d/spool/events.jsonl" | tr -d ' ')"
 expect_eq "event name is correct" "raftkit_session_started" "$(last_event_field "$d/spool/events.jsonl" 'event')"
+
+# The server dedups on event_id. Without it, every flush retry double-counts.
+event_id="$(last_event_field "$d/spool/events.jsonl" 'event_id')"
+if [[ "$event_id" =~ ^[A-Za-z0-9-]{8,64}$ ]]; then
+  echo "PASS: event carries an idempotency key"
+else
+  echo "FAIL: missing or malformed event_id ('$event_id')"
+  failures=$((failures + 1))
+fi
+# ...and it must differ per event, or dedup would collapse distinct events.
+echo '{"session_id":"s1","cwd":"'$PWD'"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
+second_id="$(last_event_field "$d/spool/events.jsonl" 'event_id')"
+if [[ "$second_id" != "$event_id" ]]; then
+  echo "PASS: event_id is unique per event"
+else
+  echo "FAIL: event_id repeated across events ('$event_id')"
+  failures=$((failures + 1))
+fi
 repo_val="$(last_event_field "$d/spool/events.jsonl" 'props.repo')"
 if [[ "$repo_val" == sha256:* && "$repo_val" != *raftkit* ]]; then
   echo "PASS: repo identity is hashed, never the repo name"
@@ -257,7 +276,7 @@ start_stub() { # <code> -> echoes port
 d="$(new_sandbox)"
 port="$(start_stub 200)"
 echo "{\"session_id\":\"s1\",\"cwd\":\"$PWD\"}" | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
-RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_POSTHOG_HOST="http://127.0.0.1:$port" RAFTKIT_POSTHOG_KEY="phc_test" \
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:$port/api/telemetry" \
   node "$FLUSH" >/dev/null 2>&1
 check "flush exits 0 on success" ok $?
 if [[ ! -f "$d/spool/events.jsonl" ]]; then
@@ -270,7 +289,7 @@ fi
 d="$(new_sandbox)"
 port="$(start_stub 500)"
 echo "{\"session_id\":\"s1\",\"cwd\":\"$PWD\"}" | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
-RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_POSTHOG_HOST="http://127.0.0.1:$port" RAFTKIT_POSTHOG_KEY="phc_test" \
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:$port/api/telemetry" \
   node "$FLUSH" >/dev/null 2>&1
 check "flush exits 0 on server error" ok $?
 if [[ -s "$d/spool/events.jsonl" ]]; then
@@ -282,7 +301,7 @@ fi
 
 d="$(new_sandbox)"
 echo "{\"session_id\":\"s1\",\"cwd\":\"$PWD\"}" | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
-RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_POSTHOG_HOST="http://127.0.0.1:1" RAFTKIT_POSTHOG_KEY="phc_test" \
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:1/api/telemetry" \
   node "$FLUSH" >/dev/null 2>&1
 check "flush exits 0 when the host is unreachable" ok $?
 if [[ -s "$d/spool/events.jsonl" ]]; then
@@ -296,9 +315,9 @@ d="$(new_sandbox)"
 echo "{\"session_id\":\"s1\",\"cwd\":\"$PWD\"}" | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
 RAFTKIT_TELEMETRY_DIR="$d" node "$FLUSH" >/dev/null 2>&1
 if [[ -s "$d/spool/events.jsonl" ]]; then
-  echo "PASS: no api_key configured sends nothing and keeps the spool"
+  echo "PASS: no endpoint configured sends nothing and keeps the spool"
 else
-  echo "FAIL: spool cleared without an api_key"
+  echo "FAIL: spool cleared without an endpoint"
   failures=$((failures + 1))
 fi
 
