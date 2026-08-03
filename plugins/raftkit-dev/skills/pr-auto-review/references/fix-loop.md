@@ -12,11 +12,15 @@ context. This is the core novel mechanic pr-auto-review adds.
    second-guesses its severity calls, mirroring how `pr` and `scope-guard`
    treat pr-review-toolkit as an owned, un-reimplemented engine.
 
-2. **Resolve a verify tier** before touching any file — the same toolchain
-   detection `setup-project` already runs (`scripts/detect-toolchain.mjs`'s
-   decision table), looking for an approved test-role script:
+2. **Resolve a verify tier** before touching any file. On Tier 2, "available"
+   means checked directly against this repo's manifest (e.g. a `build`,
+   `typecheck`, or `lint` entry in `package.json`'s `scripts`) — the same
+   signal `setup-project`'s toolchain detection (`scripts/detect-toolchain.mjs`)
+   looks for, checked here directly rather than by invoking that script,
+   since the headless fix-loop prompt is self-contained and has no access to
+   it at CI runtime:
    - **Tier 1 (test script exists)** → run it as the reverify gate after
-     each fix commit. Full auto-revert-on-red.
+     each fix. Full auto-revert-on-red.
    - **Tier 2 (no test script, but build/typecheck/lint exists)** → run the
      strongest available in that preference order (build > typecheck >
      lint) as the reverify gate, and disclose it explicitly in the PR
@@ -31,14 +35,24 @@ context. This is the core novel mechanic pr-auto-review adds.
      commits below are unverified; review carefully before merge.`
 
 3. **Process Critical findings one at a time, sequentially — never
-   batched**, so a red result is attributable to exactly one fix:
+   batched**, so a red result is attributable to exactly one fix. Each
+   fix is verified against the tree as it stands after every prior fix in
+   this run, so a fix that depends on an earlier one in the same run
+   resolves naturally — there is no separate cross-finding dependency
+   mechanism to reason about.
+
+   **Verify happens on the uncommitted change, before any commit exists for
+   this finding** — this is what makes the revert in (e) a plain discard,
+   never a history rewrite of something already pushed:
    - a. Take the next unaddressed Critical finding (file:line + description
      from `pr-review-toolkit`'s output).
-   - b. Apply the smallest fix that resolves it — no speculative or
-     adjacent changes, same "smallest fix" discipline as `fix-bug`'s
-     fix-to-green step.
-   - c. Verify per the resolved tier.
-   - d. **Green (Tier 1/2) or unverifiable (Tier 3)** → commit immediately:
+   - b. Apply the smallest fix that resolves it, uncommitted — no
+     speculative or adjacent changes, same "smallest fix" discipline as
+     `fix-bug`'s fix-to-green step.
+   - c. Verify the uncommitted working tree per the resolved tier, before
+     committing anything for this finding.
+   - d. **Green (Tier 1/2) or unverifiable (Tier 3)** → commit the
+     already-verified change:
 
      ```
      fix: <specific description of the one fix>
@@ -53,10 +67,12 @@ context. This is the core novel mechanic pr-auto-review adds.
      Push right away — pushing per-fix, not batching at the end, is what
      makes the self-trigger loop guard (`workflow-mechanics.md`)
      load-bearing.
-   - e. **Red (only possible in Tier 1/2)** → auto-revert just that one
-     commit (`git reset --hard HEAD~1` since nothing public exists yet to
-     preserve — this commit was never pushed if the verify step runs
-     before the push) and report in the PR comment:
+   - e. **Red (only possible in Tier 1/2)** → nothing was committed for
+     this finding, so there is nothing to revert via history and nothing
+     to push. Discard the uncommitted working-tree change (`git checkout --
+     .` / `git reset --hard HEAD`, resetting to the current `HEAD` — never
+     `HEAD~1`, which would instead destroy the *previous* finding's already
+     -verified, already-pushed commit) and report in the PR comment:
 
      ```
      Could not auto-fix safely: <finding file:line> — attempted fix broke
