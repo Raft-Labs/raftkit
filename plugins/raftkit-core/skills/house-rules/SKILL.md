@@ -16,6 +16,21 @@ These are the rules every RaftKit role plugin inherits. They are authored once h
 - **Asana free tier only.** Nothing a skill creates may rely on paid features: no dependencies, custom fields, milestones, start dates, or approval tasks. Express relationships between tasks as links in the description instead.
 - **Human gates everywhere.** Skills draft; humans approve. The gates are: story approval, plan approval, PR merge, and bug close. No skill advances past a gate on its own. For the mechanics of outward writes, see [write-protocol](../write-protocol/SKILL.md).
 
+## The pr-auto-review exception to "human gates everywhere"
+
+The four gates above — story approval, plan approval, PR merge, bug close —
+are unchanged and still human-only. `raftkit-dev`'s `pr-auto-review` skill
+adds Critical-fix commits on a PR branch as intermediate, non-gate-advancing
+writes: a Critical-fix commit does not complete the PR-merge gate, does not
+close a bug, and does not advance any of the four named gates on its own —
+it only prepares evidence (the commit itself, plus the PR comment) for the
+human who still owns the PR-merge gate. See `write-protocol`'s own
+paragraph on this skill for the exact commit-level boundary (Critical-only,
+one commit per fix, auto-reverted on a red check, never a merge). If a
+future skill is tempted to read this paragraph as license to add its own
+auto-write, it is not — this is the one named exception, and a new one
+needs its own amendment here, not an inference from this one.
+
 ## Escalate to founders
 
 Some decisions are above any skill's or PM's authority. When work touches **budget, contracts, relationship risk, or a client commitment**, surface it to the founders — never absorb it, never decide it inside the skill, never imply a commitment on RaftLabs' behalf.
