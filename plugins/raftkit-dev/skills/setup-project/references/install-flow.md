@@ -130,6 +130,10 @@ The install is not done until it is verified:
 - **Protocols and MDS agent-readable:** confirm the merged `CLAUDE.md`
   (protocol block **and** Module Design Standard block) and
   `.claude/skills/orchestrator/SKILL.md` are present and readable.
+- **MDS ESLint config present:** confirm `.raftkit/mds-eslint.config.mjs`
+  exists and is readable. A write that silently failed or was skipped is a
+  failed install for this component, not a pass — never claim it "verified"
+  in the success line without having actually read the file back.
 
 On success emit exactly (with `<X>` = the installed raftkit-core version):
 

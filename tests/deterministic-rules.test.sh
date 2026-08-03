@@ -69,6 +69,13 @@ ph4=$(flat "$(sec "$IF" '^## Phase 4' '^## Baseline capabilities')")
 grep -qi 'MDS ESLint config' <<<"$ph4" && grep -qi 'import mds from' <<<"$ph4"
 check "SETUP5 Phase 4's success string and printed wiring instructions include the ESLint config" ok $?
 
+# A component named in the success line must have its own verify step, not
+# just be mentioned in prose — otherwise a failed or skipped write can still
+# report "verified". This is a real file-existence check, distinct from
+# SETUP5's text-mentions-it check above.
+grep -qi 'mds-eslint.config.mjs' <<<"$ph4" && grep -qi 'exists and is readable' <<<"$ph4"
+check "SETUP5b Phase 4 has its own verify bullet confirming the ESLint config file actually exists (not just claimed)" ok $?
+
 SPSKILL="$DEV/setup-project/SKILL.md"
 n=$(grep -ci 'MDS ESLint config' "$SPSKILL")
 [[ "$n" -ge 3 ]]
