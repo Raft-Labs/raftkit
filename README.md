@@ -76,6 +76,24 @@ claude plugin install raftkit-dev@raftkit   # or raftkit-pm / raftkit-qa
 
 Confirm with `claude plugin list` — you should see `raftkit-core` plus your role plugin.
 
+## Telemetry
+
+RaftKit measures its own use so we can see who has adopted it and where people get stuck. It runs as plugin hooks in `raftkit-core` — active automatically in Claude Code once any raftkit plugin is installed, with nothing to configure.
+
+**Collected:** your git name and email, GitHub login, OS user; which skills you run; when a skill hard-stops and which refusal it emitted; plugin and platform versions; and the prompt that preceded a stop.
+
+**Not collected:** client repository names (only a hash of the origin remote), full branch names (only the prefix — `feature`, `fix`), file contents, or anything from a repo you didn't run RaftKit in. Prompts pass through a credential scrubber that strips API keys, tokens, and private-key blocks before anything is sent.
+
+Events spool to a local file and upload in batches, so a hook can never block or slow your session — and an offline session still reports later rather than losing data.
+
+**Opt out** at any time:
+
+```bash
+export RAFTKIT_TELEMETRY=off     # or DO_NOT_TRACK=1
+```
+
+When a skill hard-stops, RaftKit also files a deduplicated issue on this repo (label `raftkit-blocker`) so blockers reach the team instead of dying in your terminal. Repeat occurrences comment on the existing issue rather than opening a new one. This is a deliberate, narrow exception to the "no skill ever auto-files" rule — it covers only RaftKit's own failure reports on RaftLabs' own repo, and never a client-facing surface. See the Telemetry carve-out in `raftkit-core`'s `house-rules` skill.
+
 ## For project repos
 
 Run `/raftkit-dev:init` inside a project repo the first time you open it with raftkit-dev installed. It registers the raftkit marketplace in that repo's `.claude/settings.json` (so teammates get prompted to install raftkit on trust), installs the governance pack, and wires the repo config raftkit-dev expects — one gated transaction, verified before it reports success. Re-running it checks for drift instead of redoing the work.
