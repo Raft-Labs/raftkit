@@ -10,8 +10,9 @@ distinction is the whole point of this skill:
   **zero copies** of that text; a copy here would drift from the source, the
   exact failure the pack exists to prevent.
 - **Artifacts owned by this skill (M3)** — the pre-push hook, the CI
-  quality-guardrail workflow, and the CodeRabbit config. These ship as files
-  under `assets/` here (governance-protocols does not carry them).
+  quality-guardrail workflow, the CodeRabbit config, and the MDS ESLint
+  config. These ship as files under `assets/` here (governance-protocols does
+  not carry them).
 
 ## Component table
 
@@ -23,9 +24,10 @@ distinction is the whole point of this skill:
 | 4 | CI quality guardrail | `assets/quality-guardrail.yml` (M3) | `.github/workflows/quality-guardrail.yml` |
 | 5 | CodeRabbit config | `assets/coderabbit.yaml` (M3) | `.coderabbit.yaml` |
 | 6 | Module Design Standard (MDS) | `raftkit-core/design-standard` → `references/standard.md` (live) | `CLAUDE.md` (merged) |
+| 7 | MDS ESLint config (deterministic subset) | `assets/mds-eslint.config.mjs` (M3) | `.raftkit/mds-eslint.config.mjs` (new file — never merged into an existing eslint config; the install summary prints the one-line import to wire it in) |
 
-Success string counts these six: `5 protocols, spec template, hook, CI,
-CodeRabbit, design standard`. The orchestrator mechanism travels **with** the protocols component
+Success string counts these seven: `5 protocols, spec template, hook, CI,
+CodeRabbit, design standard, MDS ESLint config`. The orchestrator mechanism travels **with** the protocols component
 (Protocol 2 is inert without it) — it is not a sixth component. It installs as a
 **discoverable skill** at `.claude/skills/orchestrator/SKILL.md` (a bare `.md`
 loose under `skills/` is not a registered skill), still counted inside the
@@ -99,7 +101,7 @@ v1 from v2 and update in place. Shape:
 {
   "pack_version": "<raftkit-core version at install time>",
   "installed_at": "<ISO date>",
-  "components": ["protocols", "spec-template", "hook", "ci", "coderabbit", "design-standard"]
+  "components": ["protocols", "spec-template", "hook", "ci", "coderabbit", "design-standard", "mds-eslint"]
 }
 ```
 

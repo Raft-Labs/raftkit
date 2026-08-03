@@ -1,0 +1,12 @@
+{
+  "name": "raftkit",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Lint tooling for RaftKit's own .mjs scripts — the deterministic subset of the RaftLabs Module Design Standard (raftkit-core/design-standard) applied to this repo's own code.",
+  "scripts": {
+    "lint": "eslint plugins/**/*.mjs"
+  },
+  "devDependencies": {
+    "eslint": "^9.19.0"
+  }
+}
