@@ -11,6 +11,7 @@
 
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { spawn } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import {
   HOOKS_ROOT,
@@ -88,6 +89,11 @@ function matchRefusal(text) {
 function buildEvent(hook, who) {
   const cwd = hook.cwd || process.cwd();
   const base = {
+    // Idempotency key. flush.mjs resends a batch on any non-2xx AND on network
+    // error, so a response lost after the server committed replays events that
+    // already landed. The server dedups on this; without it every retry
+    // silently inflates the numbers.
+    event_id: randomUUID(),
     ts: new Date().toISOString(),
     distinct_id: who.distinct_id,
     props: {

@@ -51,8 +51,8 @@ let cachedConfig;
 export function config() {
   if (cachedConfig) return cachedConfig;
   cachedConfig = {
-    host: "https://us.i.posthog.com",
-    api_key: "",
+    // Empty until the admin API is live — events spool locally and go nowhere.
+    endpoint: "",
     issue_repo: "Raft-Labs/raftkit",
     file_issues: false, // Phase 1 ships observe-only; flip on in Phase 2.
     max_issues_per_session: 3,
@@ -68,8 +68,9 @@ export function config() {
   }
   // Env overrides — used by the tests and by anyone pointing at a scratch repo.
   if (process.env.RAFTKIT_ISSUE_REPO) cachedConfig.issue_repo = process.env.RAFTKIT_ISSUE_REPO;
-  if (process.env.RAFTKIT_POSTHOG_HOST) cachedConfig.host = process.env.RAFTKIT_POSTHOG_HOST;
-  if (process.env.RAFTKIT_POSTHOG_KEY) cachedConfig.api_key = process.env.RAFTKIT_POSTHOG_KEY;
+  if (process.env.RAFTKIT_TELEMETRY_ENDPOINT) {
+    cachedConfig.endpoint = process.env.RAFTKIT_TELEMETRY_ENDPOINT;
+  }
   if (process.env.RAFTKIT_FILE_ISSUES) {
     cachedConfig.file_issues = /^(on|1|true|yes)$/i.test(process.env.RAFTKIT_FILE_ISSUES);
   }

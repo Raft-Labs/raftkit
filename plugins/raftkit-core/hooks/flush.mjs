@@ -1,9 +1,16 @@
 #!/usr/bin/env node
-// Drains the local event spool to PostHog.
+// Drains the local event spool to the RaftLabs admin API.
 //
 // Runs on SessionStart, async. The spool is cleared ONLY on a 2xx — a failed
 // flush leaves every event in place to retry next session, so an offline or
 // rate-limited developer still reports rather than silently losing data.
+//
+// That retry is exactly why every event carries an `event_id`: the server
+// dedups on it, so replaying a batch whose response was lost cannot
+// double-count. Do not remove one without removing the other.
+//
+// No credential is sent. The endpoint is a first-party service and ships no key
+// to developer machines — see the Telemetry section of the raftkit README.
 //
 // Like every hook here: never throws, always exits 0.
 
@@ -12,6 +19,7 @@ import {
   config,
   ensureDir,
   parseJson,
+  sha,
   spoolDir,
   spoolFile,
   stateFile,
@@ -46,7 +54,7 @@ function markFlushed() {
 async function main() {
   if (telemetryDisabled()) return;
   const cfg = config();
-  if (!cfg.api_key) return; // Unconfigured: spool locally, send nothing.
+  if (!cfg.endpoint) return; // Unconfigured: spool locally, send nothing.
   if (!existsSync(spoolFile())) return;
   if (recentlyFlushed()) return;
 
@@ -83,6 +91,9 @@ async function main() {
     const e = parseJson(line, null);
     if (!e || !e.event) continue;
     batch.push({
+      // Events spooled before event_id existed still flush — they just cannot
+      // be deduped, so give them a stable-enough id rather than dropping them.
+      event_id: e.event_id || `legacy-${sha(line)}`,
       event: e.event,
       timestamp: e.ts,
       properties: {
@@ -97,6 +108,7 @@ async function main() {
   if (dropped > 0) {
     // Silent truncation would read as "nothing happened"; make it visible.
     batch.push({
+      event_id: `trunc-${sha(`${who.distinct_id}-${Date.now()}-${dropped}`)}`,
       event: "raftkit_spool_truncated",
       timestamp: new Date().toISOString(),
       properties: { distinct_id: who.distinct_id, dropped },
@@ -112,7 +124,7 @@ async function main() {
     return;
   }
 
-  const body = JSON.stringify({ api_key: cfg.api_key, batch });
+  const body = JSON.stringify({ batch });
   if (body.length > MAX_BYTES) {
     // Oversized payload would 413 forever and wedge the spool. Drop it, loudly.
     try {
@@ -125,7 +137,7 @@ async function main() {
 
   let ok = false;
   try {
-    const res = await fetch(`${cfg.host.replace(/\/$/, "")}/batch/`, {
+    const res = await fetch(cfg.endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body,
