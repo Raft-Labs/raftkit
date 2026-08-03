@@ -325,12 +325,26 @@ fi
 BLOCK_EVENT='{"ts":"2026-08-03T09:00:00Z","event":"raftkit_blocked","distinct_id":"x@y.z","props":{"refusal_id":"gate0-not-ready","skill":"story-readiness","severity":"blocker","matched_line":"NOT READY — 2 gap(s):","session_id":"s1","repo":"sha256:abc","branch_kind":"feat","prompt":"implement","plugin_versions":{"raftkit-core":"0.7.0"},"os":"darwin"}}'
 
 # Default posture: observe-only, no filing.
+# The kill switch for filing, set explicitly rather than read from the shipped
+# config — this must keep testing the behaviour after the default flips.
 d="$(new_sandbox)"; make_fake_gh "$d" empty
-echo "$BLOCK_EVENT" | PATH="$d/bin:$PATH" RAFTKIT_TELEMETRY_DIR="$d" node "$BLOCKER" >/dev/null 2>&1
+echo "$BLOCK_EVENT" | PATH="$d/bin:$PATH" RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_FILE_ISSUES=false \
+  node "$BLOCKER" >/dev/null 2>&1
 if [[ ! -f "$d/gh.log" ]]; then
-  echo "PASS: file_issues=false files nothing (Phase 1 default)"
+  echo "PASS: file_issues=false files nothing"
 else
   echo "FAIL: filed an issue while file_issues was false"
+  failures=$((failures + 1))
+fi
+
+# Telemetry opt-out must also stop filing, independently of file_issues.
+d="$(new_sandbox)"; make_fake_gh "$d" empty
+echo "$BLOCK_EVENT" | PATH="$d/bin:$PATH" RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY=off \
+  node "$BLOCKER" >/dev/null 2>&1
+if [[ ! -f "$d/gh.log" ]]; then
+  echo "PASS: RAFTKIT_TELEMETRY=off files nothing even with filing enabled"
+else
+  echo "FAIL: filed an issue while telemetry was opted out"
   failures=$((failures + 1))
 fi
 
