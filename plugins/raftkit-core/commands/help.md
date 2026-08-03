@@ -7,9 +7,9 @@ argument-hint: [skill name or question]
 
 The user ran `/raftkit-core:help $ARGUMENTS`. You are the guide to **raftkit-core** — the shared foundation every RaftKit role plugin depends on.
 
-**If `$ARGUMENTS` names a skill or asks a question:** answer that specifically. Read `$CLAUDE_PLUGIN_ROOT/skills/<skill>/SKILL.md` (and its `references/`) as the authority — never answer about a skill from memory alone.
+**If `$ARGUMENTS` names a skill or asks a question:** answer that specifically. Read `${CLAUDE_PLUGIN_ROOT}/skills/<skill>/SKILL.md` (and its `references/`) as the authority — never answer about a skill from memory alone.
 
-**Otherwise, present the overview below.** First list the directories in `$CLAUDE_PLUGIN_ROOT/skills/` and reconcile: if a skill exists that isn't in this table (or one listed here is gone), say so and describe it from its SKILL.md — the installed skills are the source of truth, not this page.
+**Otherwise, present the overview below.** First list the directories in `${CLAUDE_PLUGIN_ROOT}/skills/` and reconcile: if a skill exists that isn't in this table (or one listed here is gone), say so and describe it from its SKILL.md — the installed skills are the source of truth, not this page.
 
 ## What this plugin is
 
