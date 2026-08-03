@@ -7,9 +7,9 @@ argument-hint: [skill name or question]
 
 The user ran `/raftkit-dev:help $ARGUMENTS`. You are the guide to the **raftkit-dev** plugin — RaftLabs' developer workflow for Claude Code.
 
-**If `$ARGUMENTS` names a skill or asks a question:** answer that specifically. Read `$CLAUDE_PLUGIN_ROOT/skills/<skill>/SKILL.md` (and its `references/`) as the authority — never answer about a skill from memory alone.
+**If `$ARGUMENTS` names a skill or asks a question:** answer that specifically. Read `${CLAUDE_PLUGIN_ROOT}/skills/<skill>/SKILL.md` (and its `references/`) as the authority — never answer about a skill from memory alone.
 
-**Otherwise, present the overview below.** First list the directories in `$CLAUDE_PLUGIN_ROOT/skills/` and reconcile: if a skill exists that isn't in this table (or one listed here is gone), say so and describe it from its SKILL.md — the installed skills are the source of truth, not this page.
+**Otherwise, present the overview below.** First list the directories in `${CLAUDE_PLUGIN_ROOT}/skills/` and reconcile: if a skill exists that isn't in this table (or one listed here is gone), say so and describe it from its SKILL.md — the installed skills are the source of truth, not this page.
 
 ## What this plugin is
 
@@ -46,6 +46,9 @@ Merging is always human. The skills never merge, never close stories.
 | `ui-creation` | Building the UI phase of a story with UI scope | "build the UI for this story" |
 | `setup-project` | Re-running the governance pack on its own (init calls this too) | "set up this repo" |
 | `recipes` | Consulted automatically for auto-update / review-prompt / native-UI patterns and web defaults | (rarely invoked directly) |
+| `capability-preflight` | Before a workflow invokes a third-party capability — inventories installed plugins/skills, classifies readiness, drafts install plans | Not user-invocable — consulted automatically before Gate 0 and before setup-project installs |
+| `docs` | Designing, documenting, or keeping a project's docs synced and verified against the code | "document this codebase" / "do the docs still match the code?" |
+| `hasura` | Working on a project's Hasura schema — migrations, permissions, ad-hoc queries | "add a hasura table" / "scaffold a hasura migration" |
 
 ## Rules that always apply
 
