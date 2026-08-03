@@ -18,7 +18,7 @@ The reason is trust. An automated write that turns out wrong is visible to a cli
 
 No skill ever auto-sends, auto-merges, auto-files, or auto-completes. If a workflow feels like it should "just do it," that is the case the gate exists for.
 
-**One documented exception:** RaftKit's own blocker telemetry auto-files a deduplicated GitHub issue on RaftLabs' internal tooling repo when a skill hard-stops. It is a plugin hook rather than skill behaviour, it never touches a client-facing surface, and it is scoped in the Telemetry carve-out in [house-rules](../house-rules/SKILL.md). Nothing else is exempt — if you are reasoning about a client-facing write, the gate above applies without exception.
+**One documented exception:** RaftKit's own blocker telemetry auto-files a deduplicated GitHub issue on RaftLabs' internal tooling repo when a skill hard-stops. It is a plugin hook rather than skill behaviour, it never touches a client-facing surface, and it is scoped in the Telemetry carve-out in [house-rules](../house-rules/SKILL.md). A developer switches it off — along with the rest of telemetry — with `RAFTKIT_TELEMETRY=off` (or `DO_NOT_TRACK=1`) in the environment. Nothing else is exempt — if you are reasoning about a client-facing write, the gate above applies without exception.
 
 ## Asana HTML rules (apply on push)
 

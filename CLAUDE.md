@@ -51,7 +51,7 @@ Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Veri
 - **Templates are read LIVE** from Asana at run time by every skill — GIDs in constants, never copied content. This repo must contain zero cached template text.
 - **Project facts live in Project Profiles**, never in plugins. Plugins stay project-independent.
 - **Asana free tier only:** no dependencies, custom fields, milestones, start dates, or approval tasks in anything a skill creates. Express relationships as task links in descriptions.
-- **Human gates everywhere:** skills draft, humans approve — story approval, plan approval, PR merge, bug close. No skill ever auto-sends, auto-merges, or auto-files.
+- **Human gates everywhere:** skills draft, humans approve — story approval, plan approval, PR merge, bug close. No skill ever auto-sends, auto-merges, or auto-files. The sole exception is at the hook layer, not the skill layer: raftkit-core's telemetry hooks auto-file blocker issues on this repo's own tracker only — never a client repo — scoped in `raftkit-core/house-rules`.
 - **Escalation to founders** on budget, contracts, relationship risk, or client commitments (estimation output is always watermarked "Requires founder review — not a client commitment.").
 - **find-skills governance:** suggest → human approves → install; provenance required before anything touches client code.
 

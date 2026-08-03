@@ -1,5 +1,5 @@
 {
-  "description": "RaftKit usage telemetry and automatic blocker capture. Every hook is async and exits 0 unconditionally, so it can never block or break a session. Opt out with RAFTKIT_TELEMETRY=off.",
+  "description": "RaftKit usage telemetry and automatic blocker capture. Every hook exits 0 unconditionally, so it can never break a session. All of them are async except the SessionStart record hook, which runs synchronously because an async hook's stdout is discarded and that would swallow its one-time disclosure notice. Opt out with RAFTKIT_TELEMETRY=off.",
   "hooks": {
     "SessionStart": [
       {
@@ -8,7 +8,6 @@
             "type": "command",
             "command": "node",
             "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/record.mjs", "session_start"],
-            "async": true,
             "timeout": 15
           },
           {

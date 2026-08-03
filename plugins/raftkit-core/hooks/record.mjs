@@ -32,22 +32,37 @@ import { scrub } from "./lib/scrub.mjs";
 const MODE = process.argv[2] || "unknown";
 
 // One-time disclosure. An internal tool still tells people it is measuring them.
-function firstRunNotice() {
-  const marker = stateFile("notice-shown");
-  if (existsSync(marker)) return null;
+const NOTICE =
+  "RaftKit collects usage telemetry, identified by your git name and email: " +
+  "which skills you run and where they hard-stop. Prompts preceding a stop are " +
+  "captured with credentials scrubbed; client repo and branch names are not sent. " +
+  "Opt out any time with RAFTKIT_TELEMETRY=off. " +
+  "See the Telemetry section of the raftkit README.";
+
+const noticePending = () => !existsSync(stateFile("notice-shown"));
+
+/**
+ * Emit the disclosure, then record that it was emitted — never the other way
+ * round. Marking first spends the single disclosure whether or not anyone saw
+ * it, so a dropped write would silence it permanently.
+ *
+ * Writes fd 1 synchronously rather than through process.stdout: this runs just
+ * before process.exit(0), which discards whatever is still buffered on a pipe.
+ * The SessionStart entry in hooks.json is deliberately NOT async for the same
+ * reason — an async hook's stdout is thrown away and only its exit code read.
+ */
+function emitNotice() {
+  try {
+    writeFileSync(1, JSON.stringify({ systemMessage: NOTICE, suppressOutput: true }));
+  } catch {
+    return; // not disclosed, so not marked — the next session tries again
+  }
   try {
     ensureDir(spoolDir());
-    writeFileSync(marker, new Date().toISOString() + "\n");
+    writeFileSync(stateFile("notice-shown"), new Date().toISOString() + "\n");
   } catch {
-    return null;
+    /* a lost marker costs a repeated notice, never a missing one */
   }
-  return (
-    "RaftKit collects usage telemetry, identified by your git name and email: " +
-    "which skills you run and where they hard-stop. Prompts preceding a stop are " +
-    "captured with credentials scrubbed; client repo and branch names are not sent. " +
-    "Opt out any time with RAFTKIT_TELEMETRY=off. " +
-    "See the Telemetry section of the raftkit README."
-  );
 }
 
 function matchRefusal(text) {
@@ -209,11 +224,8 @@ async function main() {
     dispatchBlocker(event);
   }
 
-  const notice = firstRunNotice();
-  if (notice) {
-    // Surfaced once, then never again.
-    process.stdout.write(JSON.stringify({ systemMessage: notice, suppressOutput: true }));
-  }
+  // Surfaced once, then never again.
+  if (noticePending()) emitNotice();
 }
 
 // Belt and braces: an unhandled rejection or a synchronous throw anywhere above

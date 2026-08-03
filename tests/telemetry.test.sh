@@ -10,6 +10,8 @@
 #   7. flush clears the spool on 2xx and RETAINS it on failure
 #      (plus: every flushed event carries the event_id the server dedups on)
 #   8. issue filing dedups by fingerprint and honours the storm guard
+#   9. the governance docs match the shipped behaviour, the one-time disclosure
+#      actually renders, and the manifests stay in version/description lockstep
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
@@ -452,6 +454,78 @@ d="$(new_sandbox)"
 mkdir -p "$d/bin"; printf '#!/usr/bin/env bash\nexit 1\n' > "$d/bin/gh"; chmod +x "$d/bin/gh"
 echo "$BLOCK_EVENT" | PATH="$d/bin:$PATH" RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_FILE_ISSUES=true node "$BLOCKER" >/dev/null 2>&1
 check "unauthenticated gh exits 0 without filing" ok $?
+
+# -------------------------------------------- 9. governance docs + disclosure
+# Auto-filing and full-prompt capture are deliberate, so the governance docs are
+# the only thing standing between them and a surprised developer. These assert
+# the docs describe what the code above actually does — no more, no less.
+HOUSE_RULES="plugins/raftkit-core/skills/house-rules/SKILL.md"
+WRITE_PROTOCOL="plugins/raftkit-core/skills/write-protocol/SKILL.md"
+
+carveout="$(awk '/^\*\*The auto-file carve-out/,/^## find-skills/' "$HOUSE_RULES")"
+grep -qiE 'creates?\b' <<<"$carveout" \
+  && grep -qiE 'comments?\b' <<<"$carveout" \
+  && grep -qiE 'reopens?\b' <<<"$carveout"
+check "carve-out names all three automatic writes (create, comment, reopen)" ok $?
+
+# The reopen overrides a human's triage decision, so it must be named, not implied.
+grep -qiE 'reopens?\b' <<<"$carveout"
+check "carve-out names the reopen specifically" ok $?
+
+grep -qi 'every prompt' "$HOUSE_RULES" && grep -qi 'failed tool call' "$HOUSE_RULES"
+check "house-rules states every prompt and every failed tool call is captured" ok $?
+
+grep -q 'RAFTKIT_TELEMETRY=off' "$HOUSE_RULES" && grep -q 'RAFTKIT_TELEMETRY=off' "$WRITE_PROTOCOL"
+check "opt-out is stated in house-rules AND write-protocol, not just the README" ok $?
+
+gates="$(grep -m1 'No skill ever auto-sends' CLAUDE.md)"
+grep -qi 'exception' <<<"$gates" \
+  && grep -qi 'telemetry hooks' <<<"$gates" \
+  && grep -qi 'client repo' <<<"$gates"
+check "CLAUDE.md's non-negotiable names the hook-layer auto-file exception" ok $?
+
+# An async hook's stdout AND JSON output are discarded — only its exit code is
+# read. The SessionStart record hook must therefore stay synchronous, or the
+# one-time disclosure below is written into a void and never seen once.
+node -e '
+  const h = JSON.parse(require("fs").readFileSync("plugins/raftkit-core/hooks/hooks.json", "utf8"));
+  const entries = (h.hooks.SessionStart || []).flatMap((m) => m.hooks || []);
+  const rec = entries.find((e) => (e.args || []).some((a) => /record\.mjs$/.test(a)));
+  if (!rec) process.exit(1);
+  process.exit(rec.async ? 1 : 0);
+'
+check "SessionStart record hook is not async, so its disclosure can render" ok $?
+
+d="$(new_sandbox)"
+first="$(echo '{"session_id":"n1","hook_event_name":"SessionStart"}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start 2>/dev/null)"
+second="$(echo '{"session_id":"n2","hook_event_name":"SessionStart"}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start 2>/dev/null)"
+if [[ "$first" == *systemMessage* && "$first" == *'RAFTKIT_TELEMETRY=off'* ]]; then
+  echo "PASS: first run discloses collection on stdout"
+else
+  echo "FAIL: first run emitted no disclosure ('$first')"
+  failures=$((failures + 1))
+fi
+expect_eq "disclosure is one-time, not once per session" "" "$second"
+
+# Version + description lockstep. The minimum is this story's introduced version;
+# later work bumps further, and the repository version gate owns the exact one.
+node -e '
+  const v = JSON.parse(require("fs").readFileSync("plugins/raftkit-core/.claude-plugin/plugin.json","utf8")).version.split(".").map(Number);
+  const min = [0, 8, 0];
+  const cmp = v[0] - min[0] || v[1] - min[1] || v[2] - min[2];
+  process.exit(cmp >= 0 ? 0 : 1);
+'
+check "raftkit-core version is at least 0.8.0 (telemetry bump held)" ok $?
+node -e '
+  const fs = require("fs");
+  const m = JSON.parse(fs.readFileSync(".claude-plugin/marketplace.json", "utf8"));
+  const p = JSON.parse(fs.readFileSync("plugins/raftkit-core/.claude-plugin/plugin.json", "utf8"));
+  const entry = m.plugins.find((x) => x.name === "raftkit-core");
+  process.exit(entry && entry.description === p.description ? 0 : 1);
+'
+check "marketplace description matches raftkit-core's manifest exactly" ok $?
 
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures test(s) failed"

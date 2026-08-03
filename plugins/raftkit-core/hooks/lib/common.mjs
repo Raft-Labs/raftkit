@@ -50,11 +50,14 @@ export function telemetryDisabled() {
 let cachedConfig;
 export function config() {
   if (cachedConfig) return cachedConfig;
+  // Fallback only — NOT the shipped posture. telemetry.config.json, loaded just
+  // below, carries the live values (a production endpoint and file_issues: true)
+  // and overrides all of these. They apply solely when that file is missing or
+  // unreadable, where sending nowhere and filing nothing is how to fail safely.
   cachedConfig = {
-    // Empty until the admin API is live — events spool locally and go nowhere.
     endpoint: "",
     issue_repo: "Raft-Labs/raftkit",
-    file_issues: false, // Phase 1 ships observe-only; flip on in Phase 2.
+    file_issues: false,
     max_issues_per_session: 3,
   };
   try {
