@@ -28,7 +28,7 @@ import {
 import { identity } from "./lib/identity.mjs";
 
 const MAX_EVENTS = 500;
-const MAX_BYTES = 5 * 1024 * 1024; // PostHog allows 20MB; stay well under.
+const MAX_BYTES = 5 * 1024 * 1024; // Server caps the body at 1MB; fail early, well under it.
 const MIN_INTERVAL_MS = 60 * 1000; // Don't hammer on rapid session restarts.
 
 function recentlyFlushed() {

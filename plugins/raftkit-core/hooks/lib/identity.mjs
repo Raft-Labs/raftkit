@@ -22,9 +22,9 @@ function resolve() {
   const machine = sha(hostname() || "unknown", 8);
 
   return {
-    // Email is stable and human-readable, and matches how PostHog models people.
-    // With no git identity at all the developer still counts toward "how many
-    // people", just without a name attached.
+    // Email is stable, human-readable, and joins directly against the admin
+    // dashboard's roster table. With no git identity at all the developer still
+    // counts toward "how many people", just without a name attached.
     distinct_id: email || (ghLogin ? `gh:${ghLogin}` : `anon:${machine}`),
     name,
     email,
