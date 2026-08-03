@@ -3,3 +3,5 @@ node_modules/
 .remember/
 .claude/skills/*-workspace/
 .claude/worktrees/
+# Telemetry spool, if a run ever lands one inside the repo instead of the plugin data dir.
+.raftkit-telemetry/

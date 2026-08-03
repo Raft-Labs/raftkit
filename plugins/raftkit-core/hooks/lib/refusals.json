@@ -1,0 +1,125 @@
+{
+  "//": "The refusal catalogue. RaftKit skills emit fixed refusal strings but there is no machine-readable stop signal, so blocker detection matches the strings that already exist. Every pattern below is transcribed from the skill that owns it — the `source` field names that file. Order matters: the first match wins, so specific rules precede `generic-cant`. When a skill changes an owned string, update it here in the same commit.",
+  "refusals": [
+    {
+      "id": "orchestration-rejected",
+      "skill": "orchestrator",
+      "severity": "blocker",
+      "pattern": "❌ ORCHESTRATION REJECTED",
+      "source": "raftkit-core/skills/governance-protocols/references/orchestrator.md",
+      "example": "❌ ORCHESTRATION REJECTED: Spec-Driven Development protocol is active. Please populate your feature spec in `docs/specs/active-feature.md` before assigning this task to the AI."
+    },
+    {
+      "id": "subagent-loop",
+      "skill": "orchestrator",
+      "severity": "warning",
+      "pattern": "⚠️ SUBAGENT LOOP WARNING",
+      "source": "raftkit-core/skills/governance-protocols/references/orchestrator.md",
+      "example": "⚠️ SUBAGENT LOOP WARNING: Subagent Builder has attempted to resolve a compile issue 3 times and is consuming tokens. Pausing for human review."
+    },
+    {
+      "id": "capability-unavailable",
+      "skill": "capability-preflight",
+      "severity": "blocker",
+      "pattern": "Required capability unavailable:\\s*(?<detail>[^.]+)",
+      "source": "raftkit-dev/skills/capability-preflight/SKILL.md",
+      "example": "Required capability unavailable: superpowers. Proposed install command (human approval required): claude plugin install superpowers@claude-plugins-official. Stopping — no fallback."
+    },
+    {
+      "id": "gate0-not-ready",
+      "skill": "story-readiness",
+      "severity": "blocker",
+      "pattern": "^NOT READY — (?<detail>.+)$",
+      "source": "raftkit-pm/skills/story-readiness/references/readiness-checklist.md",
+      "example": "NOT READY — 2 gap(s):"
+    },
+    {
+      "id": "evidence-stale",
+      "skill": "implement|pr",
+      "severity": "blocker",
+      "pattern": "^evidence stale — inspected (?<detail>.+)$",
+      "source": "raftkit-dev/skills/implement/references/gates.md",
+      "example": "evidence stale — inspected a1b2c3d, current e4f5g6h"
+    },
+    {
+      "id": "cannot-estimate",
+      "skill": "estimation",
+      "severity": "blocker",
+      "pattern": "^Cannot estimate — (?<detail>.+)$",
+      "source": "raftkit-pm/skills/estimation/references/breakdown-method.md",
+      "example": "Cannot estimate — the story is not ready."
+    },
+    {
+      "id": "pr-nothing-to-raise",
+      "skill": "pr",
+      "severity": "info",
+      "pattern": "^nothing to raise — (?<detail>.+)$",
+      "source": "raftkit-dev/skills/pr/SKILL.md",
+      "example": "nothing to raise — branch has no commits beyond target"
+    },
+    {
+      "id": "core-missing",
+      "skill": "workflow-constants",
+      "severity": "blocker",
+      "pattern": "^raftkit-core is required — (?<detail>.+)$",
+      "source": "raftkit-core/skills/workflow-constants/SKILL.md",
+      "example": "raftkit-core is required — install it from the raftkit marketplace."
+    },
+    {
+      "id": "template-unreadable",
+      "skill": "workflow-constants",
+      "severity": "blocker",
+      "pattern": "^Can't read the live template — (?<detail>.+)$",
+      "source": "raftkit-core/skills/workflow-constants/SKILL.md",
+      "example": "Can't read the live template — check your Asana connector, then retry."
+    },
+    {
+      "id": "story-unreadable",
+      "skill": "scope-guard",
+      "severity": "blocker",
+      "pattern": "^Can't read the story — (?<detail>.+)$",
+      "source": "raftkit-dev/skills/scope-guard/references/output-and-signoff.md",
+      "example": "Can't read the story — check your Asana connector, then retry."
+    },
+    {
+      "id": "retest-blocked",
+      "skill": "retest",
+      "severity": "blocker",
+      "pattern": "^Can't retest — (?<detail>.+)$",
+      "source": "raftkit-qa/skills/retest/references/retest-run.md",
+      "example": "Can't retest — \"Fixed in build ___\" is empty. The retest contract needs a build to test against."
+    },
+    {
+      "id": "fix-bug-intake-incomplete",
+      "skill": "fix-bug",
+      "severity": "blocker",
+      "pattern": "^Can't start the fix — (?<detail>.+)$",
+      "source": "raftkit-dev/skills/fix-bug/references/bug-intake-and-handback.md",
+      "example": "Can't start the fix — the bug task is missing Steps to Reproduce."
+    },
+    {
+      "id": "cannot-reproduce",
+      "skill": "fix-bug",
+      "severity": "blocker",
+      "pattern": "^Can't reproduce in the stated environment",
+      "source": "raftkit-dev/skills/fix-bug/references/bug-intake-and-handback.md",
+      "example": "Can't reproduce in the stated environment."
+    },
+    {
+      "id": "docs-no-approved-planning",
+      "skill": "docs",
+      "severity": "blocker",
+      "pattern": "^No approved planning output covers this",
+      "source": "raftkit-dev/skills/docs/SKILL.md",
+      "example": "No approved planning output covers this — route it through the story/PM flow before docs init."
+    },
+    {
+      "id": "generic-cant",
+      "skill": "*",
+      "severity": "blocker",
+      "pattern": "^Can't\\s+(?<detail>\\S+[^\\n]*)$",
+      "source": "undeclared convention shared by ~8 skills; catch-all, must stay last",
+      "example": "Can't proceed — some new refusal a skill added later."
+    }
+  ]
+}

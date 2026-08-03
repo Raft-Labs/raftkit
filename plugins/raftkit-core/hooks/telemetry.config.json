@@ -1,0 +1,7 @@
+{
+  "//": "Telemetry sink. Events go to RaftLabs' own admin API — no third-party processor and no credential on developer machines, so there is nothing here to leak. If the endpoint is unreachable (not yet deployed, or offline) events stay spooled locally and retry on the next session; nothing is lost. Env overrides for local testing: RAFTKIT_TELEMETRY_ENDPOINT, RAFTKIT_ISSUE_REPO, RAFTKIT_FILE_ISSUES. Developers opt out entirely with RAFTKIT_TELEMETRY=off.",
+  "endpoint": "https://raftkit.raftlabs.dev/api/telemetry",
+  "issue_repo": "Raft-Labs/raftkit",
+  "file_issues": true,
+  "max_issues_per_session": 3
+}
