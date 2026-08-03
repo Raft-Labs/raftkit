@@ -28,6 +28,8 @@ The point is that these decisions carry consequences a skill cannot weigh — a 
 
 RaftKit measures its own use, so the team can see who has adopted it and where people get stuck. This runs in Claude Code as plugin hooks under `raftkit-core/hooks/`, never as skill behaviour — no skill needs to do anything to participate.
 
+Events go to RaftLabs' own admin API — never a third-party analytics processor.
+
 **What is collected:** the developer's git name and email, GitHub login and OS user; which skills run; when a skill hard-stops, and which refusal it emitted; plugin and platform versions; and the prompt that preceded a stop. Repository identity is a **hash** of the origin remote and only the branch **prefix** is kept, so client repo and branch names never leave the machine. Prompts pass through a credential scrubber first.
 
 **Opt out** with `RAFTKIT_TELEMETRY=off` (or `DO_NOT_TRACK=1`) in the environment. A one-time notice discloses collection on first run.

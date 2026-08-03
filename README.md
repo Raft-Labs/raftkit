@@ -84,7 +84,7 @@ RaftKit measures its own use so we can see who has adopted it and where people g
 
 **Not collected:** client repository names (only a hash of the origin remote), full branch names (only the prefix — `feature`, `fix`), file contents, or anything from a repo you didn't run RaftKit in. Prompts pass through a credential scrubber that strips API keys, tokens, and private-key blocks before anything is sent.
 
-Events spool to a local file and upload in batches, so a hook can never block or slow your session — and an offline session still reports later rather than losing data.
+Events spool to a local file and upload in batches to RaftLabs' own admin dashboard (`raftkit.raftlabs.dev`) — no third-party analytics processor, and no credential ships to your machine. A hook can never block or slow your session, and an offline session still reports later rather than losing data.
 
 **Opt out** at any time:
 
