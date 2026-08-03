@@ -110,6 +110,24 @@ check "R12b CLAUDE.md has no CodeRabbit mention (decision closed, row dropped)" 
 ! grep -rqi 'ponytail' plugins/raftkit-dev/skills/ CLAUDE.md 2>/dev/null
 check "R13 no skill or reference file names ponytail anywhere" ok $?
 
+# --- R13b-R13e: the CodeRabbit closure reaches the surfaces R5-R7 missed —
+# the /help commands and setup-project — without dropping the config file the
+# pack still installs. ---
+
+! grep -rqi 'coderabbit' plugins/*/commands/ 2>/dev/null
+check "R13b no plugin command page names CodeRabbit (help pages included)" ok $?
+
+SETUP="$DEV/setup-project/SKILL.md"
+cr_bullet=$(grep -i -A2 'CodeRabbit licensing' "$SETUP")
+! grep -qi 'open' <<<"$cr_bullet"
+check "R13c setup-project no longer calls the licensing decision open" ok $?
+
+grep -q '1216551482947559' <<<"$cr_bullet" && grep -qi 'closed 2026-07-14' <<<"$cr_bullet"
+check "R13d setup-project states the decision is closed, citing it with its date" ok $?
+
+grep -qi 'coderabbit.yaml' "$SETUP"
+check "R13e setup-project still installs the CodeRabbit config asset (scope pin)" ok $?
+
 # --- R14-R15: fix the two things that would otherwise regress ---
 
 ! grep -q "grep -q 'ponytail:ponytail-review'" tests/workflow-integration.test.sh
