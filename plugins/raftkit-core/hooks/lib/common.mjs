@@ -68,7 +68,10 @@ export function config() {
   }
   // Env overrides — used by the tests and by anyone pointing at a scratch repo.
   if (process.env.RAFTKIT_ISSUE_REPO) cachedConfig.issue_repo = process.env.RAFTKIT_ISSUE_REPO;
-  if (process.env.RAFTKIT_TELEMETRY_ENDPOINT) {
+  // Checked against undefined, not truthiness: setting the variable to an empty
+  // string must mean "send nowhere". Without that there is no way to override a
+  // configured endpoint back off, and tests would silently post to production.
+  if (process.env.RAFTKIT_TELEMETRY_ENDPOINT !== undefined) {
     cachedConfig.endpoint = process.env.RAFTKIT_TELEMETRY_ENDPOINT;
   }
   if (process.env.RAFTKIT_FILE_ISSUES) {

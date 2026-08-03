@@ -21,10 +21,47 @@ BLOCKER="$HOOKS/blocker.mjs"
 failures=0
 tmpdirs=()
 cleanup() {
+  # Stub servers first — their PID file lives inside one of the tmpdirs.
+  for d in "${tmpdirs[@]:-}"; do
+    [[ -n "$d" && -f "$d/pids" ]] && while read -r pid; do
+      [[ -n "$pid" ]] && kill "$pid" 2>/dev/null
+    done < "$d/pids"
+  done
   for d in "${tmpdirs[@]:-}"; do [[ -n "$d" ]] && rm -rf "$d"; done
-  jobs -p | xargs -r kill 2>/dev/null
 }
 trap cleanup EXIT
+
+# Make the suite hermetic.
+#
+# identity() shells out to `gh api user` on every cold cache, and each test runs
+# in a fresh sandbox, so an unauthenticated or slow `gh` — which is exactly what
+# CI has — turns 22 identity resolutions into 22 network timeouts and blows the
+# job's time budget. Tests must not touch the network.
+#
+# Individual tests that care about `gh` behaviour prepend their own stub, which
+# takes precedence over this one.
+STUB_BIN="$(mktemp -d)"
+tmpdirs+=("$STUB_BIN")
+cat > "$STUB_BIN/gh" <<'STUB'
+#!/usr/bin/env bash
+# Hermetic default: succeed instantly, return nothing useful.
+case "$1" in
+  api) exit 1 ;;         # no identity lookup
+  auth) exit 0 ;;        # "authenticated", so filing paths are reachable
+  *) exit 0 ;;
+esac
+STUB
+chmod +x "$STUB_BIN/gh"
+export PATH="$STUB_BIN:$PATH"
+
+# Never let the suite reach the real telemetry endpoint.
+#
+# The shipped config now points at production, so any test that runs flush.mjs
+# without an explicit override would POST real events into the live database.
+# Default to "send nowhere"; the flush tests set their own stub-server URL.
+export RAFTKIT_TELEMETRY_ENDPOINT=""
+# Same reasoning for issue filing — the shipped default is now `true`.
+export RAFTKIT_FILE_ISSUES=false
 
 check() { # <name> <expected: ok|fail> <actual exit code>
   local name="$1" expected="$2" actual="$3"
@@ -265,7 +302,12 @@ srv.listen(0, () => console.log(srv.address().port));
 STUB
 
 start_stub() { # <code> -> echoes port
+  # The PID is written to a file rather than tracked as a shell job: this
+  # function is called inside a command substitution, so the background process
+  # belongs to that subshell and `jobs -p` in the EXIT trap cannot see it.
+  # Without this the stub servers survive the run and pile up across invocations.
   node "$stub/stub.mjs" "$1" > "$stub/port.$1" 2>/dev/null &
+  echo $! >> "$stub/pids"
   for _ in 1 2 3 4 5 6 7 8 9 10; do
     [[ -s "$stub/port.$1" ]] && break
     sleep 0.3
