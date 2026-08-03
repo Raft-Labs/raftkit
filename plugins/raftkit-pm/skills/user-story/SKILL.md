@@ -87,6 +87,9 @@ If any of these is missing, **ask before doing anything else** (the Empty state)
   something only the product knows — ask instead.
 - **No cached template text.** The format comes from the live fetch, so a template
   change in Asana is reflected the same day with no plugin release.
+- **Sources are confirmed before drafting, every run** — this checkpoint precedes
+  the existing draft → approve → push gate for the story body and does not
+  replace or duplicate it.
 - **Asana free tier only** (`raftkit-core/house-rules`): no dependencies, custom
   fields, milestones, start dates, or approval tasks. Express relationships (epic
   ↔ sub-story, depends-on) as task links in the description.
