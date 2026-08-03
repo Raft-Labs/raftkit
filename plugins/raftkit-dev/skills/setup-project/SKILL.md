@@ -1,6 +1,6 @@
 ---
 name: setup-project
-description: This skill should be used when a developer or tech lead wants to install, set up, update, or re-run RaftLabs' governance pack on a repository — CLAUDE.md protocols 1–5, the Module Design Standard, the active-feature spec template, the pre-push hook, the CI quality-guardrail workflow, and the CodeRabbit config — idempotently and all-or-nothing. Trigger on "set up this repo", "install the governance pack", "add the protocols to this repo", "update the governance pack", "run setup-project". It reads the protocol content, the design standard, and parameters live from raftkit-core (never hand-edited per repo), merges rather than clobbers an existing CLAUDE.md, falls back to a PR on protected branches, records a pack version for update runs, and verifies the install before reporting success.
+description: This skill should be used when a developer or tech lead wants to install, set up, update, or re-run RaftLabs' governance pack on a repository — CLAUDE.md protocols 1–5, the Module Design Standard, the active-feature spec template, the pre-push hook, the CI quality-guardrail workflow, the CodeRabbit config, and the MDS ESLint config (the deterministic subset of the design standard) — idempotently and all-or-nothing. Trigger on "set up this repo", "install the governance pack", "add the protocols to this repo", "update the governance pack", "run setup-project". It reads the protocol content, the design standard, and parameters live from raftkit-core (never hand-edited per repo), merges rather than clobbers an existing CLAUDE.md, falls back to a PR on protected branches, records a pack version for update runs, and verifies the install before reporting success.
 user-invocable: true
 ---
 
@@ -8,8 +8,9 @@ user-invocable: true
 
 Install the full RaftLabs governance pack on any repo with one command:
 CLAUDE.md protocols 1–5, the Module Design Standard, the spec template, the
-pre-push hook, the CI quality-guardrail workflow, and CodeRabbit config — so
-the rules live in files the repo carries, not in anyone's memory (PRD §5.3).
+pre-push hook, the CI quality-guardrail workflow, CodeRabbit config, and the
+MDS ESLint config — so the rules live in files the repo carries, not in
+anyone's memory (PRD §5.3).
 
 Hand-copying protocols drifts. This installer versions the pack and makes an
 update a re-run: the same command that installs v1 upgrades it to v2 in place,
@@ -25,8 +26,8 @@ shows the diff, and leaves every repo-specific file untouched.
    `raftkit-core/governance-protocols` skill at install time; the Module Design
    Standard is read the same way from `raftkit-core/design-standard`. This
    skill keeps **zero copies** of any of that text — a copy would drift from
-   the source. It authors only its own three artifacts (hook, CI, CodeRabbit
-   config).
+   the source. It authors only its own four artifacts (hook, CI, CodeRabbit
+   config, MDS ESLint config).
 
 And: parameters (`decomposition_threshold`, `spec_path`) come from raftkit-core's
 parameter table — never hand-edited per repo.
@@ -59,9 +60,10 @@ Work `references/install-flow.md` in order — it is the transaction:
    committing: merge the protocols and the Module Design Standard into
    CLAUDE.md via `claude-md-management` (never clobber), write the
    orchestrator (to `.claude/skills/orchestrator/SKILL.md`) and spec template
-   from live core content, write the three assets (substituting
-   `spec_path` and the template sentinel in the hook, then `chmod +x` it), and
-   stage the version marker.
+   from live core content, write the four assets (substituting
+   `spec_path` and the template sentinel in the hook, then `chmod +x` it —
+   the MDS ESLint config is static, no substitution, written to
+   `.raftkit/mds-eslint.config.mjs`), and stage the version marker.
 3. **Apply atomically.** Unprotected branch → one commit (hook staged with its
    executable bit) + `git config core.hooksPath .githooks`. Protected branch —
    detected via `gh api`, or on a rejected direct push — → open a PR with the
@@ -123,5 +125,6 @@ change re-asserts `core.hooksPath` and reports no file changes. Details in
 - `references/components.md` — the five components, live-vs-M3 sources, install
   targets, the `spec_path` substitution, the tracked-hook rationale, and the
   version-marker shape.
-- `references/assets/` — the three M3-owned artifacts installed verbatim:
-  `pre-push`, `quality-guardrail.yml`, `coderabbit.yaml`.
+- `references/assets/` — the four M3-owned artifacts installed verbatim:
+  `pre-push`, `quality-guardrail.yml`, `coderabbit.yaml`,
+  `mds-eslint.config.mjs`.

@@ -87,10 +87,12 @@ Build the full change set without committing:
 - **orchestrator, spec template:** write from the live core content — the
   orchestrator to `.claude/skills/orchestrator/SKILL.md` (discoverable-skill
   form), the spec template to `spec_path`.
-- **hook, CI, CodeRabbit:** write the three assets; substitute `__SPEC_PATH__`
-  and `__SPEC_TEMPLATE_SENTINEL__` in the hook (see `components.md`), then
-  `chmod +x .githooks/pre-push` — git ignores a non-executable hook under
-  `core.hooksPath`.
+- **hook, CI, CodeRabbit, MDS ESLint config:** write the four assets;
+  substitute `__SPEC_PATH__` and `__SPEC_TEMPLATE_SENTINEL__` in the hook (see
+  `components.md`), then `chmod +x .githooks/pre-push` — git ignores a
+  non-executable hook under `core.hooksPath`. The MDS ESLint config writes to
+  `.raftkit/mds-eslint.config.mjs`, a new file, never merged into any existing
+  eslint config the repo already has.
 - **version marker:** stage `.raftkit/governance-pack.json`.
 
 If anything here fails, discard the staged work — nothing is committed.
@@ -132,11 +134,18 @@ The install is not done until it is verified:
 On success emit exactly (with `<X>` = the installed raftkit-core version):
 
 ```
-Governance pack v<X> installed: 5 protocols, spec template, hook, CI, CodeRabbit, design standard — verified
+Governance pack v<X> installed: 5 protocols, spec template, hook, CI, CodeRabbit, design standard, MDS ESLint config — verified
 ```
 
-Then print the one-time per-clone line teammates need:
-`git config core.hooksPath .githooks` (see components.md).
+Then print the two one-time lines the dev needs: the per-clone
+`git config core.hooksPath .githooks` (see components.md), and the one-line
+import that wires the MDS ESLint config into the repo's own `eslint.config.js`
+— this installer never edits that file itself:
+
+```
+import mds from "./.raftkit/mds-eslint.config.mjs";
+export default [...yourExistingConfig, ...mds];
+```
 
 ## Baseline capabilities — one consolidated, approved, transactional setup
 
