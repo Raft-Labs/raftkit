@@ -56,5 +56,28 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: bash scripts/validate.sh
 
-      - name: Gate self-test
-        run: bash tests/validate.test.sh
+      - name: Run all contract test suites
+        run: |
+          failures=0
+          for t in tests/*.test.sh; do
+            # Opt-in network suite (RUN_NETWORK_TESTS=1) — makes real installs
+            # against the live registry; not run in CI.
+            if [[ "$(basename "$t")" == "capability-preflight-network.test.sh" ]]; then
+              echo "SKIP  $t (network, opt-in — see file header)"
+              continue
+            fi
+            echo "::group::$t"
+            if bash "$t"; then
+              echo "PASS  $t"
+            else
+              echo "FAIL  $t"
+              failures=$((failures + 1))
+            fi
+            echo "::endgroup::"
+          done
+          echo
+          if [[ "$failures" -gt 0 ]]; then
+            echo "$failures suite(s) failed"
+            exit 1
+          fi
+          echo "all contract suites passed"
