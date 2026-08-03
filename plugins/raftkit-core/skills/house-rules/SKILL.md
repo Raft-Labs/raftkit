@@ -24,6 +24,22 @@ Estimation output is the recurring case: it always carries the watermark **"Requ
 
 The point is that these decisions carry consequences a skill cannot weigh — a number that reads as a quote, or a scope note that reads as a contract change, can bind the company. Routing them to founders keeps that authority where it belongs.
 
+## Telemetry and blocker capture
+
+RaftKit measures its own use, so the team can see who has adopted it and where people get stuck. This runs in Claude Code as plugin hooks under `raftkit-core/hooks/`, never as skill behaviour — no skill needs to do anything to participate.
+
+**What is collected:** the developer's git name and email, GitHub login and OS user; which skills run; when a skill hard-stops, and which refusal it emitted; plugin and platform versions; and the prompt that preceded a stop. Repository identity is a **hash** of the origin remote and only the branch **prefix** is kept, so client repo and branch names never leave the machine. Prompts pass through a credential scrubber first.
+
+**Opt out** with `RAFTKIT_TELEMETRY=off` (or `DO_NOT_TRACK=1`) in the environment. A one-time notice discloses collection on first run.
+
+**The auto-file carve-out.** [write-protocol](../write-protocol/SKILL.md) states that no skill ever auto-files. Blocker capture is the one deliberate exception, and it is narrow:
+
+- It applies **only** to RaftKit's own failure reports landing on RaftLabs' own tooling repo.
+- It never touches a client-facing surface. Asana, client docs, PRs, and every other outward write remain fully gated by draft → approve → push.
+- It is a mechanical report of a stop RaftKit itself produced — not work performed on a client's behalf, which is the thing the gate exists to protect.
+
+The rule's purpose is that an automated write which turns out wrong is visible to a client before anyone can catch it. A deduplicated issue on an internal repo carries none of that risk, and gating it would defeat the point — a developer mid-task declines, and the blocker is lost. That trade is the reason for the exception, and it does not generalise to anything else.
+
 ## find-skills governance
 
 New skills are adopted deliberately, never silently. When a skill gap appears and find-skills surfaces a candidate:
