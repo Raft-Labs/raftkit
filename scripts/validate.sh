@@ -32,6 +32,27 @@ node -e '
   }
 ' || fail "description drift between marketplace.json and a plugin manifest"
 
+# Every help command must reference its own plugin directory with the braced
+# ${CLAUDE_PLUGIN_ROOT} form — the bare $CLAUDE_PLUGIN_ROOT is never substituted in
+# skill/command content and silently resolves to nothing.
+# Every help command's Skills table must also stay in sync with skills/ on disk:
+# no skill missing from the table, no table row naming a skill that doesn't exist.
+for dir in plugins/*/; do
+  help="${dir}commands/help.md"
+  [[ -f "$help" ]] || continue
+
+  grep -qE '(^|[^{])\$CLAUDE_PLUGIN_ROOT' "$help" && fail "$help uses bare \$CLAUDE_PLUGIN_ROOT — must be \${CLAUDE_PLUGIN_ROOT}"
+
+  table_skills="$(grep -oE '^\| `[a-z0-9-]+`' "$help" | sed -E 's/^\| `(.+)`$/\1/' | sort -u)"
+  disk_skills="$(for d in "${dir}"skills/*/; do [[ -f "${d}SKILL.md" ]] && basename "$d"; done | sort -u)"
+
+  missing="$(comm -23 <(echo "$disk_skills") <(echo "$table_skills"))"
+  [[ -z "$missing" ]] || fail "$help missing table row(s) for: $(echo "$missing" | tr '\n' ' ')"
+
+  stale="$(comm -13 <(echo "$disk_skills") <(echo "$table_skills"))"
+  [[ -z "$stale" ]] || fail "$help table references nonexistent skill(s): $(echo "$stale" | tr '\n' ' ')"
+done
+
 # A content change only reaches installed machines via a version bump (versions are
 # pinned in plugin.json), so a changed plugin dir must also change its version.
 # Both the diff and the base version are anchored at the merge base — a bump that

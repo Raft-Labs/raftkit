@@ -4,6 +4,8 @@
 #   2. a malformed marketplace.json fails (exit != 0)
 #   3. a plugin change without a version bump fails; with a bump it passes
 #   4. a bump that landed on the base branch does not mask a missing bump here
+#   5. a help.md with a bare $CLAUDE_PLUGIN_ROOT fails
+#   6. a skill dir missing from its help.md table fails
 set -uo pipefail
 cd "$(dirname "$0")/.."
 unset BASE_REF # checks 1-2 must not exercise the bump gate; later checks set it explicitly
@@ -91,6 +93,28 @@ echo "unshipped" > "$repo2/plugins/raftkit-core/PLACEHOLDER2.md"
 commit_all "$repo2" "change without bump, base bumped meanwhile"
 (cd "$repo2" && BASE_REF=main bash scripts/validate.sh) >/dev/null 2>&1
 check "base-branch bump does not mask a missing bump" fail $?
+
+# 5. Bare $CLAUDE_PLUGIN_ROOT in a help command is rejected
+bare="$(mktemp -d)"
+tmpdirs+=("$bare")
+copy_repo_into "$bare" || { echo "FATAL: repo copy failed"; exit 1; }
+sed -i.bak 's/\${CLAUDE_PLUGIN_ROOT}/\$CLAUDE_PLUGIN_ROOT/g' "$bare/plugins/raftkit-core/commands/help.md"
+bash "$bare/scripts/validate.sh" >/dev/null 2>&1
+check "bare \$CLAUDE_PLUGIN_ROOT in help.md fails" fail $?
+
+# 6. A skill dir absent from its plugin's help.md table is rejected
+undocumented="$(mktemp -d)"
+tmpdirs+=("$undocumented")
+copy_repo_into "$undocumented" || { echo "FATAL: repo copy failed"; exit 1; }
+mkdir -p "$undocumented/plugins/raftkit-qa/skills/undocumented-skill"
+cat > "$undocumented/plugins/raftkit-qa/skills/undocumented-skill/SKILL.md" <<'EOF'
+---
+description: test fixture, not a real skill
+---
+test
+EOF
+bash "$undocumented/scripts/validate.sh" >/dev/null 2>&1
+check "skill missing from help.md table fails" fail $?
 
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures test(s) failed"
