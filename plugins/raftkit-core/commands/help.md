@@ -23,6 +23,7 @@ raftkit-core carries no day-to-day workflow of its own — it is the rulebook th
 | `workflow-constants` | The Asana workspace GID, Feature + Bugs Template GIDs, subtask naming conventions — the single source; templates are always fetched LIVE | "What's the story template GID?" / "How do I fetch the live template?" |
 | `write-protocol` | The draft → approve → push gate for every outward write (Asana, Drive docs, files, client-facing), plus Asana's rich-text HTML rules | "Why won't my html_notes push?" / before any skill writes anywhere |
 | `governance-protocols` | Ashit's protocols 1–5 (model triage, decomposition, pre-flight gates, cost hygiene, production alerts), the spec template, the team cheat sheet — the pack `raftkit-dev:setup-project` installs per repo | "What's the exact efficiency warning string?" / "What's the decomposition threshold default?" |
+| `asana-formatting` | How RaftKit renders content for Asana — per-surface tag matrix, markdown-to-Asana-HTML rules, object-reference syntax, read-before-write and read-back verification | Not user-invocable — consulted automatically by write-protocol and every skill that writes to Asana |
 
 ## The three rules everyone hits eventually
 
