@@ -1,6 +1,6 @@
 ---
 name: scope-guard
-description: This skill should be used when a RaftLabs developer wants to audit a branch diff against its story before opening a PR — e.g. "run scope-guard", "check my diff against the story", "did I add anything beyond the story", "audit scope before the PR", or when /implement reaches its pre-PR gate (Gate 2). Reads the story and its live [AC] subtasks plus the Out-of-scope section from Asana, diffs the branch against the merge-base with the PR base branch, and returns exactly two lists — BEYOND THE STORY (additions with no AC, and any Out-of-scope item that appears) and MISSING FROM THE STORY (an AC with no change or test, quoted). Fail-closed — anything it cannot map to an AC lands in BEYOND for a human call. It reports and blocks only — it never removes code and never judges code quality (simplify, CodeRabbit, and pr-review-toolkit own that).
+description: This skill should be used when a RaftLabs developer wants to audit a branch diff against its story before opening a PR — e.g. "run scope-guard", "check my diff against the story", "did I add anything beyond the story", "audit scope before the PR", or when /implement reaches its pre-PR gate (Gate 2). Reads the story and its live [AC] subtasks plus the Out-of-scope section from Asana, diffs the branch against the merge-base with the PR base branch, and returns exactly two lists — BEYOND THE STORY (additions with no AC, no Gate-1-approved Design Approach decision, and any Out-of-scope item that appears) and MISSING FROM THE STORY (an AC with no change or test, or an approved Design Approach decision with no corresponding structure, quoted). Fail-closed — anything it cannot map to an AC or an approved decision lands in BEYOND for a human call. It reports and blocks only — it never removes code and never judges code quality (simplify and pr-review-toolkit own that).
 user-invocable: true
 ---
 
@@ -24,8 +24,8 @@ and blocking, at Gate 2 of `/implement` and on demand at any point.
    default is to flag, not to excuse.
 2. **Report and block — never remove, never judge quality.** scope-guard lists
    and blocks; a human removes flagged code or signs it off. It does not delete
-   code, and it does not assess code quality — that is `simplify`, CodeRabbit,
-   and pr-review-toolkit (Out of scope, below).
+   code, and it does not assess code quality — that is `simplify` and
+   pr-review-toolkit (Out of scope, below).
 
 And a flagged item may only survive with the dev's **explicit, logged sign-off**
 — **silence is not approval**. The sign-off log format is in
@@ -56,24 +56,38 @@ And a flagged item may only survive with the dev's **explicit, logged sign-off**
    line** `Can't read the story — check your Asana connector, then retry.` — do
    not audit against a remembered or partial story (Error state, exact wording in
    `references/output-and-signoff.md`).
-2. **Take the diff.** Diff the branch against the **merge-base with the PR base
+2. **Resolve `spec_path` and read the Design Approach.** Read the `spec_path`
+   parameter **live** from `raftkit-core/governance-protocols` every run —
+   **never hardcode the path** (default `docs/specs/active-feature.md`). From
+   that spec, read the **`## Design Approach`** section and the decomposition
+   table beside it: the decision rows and their **Phases** column are what the
+   fourth mapping surface joins against (`references/audit-method.md`). An
+   explicit **"No new structure"** / zero-decision answer is a **valid pass** —
+   no fourth-surface work this run. A missing spec, or a spec with no
+   `## Design Approach` section at all, is a **stale-spec stop** — halt and say
+   so; never proceed as a silent zero-decision pass.
+3. **Take the diff.** Diff the branch against the **merge-base with the PR base
    branch** — the same anchor the repo's `validate.sh` version gate uses, so the
    audit sees exactly the branch's own changes. Large diffs are walked
    **file-group by file-group with progress** so nothing is skipped
    (`references/audit-method.md`).
-3. **Audit into the two lists** (`references/audit-method.md`):
+4. **Audit into the two lists** (`references/audit-method.md`):
    - **BEYOND THE STORY** — every changed item (feature, field, screen, file)
-     that maps to no `[AC]`, no Gate-1-approved Docs Impact Plan, and no
-     permalink-cited Gate-0 clarification (`implement/references/clarification.md`)
-     — **each listed with its files**; plus any item that matches the story's
-     **Out-of-scope** list — those are automatic BEYOND flags, a fail condition,
-     not a judgment. A clarification is only ever admitted by its Decision Log
+     that maps to no `[AC]`, no Gate-1-approved Docs Impact Plan, no
+     Gate-1-approved Design Approach decision, and no permalink-cited
+     Gate-0 clarification (`implement/references/clarification.md`) — **each
+     listed with its files**; plus any item that matches the story's **Out-of-scope**
+     list — those are automatic BEYOND flags, a fail condition, not a
+     judgment. A clarification is only ever admitted by its Decision Log
      permalink, supplied with the run — never accepted from chat alone
      (`references/audit-method.md`).
    - **MISSING FROM THE STORY** — every `[AC]` with no corresponding change or
-     test, **the uncovered AC quoted verbatim**.
-   - Fail-closed: anything that cannot be mapped to an AC lands in BEYOND.
-4. **Verdict** (`references/output-and-signoff.md` for the exact strings):
+     test, **the uncovered AC quoted verbatim** — plus every Gate-1-approved
+     Design Approach decision with no corresponding structure in the diff,
+     **quoted by its decision number** (`references/audit-method.md`).
+   - Fail-closed: anything that cannot be mapped to an AC or an approved
+     decision lands in BEYOND.
+5. **Verdict** (`references/output-and-signoff.md` for the exact strings):
    - **Both lists empty** → emit the clean-pass line and mark the PR unblocked.
    - **Either list non-empty** → block. A BEYOND item clears only by removal or
      an explicit logged sign-off; a MISSING item clears only by being built or
@@ -98,16 +112,17 @@ And a flagged item may only survive with the dev's **explicit, logged sign-off**
 ## Out of scope
 
 - **Code-quality judgments** — readability, duplication, style, security review.
-  Those are `raftkit-dev/simplify`, CodeRabbit, and pr-review-toolkit; scope-guard
+  Those are `raftkit-dev/simplify` and pr-review-toolkit; scope-guard
   only checks the diff against the story's ACs.
 - **Auto-removing flagged code** — scope-guard reports and blocks; a human
   removes or signs off. It never edits the diff.
 
 ## Reference files
 
-- `references/audit-method.md` — mapping the diff to ACs, the Out-of-scope
-  auto-BEYOND rule, the fail-closed default, large-diff file-group walking, and
-  the multi-story-branch rejection.
+- `references/audit-method.md` — mapping the diff to ACs and Gate-1-approved
+  Design Approach decisions, the Out-of-scope auto-BEYOND rule, the
+  fail-closed default, large-diff file-group walking, and the
+  multi-story-branch rejection.
 - `references/output-and-signoff.md` — the exact two-list output, the fixed
   headers and clean-pass line, the block semantics, the sign-off log format, and
   the error states (story unreachable, diff unavailable) with their git remedy.

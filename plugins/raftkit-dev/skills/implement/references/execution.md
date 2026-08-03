@@ -16,6 +16,13 @@ If Gate 0 cleared any gaps by clarification, the spec carries a
 permalink (`references/clarification.md`) — the same entries the Gate 1 story
 comment cites, not restated from memory.
 
+The spec also carries the Gate 1 **`## Design Approach`** section verbatim
+from what was approved (`references/design-approach.md`) — including an
+explicit "No new structure" statement when the story declared zero decisions.
+This is the same artifact `scope-guard` consumes as its fourth mapping
+surface; a spec missing this section when Gate 1 approved decisions is a
+stale-spec condition, not a silent gap.
+
 If the spec file is absent at **any** point after Gate 1 — before the first edit,
 or if it goes missing mid-run — stop with the governance pack's verbatim string:
 

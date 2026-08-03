@@ -19,7 +19,10 @@ MISSING FROM THE STORY
   nor the Gate-1-approved Docs Impact Plan. Blocks the PR until the item is
   **removed** or **explicitly signed off** (sign-off logged, below).
 - **MISSING FROM THE STORY** — one entry per uncovered `[AC]`, **quoting the AC
-  verbatim**. Blocks the PR until the item is **built** or **explained**.
+  verbatim**, plus one entry per Gate-1-approved **Design Approach decision**
+  with no corresponding structure in the diff, **quoted by its decision number**
+  (e.g. `D2 — no corresponding change found`). Blocks the PR until the item is
+  **built** or **explained**.
 
 ## Verdict
 
@@ -36,7 +39,9 @@ MISSING FROM THE STORY
 ## Empty diff
 
 An empty diff is not a pass: report that nothing is implemented yet, and
-**MISSING lists every `[AC]`** (each quoted). Nothing to put in BEYOND.
+**MISSING lists every `[AC]`** (each quoted) plus every Gate-1-approved
+**Design Approach decision** (each quoted by its decision number). Nothing to
+put in BEYOND.
 
 ## Sign-off log — how a BEYOND item survives
 
