@@ -73,7 +73,13 @@ close its own loop).
    files (read the value live from `governance-protocols`). Model per phase from
    the table — **Sonnet is the default workhorse**; reserve a stronger model for
    phases that genuinely need it and say why in the row.
-4. **Docs Impact Plan.** The plan carries the story's documentation impact,
+4. **Design Approach.** State the story's structural decisions — 0 to 6 rows,
+   each naming a Decision, the Alternative rejected, the Why, and the Phases it
+   governs (the decomposition table's row numbers), plus a **Deliberately not
+   doing** line. Zero is legitimate and must stay cheap when the story adds no
+   new structure. Full field spec, the cap, and the rejectable conditions are
+   in `references/design-approach.md` — do not reinvent them here.
+5. **Docs Impact Plan.** The plan carries the story's documentation impact,
    built on `raftkit-dev:docs` discovery (ownership evidence, never guessed):
    - a **concrete affected-doc list**, or
    - an **evidence-backed expected no-impact**, or
@@ -86,15 +92,20 @@ close its own loop).
    lifecycle's confirm step for exactly that list; if the impact expands during
    implementation, the additions regain approval before any extra doc is
    written.
-5. **Approval is a hard stop.** Present the scope contract + table + Docs
-   Impact Plan and wait for the dev's explicit "go". Silence is not approval.
-6. **On approval, persist the plan two ways** (both required — this is the AC):
+6. **Approval is a hard stop.** Present the scope contract, the table, the
+   Design Approach, and the Docs Impact Plan, and wait for the dev's explicit
+   "go". Silence is not approval. A Design Approach that fails
+   `references/design-approach.md`'s approvable test is sent back inside this
+   gate — it does not reach this step until it clears.
+7. **On approval, persist the plan three ways** (all required — this is the AC):
    - Post the approved plan as a **comment on the story** (`write-protocol`: draft
      → approve → push; Asana HTML rules — single `<body>` root, no `<p>`, links
      only as `<a>`, escape `&`/`<`/`>`, no named entities).
    - **Write it to the spec file** at `spec_path` (read live; default
-     `docs/specs/active-feature.md`). This spec is the gate the build phase checks
-     for — see `references/execution.md`, "No spec, no code".
+     `docs/specs/active-feature.md`), including its own `## Design Approach`
+     section (`references/design-approach.md`). This spec is the gate the
+     build phase checks for — see `references/execution.md`, "No spec, no
+     code".
 
 ## Gate 2 · Scope + review (block or proceed)
 

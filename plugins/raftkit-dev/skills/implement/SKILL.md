@@ -79,7 +79,9 @@ and the gap list is posted back on the story for the PM. A title-only stub with 
 Run plan mode with `superpowers:brainstorming`, dev in the loop. The plan states
 the **scope contract** (in scope = the ACs; everything else = out), the
 **decomposition table** (phase · subagent · target files · target model ·
-dependency) of atomic units that compile in isolation, and the **Docs Impact
+dependency) of atomic units that compile in isolation, the **Design Approach**
+(0–6 structural decisions, each with its rejected alternative, why, and
+governing phases — zero is a legitimate, cheap answer), and the **Docs Impact
 Plan** (a concrete affected-doc list, an evidence-backed no-impact, or an
 unknown mapping — a planning blocker, not docs-write approval). On dev
 approval, post the plan as a comment on the story **and** write it to
@@ -138,6 +140,9 @@ on an Asana write failure, give the dev the exact manual-link text. See
 - `references/gates.md` — the three human gates: Gate 0 readiness seam + refusal
   and gap-post, Gate 1 plan → approval → spec-write + story comment, Gate 2
   scope-guard clean line.
+- `references/design-approach.md` — the Design Approach artifact: five fields,
+  the 0–6 cap, the approvable zero-answer, rejectable conditions, and the
+  mid-build amendment path.
 - `references/clarification.md` — Gate 0's three entry paths, gap classification
   (dev-answerable vs. escalate vs. refuse vs. scope-change), the one-round
   interview, the Decision Log write and its hard stop, and how clarifications
