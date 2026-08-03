@@ -118,8 +118,11 @@ grep -q 'raftkit-core/design-standard' <<<"$ct" && grep -q 'references/standard.
   && grep -qi '(live)' <<<"$ct" && grep -q 'CLAUDE.md' <<<"$ct"
 check "SETUP1 components.md's table has a live-sourced design-standard row installing to CLAUDE.md" ok $?
 
-grep -qi 'these six' "$CM" && grep -qi 'design standard' "$CM"
-check "SETUP2 the success-string sentence now counts six components" ok $?
+# Not "these six" specifically — the pack legitimately grows components over
+# time (S5 adds a seventh), so this pins the design standard's presence in
+# whichever count sentence is current, not the exact numeral word.
+grep -qi 'design standard' "$CM"
+check "SETUP2 the success-string sentence names the design standard" ok $?
 
 mk=$(sed -n '/^## The version marker/,$p' "$CM")
 grep -q '"design-standard"' <<<"$mk"
