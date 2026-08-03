@@ -1,6 +1,6 @@
 ---
 name: pr
-description: This skill should be used when a RaftLabs developer wants to raise a pull request the house way — e.g. "raise the PR", "open a PR for this story", "run the pr skill", or when /implement reaches its final step after scope-guard is clean. It raises ONE squash-target PR (never main directly) with a commitlint-valid title (the future squash commit = the changelog line) and a description carrying the five mandatory sections (story link, AC checklist, out-of-scope confirmation, test summary, Docs result), then runs pr-review-toolkit — and CodeRabbit when present — and addresses or explicitly answers every finding before a human reviewer is requested. It refuses on an empty branch or while scope-guard flags are open, and surfaces a pre-push hook failure verbatim. It NEVER merges and never approves its own PR — merging is human-only.
+description: This skill should be used when a RaftLabs developer wants to raise a pull request the house way — e.g. "raise the PR", "open a PR for this story", "run the pr skill", or when /implement reaches its final step after scope-guard is clean. It raises ONE squash-target PR (never main directly) with a commitlint-valid title (the future squash commit = the changelog line) and a description carrying the five mandatory sections (story link, AC checklist, out-of-scope confirmation, test summary, Docs result), then runs pr-review-toolkit and addresses or explicitly answers every finding before a human reviewer is requested. It refuses on an empty branch or while scope-guard flags are open, and surfaces a pre-push hook failure verbatim. It NEVER merges and never approves its own PR — merging is human-only.
 user-invocable: true
 ---
 
@@ -13,8 +13,8 @@ changelog line = 1 QA item = 1 clean revert** (PRD §5.3). The PR **title is the
 changelog line** — commitlint-valid or the train rejects it.
 
 This skill is the final step of `/implement` and also runs standalone. It
-orchestrates existing engines — scope-guard, the pre-push hook, pr-review-toolkit,
-CodeRabbit — and rebuilds none of them.
+orchestrates existing engines — scope-guard, the pre-push hook, pr-review-toolkit
+— and rebuilds none of them.
 
 ## The one rule that governs everything
 
@@ -77,9 +77,9 @@ Work `references/raise-flow.md` then `references/automated-review.md` in order.
    bypass with `--no-verify`. Then open the PR against the squash target, assigning
    reviewers from CODEOWNERS when present; when absent, leave reviewers unset and
    note it in the run output.
-7. **Automated review before humans.** Run pr-review-toolkit (always) and CodeRabbit
-   (when present); address or explicitly answer every finding, then request the
-   human reviewer with the success line (`references/automated-review.md`):
+7. **Automated review before humans.** Run pr-review-toolkit (always); address
+   or explicitly answer every finding, then request the human reviewer with the
+   success line (`references/automated-review.md`):
 
    ```
    automated layers clean — requesting human review
@@ -100,7 +100,7 @@ Work `references/raise-flow.md` then `references/automated-review.md` in order.
 - **Story read live, not cached** — the AC checklist and out-of-scope confirmation
   come from the live Asana fetch every run.
 - **Automated layers before humans** — a human reviewer is requested only after
-  pr-review-toolkit (and CodeRabbit when present) findings are addressed or answered.
+  pr-review-toolkit findings are addressed or answered.
 - **Escalate to founders** per `raftkit-core/house-rules` if the PR implies a
   budget, contract, or client-relationship risk beyond the code.
 
@@ -112,8 +112,8 @@ Work `references/raise-flow.md` then `references/automated-review.md` in order.
   `raftkit-dev/setup-project`; `pr` only *surfaces* the hook's result, never
   installs or edits it.
 - **Stacked / multi-story PRs** — one branch = one story = one PR in v1.
-- **Code-quality judgments** — owned by `simplify`, CodeRabbit, and
-  pr-review-toolkit; `pr` orchestrates those layers, it does not second-guess them.
+- **Code-quality judgments** — owned by `simplify` and pr-review-toolkit; `pr`
+  orchestrates those layers, it does not second-guess them.
 
 ## Reference files
 
@@ -121,9 +121,9 @@ Work `references/raise-flow.md` then `references/automated-review.md` in order.
   the empty-branch and scope-guard gates, commitlint title validation with a
   compliant proposal, the five mandatory description sections, CODEOWNERS
   reviewers, and the verbatim pre-push-failure surfacing.
-- `references/automated-review.md` — pr-review-toolkit (always) and CodeRabbit
-  (optional/parameterized), the address-or-answer-before-humans gate, the success
-  line, and the never-merge/never-approve guardrail.
+- `references/automated-review.md` — pr-review-toolkit (always, scoped to an
+  explicit merge-base range), the address-or-answer-before-humans gate, the
+  success line, and the never-merge/never-approve guardrail.
 
 
 ## Asana rendering

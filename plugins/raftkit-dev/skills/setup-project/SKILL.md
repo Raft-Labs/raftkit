@@ -104,7 +104,8 @@ change re-asserts `core.hooksPath` and reports no file changes. Details in
 - **GitHub org settings** (rulesets, environments) — owned by the release-train
   rollout; this skill only detects protection and falls back to a PR.
 - **CodeRabbit licensing** — the config file installs; the licensing decision
-  (open, Asana `1216551482947559`) is untouched.
+  is closed (Asana `1216551482947559`, closed 2026-07-14 — pr-review-toolkit
+  only, not CodeRabbit) and this skill does not revisit it.
 - **The pack cheat sheet** — a team-workspace artifact, not a repo file; this
   per-repo installer does not place it.
 

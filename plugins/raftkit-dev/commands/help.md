@@ -13,7 +13,7 @@ The user ran `/raftkit-dev:help $ARGUMENTS`. You are the guide to the **raftkit-
 
 ## What this plugin is
 
-The RaftLabs way of building: **Spec-Driven + Test-Driven, human-in-the-loop at every gate.** The Asana story is the contract — its `[AC]` subtasks are the definition of done, its Out-of-scope list is a hard exclusion. Nothing beyond the story, nothing missing from it. These skills orchestrate proven engines (superpowers, code-simplifier, pr-review-toolkit, security-guidance, CodeRabbit); they rebuild nothing.
+The RaftLabs way of building: **Spec-Driven + Test-Driven, human-in-the-loop at every gate.** The Asana story is the contract — its `[AC]` subtasks are the definition of done, its Out-of-scope list is a hard exclusion. Nothing beyond the story, nothing missing from it. These skills orchestrate proven engines (superpowers, code-simplifier, pr-review-toolkit, security-guidance); they rebuild nothing.
 
 ## The core loop
 
@@ -24,7 +24,7 @@ implement <story-url>
    Gate 0 story readiness (dev-answerable gaps clarified + logged, not just
    refused) → plan + decomposition table → Gate 1 dev approves
    → spec file written (no spec, no code) → TDD phases via scoped subagents
-   → simplify → security → lint + suite → Gate 2 scope-guard + CodeRabbit
+   → simplify → security → lint + suite → Gate 2 scope-guard
    ↓
 pr  (squash-target PR, commitlint title, automated review layers, then human)
 ```

@@ -20,8 +20,7 @@ classifier (`scripts/classify.mjs`) parses this table verbatim.
 | security-feedback | security-guidance | claude-plugins-official | hooks: SessionStart, UserPromptSubmit, PostToolUse, Stop (hook-only; no invocable component — the seam is "hooks active, Stop-review runs") | required (declared) | raftkit-dev |
 | pr-review | pr-review-toolkit | claude-plugins-official | inventory-at-verification (observed 2026-07-21: skill review-pr; agents code-reviewer, silent-failure-hunter, code-simplifier, comment-analyzer, pr-test-analyzer, type-design-analyzer — its code-simplifier agent collides by bare name with the code-simplifier plugin's; all agent dispatch uses scoped plugin-name:agent-name types, so downstream skills must name the scoped type, never the bare name) | required (declared) | raftkit-dev |
 | asana-connectivity | claude.ai Asana connector or an approved asana plugin | — | connector-or-plugin (authentication is a human/setup gate) | required (core-inherited) | raftkit-core (inherited) |
-| minimalism-lens | ponytail | ponytail | skills: ponytail, ponytail-review | recommended | raftkit-dev |
-| pr-annotations | coderabbit | claude-plugins-official | skills: coderabbit-review, autofix | optional (licensing decision open — Asana 1216551482947559) | raftkit-dev |
+| pr-annotations | coderabbit | claude-plugins-official | skills: coderabbit-review, autofix | optional (not in use — RaftLabs decided pr-review-toolkit only, Asana 1216551482947559, closed 2026-07-14) | raftkit-dev |
 | ui-implementation | frontend-design | claude-plugins-official | skill: frontend-design | baseline-required | raftkit-dev |
 | ui-polish | impeccable | impeccable | skill: impeccable | required-available (UI work; never replaces frontend-design) | raftkit-dev |
 | browser-validation | playwright | claude-plugins-official | browser tools | conditional: browser-visible ACs | raftkit-dev |

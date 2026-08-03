@@ -132,13 +132,13 @@ Run after the post-edit gates are green (`references/execution.md`), before the 
    Any **BEYOND** or **MISSING** item blocks the PR. A BEYOND item clears only by
    removal or the dev's explicit logged sign-off; a MISSING item only by being
    built or explained. Silence is not a sign-off.
-2. **CodeRabbit local pass.** Run the CodeRabbit CLI review locally and address or
-   explicitly answer every finding before proceeding to the raise. This Gate 2
-   pass is the branch's CodeRabbit review — `pr` may reuse it if it is still fresh
-   for this branch rather than re-run an identical review at the raise.
 
-Only when both are satisfied does the run proceed to the `pr` skill
-(`references/close-out.md`).
+Only when this is satisfied does the run proceed to the `pr` skill
+(`references/close-out.md`). Automated code review (pr-review-toolkit) is not
+duplicated here — it runs once, downstream, as part of `pr`'s own flow
+(`pr/references/automated-review.md`). CodeRabbit is not part of the review
+chain: RaftLabs decided to use pr-review-toolkit only (Asana
+`1216551482947559`, closed 2026-07-14).
 
 ## Gate evidence is SHA-bound
 

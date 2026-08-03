@@ -1,6 +1,6 @@
 ---
 name: implement
-description: This skill should be used when a RaftLabs developer wants to take one Asana story from URL to a review-ready PR the house way — e.g. "run /implement <story-url>", "implement this story", "build this task end to end", or when a dev hands over a ready raftkit story to code. It fetches the story and its live [AC] subtasks, refuses any story that fails the Gate 0 readiness audit (no override), runs plan mode with superpowers:brainstorming, writes the approved plan as the spec file (no spec, no code), then drives test-first phases through scoped subagents and the post-edit review layers (simplify, security, lint + suite), clears Gate 2 (scope-guard + CodeRabbit), and delegates the raise + Asana close-out to the pr skill. It orchestrates existing engines and rebuilds none of them; it never merges and never ticks [AC]/Testing or closes the story.
+description: This skill should be used when a RaftLabs developer wants to take one Asana story from URL to a review-ready PR the house way — e.g. "run /implement <story-url>", "implement this story", "build this task end to end", or when a dev hands over a ready raftkit story to code. It fetches the story and its live [AC] subtasks, refuses any story that fails the Gate 0 readiness audit (no override), runs plan mode with superpowers:brainstorming, writes the approved plan as the spec file (no spec, no code), then drives test-first phases through scoped subagents and the post-edit review layers (simplify, security, lint + suite), clears Gate 2 (scope-guard), and delegates the raise + Asana close-out to the pr skill. It orchestrates existing engines and rebuilds none of them; it never merges and never ticks [AC]/Testing or closes the story.
 user-invocable: true
 ---
 
@@ -17,7 +17,7 @@ orchestrator chains the guardrails into one disciplined flow.
 nothing** — Gate 0 is `raftkit-pm/story-readiness`, planning is
 `superpowers:brainstorming` + `superpowers:writing-plans`, the post-edit layers
 are `simplify` + the security-guidance hook evidence + the suite, Gate 2 is
-`raftkit-dev:docs` verify + `scope-guard` + CodeRabbit, and the raise +
+`raftkit-dev:docs` verify + `scope-guard`, and the raise +
 close-out are the `pr` skill. It owns
 only the **gate sequencing**, the **spec-file lifecycle**, the **pre-edit
 baseline hard stop**, the **decomposition + scoped-subagent discipline**, the
@@ -96,7 +96,7 @@ full suite. See `references/execution.md`.
 ### Gate 2 · Scope + review  → BLOCK-OR-PROCEED
 Run `raftkit-dev:docs` verify against the story's explicit change set (docs
 parity is required), then `scope-guard` with its verbatim clean line (or a
-logged sign-off), then the CodeRabbit local pass. See `references/gates.md`.
+logged sign-off). See `references/gates.md`.
 
 ### Close out · raise + link
 Hand the raise to the `pr` skill (it owns the squash target, commitlint title,
@@ -137,7 +137,7 @@ on an Asana write failure, give the dev the exact manual-link text. See
 
 - `references/gates.md` — the three human gates: Gate 0 readiness seam + refusal
   and gap-post, Gate 1 plan → approval → spec-write + story comment, Gate 2
-  scope-guard clean line + CodeRabbit local.
+  scope-guard clean line.
 - `references/clarification.md` — Gate 0's three entry paths, gap classification
   (dev-answerable vs. escalate vs. refuse vs. scope-change), the one-round
   interview, the Decision Log write and its hard stop, and how clarifications

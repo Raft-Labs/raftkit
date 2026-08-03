@@ -1,13 +1,12 @@
-# Candidate catalog — how the two engines' findings become candidates
+# Candidate catalog — how the engine's findings become candidates
 
 What this pass looks for in the in-scope diff, and how it decides. The
 **`code-simplifier:code-simplifier` agent** does the finding and the mechanical
-change, and **`ponytail:ponytail-review`** supplies the minimalism read of the
-same diff — the lens is that provider's method, invoked there, never restated
-here. This catalog is how their findings are triaged into RaftKit's approval
-buckets. Everything here is behaviour-preserving — a candidate that would
-change behaviour is not a simplification, it is a bug (and the suite catches
-it: see `revert-safety.md`).
+change; this catalog **is** RaftKit's own minimalism lens — there is no
+external minimalism engine — and is how its findings are triaged into RaftKit's
+approval buckets. Everything here is behaviour-preserving — a candidate that
+would change behaviour is not a simplification, it is a bug (and the suite
+catches it: see `revert-safety.md`).
 
 ## What counts as a candidate
 
