@@ -7,15 +7,31 @@ not just once at open. No `reopened`/`edited` (unlike RaftKit's own
 `validate.yml`, which validates a different thing) — this workflow's scope
 is strictly "re-review on every new push."
 
-`concurrency` is keyed on the PR number, `cancel-in-progress: true`, so a
-rapid double-push doesn't run two fix loops against the same PR
-simultaneously and race each other's commits:
+`concurrency` is keyed on the PR number, so a rapid double-push doesn't run
+two fix loops against the same PR simultaneously and race each other's
+commits — but it **serializes rather than cancels**:
 
 ```yaml
 concurrency:
   group: pr-auto-review-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 ```
+
+`false` is load-bearing. This job pushes each fix to its own trigger branch
+(`fix-loop.md` step 3d pushes per-fix, not batched at the end), and every
+such push fires another `synchronize` into this same group. Under
+`cancel-in-progress: true` the run would cancel *itself* right after its
+first pushed fix — every remaining Critical finding dropped, and the
+end-of-run PR summary comment (`comment-contract.md`) never posted.
+Serializing instead, the follow-up run queues, starts, hits the loop guard
+below, and exits as a no-op. Cancellation is not the recursion guard; the
+bot-commit check is.
+
+A *human* push mid-run is the one case this costs something: the in-flight
+run is now working from a stale head, and its non-fast-forward push is
+rejected (force-push is a hard boundary — `fix-loop.md`), so it fails
+loudly rather than clobbering the human's commit. The queued run then
+reviews the new head from scratch.
 
 ## The self-trigger loop guard
 
