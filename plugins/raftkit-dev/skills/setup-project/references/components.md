@@ -1,7 +1,8 @@
 # The pack: components, sources, and the version marker
 
-The governance pack is five components. Two kinds of source feed them, and the
-distinction is the whole point of this skill:
+The governance pack is seven components, plus one opt-in eighth. Two kinds of
+source feed the seven; the eighth has its own owning skill. The distinction
+is the whole point of this skill:
 
 - **Content owned by `raftkit-core`** — the protocols, the orchestrator
   mechanism, the spec template, and the Module Design Standard. Read these
@@ -25,13 +26,28 @@ distinction is the whole point of this skill:
 | 5 | CodeRabbit config | `assets/coderabbit.yaml` (M3) | `.coderabbit.yaml` |
 | 6 | Module Design Standard (MDS) | `raftkit-core/design-standard` → `references/standard.md` (live) | `CLAUDE.md` (merged) |
 | 7 | MDS ESLint config (deterministic subset) | `assets/mds-eslint.config.mjs` (M3) | `.raftkit/mds-eslint.config.mjs` (new file — never merged into an existing eslint config; the install summary prints the one-line import to wire it in) |
+| 8 | **PR auto-review workflow (opt-in)** | `pr-auto-review/references/assets/pr-auto-review.yml` (rendered by `pr-auto-review/scripts/render-pr-auto-review.mjs`) | `.github/workflows/pr-auto-review.yml` |
+
+Component 8 is **opt-in, never installed by default.** Unlike components
+1–7, it commits code autonomously (Critical-fix commits only — see
+`raftkit-dev/pr-auto-review` and the `write-protocol`/`house-rules`
+amendment naming its exact boundary) and requires a manual secret
+(`ANTHROPIC_API_KEY`) this installer cannot provision. `setup-project`
+proposes it in the consolidated plan as a **separate, explicitly-labeled
+line** the developer must opt into by name — declining it does not affect
+components 1–7 and is not reported as "not ready." A decline is not
+re-asked on the next re-run unless the developer requests it explicitly —
+see `install-flow.md` for how the ask and its outcome are actually tracked
+across a re-run.
 
 Success string counts these seven: `5 protocols, spec template, hook, CI,
 CodeRabbit, design standard, MDS ESLint config`. The orchestrator mechanism travels **with** the protocols component
-(Protocol 2 is inert without it) — it is not a sixth component. It installs as a
+(Protocol 2 is inert without it) — it is not a separate required component. It installs as a
 **discoverable skill** at `.claude/skills/orchestrator/SKILL.md` (a bare `.md`
 loose under `skills/` is not a registered skill), still counted inside the
-protocols component.
+protocols component. Component 8, when accepted, is reported separately from
+that seven-component success string (see `optional_components` below) — it is
+never folded into the counted seven.
 
 **Not installed by this per-repo skill:** the governance pack's cheat sheet.
 It installs to the team workspace (pinned), not a repo file, and this installer
@@ -101,9 +117,16 @@ v1 from v2 and update in place. Shape:
 {
   "pack_version": "<raftkit-core version at install time>",
   "installed_at": "<ISO date>",
-  "components": ["protocols", "spec-template", "hook", "ci", "coderabbit", "design-standard", "mds-eslint"]
+  "components": ["protocols", "spec-template", "hook", "ci", "coderabbit", "design-standard", "mds-eslint"],
+  "optional_components": ["pr-auto-review"]
 }
 ```
+
+`optional_components` lists only opt-in components the developer has
+**accepted** — it is absent or `[]` when none were accepted, and never
+includes a declined component. This is a separate array from `components`
+(the seven required, always-present ones) so a decline of component 8 never
+looks like a partial or broken install of the required seven.
 
 `pack_version` is the installed **raftkit-core** version (the content source), so
 a repo carrying pack v1 while core ships v2 is detected on the next run. On a

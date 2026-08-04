@@ -14,7 +14,33 @@ These are the rules every RaftKit role plugin inherits. They are authored once h
 - **Project facts live in Project Profiles, never in plugins.** Plugins stay project-independent. Anything specific to one client or codebase belongs in that project's profile, not in a skill.
 - **Sources and destinations are access-path-agnostic.** A named source or output home may arrive via a connector (Google Drive, Gmail, Fathom, Asana), a file uploaded into the conversation, a file in a synced local folder (e.g. Google Drive for Desktop, where a Drive doc is a local file), or a pasted link. Accept whichever path the session provides — never insist on one. Every gate, citation rule, and approval applies identically on every path. Cite an upload as "uploaded file, as-of \<date\>" — it carries no live URL.
 - **Asana free tier only.** Nothing a skill creates may rely on paid features: no dependencies, custom fields, milestones, start dates, or approval tasks. Express relationships between tasks as links in the description instead.
-- **Human gates everywhere.** Skills draft; humans approve. The gates are: story approval, plan approval, PR merge, and bug close. No skill advances past a gate on its own. For the mechanics of outward writes, see [write-protocol](../write-protocol/SKILL.md).
+- **Human gates everywhere.** Skills draft; humans approve. The gates are: story approval, plan approval, PR merge, and bug close. No skill advances past a gate on its own, and only the two exceptions enumerated below write anything automatically. For the mechanics of outward writes, see [write-protocol](../write-protocol/SKILL.md).
+
+## The two automatic-write exceptions
+
+The four gates above — story approval, plan approval, PR merge, bug close —
+are unchanged and still human-only. Exactly two RaftKit mechanisms write
+without a per-write human approval, and neither of them advances a gate. They
+are enumerated here and mirrored in
+[write-protocol](../write-protocol/SKILL.md):
+
+1. **Blocker telemetry auto-file (hook layer).** RaftKit's own failure reports
+   land as deduplicated issues on RaftLabs' own tooling repo. Its scope,
+   limits, and opt-out are in "The auto-file carve-out" under Telemetry and
+   blocker capture below.
+2. **`pr-auto-review` Critical-fix commits (CI layer).** `raftkit-dev`'s
+   `pr-auto-review` skill adds Critical-fix commits on a PR branch as
+   intermediate, non-gate-advancing writes: a Critical-fix commit does not
+   complete the PR-merge gate, does not close a bug, and does not advance any
+   of the four named gates on its own — it only prepares evidence (the commit
+   itself, plus the PR comment) for the human who still owns the PR-merge
+   gate. See `write-protocol`'s entry for this skill for the exact
+   commit-level boundary (Critical-only, one commit per fix, auto-reverted on
+   a red check, never a merge).
+
+A future skill tempted to read either entry as license to add its own
+auto-write may not — a third exception needs its own named amendment to this
+list, not an inference from these two.
 
 ## Escalate to founders
 
@@ -34,7 +60,7 @@ Events go to RaftLabs' own admin API — never a third-party analytics processor
 
 **Opt out** with `RAFTKIT_TELEMETRY=off` (or `DO_NOT_TRACK=1`) in the environment. A one-time notice discloses collection on first run.
 
-**The auto-file carve-out.** [write-protocol](../write-protocol/SKILL.md) states that no skill ever auto-files. Blocker capture is the one deliberate exception, and it is narrow:
+**The auto-file carve-out.** [write-protocol](../write-protocol/SKILL.md) states that no skill ever auto-files. Blocker capture is the first of the two enumerated exceptions above, and it is narrow:
 
 - It applies **only** to RaftKit's own failure reports landing on RaftLabs' own tooling repo.
 - It never touches a client-facing surface. Asana, client docs, PRs, and every other outward write remain fully gated by draft → approve → push.
@@ -42,7 +68,7 @@ Events go to RaftLabs' own admin API — never a third-party analytics processor
 - It makes exactly **three** automatic writes to that repo, all through the `gh` CLI: it **creates** a deduplicated issue for a blocker never seen before, **comments** a "+1 occurrence" note on the matching existing issue, and **reopens** that issue when the blocker recurs after someone closed it. The reopen is the one to know about — a closed issue is a human triage decision, and a recurrence overrides it with no one in the loop.
 - The limits are the ones the code actually enforces: at most **3 issues per session** (`max_issues_per_session`), `info`-severity stops are **never** filed, repeat occurrences of a known problem collapse onto the one issue by fingerprint, and nothing is written at all when telemetry is opted out, when `file_issues` is off, or when `gh` is absent or unauthenticated.
 
-The rule's purpose is that an automated write which turns out wrong is visible to a client before anyone can catch it. A deduplicated issue on an internal repo carries none of that risk, and gating it would defeat the point — a developer mid-task declines, and the blocker is lost. That trade is the reason for the exception, and it does not generalise to anything else.
+The rule's purpose is that an automated write which turns out wrong is visible to a client before anyone can catch it. A deduplicated issue on an internal repo carries none of that risk, and gating it would defeat the point — a developer mid-task declines, and the blocker is lost. That trade is the reason for the exception, and it does not generalise beyond the two entries enumerated above.
 
 ## find-skills governance
 
