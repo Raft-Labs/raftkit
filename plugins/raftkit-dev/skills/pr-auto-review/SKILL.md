@@ -40,6 +40,28 @@ to `.github/workflows/**` (including its own file). See
 section and `raftkit-core/house-rules`' matching subsection for the exact,
 binding boundary — this skill does not restate it, it inherits it.
 
+## The limitation every installer must be told about
+
+**The bot's commits are never exercised by the repo's own CI.** GitHub
+suppresses workflow runs for events generated with the built-in
+`GITHUB_TOKEN`, and that is what this workflow pushes with. So the repo's
+test, lint and guardrail workflows do not run against the SHAs this bot
+pushes, and a green check on the PR was computed on the commit *before* the
+fixes.
+
+Three things follow, and none of them are optional:
+
+- The workflow's own in-job verification (`references/fix-loop.md`) is the
+  only automated check those commits ever get.
+- Every PR comment that reports a pushed commit states this in plain words,
+  so the reviewer reads it in the artifact they are already reading.
+- **A human must review the bot's commits before merging.** This is the
+  same gate as the Gate 2 caveat below, for a second reason.
+
+RaftKit takes the no-new-secrets path deliberately: no PAT, no GitHub App
+private key added to a client repo. `references/install.md` documents the
+App-token upgrade as an optional future path and the tradeoff it carries.
+
 ## Preconditions
 
 - **`raftkit-core` installed** — the amendment above must exist in the
@@ -79,18 +101,40 @@ binding boundary — this skill does not restate it, it inherits it.
 
 - **Critical-only auto-fix.** Important and Suggestion findings are reported
   in the PR comment, never auto-fixed.
+- **pr-review-toolkit is the sole classifier.** If its slash command does not
+  return a structured Critical/Important/Suggestion list, the run aborts and
+  says so. An improvised, self-performed review is never a substitute.
 - **One commit per fix**, never batched — a red result is attributable to
   exactly one fix.
+- **A baseline verify run before the first fix.** Without it, a PR whose
+  checks were already failing — the normal case for a PR under review — gets
+  every correct fix discarded and a comment falsely blaming the fix. A red
+  baseline drops the run to unverified-Tier-3 with its own distinct
+  disclosure; it never attributes the failure to a fix.
+- **Infrastructure failure is not a red fix.** A broken toolchain — install
+  failed, harness could not start — aborts the run with a "cannot verify"
+  disclosure and changes no code, rather than being read as "this fix broke
+  the build".
 - **Auto-revert-on-red**, naming the specific failing check, when a check
-  exists. When no check exists at all, the fix still commits but the
-  comment carries a mandatory, permanent "unverified" disclosure — never
-  silently implied to be equivalent to a verified fix.
+  exists and the baseline was green. When no check exists at all, the fix
+  still commits but the comment carries a mandatory, permanent "unverified"
+  disclosure — never silently implied to be equivalent to a verified fix.
 - **Never merges.** The human always owns the PR-merge gate.
-- **Comment idempotency** — edited in place via a hidden marker, never
-  duplicated across re-runs.
-- **Self-trigger loop guard** — the bot's own fix commits (identified by a
-  fixed, documented commit author identity, never by `github.actor`) are
-  recognized and skipped, so `synchronize` never chases its own commits.
+- **Never force-pushes and never rewrites remote history.** A push rejected
+  because a human moved the branch stops the loop and is reported — never
+  resolved with `pull --rebase` or `--force`.
+- **Disclosure before commits, not after.** The summary comment is posted
+  before the first fix and updated after each pushed commit, with an
+  `if: always()` backstop, so a run that dies mid-loop can never leave bot
+  commits on a branch with no disclosure.
+- **Comment idempotency** — edited in place via a hidden marker found across
+  *all* comment pages, never duplicated across re-runs.
+- **Self-trigger loop guard** — the bot's own fix commits (identified by both
+  a pinned commit author identity and the `pr-auto-review-commit` trailer,
+  never by `github.actor`) are recognized and skipped, and a skip is always
+  announced in the job summary rather than being silent.
+- **Never runs on fork PRs or draft PRs** — both refused at job level, so no
+  step can precede the check.
 - **Never edits `.github/workflows/**`**, including its own file — a
   supply-chain-adjacent guardrail so the workflow can never alter its own
   trigger or permissions.
