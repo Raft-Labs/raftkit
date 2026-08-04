@@ -88,9 +88,10 @@ head from scratch.
 ## The self-trigger loop guard
 
 Every fix commit this workflow makes carries a `pr-auto-review-commit: true`
-trailer in its commit message body **and** the rendered bot author identity
-(see `fix-loop.md`). Before invoking the official action, a guard step checks
-**both**, and skips on either:
+trailer in its commit message body (see `fix-loop.md`) **and** the rendered
+bot author identity, stamped by the `Configure bot git identity` step below.
+Before invoking the official action, a guard step checks **both**, and skips
+on either:
 
 ```yaml
 - name: Check last commit is not our own fix
@@ -119,10 +120,28 @@ skipping on either, is the conservative combination.
 **Why the commit author identity, not `github.actor`:** `github.actor`
 reflects the push event's actor, which — depending on whether a GitHub App
 token or a PAT was used to push the fix commit — can read ambiguously. The
-commit author identity is fully controlled by this workflow itself (set via
-`git config user.email` before committing, see `fix-loop.md`), so it's the
-one signal that's reliable regardless of token/App identity used for the
+commit author identity is fully controlled by this workflow itself, so it's
+the one signal that's reliable regardless of token/App identity used for the
 push.
+
+## Bot git identity — required, and the reason the email signal works
+
+```yaml
+- name: Configure bot git identity
+  if: steps.guard.outputs.skip != 'true'
+  run: |
+    git config user.name "__BOT_COMMIT_NAME__"
+    git config user.email "__BOT_COMMIT_EMAIL__"
+```
+
+Not optional, and load-bearing twice. A GitHub Actions runner carries no
+default git identity, so without this step every `git commit` in the fix loop
+fails with `Please tell me who you are` and no fix can ever be committed — the
+workflow runs and accomplishes nothing. It is also the only reason the guard's
+author-email comparison above ever matches: without it the bot's commits do
+not carry `__BOT_COMMIT_EMAIL__`, and that half of the guard silently degrades
+to never firing, leaving the trailer — defence-in-depth by design — as the
+sole signal.
 
 **A skip is never silent.** The guard writes its reason (the observed author
 email and trailer count) to `$GITHUB_STEP_SUMMARY`, so a run that exits as a

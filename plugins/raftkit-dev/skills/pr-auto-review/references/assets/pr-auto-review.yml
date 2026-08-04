@@ -113,6 +113,21 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Configure bot git identity
+        if: steps.guard.outputs.skip != 'true'
+        # MANDATORY, and load-bearing twice over. A GitHub Actions runner has
+        # no default git identity, so without this every `git commit` in the
+        # fix loop dies with "Please tell me who you are" and not one fix can
+        # ever be committed — the workflow is inert. It is also what makes the
+        # first half of the guard step above real: that check compares HEAD's
+        # author email against __BOT_COMMIT_EMAIL__, which only ever matches
+        # because this step stamped it. Delete this step and the email signal
+        # silently degrades to never matching, leaving the commit trailer —
+        # explicitly defence-in-depth, not the primary — as the only signal.
+        run: |
+          git config user.name "__BOT_COMMIT_NAME__"
+          git config user.email "__BOT_COMMIT_EMAIL__"
+
       - name: Set up Node toolchain
         if: steps.guard.outputs.skip != 'true' && hashFiles('package.json') != ''
         uses: actions/setup-node@v4
