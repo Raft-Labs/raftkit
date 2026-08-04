@@ -14,9 +14,19 @@ on:
   pull_request:
     types: [opened, synchronize]
 
+# CONCURRENCY: `cancel-in-progress` MUST stay `false`. This job pushes its
+# fix commits to the very branch that triggers it, so every fix it pushes
+# fires another `synchronize` event into this same concurrency group. With
+# `cancel-in-progress: true` the run therefore cancels *itself* the moment
+# it pushes its first fix — every remaining Critical finding is silently
+# dropped and the end-of-run PR summary comment is never posted. Recursion
+# is prevented by the "Check last commit is not our own fix" guard step
+# below, not by cancellation: the follow-up run starts, sees the bot's own
+# commit as HEAD, and exits as a cheap no-op. Keep the group key — it still
+# serializes runs per PR so two fix loops never race each other's commits.
 concurrency:
   group: pr-auto-review-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: write

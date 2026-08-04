@@ -140,6 +140,49 @@ actual=$?
 if [[ "$actual" -eq 3 ]]; then echo "PASS: S10 stray placeholder in prompt content rejected"; else echo "FAIL: S10 expected exit 3, got $actual"; failures=$((failures+1)); fi
 [[ -f "$tmp10out/pr-auto-review.yml" ]] && { echo "FAIL: S10 wrote a file despite stray placeholder"; failures=$((failures+1)); } || echo "PASS: S10 wrote nothing"
 
+# S11 — the rendered workflow pins `cancel-in-progress: false`. This job
+# pushes its fixes to its own trigger branch, so `true` makes the run cancel
+# itself after its first pushed fix (see references/workflow-mechanics.md).
+# Matched as an anchored YAML key, counted: the asset's own comment block
+# discusses `cancel-in-progress: true` in prose, and a bare substring test
+# would either false-alarm on that or be satisfied by it.
+if [[ -f "$tmp1/pr-auto-review.yml" ]]; then
+  keys=$(grep -cE '^[[:space:]]*cancel-in-progress:' "$tmp1/pr-auto-review.yml")
+  false_keys=$(grep -cE '^[[:space:]]*cancel-in-progress: false[[:space:]]*$' "$tmp1/pr-auto-review.yml")
+  if [[ "$keys" -eq 1 && "$false_keys" -eq 1 ]]; then
+    echo "PASS: S11 cancel-in-progress is false"
+  else
+    echo "FAIL: S11 expected exactly one cancel-in-progress key, set to false (found $keys key(s), $false_keys false)"; failures=$((failures+1))
+  fi
+fi
+
+# S12 — the concurrency group survives and is still keyed on the PR number:
+# runs must still serialize per PR now that they no longer cancel each other.
+if [[ -f "$tmp1/pr-auto-review.yml" ]]; then
+  if grep -qF 'group: pr-auto-review-${{ github.event.pull_request.number }}' "$tmp1/pr-auto-review.yml"; then
+    echo "PASS: S12 concurrency group keyed on PR number"
+  else
+    echo "FAIL: S12 concurrency group missing or not keyed on PR number"; failures=$((failures+1))
+  fi
+fi
+
+# S13 — the bot-commit loop guard step still exists AND still gates the
+# later steps. With S11's cancel-in-progress: false this guard is the only
+# thing preventing an infinite push -> synchronize -> push recursion, so the
+# two are pinned together. Anchored on the YAML step, not on the step name
+# as a substring: that name also appears in the asset's comment block, which
+# would keep a loose check green after the step itself was renamed away.
+if [[ -f "$tmp1/pr-auto-review.yml" ]]; then
+  if grep -qE '^[[:space:]]*- name: Check last commit is not our own fix[[:space:]]*$' "$tmp1/pr-auto-review.yml" \
+     && grep -qE '^[[:space:]]*id: guard[[:space:]]*$' "$tmp1/pr-auto-review.yml" \
+     && grep -qF 'skip=true' "$tmp1/pr-auto-review.yml" \
+     && grep -qF "steps.guard.outputs.skip != 'true'" "$tmp1/pr-auto-review.yml"; then
+    echo "PASS: S13 bot-commit loop guard present and gating"
+  else
+    echo "FAIL: S13 bot-commit loop guard missing or not gating (recursion guard for S11)"; failures=$((failures+1))
+  fi
+fi
+
 echo "----"
 if [[ "$failures" -eq 0 ]]; then
   echo "OK: all pr-auto-review render checks passed"
