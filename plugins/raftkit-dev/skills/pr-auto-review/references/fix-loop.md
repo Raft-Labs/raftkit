@@ -12,6 +12,14 @@ context. This is the core novel mechanic pr-auto-review adds.
    second-guesses its severity calls, mirroring how `pr` and `scope-guard`
    treat pr-review-toolkit as an owned, un-reimplemented engine.
 
+   **The merge-base range must be passed explicitly.** `review-pr` and its
+   `code-reviewer` agent default to reviewing *unstaged* changes (`git diff`
+   with no arguments). A CI checkout has none, so the default scope is empty
+   and the command would report zero findings on every PR — the workflow
+   would run, pass, and do nothing, forever. The prompt therefore states the
+   scope (`"$MERGE_BASE"..HEAD` plus the changed-file list) in the
+   invocation itself and forbids falling back to the default.
+
    **Hard abort if the review does not come back structured.** `review-pr`
    is a slash command, so the run's `--allowedTools` must include
    `SlashCommand` plus everything that command's own frontmatter declares —
@@ -82,12 +90,29 @@ context. This is the core novel mechanic pr-auto-review adds.
    review carefully before merge.
    ```
 
+   **Where the infrastructure boundary sits, exactly.** The question is
+   *whose* code failed to load — the harness's, or the repository's:
+
+   | Symptom | Class |
+   |---|---|
+   | Command/binary/interpreter not found, runner dependency absent, process died before loading any repo code | **Infrastructure** |
+   | Repo's own code fails to import, parse, compile, or type-check | **Red** |
+   | Test collection fails because a test file raises | **Red** |
+   | A test fails, errors, or times out | **Red** |
+   | `"test": "echo \"Error: no test specified\" && exit 1"` | **Red** |
+
+   A missing `node_modules` is infrastructure; a broken `import` in the PR's
+   own source is red — and after a fix, that broken import is very often the
+   damage the fix just did, so misfiling it as infrastructure would commit
+   the breakage while claiming the toolchain was at fault. When the call is
+   genuinely ambiguous, treat it as red: that costs a discarded fix, which
+   is the cheaper error.
+
    **Why an infrastructure failure aborts instead.** A harness that cannot
-   start — command not found, missing module, missing binary, a crash before
-   any check executed — tells you nothing about the code. A red from it must
-   never be read as "this fix is bad", and a green cannot be read as "this
-   fix is good", so there is no safe way to continue. The run makes no code
-   change at all and discloses:
+   start tells you nothing about the code. A red from it must never be read
+   as "this fix is bad", and a green cannot be read as "this fix is good",
+   so there is no safe way to continue. The run makes no code change at all
+   and discloses:
 
    ```
    Could not verify — the verification toolchain could not be prepared in CI
@@ -150,14 +175,22 @@ context. This is the core novel mechanic pr-auto-review adds.
      git push origin HEAD:"$HEAD_REF"
      ```
 
-     **On rejection (non-fast-forward), the loop stops.** A human pushed
-     while the run was working. The two improvisations a model reaches for
-     here are both destructive and both explicitly forbidden: `git pull
-     --rebase` rewrites a human's history, and `git push --force` /
-     `--force-with-lease` destroys their commit — restating the hard
-     boundary at the point of use, **never force-push**. Leave the local
-     commit unpushed, report the stop in the comment, end the run. The
-     human's push will trigger a fresh one.
+     **Any non-zero exit stops the loop** — non-fast-forward rejection is
+     only the most likely case. Authentication and permission errors, a
+     rejecting pre-receive hook, a protected-branch rule and network
+     failures all leave the remote in a state the run did not choose, and a
+     network failure after the objects transferred can leave the commit *on*
+     the remote while still reporting failure. So the loop does not guess:
+     it queries `git ls-remote origin "refs/heads/$HEAD_REF"`, compares the
+     result with the local HEAD, and discloses both the real reason and
+     whether the commit actually reached the remote.
+
+     The two improvisations a model reaches for here are both destructive
+     and both explicitly forbidden: `git pull --rebase` rewrites a human's
+     history, and `git push --force` / `--force-with-lease` destroys their
+     commit — restating the hard boundary at the point of use, **never
+     force-push**. Leave the local commit as it is, report the stop in the
+     comment, end the run. A human's subsequent push triggers a fresh one.
 
      **Capture the commit SHA only after the push has exited 0.** A SHA
      captured before a confirmed push can end up linked in the summary

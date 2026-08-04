@@ -121,9 +121,24 @@ Pass the body from a file (`-F body=@<file>`), never as an inline argument.
    above. Comment even when fully clean — silence must never be mistaken
    for "the workflow didn't run."
 6. **Stop reasons**, when they apply: any "Could not auto-fix safely" line
-   from a red fix, the push-rejected line when a human moved the branch
-   mid-run, and the "review could not be completed" line when
+   from a red fix, and the "review could not be completed" line when
    `pr-review-toolkit:review-pr` did not return a structured finding list.
+
+   **Push failures get a disclosure that names the remote state**, not just
+   the fact of failure. A non-fast-forward rejection is the likely case, but
+   auth errors, pre-receive hooks, protected-branch rules and network
+   failures all reach here too — and a network failure after the objects
+   transferred can leave the commit on the remote while reporting failure.
+   So the line states the reason *and* what the run confirmed via
+   `git ls-remote`:
+   ```
+   Fix loop stopped early — `git push` failed (<reason from git's output>).
+   Commit <short SHA> <is / is NOT> present on the remote branch. Nothing
+   was force-pushed and no history was rewritten. The remaining Critical
+   findings below are unaddressed.
+   ```
+   A reviewer must never have to open the Actions log to find out whether a
+   commit landed.
 
 ## Marker versioning
 

@@ -24,15 +24,26 @@ these variables. Never put that literal text into a command or a URL.
 
 ## Step 1 — Review
 
-Invoke the `pr-review-toolkit:review-pr` slash command against this PR's
-diff. Anchor the diff at the merge-base of the base branch and the head:
+Anchor the diff at the merge-base of the base branch and the head:
 
-```
+```bash
 MERGE_BASE="$(git merge-base "origin/$BASE_REF" HEAD)"
+git diff --name-only "$MERGE_BASE" HEAD
 ```
 
 If `origin/$BASE_REF` does not resolve, run `git fetch origin "$BASE_REF"`
 once (always quoted, always from the variable) and retry.
+
+**You must hand `review-pr` that explicit range.** Left to its own devices
+it reviews *unstaged* changes — `git diff` with no arguments — and this is a
+clean CI checkout with no unstaged changes at all, so it would find nothing
+to review and report zero findings on every PR. Invoke the
+`pr-review-toolkit:review-pr` slash command and state, in the invocation,
+that the scope is the diff `"$MERGE_BASE"..HEAD` and the file list that
+command above prints. Never let it fall back to its default scope.
+
+If the merge-base range itself is empty (no files changed), that is a real
+empty PR: report "No critical issues found." and finish at Step 5 normally.
 
 Do not re-bucket or second-guess its severity classifications — Critical,
 Important, and Suggestion are its call, not yours.
@@ -89,12 +100,28 @@ result attributable to a fix at all. Three outcomes:
 **Baseline green (exit 0).** Normal operation. Proceed to Step 3; a red
 result after a fix is that fix's fault.
 
-**Baseline is an infrastructure failure.** The harness could not run at all
-— command not found, a missing module or binary, a missing interpreter, a
-crash before any check executed. Treat it as infrastructure unavailable
-(below), never as a red baseline. Note that npm's scaffold `"test": "echo
-\"Error: no test specified\" && exit 1"` is neither: it is a real command
-that really exits 1, so it is a red baseline.
+**Baseline is an infrastructure failure.** Draw this line precisely,
+because getting it wrong in either direction is a bug:
+
+*Infrastructure* means **the test runner itself could not start** — the
+command or binary does not exist, the interpreter is missing, a runner
+dependency is absent, or the process died before it began loading any of
+the repo's own code.
+
+*Not infrastructure* — these are ordinary red results, and must be treated
+as red:
+- the repo's own code fails to import, parse, compile, or type-check;
+- test collection fails because a test file raises;
+- a test fails, errors, or times out;
+- npm's scaffold `"test": "echo \"Error: no test specified\" && exit 1"` —
+  a real command that really exits 1, so it is a red baseline.
+
+The distinction is *whose* code failed to load: the harness's, or the
+repository's. A missing `node_modules` is infrastructure; a broken `import`
+in the PR's own source is red. When you genuinely cannot tell, treat it as
+red — that is the conservative direction: it costs a discarded fix, whereas
+the wrong call the other way commits unverified code while claiming a
+broken toolchain.
 
 **Baseline red (the harness ran and reported failures).** The PR's checks
 were already failing before you touched anything — the normal case for a PR
@@ -146,10 +173,13 @@ them, one at a time — never batch:
    not touch anything else. Do not make speculative or adjacent changes.
 2. Verify the UNCOMMITTED working tree with your verify command for the
    resolved tier, before committing anything for this finding (skip this
-   sub-step entirely at Tier 3 — there is nothing to run). If the verify
-   command fails the way an infrastructure failure fails rather than the way
-   a test failure fails — command not found, missing module, harness crash
-   before any check ran — that is NOT a red fix. Discard the working-tree
+   sub-step entirely at Tier 3 — there is nothing to run). Apply Step 2b's
+   infrastructure-vs-red boundary here unchanged: only "the test runner
+   itself could not start" is infrastructure. A failure to import, parse,
+   compile, type-check, or collect **the repository's own code** is a red
+   fix — very often it is precisely the damage your fix just did — and must
+   be handled by 4.5, never excused as a broken toolchain. When the runner
+   truly could not start, that is NOT a red fix: discard the working-tree
    change, stop the loop, and finish at Step 5 with the "Could not verify —
    the verification toolchain could not be prepared in CI" disclosure above.
 3. If green (Tier 1/2) or unverifiable (Tier 3): commit the already-verified
@@ -167,24 +197,45 @@ them, one at a time — never batch:
    Then push this commit immediately, before moving to the next finding,
    with exactly this command — and check its exit status:
 
-   ```
+   ```bash
    git push origin HEAD:"$HEAD_REF"
    ```
 
-   **If the push is rejected** (non-fast-forward — a human pushed to this
-   branch while you were working), STOP the fix loop. Do not run `git pull`,
-   `git pull --rebase`, or `git rebase`: that rewrites a human's history.
-   Do not run `git push --force` or `git push --force-with-lease`:
-   **never force-push** is a hard boundary of this workflow, and forcing
-   here destroys the commit that rejected you. Leave the local commit
-   unpushed, go to Step 5, and record in the comment:
+   **Any non-zero exit stops the fix loop** — not only a non-fast-forward
+   rejection. Authentication and permission errors, a rejecting pre-receive
+   hook, a network failure, a protected-branch rule: each leaves the remote
+   in a state you did not choose, and some of them (a network failure after
+   the objects transferred, most of all) can leave the commit *on* the
+   remote while reporting failure. So on any non-zero exit:
 
-   ```
-   Fix loop stopped early — the branch moved while this run was working, so
-   the push was rejected. Nothing was force-pushed and no history was
-   rewritten. The remaining Critical findings below are unaddressed; the
-   next push to this branch will trigger a fresh run.
-   ```
+   1. Determine what actually reached the remote, rather than assuming:
+
+      ```bash
+      git ls-remote origin "refs/heads/$HEAD_REF"
+      ```
+
+      Compare that SHA with your local `git rev-parse HEAD`.
+   2. Do not retry more than once, and never with different arguments.
+   3. Go to Step 5 and disclose the real reason and the real remote state:
+
+      ```
+      Fix loop stopped early — `git push` failed (<one-line reason from
+      git's own output>).
+      Remote state: commit <short SHA> <is / is NOT> on the remote branch.
+      Nothing was force-pushed and no history was rewritten. The remaining
+      Critical findings below are unaddressed.
+      ```
+
+      When the cause is specifically a non-fast-forward rejection — a human
+      pushed to this branch while you were working — say so, and add: the
+      next push to this branch will trigger a fresh run.
+
+   **Never resolve a push failure by rewriting history.** Do not run `git
+   pull`, `git pull --rebase`, or `git rebase`: that rewrites a human's
+   history. Do not run `git push --force` or `git push --force-with-lease`:
+   **never force-push** is a hard boundary of this workflow, and forcing
+   here destroys the commit that rejected you. Leave the local commit as it
+   is and stop.
 
    Only AFTER the push has exited 0, capture the commit's full
    40-character SHA (`git rev-parse HEAD`) for the PR comment. Capturing it

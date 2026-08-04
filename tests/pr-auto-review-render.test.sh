@@ -510,6 +510,49 @@ else
   bad "S30 (L4) expected 361 to exit 3 with no output and 360 to succeed (got $over / $atcap)"
 fi
 
+# S31 (CR1) — review-pr must be handed the merge-base range explicitly. It and
+# its code-reviewer agent default to reviewing UNSTAGED changes (`git diff`
+# with no arguments); a CI checkout has none, so the default scope is empty and
+# the workflow would run, pass, and review nothing on every PR forever.
+if [[ -f "$YML" ]]; then
+  if grep -qF 'git diff --name-only "$MERGE_BASE" HEAD' "$PROMPT_OUT" \
+     && grep -qF 'You must hand `review-pr` that explicit range' "$PROMPT_OUT" \
+     && grep -qF 'Never let it fall back to its default scope' "$PROMPT_OUT"; then
+    ok "S31 (CR1) review-pr is scoped to the merge-base range, never its empty default"
+  else
+    bad "S31 (CR1) review-pr would fall back to unstaged-diff scope and review nothing in CI"
+  fi
+fi
+
+# S32 (CR2) — the infrastructure-vs-red boundary is drawn precisely. Filing a
+# broken import in the PR's own source as "infrastructure" would commit the
+# breakage while blaming the toolchain; the boundary is whose code failed to
+# load, and ambiguity resolves to red.
+if [[ -f "$YML" ]]; then
+  if grep -qF 'the test runner itself could not start' "$PROMPT_OUT" \
+     && grep -qF "the repo's own code fails to import, parse, compile, or type-check" "$PROMPT_OUT" \
+     && grep -qF 'When you genuinely cannot tell, treat it as' "$PROMPT_OUT" \
+     && grep -qF 'A missing `node_modules` is infrastructure' "$PROMPT_OUT"; then
+    ok "S32 (CR2) infrastructure vs red is bounded by whose code failed to load, ambiguity resolves red"
+  else
+    bad "S32 (CR2) infrastructure failure is defined loosely enough to excuse a fix's own breakage"
+  fi
+fi
+
+# S33 (CR3) — every non-zero push exit stops the loop and the disclosure names
+# the real remote state. A network failure after the objects transferred can
+# leave the commit ON the remote while reporting failure; a reviewer must not
+# have to open the Actions log to find out whether a commit landed.
+if [[ -f "$YML" ]]; then
+  if grep -qF 'Any non-zero exit stops the fix loop' "$PROMPT_OUT" \
+     && grep -qF 'git ls-remote origin "refs/heads/$HEAD_REF"' "$PROMPT_OUT" \
+     && grep -qF 'Remote state: commit <short SHA>' "$PROMPT_OUT"; then
+    ok "S33 (CR3) any push failure stops the loop and discloses the confirmed remote state"
+  else
+    bad "S33 (CR3) only non-fast-forward is handled; other push failures leave remote state undisclosed"
+  fi
+fi
+
 echo "----"
 if [[ "$failures" -eq 0 ]]; then
   echo "OK: all pr-auto-review render checks passed"
