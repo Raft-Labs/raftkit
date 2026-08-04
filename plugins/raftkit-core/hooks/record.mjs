@@ -9,7 +9,7 @@
 //   2. Never block. Writes locally only; the network belongs to flush.mjs.
 //   3. Never leak credentials. Free text goes through scrub() before it is written.
 
-import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
@@ -184,13 +184,62 @@ function lastPrompt(hook) {
   return "";
 }
 
+// The spool is a bounded buffer, not an unbounded log.
+const MAX_SPOOL_BYTES = 2 * 1024 * 1024;
+const SPOOL_TARGET_BYTES = 1024 * 1024;
+
 function spool(event) {
   if (!ensureDir(spoolDir())) return false;
   try {
     appendFileSync(spoolFile(), JSON.stringify(event) + "\n");
-    return true;
   } catch {
     return false;
+  }
+  pruneSpool();
+  return true;
+}
+
+/**
+ * Cap the spool at append time, oldest first.
+ *
+ * Without a cap the file only ever grows: a developer who is offline or whose
+ * endpoint is down re-reads and rewrites the whole thing on every session start,
+ * and flush can only ever drain a bounded slice — so the oldest events are
+ * stranded permanently, never sent and never removed.
+ *
+ * The drop is recorded as its own event so the loss shows up in the data instead
+ * of being silent. That ADDS a signal; nothing that would have been sent is
+ * removed, because the events dropped here are exactly the ones that could
+ * otherwise never have been sent at all.
+ */
+function pruneSpool() {
+  try {
+    const path = spoolFile();
+    if (statSync(path).size <= MAX_SPOOL_BYTES) return;
+
+    const lines = readFileSync(path, "utf8").split("\n").filter(Boolean);
+    let bytes = lines.reduce((n, l) => n + l.length + 1, 0);
+    // Prune down to the low-water mark, not merely back under the cap: the gap
+    // is what stops the next append re-reading and rewriting the whole file.
+    let cut = 0;
+    while (cut < lines.length - 1 && bytes > SPOOL_TARGET_BYTES) {
+      bytes -= lines[cut].length + 1;
+      cut++;
+    }
+    if (cut === 0) return;
+
+    const kept = lines.slice(cut);
+    kept.push(
+      JSON.stringify({
+        event_id: randomUUID(),
+        ts: new Date().toISOString(),
+        event: "raftkit_spool_dropped",
+        props: { mode: MODE, dropped: cut, reason: "spool_cap" },
+      }),
+    );
+    writeFileSync(path, kept.join("\n") + "\n");
+  } catch {
+    /* an unprunable spool is still a working spool */
   }
 }
 
@@ -198,18 +247,44 @@ function spool(event) {
 // hold up the hook, even though the hook is already async.
 function dispatchBlocker(event) {
   const cfg = config();
-  if (!cfg.file_issues) return;
-  try {
-    const child = spawn(process.execPath, [join(HOOKS_ROOT, "blocker.mjs")], {
-      detached: true,
-      stdio: ["pipe", "ignore", "ignore"],
-    });
-    child.stdin.write(JSON.stringify(event));
-    child.stdin.end();
-    child.unref();
-  } catch {
-    /* the event is already spooled; filing is best-effort */
-  }
+  if (!cfg.file_issues) return Promise.resolve();
+  return new Promise((resolve) => {
+    let child;
+    try {
+      child = spawn(process.execPath, [join(HOOKS_ROOT, "blocker.mjs")], {
+        detached: true,
+        stdio: ["pipe", "ignore", "ignore"],
+      });
+    } catch {
+      return resolve(); // the event is already spooled; filing is best-effort
+    }
+
+    // Await the write instead of firing and forgetting.
+    //
+    // Anything past the 64KB pipe buffer is written asynchronously, while the
+    // caller's .finally(process.exit(0)) fired immediately — so a large event
+    // was truncated mid-JSON and the child discarded it as unparseable. A
+    // blocker with a long refusal line is exactly the case that got lost.
+    let settled = false;
+    const done = () => {
+      if (settled) return;
+      settled = true;
+      try {
+        child.unref();
+      } catch {
+        /* nothing to detach */
+      }
+      resolve();
+    };
+    // Never wait on a child that is not draining; the event is already spooled.
+    const timer = setTimeout(done, 5000);
+    timer.unref?.();
+    // EPIPE on an unlistened stream escalates to uncaughtException, which only
+    // exited 0 because the handler at the bottom of this file happens to say so.
+    child.stdin.on("error", done);
+    child.on("error", done);
+    child.stdin.end(JSON.stringify(event), done);
+  });
 }
 
 async function main() {
@@ -221,7 +296,7 @@ async function main() {
 
   spool(event);
   if (event.event === "raftkit_blocked" && event.props.severity !== "info") {
-    dispatchBlocker(event);
+    await dispatchBlocker(event);
   }
 
   // Surfaced once, then never again.

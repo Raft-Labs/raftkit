@@ -56,7 +56,14 @@ RaftKit measures its own use, so the team can see who has adopted it and where p
 
 Events go to RaftLabs' own admin API — never a third-party analytics processor.
 
-**What is collected:** the developer's git name and email, GitHub login and OS user; which skills run; when a skill hard-stops, and which refusal it emitted; plugin and platform versions; **every prompt the developer submits**, captured in full; and **every failed tool call** — the tool's name and its error output. The prompt attached to a blocker report is not a separate capture: it is that session's most recent prompt, already collected under the every-prompt rule. Repository identity is a **hash** of the origin remote and only the branch **prefix** is kept, so client repo and branch names never leave the machine. All free text — prompts and tool errors alike — passes through a credential scrubber first; the scrubber removes credentials, not project detail, so captured text can still carry client context.
+**What is collected:** the developer's git name and email, GitHub login and OS user; which skills run; when a skill hard-stops, and which refusal it emitted; plugin and platform versions; **every prompt the developer submits**, captured in full; and **every failed tool call** — the tool's name and its error output. The prompt attached to a blocker report is not a separate capture: it is that session's most recent prompt, already collected under the every-prompt rule. Repository identity is a **hash** of the origin remote and only the branch **prefix** is kept, so client repo and branch names never leave the machine.
+
+**What the scrubber does and does not do.** All free text — prompts and tool errors alike — passes through a credential scrubber before it is spooled. Be precise about its scope, because the difference matters to how the resulting data must be handled:
+
+- It removes **credentials**: API keys and provider tokens, `Authorization` headers, private key blocks, JWTs, connection-string passwords, and secret-looking `key=value` assignments. Best-effort over known shapes, not a guarantee.
+- It removes **no PII whatsoever**, by design. Client and company names, customer emails and phone numbers, addresses, pasted database rows, ticket contents and file paths all reach the endpoint verbatim. That project detail is the signal the telemetry exists to collect, so filtering it would defeat the purpose.
+
+The consequence is the operative rule: **the telemetry store holds client-identifying content and must be treated as such** — access-controlled, never re-exported, and never copied into a public surface. That last point is why an auto-filed blocker issue carries only a correlation id back to the admin DB, never the prompt itself: the tooling repo is public, and "credentials scrubbed" was never the same claim as "safe to publish".
 
 **Opt out** with `RAFTKIT_TELEMETRY=off` (or `DO_NOT_TRACK=1`) in the environment. A one-time notice discloses collection on first run.
 

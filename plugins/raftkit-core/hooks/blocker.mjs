@@ -14,6 +14,7 @@
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import {
+  acquireLock,
   config,
   ensureDir,
   parseJson,
@@ -44,22 +45,67 @@ function fingerprint(props) {
   return sha(`${props.refusal_id}|${props.skill}|${normalized}`, 12);
 }
 
-// Cap issues per session so a retry loop cannot file hundreds.
+// How long a session's issue count stays on the books.
+const STORM_WINDOW_MS = 24 * 60 * 60 * 1000;
+const STORM_KEYS_KEPT = 20;
+
+/**
+ * A counter bucket that expires.
+ *
+ * An event with no session id used to land in one permanent "no-session" bucket:
+ * three lifetime occurrences and blocker filing was disabled for that case
+ * forever, on that machine, with nothing to reset it. Date-scoping the fallback
+ * key bounds the blast radius to a day.
+ */
+function stormKey(sessionId) {
+  return sessionId || `no-session:${new Date().toISOString().slice(0, 10)}`;
+}
+
+/**
+ * Cap issues per session so a retry loop cannot file hundreds.
+ *
+ * Locked, because this is a read-modify-write over a file shared by detached
+ * processes: two blockers firing together both read the same count and both
+ * wrote back count+1, so the cap undercounted and the guard leaked issues.
+ */
 function overStormLimit(sessionId, limit) {
+  let release;
   try {
     ensureDir(spoolDir());
+    release = acquireLock(stateFile("issue-counts.lock"), { staleMs: 30000 });
+    if (!release) return true; // contended: fail closed, as below
+
     const path = stateFile("issue-counts.json");
     const counts = existsSync(path) ? parseJson(readFileSync(path, "utf8")) : {};
-    const key = sessionId || "no-session";
-    const next = (counts[key] || 0) + 1;
-    // Keep the file small: only track the 20 most recent sessions.
-    const trimmed = Object.fromEntries(Object.entries({ ...counts, [key]: next }).slice(-20));
+    const key = stormKey(sessionId);
+    const now = Date.now();
+
+    // Entries are {count, updated}. Anything older than the window is dropped,
+    // so a long-lived machine cannot accumulate dead buckets that block filing.
+    const live = Object.entries(counts)
+      .map(([k, v]) => [k, typeof v === "number" ? { count: v, updated: now } : v])
+      .filter(([, v]) => v && typeof v.count === "number" && now - (v.updated || 0) < STORM_WINDOW_MS);
+
+    const prev = live.find(([k]) => k === key)?.[1]?.count || 0;
+    const next = prev + 1;
+
+    // Trim by recency, not by insertion order: Object.entries preserves the
+    // order keys were first added, so .slice(-20) on a busy machine could evict
+    // the CURRENT session's own counter and silently reset its cap mid-session.
+    const merged = new Map(live.filter(([k]) => k !== key));
+    merged.set(key, { count: next, updated: now });
+    const trimmed = Object.fromEntries(
+      [...merged.entries()].sort((a, b) => (a[1].updated || 0) - (b[1].updated || 0)).slice(-STORM_KEYS_KEPT),
+    );
+
     writeFileSync(path, JSON.stringify(trimmed));
     return next > limit;
   } catch {
     // If the guard cannot be evaluated, do not file — failing closed here risks
     // losing one report; failing open risks spamming the tracker.
     return true;
+  } finally {
+    if (release) release();
   }
 }
 
@@ -102,8 +148,11 @@ function rememberLocally(fp, issueNumber) {
   }
 }
 
-/** Comment on an existing issue, reopening it if a closed problem recurred. */
-function addOccurrence(repo, number, props) {
+/**
+ * Comment on an existing issue, reopening it if a closed problem recurred.
+ * Same rule as issueBody: correlation ids only, never the prompt.
+ */
+function addOccurrence(repo, number, props, eventId) {
   const note = [
     `+1 occurrence — ${new Date().toISOString()}`,
     "",
@@ -114,17 +163,40 @@ function addOccurrence(repo, number, props) {
         .map(([k, v]) => `${k}@${v}`)
         .join(", ") || "unknown"
     }`,
+    `- Event id: \`${eventId || "unknown"}\` (full context in the admin DB)`,
   ].join("\n");
   safeExec("gh", ["issue", "comment", String(number), "--repo", repo, "--body", note], {
     timeout: 15000,
   });
 }
 
+/**
+ * Render the issue body for a blocker.
+ *
+ * THE RAW PROMPT MUST NEVER APPEAR HERE. Do not re-add it.
+ *
+ * The telemetry endpoint and this GitHub issue are two different channels with
+ * two different jobs. The endpoint is private, first-party, and already receives
+ * the full prompt — every analytics and product-improvement question is answered
+ * there, and nothing about that changes. This issue exists for blocker TRIAGE,
+ * and triage needs the refusal, the skill and the versions, not the prompt.
+ *
+ * The repo this files into is PUBLIC. A developer who hard-stops inside a client
+ * repo was publishing that client's prompt — under their own GitHub identity, to
+ * a search-indexed page — every time. "Credentials scrubbed" was never the same
+ * claim as "safe to publish": the scrubber removes credentials, not project
+ * detail, and it is best-effort even at that.
+ *
+ * What replaces it is a correlation id. The event_id here is the same id the
+ * telemetry event carries, so a triager looks the full context up in the admin
+ * DB, where access is already controlled.
+ */
 function issueBody(event, fp) {
   const p = event.props || {};
   const versions = Object.entries(p.plugin_versions || {})
     .map(([k, v]) => `${k}@${v}`)
     .join(", ");
+  const correlation = event.event_id || "(none — pre-dates event ids)";
   return [
     `<!-- raftkit-fingerprint: ${fp} -->`,
     "",
@@ -149,13 +221,14 @@ function issueBody(event, fp) {
     `| Platform | ${p.os || "?"} / node ${p.node || "?"} |`,
     `| First seen | ${event.ts || new Date().toISOString()} |`,
     "",
-    "## Prompt that led here",
+    "## Full context",
     "",
-    "> Captured with credentials scrubbed. May still contain project detail.",
+    "This repo is public, so the triggering prompt is deliberately not reproduced",
+    "here. It was captured by telemetry and is available to look up in the admin",
+    "DB by the ids below.",
     "",
-    "```",
-    p.prompt || "(not captured)",
-    "```",
+    `- Event id: \`${correlation}\``,
+    ...(p.session_id ? [`- Session id: \`${p.session_id}\``] : []),
     "",
     "## Reproducing",
     "",
@@ -195,23 +268,30 @@ async function main() {
   //    moments ago that the search index has not picked up yet.
   const cached = knownLocally(fp)
   if (cached) {
-    addOccurrence(repo, cached, props);
+    addOccurrence(repo, cached, props, event.event_id);
     return;
   }
 
   // 2. GitHub search across open AND closed issues — a recurrence of something
   //    already closed is important signal, and this is what dedups across
   //    different developers' machines.
-  const found = safeExec(
+  //
+  //    Must test the exit code, not the output. safeExec returns "" on failure,
+  //    which parses to [] — indistinguishable from "searched fine, found
+  //    nothing". Any rate limit or network blip therefore read as "no existing
+  //    issue" and filed a duplicate. A search that did not run proves nothing,
+  //    so abort: the event is already spooled and the next occurrence retries.
+  const search = safeExecResult(
     "gh",
     ["issue", "list", "--repo", repo, "--state", "all", "--search", `${fp} in:body`, "--json", "number,state", "--limit", "5"],
     { timeout: 15000 },
   );
-  const matches = parseJson(found, []);
+  if (!search.ok) return;
+  const matches = parseJson(search.stdout, []);
   const hit = Array.isArray(matches) ? matches[0] : null;
 
   if (hit && hit.number) {
-    addOccurrence(repo, hit.number, props);
+    addOccurrence(repo, hit.number, props, event.event_id);
     if (hit.state === "CLOSED") {
       safeExec("gh", ["issue", "reopen", String(hit.number), "--repo", repo], { timeout: 15000 });
     }

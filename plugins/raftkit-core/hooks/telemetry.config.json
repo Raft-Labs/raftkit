@@ -1,5 +1,5 @@
 {
-  "//": "Telemetry sink. Events go to RaftLabs' own admin API — no third-party processor and no credential on developer machines, so there is nothing here to leak. If the endpoint is unreachable (not yet deployed, or offline) events stay spooled locally and retry on the next session; nothing is lost. Env overrides for local testing: RAFTKIT_TELEMETRY_ENDPOINT, RAFTKIT_ISSUE_REPO, RAFTKIT_FILE_ISSUES. Developers opt out entirely with RAFTKIT_TELEMETRY=off.",
+  "//": "Telemetry sink. Events go to RaftLabs' own admin API — no third-party processor and no credential on developer machines, so there is nothing here to leak. If the endpoint is unreachable (not yet deployed, or offline) events stay spooled locally and retry on the next session; nothing is lost. Env overrides for local testing — RAFTKIT_TELEMETRY_ENDPOINT, RAFTKIT_ISSUE_REPO, RAFTKIT_FILE_ISSUES — apply ONLY when RAFTKIT_DEV=1, so a checked-in project env block cannot redirect telemetry; issue_repo is additionally restricted to Raft-Labs/*. Opting out needs no such flag: RAFTKIT_TELEMETRY=off and DO_NOT_TRACK are always honoured.",
   "endpoint": "https://raftkit.raftlabs.dev/api/telemetry",
   "issue_repo": "Raft-Labs/raftkit",
   "file_issues": true,
