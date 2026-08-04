@@ -64,6 +64,23 @@ extract_run_blocks() { # <rendered yml>
   ' "$1"
 }
 
+# Extract the identity of every job step, in order, as `name: …` / `uses: …`.
+# Anchored on the exact list-item indentation derived from the `steps:` key, so
+# neither a `#` comment nor a line inside a `run:` block or the prompt block
+# scalar (both indented deeper) can forge a step. See S35.
+extract_step_names() { # <rendered yml>
+  awk '
+    !instep && /^[[:space:]]*steps:[[:space:]]*$/ {
+      match($0, /^[[:space:]]*/); itemind = RLENGTH + 2; instep = 1; next
+    }
+    instep {
+      match($0, /^[[:space:]]*/); ind = RLENGTH
+      line = substr($0, ind + 1)
+      if (ind == itemind && line ~ /^- (name|uses): /) { sub(/^- /, "", line); print line }
+    }
+  ' "$1"
+}
+
 # S1 — happy path renders successfully with all valid inputs.
 tmp1=$(mktemp -d); tmpdirs+=("$tmp1")
 node "$RENDER" \
@@ -551,6 +568,52 @@ if [[ -f "$YML" ]]; then
   else
     bad "S33 (CR3) only non-fast-forward is handled; other push failures leave remote state undisclosed"
   fi
+fi
+
+# S34 (REG1) — the bot git identity is configured before the fix loop runs.
+# A GitHub Actions runner has no default git identity, so without this every
+# `git commit` in the fix loop dies with "Please tell me who you are" and the
+# workflow can never land a single fix. It is also what makes the loop guard's
+# author-email comparison (S24) match anything at all. Asserted against the
+# extracted `run:` lines carrying the RENDERED values, so neither the step's
+# own explanatory comment nor any prose elsewhere in the YAML can satisfy it.
+# Deliberately NOT guarded on the artifact existing (cf. S27b, S35): a missing
+# render must fail this check, never silently skip it.
+if [[ -n "$RUN_LINES" ]] \
+   && grep -qF 'git config user.name "RaftKit PR Auto-Review"' "$RUN_LINES" \
+   && grep -qF 'git config user.email "pr-auto-review@raftlabs.com"' "$RUN_LINES"; then
+  ok "S34 (REG1) bot git identity is configured with the canonical rendered values"
+else
+  bad "S34 (REG1) no git identity is configured — every fix commit fails with 'Please tell me who you are'"
+fi
+
+# S35 (REG2) — pin the COMPLETE, ordered set of job steps. Every other
+# assertion here pins a step someone thought to test, which is exactly why
+# b3eb925 could delete the identity step invisibly: nothing asserted what the
+# workflow's step list should be, only what pieces of it must contain. This
+# fails on any deletion, rename, reorder or addition, so a step can only leave
+# this workflow deliberately. Order is part of the contract — the identity step
+# must precede the action, the guard must precede everything gated on it.
+# Deliberately NOT guarded on the artifact existing (cf. S27b): a missing
+# render is a failure of this check, not a reason to skip it.
+expected_steps=$(mktemp); tmpdirs+=("$expected_steps")
+cat > "$expected_steps" <<'STEPS'
+uses: actions/checkout@v4
+name: Check last commit is not our own fix
+name: Configure bot git identity
+name: Set up Node toolchain
+name: Install dependencies
+uses: anthropics/claude-code-action@v1
+name: Record fix-loop completion
+name: Disclose an incomplete run
+STEPS
+actual_steps=$(mktemp); tmpdirs+=("$actual_steps")
+extract_step_names "$YML" > "$actual_steps" 2>/dev/null
+if diff -q "$expected_steps" "$actual_steps" >/dev/null 2>&1; then
+  ok "S35 (REG2) the rendered workflow's step set is exactly the expected list, in order"
+else
+  bad "S35 (REG2) workflow steps changed — a step was deleted, renamed, reordered or added:"
+  diff "$expected_steps" "$actual_steps" | sed 's/^/       /' >&2
 fi
 
 echo "----"

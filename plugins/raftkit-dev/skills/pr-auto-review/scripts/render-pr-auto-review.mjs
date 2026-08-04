@@ -103,6 +103,15 @@ const readRequired = (file) => {
 };
 
 const templateText = readRequired("pr-auto-review.yml");
+// Every token in `subs` MUST still have a consumer in the template. The
+// unresolved-placeholder scan below is one-directional — it catches a token
+// the renderer forgot to substitute, but not a token the template dropped.
+// That blind spot shipped once already: a refactor deleted the step carrying
+// __BOT_COMMIT_NAME__, the renderer kept accepting and validating --bot-name,
+// and the value went nowhere while every check stayed green. An orphaned
+// token means an argument that silently does nothing, so fail closed on it.
+const orphanedToken = Object.keys(subs).find((token) => !templateText.includes(token));
+if (orphanedToken) fail(`${orphanedToken} is substituted by this renderer but no longer appears in pr-auto-review.yml — the corresponding argument would silently do nothing`);
 const templateLines = templateText.split("\n");
 const tokenLineIndex = templateLines.findIndex((l) => /^\s*__FIX_LOOP_PROMPT__\s*$/.test(l));
 if (tokenLineIndex === -1) fail("no standalone __FIX_LOOP_PROMPT__ block-scalar line found in pr-auto-review.yml");
