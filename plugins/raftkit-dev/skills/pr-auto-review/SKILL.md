@@ -36,7 +36,7 @@ wants comments without any code changes.
 Everything else about RaftKit's write-protocol gate is unchanged: no
 merges, no Asana writes, no direct pushes to protected branches, no edits
 to `.github/workflows/**` (including its own file). See
-`raftkit-core/write-protocol`'s "The one named exception — pr-auto-review"
+`raftkit-core/write-protocol`'s "The two documented exceptions" (entry 2, pr-auto-review)
 section and `raftkit-core/house-rules`' matching subsection for the exact,
 binding boundary — this skill does not restate it, it inherits it.
 
@@ -61,7 +61,7 @@ binding boundary — this skill does not restate it, it inherits it.
 
 ## Run flow
 
-1. **Install** — as `setup-project`'s opt-in component 6 (see
+1. **Install** — as `setup-project`'s opt-in component 8 (see
    `references/install.md`): render `references/assets/pr-auto-review.yml`
    via `scripts/render-pr-auto-review.mjs`, write it to
    `.github/workflows/pr-auto-review.yml`, and print the manual secret step
@@ -98,6 +98,20 @@ binding boundary — this skill does not restate it, it inherits it.
   this skill implies a scope, contract, or client-relationship risk beyond
   the repo itself.
 
+## Known interaction — `/implement`'s Gate 2 and `pr`
+
+A known, unsolved limitation, documented so nobody is surprised by it. If a
+repo runs both `/implement` and `pr-auto-review` over the same PR's lifecycle,
+a Critical-fix commit pushed by CI **after** Gate 2 recorded its scope-guard
+evidence invalidates that evidence: `implement/references/gates.md` requires
+Gate 2 evidence to name the SHA it inspected and refuses a stale one, and
+nothing re-triggers scope-guard when this workflow pushes. Separately, `pr`'s
+finding-resolution gate expects every finding addressed before human review,
+while this workflow resolves only Criticals out-of-band in CI — two
+independent `review-pr` invocations with no arbitration between them. Until
+that is designed, **a human must re-run Gate 2 after any pr-auto-review commit
+before merging.**
+
 ## Out of scope
 
 - **Secret provisioning** — printed as a manual step, never automated.
@@ -110,7 +124,7 @@ binding boundary — this skill does not restate it, it inherits it.
 
 ## Reference files
 
-- `references/install.md` — `setup-project` component-6 integration: the
+- `references/install.md` — `setup-project` component-8 integration: the
   opt-in ask, the version-marker JSON addition, the manual-secret reminder.
 - `references/workflow-mechanics.md` — trigger config, the self-trigger loop
   guard mechanism, diff anchoring, idempotent re-run behavior.

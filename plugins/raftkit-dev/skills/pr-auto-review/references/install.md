@@ -1,9 +1,10 @@
-# Installing pr-auto-review as setup-project's opt-in component 6
+# Installing pr-auto-review as setup-project's opt-in component 8
 
 This skill does not install itself standalone in the normal case — it is
-offered by `setup-project` as an **explicitly opt-in** sixth component,
-alongside the existing five (protocols, spec template, pre-push hook, CI
-quality-guardrail, CodeRabbit config). See
+offered by `setup-project` as an **explicitly opt-in** eighth component,
+alongside the existing seven (protocols, spec template, pre-push hook, CI
+quality-guardrail, CodeRabbit config, Module Design Standard, MDS ESLint
+config). See
 `setup-project/references/components.md` and `install-flow.md` for the
 wiring (added in a later task of this plan) — this file documents
 pr-auto-review's side of that contract.
@@ -58,7 +59,7 @@ asset, identical for every client repo, embedded into the rendered YAML's
 
 ## Ownership marker: silent replace vs. foreign-file proposal
 
-This follows `components.md`'s existing marker rule exactly — component 6
+This follows `components.md`'s existing marker rule exactly — component 8
 introduces no new marker semantics, just one more file under it:
 
 - If `.github/workflows/pr-auto-review.yml` does not exist, or exists and

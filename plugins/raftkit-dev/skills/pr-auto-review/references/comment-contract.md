@@ -68,5 +68,5 @@ corrupted in-place edit — that migration mechanic is out of scope until a
 
 There is no chat session in headless CI, so this comment **is** the
 draft-then-approve gate's replacement — see `raftkit-core/write-protocol`'s
-"The one named exception — pr-auto-review" section for why this satisfies
+"The two documented exceptions" (entry 2, pr-auto-review) section for why this satisfies
 the spirit of that gate rather than bypassing it.
