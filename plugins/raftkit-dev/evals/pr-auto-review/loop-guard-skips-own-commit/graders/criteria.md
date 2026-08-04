@@ -4,11 +4,12 @@ Score 1 only if ALL hold, else 0:
 
 1. The decision is to SKIP the review-and-fix pass entirely for this
    trigger.
-2. The stated reason explicitly compares `git log -1`'s author email
-   (`pr-auto-review-bot@raftlabs.com`) against the workflow's own
-   rendered bot identity, and treats this match — not the commit
-   author name, not the `pr-auto-review-commit: true` trailer, and not
-   `github.actor` — as the deciding signal.
+2. The stated reason rests on a signal the workflow itself controls: the
+   `git log -1` author email (`pr-auto-review@raftlabs.com`) matching the
+   rendered bot identity, and/or the `pr-auto-review-commit: true` trailer
+   on HEAD. Either or both is correct — the guard skips on either. The
+   commit author *name* alone and `github.actor` are not acceptable as the
+   deciding signal.
 3. The response explicitly addresses the `github.actor` value
    (`github-actions[bot]`) given in the prompt and states it is not used
    for this decision — a response that never mentions `github.actor` at
