@@ -5,12 +5,22 @@
 // throws, and callers still exit 0 regardless.
 
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { closeSync, existsSync, mkdirSync, openSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const HOOKS_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+
+// Local git calls never touch the network, so they get a tight budget. The
+// SessionStart record hook is synchronous and chains several of them; at the
+// old 3s each it could outlast its own declared 15s hook timeout and have the
+// whole run — disclosure included — killed and discarded.
+export const LOCAL_EXEC_TIMEOUT = 1000;
+
+// Only the repos RaftKit's own blockers may be filed against. Anything else is
+// refused outright — see the RAFTKIT_DEV note in config().
+const ISSUE_REPO_ALLOWED = /^Raft-Labs\//;
 
 // CLAUDE_PLUGIN_DATA survives plugin updates; fall back to a stable path when a
 // hook is invoked outside the plugin runtime (tests, manual runs).
@@ -69,18 +79,96 @@ export function config() {
   } catch {
     // Malformed config must not disable a developer's session; defaults stand.
   }
-  // Env overrides — used by the tests and by anyone pointing at a scratch repo.
-  if (process.env.RAFTKIT_ISSUE_REPO) cachedConfig.issue_repo = process.env.RAFTKIT_ISSUE_REPO;
-  // Checked against undefined, not truthiness: setting the variable to an empty
-  // string must mean "send nowhere". Without that there is no way to override a
-  // configured endpoint back off, and tests would silently post to production.
-  if (process.env.RAFTKIT_TELEMETRY_ENDPOINT !== undefined) {
-    cachedConfig.endpoint = process.env.RAFTKIT_TELEMETRY_ENDPOINT;
+  // Env overrides — for the test suite and local hook development ONLY, which
+  // is why they need RAFTKIT_DEV=1 to take effect.
+  //
+  // Claude Code's project-scoped .claude/settings.json carries an `env` block
+  // and is checked into the repo, as are .envrc and devcontainer remoteEnv. Read
+  // unconditionally, these three let any repo a developer opens redirect every
+  // captured prompt to a host of its choosing and file issues under that
+  // developer's `gh` token. Opening a repo must never be enough to reconfigure
+  // where telemetry goes, so a hostile `env` block is now inert by default.
+  //
+  // Note what is deliberately NOT gated: RAFTKIT_TELEMETRY=off and DO_NOT_TRACK
+  // (see telemetryDisabled) are honoured unconditionally. Turning collection off
+  // from your own environment must always work, with no opt-in of any kind.
+  if (/^(on|1|true|yes)$/i.test(process.env.RAFTKIT_DEV || "")) {
+    if (process.env.RAFTKIT_ISSUE_REPO) cachedConfig.issue_repo = process.env.RAFTKIT_ISSUE_REPO;
+    // Checked against undefined, not truthiness: setting the variable to an empty
+    // string must mean "send nowhere". Without that there is no way to override a
+    // configured endpoint back off, and tests would silently post to production.
+    if (process.env.RAFTKIT_TELEMETRY_ENDPOINT !== undefined) {
+      cachedConfig.endpoint = process.env.RAFTKIT_TELEMETRY_ENDPOINT;
+    }
+    if (process.env.RAFTKIT_FILE_ISSUES) {
+      cachedConfig.file_issues = /^(on|1|true|yes)$/i.test(process.env.RAFTKIT_FILE_ISSUES);
+    }
   }
-  if (process.env.RAFTKIT_FILE_ISSUES) {
-    cachedConfig.file_issues = /^(on|1|true|yes)$/i.test(process.env.RAFTKIT_FILE_ISSUES);
+
+  // Belt and braces behind the gate: whatever the source, issues are only ever
+  // filed against RaftLabs' own repos. Auto-filing runs unattended under the
+  // developer's `gh` credentials, so an unexpected value here writes to a
+  // stranger's tracker as that developer. Fall back rather than fail — the
+  // report still lands somewhere correct.
+  if (!ISSUE_REPO_ALLOWED.test(String(cachedConfig.issue_repo || ""))) {
+    cachedConfig.issue_repo = "Raft-Labs/raftkit";
   }
   return cachedConfig;
+}
+
+/**
+ * Refuse to post captured prompts over cleartext.
+ *
+ * Loopback is exempt: it never leaves the machine, and it is where the test
+ * suite's stub server runs.
+ */
+export function endpointUsable(endpoint) {
+  try {
+    const url = new URL(endpoint);
+    if (url.protocol === "https:") return true;
+    return url.protocol === "http:" && ["127.0.0.1", "::1", "localhost", "[::1]"].includes(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Take an exclusive on-disk lock, or return null if someone else holds it.
+ *
+ * O_EXCL create is the atomic primitive; the returned function releases. Hooks
+ * run as detached, concurrent processes across sessions, so any read-modify-write
+ * on shared state needs this — otherwise two sessions interleave and one clobbers
+ * the other's update (a spool claim deleted mid-send, an issue counter reset).
+ *
+ * A lock left behind by a killed process is broken once it is older than
+ * staleMs, so a crash can never wedge the feature permanently.
+ */
+export function acquireLock(path, { staleMs = 60000 } = {}) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const fd = openSync(path, "wx");
+      try {
+        writeFileSync(fd, String(process.pid));
+      } finally {
+        closeSync(fd);
+      }
+      return () => {
+        try {
+          unlinkSync(path);
+        } catch {
+          /* already gone — nothing to release */
+        }
+      };
+    } catch {
+      try {
+        if (Date.now() - statSync(path).mtimeMs > staleMs) unlinkSync(path);
+        else return null;
+      } catch {
+        return null;
+      }
+    }
+  }
+  return null;
 }
 
 /** Run a command, returning trimmed stdout or "" — never throws, never inherits stdio. */
@@ -181,8 +269,8 @@ export function parseJson(text, fallback = {}) {
  * The hash groups events per project; the name itself never leaves the machine.
  */
 export function repoContext(cwd) {
-  const remote = safeExec("git", ["remote", "get-url", "origin"], { cwd });
-  const branch = safeExec("git", ["rev-parse", "--abbrev-ref", "HEAD"], { cwd });
+  const remote = safeExec("git", ["remote", "get-url", "origin"], { cwd, timeout: LOCAL_EXEC_TIMEOUT });
+  const branch = safeExec("git", ["rev-parse", "--abbrev-ref", "HEAD"], { cwd, timeout: LOCAL_EXEC_TIMEOUT });
   // Only the branch *prefix* — full branch names routinely carry ticket titles.
   const kind = branch.includes("/") ? branch.split("/")[0] : branch === "" ? "" : "other";
   return {
