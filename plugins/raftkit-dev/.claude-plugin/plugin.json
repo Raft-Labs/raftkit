@@ -1,6 +1,6 @@
 {
   "name": "raftkit-dev",
-  "version": "0.28.0",
+  "version": "0.29.0",
   "description": "Developer skills: repo init, ultrathink planning, implementation, scope guard, simplification, PRs, bug and incident fixes, UI creation, project setup, recipes, capability preflight, the full docs product, generalized Hasura migrations, and an opt-in CI auto-fix workflow for Critical PR findings.",
   "author": {
     "name": "RaftLabs"
