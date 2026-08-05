@@ -107,6 +107,16 @@ block_count="$(grep -oE '^checked [0-9]+' <<<"$real_out" | grep -oE '[0-9]+')"
 [[ "${block_count:-0}" -ge 40 ]]
 check "PL10 at least 40 output blocks found repo-wide (no silent scope shrink)" ok $?
 
+# --- EVAL BUNDLE: behavioral cases in the official layout (prompt.md + graders/*.md) ---
+
+EVALS=plugins/raftkit-core/evals/plain-language
+n=$(find "$EVALS" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+[[ "${n:-0}" -ge 6 ]] && ! find "$EVALS" -mindepth 1 -maxdepth 1 -type d \
+  '!' -exec test -f '{}/prompt.md' ';' -print | grep -q . \
+  && ! find "$EVALS" -mindepth 1 -maxdepth 1 -type d \
+  '!' -exec sh -c 'ls "$1"/graders/*.md >/dev/null 2>&1' _ '{}' ';' -print | grep -q .
+check "PL11 >=6 eval cases each with prompt.md + graders" ok $?
+
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures check(s) failed"
   exit 1
