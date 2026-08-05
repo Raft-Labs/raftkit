@@ -21,7 +21,7 @@
       "id": "capability-unavailable",
       "skill": "capability-preflight",
       "severity": "blocker",
-      "pattern": "^Missing:\\s*(?<detail>[^.]+)\\.\\s*Install it with:",
+      "pattern": "Missing:\\s*(?<detail>.+?)\\.\\s*Install it with:",
       "source": "raftkit-dev/skills/capability-preflight/SKILL.md",
       "example": "Missing: superpowers. Install it with: claude plugin install superpowers@claude-plugins-official"
     },

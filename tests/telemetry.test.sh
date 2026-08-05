@@ -342,6 +342,15 @@ printf '{"session_id":"s1","last_assistant_message":"NOT READY — 2 gap(s):\\n-
 expect_eq "hard stop is classified as blocked" "raftkit_blocked" "$(last_event_field "$d/spool/events.jsonl" 'event')"
 expect_eq "correct refusal id" "gate0-not-ready" "$(last_event_field "$d/spool/events.jsonl" 'props.refusal_id')"
 
+# The capability-unavailable pattern has no leading `^` anchor precisely so a
+# refusal Claude renders with a bold label (`**Missing:**` instead of plain
+# `Missing:`) still classifies — an anchored pattern regressed this once.
+d="$(new_sandbox)"
+printf '{"session_id":"s1","last_assistant_message":"**Missing:** superpowers. Install it with: claude plugin install superpowers@claude-plugins-official"}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
+expect_eq "bold-prefixed capability refusal still classifies" "capability-unavailable" \
+  "$(last_event_field "$d/spool/events.jsonl" 'props.refusal_id')"
+
 d="$(new_sandbox)"
 printf '{"session_id":"s1","last_assistant_message":"Done — all tests pass and the PR is up."}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
