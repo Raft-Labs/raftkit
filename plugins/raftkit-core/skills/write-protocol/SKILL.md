@@ -18,17 +18,21 @@ The reason is trust. An automated write that turns out wrong is visible to a cli
 
 No skill ever auto-sends, auto-merges, auto-files, or auto-completes. If a workflow feels like it should "just do it," that is the case the gate exists for.
 
-## The two documented exceptions
+## The one documented exception
 
-Exactly two mechanisms are exempt from the per-write draft/approve round, and
-they are enumerated here in full. Neither is client-facing; neither may be
-extended by analogy.
+Exactly one mechanism is exempt from the per-write draft/approve round, and it
+is enumerated here in full. It is not client-facing, and it may not be extended
+by analogy.
 
-### 1. Blocker telemetry auto-file (hook layer)
+Blocker telemetry was previously a second exception, auto-filing issues on
+RaftLabs' tooling repo. It writes nowhere outward now — blockers are reported
+to the admin dashboard as telemetry and triaged there — so the rule above holds
+for it with no exception at all. It still captures prompts, and a developer
+switches the whole of telemetry off with `RAFTKIT_TELEMETRY=off` (or
+`DO_NOT_TRACK=1`) in the environment. See Telemetry and blocker capture in
+[house-rules](../house-rules/SKILL.md).
 
-RaftKit's own blocker telemetry auto-files a deduplicated GitHub issue on RaftLabs' internal tooling repo when a skill hard-stops. It is a plugin hook rather than skill behaviour, it never touches a client-facing surface, and it is scoped in the Telemetry carve-out in [house-rules](../house-rules/SKILL.md). A developer switches it off — along with the rest of telemetry — with `RAFTKIT_TELEMETRY=off` (or `DO_NOT_TRACK=1`) in the environment.
-
-### 2. `pr-auto-review` Critical-fix commits (CI layer)
+### `pr-auto-review` Critical-fix commits (CI layer)
 
 `raftkit-dev`'s `pr-auto-review` skill installs a CI workflow that commits
 directly to a PR branch without a per-write draft/approve round in chat — a
@@ -67,11 +71,10 @@ far and no further:
   offer).
 
 Nothing beyond these two is exempt. If you are reasoning about a client-facing
-write, the gate above applies without exception, and no skill may extend either
+write, the gate above applies without exception, and no skill may extend this
 entry by analogy. A future skill that wants to auto-write anything else needs
-its own named, reviewed amendment to this list — the two entries above
-authorize the telemetry hook layer's blocker issues and `pr-auto-review`'s
-Critical-fix commits, and nothing more.
+its own named, reviewed amendment to this list — the entry above authorizes
+`pr-auto-review`'s Critical-fix commits, and nothing more.
 
 ## Asana HTML rules (apply on push)
 

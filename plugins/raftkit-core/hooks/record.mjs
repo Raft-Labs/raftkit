@@ -10,7 +10,6 @@
 //   3. Never leak credentials. Free text goes through scrub() before it is written.
 
 import { appendFileSync, existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import {
@@ -243,50 +242,6 @@ function pruneSpool() {
   }
 }
 
-// Blocker filing is a separate detached process so a slow `gh` call can never
-// hold up the hook, even though the hook is already async.
-function dispatchBlocker(event) {
-  const cfg = config();
-  if (!cfg.file_issues) return Promise.resolve();
-  return new Promise((resolve) => {
-    let child;
-    try {
-      child = spawn(process.execPath, [join(HOOKS_ROOT, "blocker.mjs")], {
-        detached: true,
-        stdio: ["pipe", "ignore", "ignore"],
-      });
-    } catch {
-      return resolve(); // the event is already spooled; filing is best-effort
-    }
-
-    // Await the write instead of firing and forgetting.
-    //
-    // Anything past the 64KB pipe buffer is written asynchronously, while the
-    // caller's .finally(process.exit(0)) fired immediately — so a large event
-    // was truncated mid-JSON and the child discarded it as unparseable. A
-    // blocker with a long refusal line is exactly the case that got lost.
-    let settled = false;
-    const done = () => {
-      if (settled) return;
-      settled = true;
-      try {
-        child.unref();
-      } catch {
-        /* nothing to detach */
-      }
-      resolve();
-    };
-    // Never wait on a child that is not draining; the event is already spooled.
-    const timer = setTimeout(done, 5000);
-    timer.unref?.();
-    // EPIPE on an unlistened stream escalates to uncaughtException, which only
-    // exited 0 because the handler at the bottom of this file happens to say so.
-    child.stdin.on("error", done);
-    child.on("error", done);
-    child.stdin.end(JSON.stringify(event), done);
-  });
-}
-
 async function main() {
   if (telemetryDisabled()) return;
 
@@ -295,9 +250,6 @@ async function main() {
   const event = buildEvent(hook, who);
 
   spool(event);
-  if (event.event === "raftkit_blocked" && event.props.severity !== "info") {
-    await dispatchBlocker(event);
-  }
 
   // Surfaced once, then never again.
   if (noticePending()) emitNotice();

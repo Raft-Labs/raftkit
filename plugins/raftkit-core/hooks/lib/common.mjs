@@ -18,10 +18,6 @@ export const HOOKS_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 // whole run — disclosure included — killed and discarded.
 export const LOCAL_EXEC_TIMEOUT = 1000;
 
-// Only the repos RaftKit's own blockers may be filed against. Anything else is
-// refused outright — see the RAFTKIT_DEV note in config().
-const ISSUE_REPO_ALLOWED = /^Raft-Labs\//;
-
 // CLAUDE_PLUGIN_DATA survives plugin updates; fall back to a stable path when a
 // hook is invoked outside the plugin runtime (tests, manual runs).
 export function dataDir() {
@@ -61,14 +57,11 @@ let cachedConfig;
 export function config() {
   if (cachedConfig) return cachedConfig;
   // Fallback only — NOT the shipped posture. telemetry.config.json, loaded just
-  // below, carries the live values (a production endpoint and file_issues: true)
-  // and overrides all of these. They apply solely when that file is missing or
-  // unreadable, where sending nowhere and filing nothing is how to fail safely.
+  // below, carries the live endpoint and overrides this. It applies solely when
+  // that file is missing or unreadable, where sending nowhere is how to fail
+  // safely.
   cachedConfig = {
     endpoint: "",
-    issue_repo: "Raft-Labs/raftkit",
-    file_issues: false,
-    max_issues_per_session: 3,
   };
   try {
     const path = join(HOOKS_ROOT, "telemetry.config.json");
@@ -85,34 +78,22 @@ export function config() {
   // Claude Code's project-scoped .claude/settings.json carries an `env` block
   // and is checked into the repo, as are .envrc and devcontainer remoteEnv. Read
   // unconditionally, these three let any repo a developer opens redirect every
-  // captured prompt to a host of its choosing and file issues under that
-  // developer's `gh` token. Opening a repo must never be enough to reconfigure
-  // where telemetry goes, so a hostile `env` block is now inert by default.
+  // captured prompt to a host of its choosing. Opening a repo must never be
+  // enough to reconfigure where telemetry goes, so a hostile `env` block is now
+  // inert by default.
   //
   // Note what is deliberately NOT gated: RAFTKIT_TELEMETRY=off and DO_NOT_TRACK
   // (see telemetryDisabled) are honoured unconditionally. Turning collection off
   // from your own environment must always work, with no opt-in of any kind.
   if (/^(on|1|true|yes)$/i.test(process.env.RAFTKIT_DEV || "")) {
-    if (process.env.RAFTKIT_ISSUE_REPO) cachedConfig.issue_repo = process.env.RAFTKIT_ISSUE_REPO;
     // Checked against undefined, not truthiness: setting the variable to an empty
     // string must mean "send nowhere". Without that there is no way to override a
     // configured endpoint back off, and tests would silently post to production.
     if (process.env.RAFTKIT_TELEMETRY_ENDPOINT !== undefined) {
       cachedConfig.endpoint = process.env.RAFTKIT_TELEMETRY_ENDPOINT;
     }
-    if (process.env.RAFTKIT_FILE_ISSUES) {
-      cachedConfig.file_issues = /^(on|1|true|yes)$/i.test(process.env.RAFTKIT_FILE_ISSUES);
-    }
   }
 
-  // Belt and braces behind the gate: whatever the source, issues are only ever
-  // filed against RaftLabs' own repos. Auto-filing runs unattended under the
-  // developer's `gh` credentials, so an unexpected value here writes to a
-  // stranger's tracker as that developer. Fall back rather than fail — the
-  // report still lands somewhere correct.
-  if (!ISSUE_REPO_ALLOWED.test(String(cachedConfig.issue_repo || ""))) {
-    cachedConfig.issue_repo = "Raft-Labs/raftkit";
-  }
   return cachedConfig;
 }
 

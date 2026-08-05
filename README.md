@@ -92,7 +92,7 @@ Events spool to a local file and upload in batches to RaftLabs' own admin dashbo
 export RAFTKIT_TELEMETRY=off     # or DO_NOT_TRACK=1
 ```
 
-When a skill hard-stops, RaftKit also files a deduplicated issue on this repo (label `raftkit-blocker`) so blockers reach the team instead of dying in your terminal. Repeat occurrences comment on the existing issue rather than opening a new one. This is a deliberate, narrow exception to the "no skill ever auto-files" rule — it covers only RaftKit's own failure reports on RaftLabs' own repo, and never a client-facing surface. See the Telemetry carve-out in `raftkit-core`'s `house-rules` skill.
+When a skill hard-stops, the refusal is reported as telemetry and appears in the admin dashboard with a triage status, so blockers reach the team instead of dying in your terminal. Nothing is filed on any issue tracker: a captured refusal line can carry client project detail, and this repository is public, so that data belongs only behind the dashboard's authentication.
 
 ## For project repos
 
