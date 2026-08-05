@@ -141,19 +141,46 @@ else
   failures=$((failures + 1))
 fi
 repo_val="$(last_event_field "$d/spool/events.jsonl" 'props.repo')"
-if [[ "$repo_val" == sha256:* && "$repo_val" != *raftkit* ]]; then
-  echo "PASS: repo identity is hashed, never the repo name"
+if [[ "$repo_val" == sha256:* ]]; then
+  echo "PASS: the grouping key stays a hash"
 else
-  echo "FAIL: repo identity leaked or malformed ('$repo_val')"
+  echo "FAIL: props.repo is not a hash ('$repo_val')"
   failures=$((failures + 1))
 fi
-branch_val="$(last_event_field "$d/spool/events.jsonl" 'props.branch_kind')"
-if [[ "$branch_val" != *telemetry* ]]; then
-  echo "PASS: only the branch prefix is captured"
+
+# The readable name is sent deliberately — the dashboard cannot attribute a
+# blocker to a project without it. What must NOT survive is a credential
+# embedded in an HTTPS remote, which normalizing to owner/repo drops by
+# construction rather than by pattern-matching.
+name_val="$(last_event_field "$d/spool/events.jsonl" 'props.repo_name')"
+if [[ "$name_val" == */* && "$name_val" != *http* && "$name_val" != *@* ]]; then
+  echo "PASS: repo_name is a clean owner/repo slug"
 else
-  echo "FAIL: full branch name leaked ('$branch_val')"
+  echo "FAIL: repo_name malformed or carries a host/credential ('$name_val')"
   failures=$((failures + 1))
 fi
+
+node -e '
+  import("./plugins/raftkit-core/hooks/lib/common.mjs").then(({ repoSlug }) => {
+    const cases = [
+      ["git@github.com:Raft-Labs/raftkit.git", "Raft-Labs/raftkit"],
+      ["https://github.com/Raft-Labs/raftkit.git", "Raft-Labs/raftkit"],
+      // The one that matters: a token in the remote must not survive.
+      ["https://user:ghp_AAAABBBBCCCCDDDD@github.com/Raft-Labs/raftkit.git", "Raft-Labs/raftkit"],
+      ["ssh://git@gitlab.com/group/proj", "group/proj"],
+      ["", ""],
+      ["not-a-remote", ""],
+    ];
+    let bad = 0;
+    for (const [input, want] of cases) {
+      const got = repoSlug(input);
+      if (got !== want) { console.error(`  ${input} -> ${got} (want ${want})`); bad++; }
+      if (/ghp_|:\/\/|@/.test(got)) { console.error("  credential or host survived: " + got); bad++; }
+    }
+    process.exit(bad === 0 ? 0 : 1);
+  }).catch(() => process.exit(1));
+' >/dev/null 2>&1
+check "repoSlug normalizes remotes and strips embedded credentials" ok $?
 
 # ------------------------------------------------------------- 2. scrubbing
 d="$(new_sandbox)"
@@ -326,6 +353,40 @@ printf '{"session_id":"s9","last_assistant_message":"Can'"'"'t read the story �
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "blocker correlates the session's prompt" "implement story 123" \
   "$(last_event_field "$d/spool/events.jsonl" 'props.prompt')"
+
+# ---------------------------------------------------- 6. skill invocation
+# Until this existed, `skill` was populated only by matchRefusal(), so a skill
+# was recorded solely when it HARD-STOPPED — normal use was invisible while the
+# disclosure claimed we collect "which skills you run". Both entry points are
+# covered because there are two, verified against a live session.
+d="$(new_sandbox)"
+printf '{"session_id":"s1","hook_event_name":"UserPromptExpansion","command_name":"raftkit-dev:implement","command_args":"story 42"}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" skill >/dev/null 2>&1
+expect_eq "a typed slash command is recorded" "raftkit_skill_invoked" "$(last_event_field "$d/spool/events.jsonl" 'event')"
+expect_eq "  with the skill name" "raftkit-dev:implement" "$(last_event_field "$d/spool/events.jsonl" 'props.skill')"
+expect_eq "  and marked as typed" "typed" "$(last_event_field "$d/spool/events.jsonl" 'props.invocation')"
+
+d="$(new_sandbox)"
+printf '{"session_id":"s1","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-core:write-protocol"}}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" skill >/dev/null 2>&1
+expect_eq "a model-invoked skill is recorded" "raftkit-core:write-protocol" "$(last_event_field "$d/spool/events.jsonl" 'props.skill')"
+expect_eq "  and marked as model-invoked" "model" "$(last_event_field "$d/spool/events.jsonl" 'props.invocation')"
+
+# A payload with neither field must not spool a nameless skill row.
+d="$(new_sandbox)"
+printf '{"session_id":"s1"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" skill >/dev/null 2>&1
+expect_eq "a nameless skill payload is not recorded as a skill" "raftkit_unknown_event" "$(last_event_field "$d/spool/events.jsonl" 'event')"
+
+# The hooks must actually be wired, or none of the above ever fires in practice.
+node -e '
+  const h = JSON.parse(require("fs").readFileSync("plugins/raftkit-core/hooks/hooks.json", "utf8"));
+  const modeFor = (ev, matcher) => ((h.hooks[ev] || [])
+    .filter((m) => matcher === undefined || m.matcher === matcher)
+    .flatMap((m) => m.hooks || []))
+    .some((e) => (e.args || []).includes("skill"));
+  process.exit(modeFor("UserPromptExpansion") && modeFor("PostToolUse", "Skill") ? 0 : 1);
+'
+check "both skill hooks are wired in hooks.json" ok $?
 
 # ----------------------------------------------------------------- 7. flush
 stub="$(new_sandbox)"

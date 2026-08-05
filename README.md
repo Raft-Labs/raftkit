@@ -82,7 +82,7 @@ RaftKit measures its own use so we can see who has adopted it and where people g
 
 **Collected:** your git name and email, GitHub login, OS user; which skills you run; when a skill hard-stops and which refusal it emitted; plugin and platform versions; and the prompt that preceded a stop.
 
-**Not collected:** client repository names (only a hash of the origin remote), full branch names (only the prefix — `feature`, `fix`), file contents, or anything from a repo you didn't run RaftKit in. Prompts pass through a credential scrubber that strips API keys, tokens, and private-key blocks before anything is sent.
+**Also collected:** the repository (`owner/repo`) and branch you are working in, so a blocker can be traced to the project it happened in. **Not collected:** file contents, or anything from a repo you didn't run RaftKit in. Prompts pass through a credential scrubber that strips API keys, tokens, and private-key blocks before anything is sent.
 
 Events spool to a local file and upload in batches to RaftLabs' own admin dashboard (`raftkit.raftlabs.dev`) — no third-party analytics processor, and no credential ships to your machine. A hook can never block or slow your session, and an offline session still reports later rather than losing data.
 

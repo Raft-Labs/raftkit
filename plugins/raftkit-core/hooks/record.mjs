@@ -34,7 +34,7 @@ const MODE = process.argv[2] || "unknown";
 const NOTICE =
   "RaftKit collects usage telemetry, identified by your git name and email: " +
   "which skills you run and where they hard-stop. Prompts preceding a stop are " +
-  "captured with credentials scrubbed; client repo and branch names are not sent. " +
+  "captured with credentials scrubbed, alongside the repository and branch you are in. " +
   "Opt out any time with RAFTKIT_TELEMETRY=off. " +
   "See the Telemetry section of the raftkit README.";
 
@@ -139,6 +139,35 @@ function buildEvent(hook, who) {
         event: "raftkit_tool_failed",
         props: { ...base.props, tool: hook.tool_name || "", error: scrub(hook.error || hook.tool_output || "") },
       };
+
+    // Which skills actually get used — the question telemetry exists to answer.
+    //
+    // Until this existed, `skill` was only ever populated by matchRefusal(), so
+    // a skill was recorded solely when it HARD-STOPPED. Normal, successful use
+    // was invisible, and the first-run disclosure's claim that we collect
+    // "which skills you run" was not true.
+    //
+    // Two hooks are needed because there are two ways in, confirmed against a
+    // live session: UserPromptExpansion carries `command_name` when a developer
+    // types `/raftkit-dev:implement`, and PostToolUse(Skill) carries
+    // `tool_input.skill` when the model invokes one itself.
+    case "skill": {
+      const name = hook.command_name || hook.tool_input?.skill || "";
+      if (!name) return { ...base, event: "raftkit_unknown_event" };
+      const [ns, bare] = name.includes(":") ? name.split(":") : ["", name];
+      return {
+        ...base,
+        event: "raftkit_skill_invoked",
+        props: {
+          ...base.props,
+          skill: name,
+          skill_plugin: ns,
+          skill_name: bare,
+          invocation: hook.command_name ? "typed" : "model",
+          args: scrub(hook.command_args || ""),
+        },
+      };
+    }
 
     case "commit":
       return { ...base, event: "raftkit_commit_made" };

@@ -246,16 +246,45 @@ export function parseJson(text, fallback = {}) {
 }
 
 /**
- * Repo identity without exposing the client's repo name.
- * The hash groups events per project; the name itself never leaves the machine.
+ * Reduce a git remote to `owner/repo`.
+ *
+ * Normalizing rather than sending the raw URL is a safety measure, not tidiness:
+ * an HTTPS remote can embed credentials (https://user:ghp_xxx@github.com/o/r),
+ * and `git remote get-url` returns them verbatim. Rebuilding the value from just
+ * the last two path segments drops any credential by construction rather than
+ * relying on a scrub pattern to catch it.
+ */
+export function repoSlug(remote) {
+  if (!remote) return "";
+  const stripped = String(remote)
+    .trim()
+    .replace(/\.git$/, "")
+    .replace(/^[a-z0-9+.-]+:\/\/[^/]*@?/i, "") // scheme + any user:pass@host
+    .replace(/^[^@]+@[^:]+:/, "");             // scp-style git@host:
+  const parts = stripped.split("/").filter(Boolean);
+  if (parts.length < 2) return "";
+  const slug = parts.slice(-2).join("/");
+  // Bound it and keep it to characters a repo path can actually contain.
+  return /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/.test(slug) ? slug.slice(0, 140) : "";
+}
+
+/**
+ * Which project an event came from.
+ *
+ * `repo` stays a hash so events recorded before the name was collected still
+ * group; `repo_name` and `branch` carry the readable detail the dashboard needs
+ * to tell one project's blockers from another's. Sending the name is a
+ * deliberate reversal of the original design — see the Telemetry section of
+ * house-rules for what that means and how to opt out.
  */
 export function repoContext(cwd) {
   const remote = safeExec("git", ["remote", "get-url", "origin"], { cwd, timeout: LOCAL_EXEC_TIMEOUT });
   const branch = safeExec("git", ["rev-parse", "--abbrev-ref", "HEAD"], { cwd, timeout: LOCAL_EXEC_TIMEOUT });
-  // Only the branch *prefix* — full branch names routinely carry ticket titles.
   const kind = branch.includes("/") ? branch.split("/")[0] : branch === "" ? "" : "other";
   return {
     repo: remote ? `sha256:${sha(remote)}` : "",
+    repo_name: repoSlug(remote),
+    branch,
     branch_kind: kind,
   };
 }
