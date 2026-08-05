@@ -2,9 +2,9 @@
 
 The run sheet **is** the deliverable: this file is the single source of every
 fixed rule the skill emits — the step columns, the determinism rule, the mandatory
-WEESLD and permission step groups, the default step status, the exact-strings rule,
-and the success line. Nothing here is paraphrased in `SKILL.md`; it points back
-here so the rules never drift.
+edge-case and permission step groups, the default step status, the exact-strings
+rule, and the success line. Nothing here is paraphrased in `SKILL.md`; it points
+back here so the rules never drift.
 
 ## The step table (fixed columns, in order)
 
@@ -14,7 +14,7 @@ in order:
 | Field | Holds |
 |---|---|
 | step # | the sequential number — the sheet is numbered end to end |
-| group | what the step covers: a Gherkin scenario, an `[AC]`, a WEESLD state, or a permission boundary |
+| group | what the step covers: a Gherkin scenario, an `[AC]`, an edge-case state, or a permission boundary |
 | start state | the test account / data state the step begins from (deterministic — a named account and data, not "some data") |
 | action | the single action QA performs |
 | test data | the exact data the action uses |
@@ -44,22 +44,26 @@ say. The story is the single source of these strings; if the story gives no exac
 string for an outcome, quote the closest `[AC]` or `THEN` clause and note that the
 copy is unspecified — do not invent copy.
 
-## Mandatory step groups — every WEESLD state and every permission boundary
+## Mandatory step groups — every edge-case state and every permission boundary
 
 Two coverage guarantees, each an **explicit** step group (never folded into the
 happy path):
 
-- **WEESLD** — one step group per state the story's edge-cases section specifies:
-  Waiting, Empty, Error, Success, Limits, Default values. A state the story marks `N/A` is
-  recorded as `N/A` (so the sheet shows it was considered), not silently dropped.
+- **Edge case** — one step group per state the story's edge-cases section
+  specifies: waiting, empty, error, success-confirmation, a limit, a default
+  value (the WEESLD frame the story's own template uses — see
+  `raftkit-core/house-rules`' plain-language glossary; the group QA sees in the
+  sheet is named `edge-case`, never the bare acronym). A state the story marks
+  `N/A` is recorded as `N/A` (so the sheet shows it was considered), not
+  silently dropped.
 - **Permission boundary** — the story header's `Who is allowed / not allowed`
   becomes explicit step groups: one exercising the allowed actor, one asserting the
   disallowed actor is blocked. (For this story's own domain, for example: anyone on
   the project can generate, but pass/fail execution marks belong to QA.)
 
 Coverage tags align with `test-suite/references/sheet-format.md` — `happy`,
-`WEESLD`, `permission` — so a run sheet and the project suite describe coverage the
-same way.
+`edge-case`, `permission` — so a run sheet and the project suite describe
+coverage the same way.
 
 ## Default step status
 
@@ -73,7 +77,7 @@ anything but the `not run` default.
 
 On a generated sheet, report exactly:
 
-```
+```output
 Run sheet: N steps covering M [AC]s — gaps: none / listed
 ```
 

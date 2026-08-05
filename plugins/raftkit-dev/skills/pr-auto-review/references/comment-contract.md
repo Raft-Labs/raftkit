@@ -77,11 +77,10 @@ Pass the body from a file (`-F body=@<file>`), never as an inline argument.
    never ran against these commits and a green check on the PR does not
    cover them. The reviewer has to be told that in the artifact they are
    reading:
-   ```
-   These commits were pushed by CI and have NOT been exercised by this
-   repository's own workflows — GitHub does not trigger workflow runs for
-   pushes made with GITHUB_TOKEN. Review them before merging; a green check
-   on this PR does not cover them.
+   ```output
+   These commits were pushed by CI. GitHub does not run this repo's own
+   workflows on pushes made with GITHUB_TOKEN, so they were never tested.
+   Review them before merging — a green check on this PR does not cover them.
    ```
 3. **Important/Suggestion findings**, each as one line:
    ```
@@ -98,7 +97,7 @@ Pass the body from a file (`-F body=@<file>`), never as an inline argument.
    capped at 60000 characters: include as many *complete* findings as fit,
    write the remainder to the job summary (`$GITHUB_STEP_SUMMARY`), and say
    so explicitly:
-   ```
+   ```output
    Truncated to fit GitHub's comment size limit — <N> of <M>
    Important/Suggestion findings are shown above. The complete list is in
    this run's job summary (Actions → this run → Summary).
@@ -114,7 +113,7 @@ Pass the body from a file (`-F body=@<file>`), never as an inline argument.
    tell apart.
 5. **Zero-Critical-findings case** — when nothing was fixed, the comment
    still posts (or still edits in place), with the exact string:
-   ```
+   ```output
    No critical issues found.
    ```
    followed by the Important/Suggestion section (empty or populated) as
@@ -131,7 +130,7 @@ Pass the body from a file (`-F body=@<file>`), never as an inline argument.
    transferred can leave the commit on the remote while reporting failure.
    So the line states the reason *and* what the run confirmed via
    `git ls-remote`:
-   ```
+   ```output
    Fix loop stopped early — `git push` failed (<reason from git's output>).
    Commit <short SHA> <is / is NOT> present on the remote branch. Nothing
    was force-pushed and no history was rewritten. The remaining Critical

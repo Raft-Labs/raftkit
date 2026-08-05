@@ -67,7 +67,7 @@ wording**, naming the **exact** template sections that are missing so QA knows
 precisely what to add. It goes on the task as a comment (draft → approve, per the write
 rules below), not only into the dev's chat:
 
-```
+```output
 Can't start the fix — the bug task is missing <Environment | Steps to Reproduce |
 "Done when" | the relevant combination>. The Bug Template needs <that section /
 those sections> filled before a failing repro test can be written and its fix
@@ -86,7 +86,7 @@ when" section's `Fixed in build / version ___` field on the bug task. This is th
 QA cannot retest a fix without knowing the build it landed in, so the hand-back is
 **blocked** until this field is filled. Then hand back with the success line:
 
-```
+```output
 Red → green: repro test added, fix in PR #n, Fixed in build X — back to QA
 ```
 
@@ -162,13 +162,13 @@ board, not because the fix is incomplete without it.
 
 The two Path B success lines — **filed**:
 
-```
+```output
 Red → green: repro test added, fix in PR #n, bug filed as <task> with Fixed in build X — QA can retest
 ```
 
 and **declined**:
 
-```
+```output
 Red → green: repro test added, fix in PR #n. No bug task filed (declined) — the PR is the record, the repro test is the permanent guard.
 ```
 
@@ -198,7 +198,7 @@ blind** on either path. The return carries exactly three things:
    reproduction (e.g. a missing precondition, an unclear step, a data-state detail).
    Not a list; one question.
 
-```
+```output
 Can't reproduce in the stated environment.
 Tried: <steps followed + what was observed>
 Environment used: <the environment stated at intake>

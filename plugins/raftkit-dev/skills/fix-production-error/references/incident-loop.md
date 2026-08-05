@@ -79,7 +79,7 @@ when it is absent**, and **suggest** the deploy steps only. Deploy stays human a
 release-train governed — the skill has no deploy action. Close with the exact
 success line, verbatim:
 
-```
+```output
 Crash replicated red → fixed green. Regression test permanent. PR #n ready — deploy per the train.
 ```
 

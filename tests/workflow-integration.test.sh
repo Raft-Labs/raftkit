@@ -163,7 +163,7 @@ for s in 'Docs: not impacted — <reason>' 'Docs: updated and verified'; do
   grep -qF "$s" "$DEV/docs/SKILL.md" || { echo "owner string missing: $s"; false; }
 done
 check "W15a owner strings exist in the docs skill" ok $?
-grep -qF 'Required capability unavailable: <capability>. Proposed install command (human approval required): <exact command>. Stopping — no fallback.' "$DEV/capability-preflight/SKILL.md"
+grep -qF 'Missing: <capability>. Install it with: <exact command>' "$DEV/capability-preflight/SKILL.md"
 check "W15b preflight refusal string exists at its owner" ok $?
 
 # W16 · ownership preservation: delivery skills never enumerate the five-state

@@ -27,8 +27,9 @@ Init adds nothing here and never re-derives readiness itself. A required
 capability that stays missing after a declined or unanswered plan stops the
 run with capability-preflight's own refusal string:
 
-```
-Required capability unavailable: <capability>. Proposed install command (human approval required): <exact command>. Stopping — no fallback.
+```output
+Missing: <capability>. Install it with: <exact command>
+Needs your approval first — nothing installs until you say go.
 ```
 
 ## Phase 3 — Governance pack
@@ -69,7 +70,7 @@ node plugins/raftkit-dev/skills/init/scripts/merge-settings.mjs .claude/settings
 On success emit exactly (`<X>` = this repo's init version, tracked in the
 marker):
 
-```
+```output
 RaftKit init v<X>: capabilities ready, governance pack installed, repo config wired — verified
 ```
 

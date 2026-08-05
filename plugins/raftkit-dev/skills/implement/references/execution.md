@@ -24,9 +24,10 @@ surface; a spec missing this section when Gate 1 approved decisions is a
 stale-spec condition, not a silent gap.
 
 If the spec file is absent at **any** point after Gate 1 — before the first edit,
-or if it goes missing mid-run — stop with the governance pack's verbatim string:
+or if it goes missing mid-run — stop with the governance pack's verbatim string
+(it means: the plan isn't written to disk yet, so no code gets touched):
 
-```
+```output
 ❌ ORCHESTRATION REJECTED
 ```
 
@@ -66,9 +67,10 @@ Execute the decomposition table one phase at a time.
   one concern per commit.
 - **Loop protection.** If a subagent fails to self-fix a compile/lint/test error
   after **3 attempts**, it **pauses** — it does not keep burning attempts. Report
-  token/cost usage and alert the dev with the governance pack's verbatim string:
+  token/cost usage and alert the dev with the governance pack's verbatim string
+  (it means: a subagent is stuck and burning tokens — decide how it should proceed):
 
-  ```
+  ```output
   ⚠️ SUBAGENT LOOP WARNING
   ```
 

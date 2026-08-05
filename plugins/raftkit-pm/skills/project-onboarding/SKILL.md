@@ -54,7 +54,7 @@ the success-summary format are in `references/profile-format.md`.
 **Empty state — no sources named.** Stop with this exact message, and create
 nothing:
 
-```
+```output
 I need at least one source — a PRD, SOW, master doc, email thread, or meeting recording.
 ```
 

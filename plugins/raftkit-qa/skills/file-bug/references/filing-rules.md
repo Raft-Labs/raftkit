@@ -4,7 +4,7 @@
 
 The story requires the title be enforced in the shape:
 
-```
+```output
 [Platform][Severity] short what + where
 ```
 

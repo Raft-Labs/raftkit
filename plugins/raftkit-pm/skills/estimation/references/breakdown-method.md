@@ -57,7 +57,7 @@ reads cleanly in chat.
 
 ### Success
 
-```
+```output
 Requires founder review — not a client commitment.
 
 Estimate — <story title>
@@ -74,7 +74,7 @@ Assumptions:
 
 ### Refusal — story not ready
 
-```
+```output
 Requires founder review — not a client commitment.
 
 Cannot estimate — the story is not ready.
@@ -84,7 +84,7 @@ Estimating unspecified scope produces fiction, not an estimate. Fix the gaps, th
 
 ### Empty — no story to estimate
 
-```
+```output
 Requires founder review — not a client commitment.
 
 No story to estimate — the task description is empty. Write the story first with the

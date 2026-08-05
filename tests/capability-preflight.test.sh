@@ -166,7 +166,7 @@ S=$SKILL/SKILL.md
 grep -qF 'user-invocable: false' "$S" 2>/dev/null;                                   check "T12a skill is not user-invocable" ok $?
 grep -qF 'Capability preflight: all required capabilities ready.' "$S" 2>/dev/null;  check "T12b all-ready line in contract" ok $?
 grep -qF 'install plan awaiting approval.' "$S" 2>/dev/null;                          check "T12c plan-summary line in contract" ok $?
-grep -qF 'Required capability unavailable: <capability>. Proposed install command (human approval required): <exact command>. Stopping — no fallback.' "$S" 2>/dev/null
+grep -qF 'Missing: <capability>. Install it with: <exact command>' "$S" 2>/dev/null
 check "T12d exact refusal error copy" ok $?
 grep -qF 'installed-but-disabled' "$S" 2>/dev/null;                                   check "T12e canonical installed-but-disabled naming" ok $?
 grep -q 'never adds or installs them at runtime' "$S" 2>/dev/null;                    check "T12f declared-vs-runtime separation stated" ok $?

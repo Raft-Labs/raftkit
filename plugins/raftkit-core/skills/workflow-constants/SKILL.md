@@ -39,13 +39,13 @@ Never reuse a template's body from memory, from an earlier run, or from anywhere
 
 **raftkit-core is not installed** — a role plugin cannot resolve any of these constants without core. Stop with this exact message:
 
-```
+```output
 raftkit-core is required — install it from the raftkit marketplace.
 ```
 
 **The live template cannot be read** (Asana connector down, no access, or the task is unreachable) — stop with this exact message, and do not fall back to a remembered format:
 
-```
+```output
 Can't read the live template — check your Asana connector, then retry.
 ```
 

@@ -63,6 +63,8 @@ bare term is fine — the human has already been told what it means this run.
 | MDS / design standard | RaftLabs' Module Design Standard — the code-shape rules |
 | watermark | the "not a client commitment" line on every estimate |
 | provider seam | the point where a skill hands off to a third-party plugin |
+| the train / release train | the scheduled deploy pipeline — a PR is ready for it, never deployed by a skill |
+| governance pack | the installed set of house rules and CI checks a repo runs against |
 
 Add a term here when a skill needs it in output more than once — do not
 invent a fresh gloss inline.
@@ -88,9 +90,11 @@ as authored.
 
 ## Before / after
 
-**Before:**
+**Before** (illustrative only — never actually shipped, so this is a plain
+` ``` ` fence, not ` ```output `; a checker scanning `output` blocks should never
+find the non-compliant half of this pair):
 
-```output
+```text
 Required capability unavailable: <capability>. Proposed install command
 (human approval required): <exact command>. Stopping — no fallback.
 ```

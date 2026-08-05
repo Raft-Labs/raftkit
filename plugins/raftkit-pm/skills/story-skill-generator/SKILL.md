@@ -34,7 +34,7 @@ Profile, do not proceed and do not improvise one from raw sources.
 
 **Empty state — no approved profile.** Stop with this exact message, and do nothing else:
 
-```
+```output
 Run project-onboarding first — I need an approved Project Profile to bake from.
 ```
 

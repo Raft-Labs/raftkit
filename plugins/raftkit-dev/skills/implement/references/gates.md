@@ -136,7 +136,7 @@ Run after the post-edit gates are green (`references/execution.md`), before the 
    verbatim clean line — that string is scope-guard's, checked here, never
    re-derived:
 
-   ```
+   ```output
    Scope-guard: clean — 0 beyond, 0 missing
    ```
 

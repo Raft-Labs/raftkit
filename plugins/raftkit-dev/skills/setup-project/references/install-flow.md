@@ -167,7 +167,7 @@ The install is not done until it is verified:
 On success emit exactly (with `<X>` = the installed raftkit-core version),
 declined component 8:
 
-```
+```output
 Governance pack v<X> installed: 5 protocols, spec template, hook, CI, CodeRabbit, design standard, MDS ESLint config — verified
 ```
 
@@ -175,7 +175,7 @@ Accepted component 8, append additively (never renumber "5" to anything else —
 the count-word stays attached to "protocols", and the seven required components
 keep their exact wording):
 
-```
+```output
 Governance pack v<X> installed: 5 protocols, spec template, hook, CI, CodeRabbit, design standard, MDS ESLint config, pr-auto-review workflow — verified
 Required next step: add ANTHROPIC_API_KEY to this repo's Actions secrets — Settings → Secrets and variables → Actions → New repository secret.
 ```

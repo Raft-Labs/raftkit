@@ -50,7 +50,7 @@ the full rules are in `references/sync-and-conflicts.md`.
 **Empty state — no Project Profile.** Do not fabricate a suite from nothing. Route
 to `raftkit-pm project-onboarding` to build the profile first, then re-run:
 
-```
+```output
 No Project Profile found — run raftkit-pm project-onboarding to build it, then re-run test-suite.
 ```
 
