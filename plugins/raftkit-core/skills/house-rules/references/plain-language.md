@@ -36,8 +36,7 @@ None of these appear inside an `output` block:
 
 ## Sentence length
 
-Inside an `output` block: no sentence over 25 words. The block's average is 15
-words per sentence or fewer.
+Inside an `output` block: no sentence over 25 words.
 
 ## The house glossary
 
