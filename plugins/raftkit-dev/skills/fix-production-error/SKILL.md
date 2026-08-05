@@ -106,6 +106,7 @@ every run — never cache its text. Then:
   release-train-governed step.
 - **Escalate to founders** per `raftkit-core/house-rules` if the incident implies
   contract, client-commitment, or relationship risk beyond the crash itself.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Out of scope
 

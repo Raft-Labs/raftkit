@@ -108,6 +108,7 @@ No Project Profile found — run raftkit-pm project-onboarding to build it, then
 - **Asana free-tier constraints** apply to anything created in Asana
   (`raftkit-core/house-rules` owns that list). **Escalate to founders** on budget,
   contracts, relationship risk, or anything that reads as a client commitment.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Reference files
 

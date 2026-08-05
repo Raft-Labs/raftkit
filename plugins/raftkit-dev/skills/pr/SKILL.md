@@ -103,6 +103,7 @@ Work `references/raise-flow.md` then `references/automated-review.md` in order.
   pr-review-toolkit findings are addressed or answered.
 - **Escalate to founders** per `raftkit-core/house-rules` if the PR implies a
   budget, contract, or client-relationship risk beyond the code.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Out of scope
 

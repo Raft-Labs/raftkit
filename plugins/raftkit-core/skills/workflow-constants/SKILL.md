@@ -50,3 +50,7 @@ Can't read the live template — check your Asana connector, then retry.
 ```
 
 Falling back to remembered content here would hide the outage and produce a story or bug report in an outdated shape — worse than stopping, because no one would know to fix it.
+
+## Guardrails
+
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.

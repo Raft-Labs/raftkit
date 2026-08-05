@@ -79,3 +79,7 @@ recipes are added post-pilot by PR).
 - **No store-submission automation.**
 - New recipes and default changes go through **PR to raftkit-dev**; project-level
   deviations go in the **Project Profile**, never into a plugin.
+
+## Guardrails
+
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.

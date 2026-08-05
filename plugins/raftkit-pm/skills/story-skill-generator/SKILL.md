@@ -105,6 +105,7 @@ already-delivered skill with an unvalidated one (`raftkit-core/write-protocol`).
   (`references/baked-context.md`).
 - **Escalate to founders** (`raftkit-core/house-rules`) on budget, contracts, relationship
   risk, or anything that reads as a client commitment.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Reference files
 

@@ -110,6 +110,7 @@ Do not restate the recipes' content; apply this order over it.
   hardcoded, when the product is multi-language.
 - **Escalate to founders** per `house-rules` if UI work implies a budget,
   contract, or client-relationship decision beyond the story.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Out of scope
 

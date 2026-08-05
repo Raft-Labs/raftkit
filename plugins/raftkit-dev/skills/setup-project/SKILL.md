@@ -108,6 +108,7 @@ change re-asserts `core.hooksPath` and reports no file changes. Details in
   GitHub rulesets, environments, or any org setting.
 - **Escalate to founders** per `raftkit-core/house-rules` if setup implies a
   scope, contract, or client-relationship risk beyond the repo itself.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Out of scope
 

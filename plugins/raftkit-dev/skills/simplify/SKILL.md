@@ -110,6 +110,7 @@ by default.
 - **Escalate to founders** per `raftkit-core/house-rules` if a proposed removal
   touches budget, contract, or client-commitment surface area rather than pure
   internal cleanup.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Out of scope
 

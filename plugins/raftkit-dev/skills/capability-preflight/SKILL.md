@@ -103,6 +103,10 @@ them. Secrets are never read or printed while detecting stack signals (e.g.
 envx: the *presence* of `.envxrc` / `.env.*.gpg` is the signal, their contents
 are off-limits).
 
+## Guardrails
+
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
+
 ## Out of scope
 
 - Installing the governance pack (setup-project owns it; it calls this preflight).

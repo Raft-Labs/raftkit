@@ -96,6 +96,7 @@ both sides. Building that dev-side enforcement is out of scope here.
   reconciles a comment-only clarification **itself** and never asks this gate to
   re-bless a state it structurally cannot see. Only a real description edit or an
   added `[AC]` subtask moves this audit's verdict on a later run.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Reference file
 

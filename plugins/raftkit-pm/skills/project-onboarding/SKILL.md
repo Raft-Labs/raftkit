@@ -107,6 +107,7 @@ I need at least one source — a PRD, SOW, master doc, email thread, or meeting 
   any source the PM did not name.
 - **Escalate to founders** (`raftkit-core/house-rules`) on budget, contracts,
   relationship risk, or anything that reads as a client commitment.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Reference files
 

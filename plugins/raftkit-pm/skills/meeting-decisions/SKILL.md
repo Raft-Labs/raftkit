@@ -117,6 +117,7 @@ that (see Guardrails).
 - **Escalate to founders** (`raftkit-core/house-rules`) when a scope change or
   decision touches budget, contracts, relationship risk, or a client commitment — the
   skill surfaces it; it never commits on RaftLabs' behalf.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Reference files
 

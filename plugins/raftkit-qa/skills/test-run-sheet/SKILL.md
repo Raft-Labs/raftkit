@@ -114,6 +114,7 @@ creates the bug under the story's `Bugs` subtask). See
   state.
 - **Asana free tier** and **escalate-to-founders** rules per
   `raftkit-core/house-rules` apply to anything this skill touches.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Out of scope
 

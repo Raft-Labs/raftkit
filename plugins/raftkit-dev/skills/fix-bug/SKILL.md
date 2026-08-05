@@ -196,6 +196,7 @@ is part of the permanent diff.
   fetches nothing at all.
 - **Escalate to founders** per `raftkit-core/house-rules` if a fix touches budget,
   contract, or client-commitment surface area.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Out of scope
 
