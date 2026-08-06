@@ -2,7 +2,7 @@
 // Hook entry point: turns a Claude Code hook event into one spooled JSONL line.
 //
 // Usage: record.mjs <mode>   where mode is session_start | prompt | stop |
-//                            tool_failure | commit | pr
+//                            tool_failure | commit | pr | skill
 //
 // Contract, in priority order:
 //   1. NEVER break the developer's session. Every path exits 0. No throw escapes.
@@ -14,12 +14,12 @@ import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import {
   HOOKS_ROOT,
-  config,
   ensureDir,
   parseJson,
   pluginVersions,
   readStdin,
   repoContext,
+  sha,
   spoolDir,
   spoolFile,
   stateFile,
@@ -38,7 +38,21 @@ const NOTICE =
   "Opt out any time with RAFTKIT_TELEMETRY=off. " +
   "See the Telemetry section of the raftkit README.";
 
-const noticePending = () => !existsSync(stateFile("notice-shown"));
+// The one-shot gate is keyed on a hash of the notice's own text, not merely
+// on whether the marker file exists. A marker from a pre-upgrade install
+// carries no version info (just an ISO timestamp) and so never contains the
+// current hash — it therefore does not suppress disclosure. Any future
+// wording change flows straight into a new hash and re-discloses
+// automatically; the marker's filename is deliberately unchanged.
+const NOTICE_VERSION = sha(NOTICE, 12);
+
+const noticePending = () => {
+  try {
+    return !readFileSync(stateFile("notice-shown"), "utf8").includes(NOTICE_VERSION);
+  } catch {
+    return true; // no marker (or unreadable one) means undisclosed
+  }
+};
 
 /**
  * Emit the disclosure, then record that it was emitted — never the other way
@@ -58,7 +72,7 @@ function emitNotice() {
   }
   try {
     ensureDir(spoolDir());
-    writeFileSync(stateFile("notice-shown"), new Date().toISOString() + "\n");
+    writeFileSync(stateFile("notice-shown"), `${new Date().toISOString()} ${NOTICE_VERSION}\n`);
   } catch {
     /* a lost marker costs a repeated notice, never a missing one */
   }
@@ -153,8 +167,20 @@ function buildEvent(hook, who) {
     // `tool_input.skill` when the model invokes one itself.
     case "skill": {
       const name = hook.command_name || hook.tool_input?.skill || "";
-      if (!name) return { ...base, event: "raftkit_unknown_event" };
-      const [ns, bare] = name.includes(":") ? name.split(":") : ["", name];
+      // A PostToolUse/UserPromptExpansion invocation that never resolves to a
+      // name is not a skill event at all — most PostToolUse calls aren't the
+      // Skill tool. Recording it as raftkit_unknown_event just fills the spool
+      // with junk that, at the cap, evicts real raftkit_blocked events.
+      if (!name) return null;
+      // Split on the FIRST colon only — a bare name can itself contain one
+      // (a nested identifier), and split(":") would silently truncate it.
+      const sep = name.indexOf(":");
+      const ns = sep === -1 ? "" : name.slice(0, sep);
+      const bare = sep === -1 ? name : name.slice(sep + 1);
+      // Only RaftKit's own plugins are RaftKit usage. A skill from any other
+      // installed plugin (or a client's private skill) is silently skipped —
+      // the dashboard measures RaftKit adoption, not everything installed.
+      if (!ns.startsWith("raftkit-")) return null;
       return {
         ...base,
         event: "raftkit_skill_invoked",
@@ -278,7 +304,9 @@ async function main() {
   const who = identity();
   const event = buildEvent(hook, who);
 
-  spool(event);
+  // null means "not telemetry at all" (see the skill case above) — the spool
+  // must stay byte-for-byte untouched, not gain a junk line.
+  if (event) spool(event);
 
   // Surfaced once, then never again.
   if (noticePending()) emitNotice();
