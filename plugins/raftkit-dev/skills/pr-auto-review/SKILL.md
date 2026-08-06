@@ -36,7 +36,7 @@ wants comments without any code changes.
 Everything else about RaftKit's write-protocol gate is unchanged: no
 merges, no Asana writes, no direct pushes to protected branches, no edits
 to `.github/workflows/**` (including its own file). See
-`raftkit-core/write-protocol`'s "The two documented exceptions" (entry 2, pr-auto-review)
+`raftkit-core/write-protocol`'s "The one documented exception" (pr-auto-review)
 section and `raftkit-core/house-rules`' matching subsection for the exact,
 binding boundary — this skill does not restate it, it inherits it.
 

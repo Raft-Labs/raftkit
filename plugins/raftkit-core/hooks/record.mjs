@@ -2,7 +2,7 @@
 // Hook entry point: turns a Claude Code hook event into one spooled JSONL line.
 //
 // Usage: record.mjs <mode>   where mode is session_start | prompt | stop |
-//                            tool_failure | commit | pr
+//                            tool_failure | commit | pr | skill
 //
 // Contract, in priority order:
 //   1. NEVER break the developer's session. Every path exits 0. No throw escapes.
@@ -10,17 +10,16 @@
 //   3. Never leak credentials. Free text goes through scrub() before it is written.
 
 import { appendFileSync, existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import {
   HOOKS_ROOT,
-  config,
   ensureDir,
   parseJson,
   pluginVersions,
   readStdin,
   repoContext,
+  sha,
   spoolDir,
   spoolFile,
   stateFile,
@@ -35,11 +34,25 @@ const MODE = process.argv[2] || "unknown";
 const NOTICE =
   "RaftKit collects usage telemetry, identified by your git name and email: " +
   "which skills you run and where they hard-stop. Prompts preceding a stop are " +
-  "captured with credentials scrubbed; client repo and branch names are not sent. " +
+  "captured with credentials scrubbed, alongside the repository and branch you are in. " +
   "Opt out any time with RAFTKIT_TELEMETRY=off. " +
   "See the Telemetry section of the raftkit README.";
 
-const noticePending = () => !existsSync(stateFile("notice-shown"));
+// The one-shot gate is keyed on a hash of the notice's own text, not merely
+// on whether the marker file exists. A marker from a pre-upgrade install
+// carries no version info (just an ISO timestamp) and so never contains the
+// current hash — it therefore does not suppress disclosure. Any future
+// wording change flows straight into a new hash and re-discloses
+// automatically; the marker's filename is deliberately unchanged.
+const NOTICE_VERSION = sha(NOTICE, 12);
+
+const noticePending = () => {
+  try {
+    return !readFileSync(stateFile("notice-shown"), "utf8").includes(NOTICE_VERSION);
+  } catch {
+    return true; // no marker (or unreadable one) means undisclosed
+  }
+};
 
 /**
  * Emit the disclosure, then record that it was emitted — never the other way
@@ -59,7 +72,7 @@ function emitNotice() {
   }
   try {
     ensureDir(spoolDir());
-    writeFileSync(stateFile("notice-shown"), new Date().toISOString() + "\n");
+    writeFileSync(stateFile("notice-shown"), `${new Date().toISOString()} ${NOTICE_VERSION}\n`);
   } catch {
     /* a lost marker costs a repeated notice, never a missing one */
   }
@@ -140,6 +153,55 @@ function buildEvent(hook, who) {
         event: "raftkit_tool_failed",
         props: { ...base.props, tool: hook.tool_name || "", error: scrub(hook.error || hook.tool_output || "") },
       };
+
+    // Which skills actually get used — the question telemetry exists to answer.
+    //
+    // Until this existed, `skill` was only ever populated by matchRefusal(), so
+    // a skill was recorded solely when it HARD-STOPPED. Normal, successful use
+    // was invisible, and the first-run disclosure's claim that we collect
+    // "which skills you run" was not true.
+    //
+    // Two hooks are needed because there are two ways in, confirmed against a
+    // live session: UserPromptExpansion carries `command_name` when a developer
+    // types `/raftkit-dev:implement`, and PostToolUse(Skill) carries
+    // `tool_input.skill` when the model invokes one itself.
+    case "skill": {
+      const name = hook.command_name || hook.tool_input?.skill || "";
+      if (!name) {
+        // A PostToolUse/UserPromptExpansion invocation that never resolves to
+        // a name is not a skill event at all — most PostToolUse calls aren't
+        // the Skill tool. Recording it as raftkit_unknown_event just fills
+        // the spool with junk that, at the cap, evicts real raftkit_blocked
+        // events, so it is dropped outright, leaving the spool untouched.
+        const isSkillHook = hook.hook_event_name === "PostToolUse" || hook.hook_event_name === "UserPromptExpansion";
+        if (isSkillHook) return null;
+        // Something reached MODE=skill without even that shape (a malformed
+        // or unexpected payload) — record it generically rather than either
+        // staying silent or misclassifying it as a skill invocation.
+        return { ...base, event: "raftkit_unknown_event" };
+      }
+      // Split on the FIRST colon only — a bare name can itself contain one
+      // (a nested identifier), and split(":") would silently truncate it.
+      const sep = name.indexOf(":");
+      const ns = sep === -1 ? "" : name.slice(0, sep);
+      const bare = sep === -1 ? name : name.slice(sep + 1);
+      // Only RaftKit's own plugins are RaftKit usage. A skill from any other
+      // installed plugin (or a client's private skill) is silently skipped —
+      // the dashboard measures RaftKit adoption, not everything installed.
+      if (!ns.startsWith("raftkit-")) return null;
+      return {
+        ...base,
+        event: "raftkit_skill_invoked",
+        props: {
+          ...base.props,
+          skill: name,
+          skill_plugin: ns,
+          skill_name: bare,
+          invocation: hook.command_name ? "typed" : "model",
+          args: scrub(hook.command_args || ""),
+        },
+      };
+    }
 
     case "commit":
       return { ...base, event: "raftkit_commit_made" };
@@ -243,50 +305,6 @@ function pruneSpool() {
   }
 }
 
-// Blocker filing is a separate detached process so a slow `gh` call can never
-// hold up the hook, even though the hook is already async.
-function dispatchBlocker(event) {
-  const cfg = config();
-  if (!cfg.file_issues) return Promise.resolve();
-  return new Promise((resolve) => {
-    let child;
-    try {
-      child = spawn(process.execPath, [join(HOOKS_ROOT, "blocker.mjs")], {
-        detached: true,
-        stdio: ["pipe", "ignore", "ignore"],
-      });
-    } catch {
-      return resolve(); // the event is already spooled; filing is best-effort
-    }
-
-    // Await the write instead of firing and forgetting.
-    //
-    // Anything past the 64KB pipe buffer is written asynchronously, while the
-    // caller's .finally(process.exit(0)) fired immediately — so a large event
-    // was truncated mid-JSON and the child discarded it as unparseable. A
-    // blocker with a long refusal line is exactly the case that got lost.
-    let settled = false;
-    const done = () => {
-      if (settled) return;
-      settled = true;
-      try {
-        child.unref();
-      } catch {
-        /* nothing to detach */
-      }
-      resolve();
-    };
-    // Never wait on a child that is not draining; the event is already spooled.
-    const timer = setTimeout(done, 5000);
-    timer.unref?.();
-    // EPIPE on an unlistened stream escalates to uncaughtException, which only
-    // exited 0 because the handler at the bottom of this file happens to say so.
-    child.stdin.on("error", done);
-    child.on("error", done);
-    child.stdin.end(JSON.stringify(event), done);
-  });
-}
-
 async function main() {
   if (telemetryDisabled()) return;
 
@@ -294,10 +312,9 @@ async function main() {
   const who = identity();
   const event = buildEvent(hook, who);
 
-  spool(event);
-  if (event.event === "raftkit_blocked" && event.props.severity !== "info") {
-    await dispatchBlocker(event);
-  }
+  // null means "not telemetry at all" (see the skill case above) — the spool
+  // must stay byte-for-byte untouched, not gain a junk line.
+  if (event) spool(event);
 
   // Surfaced once, then never again.
   if (noticePending()) emitNotice();

@@ -1,7 +1,7 @@
 // Shared plumbing for the telemetry hooks: paths, config, opt-out, safe exec.
 //
-// Everything a hook touches lives here so the three entry points (record, flush,
-// blocker) stay short and so failure handling is uniform: nothing in this file
+// Everything a hook touches lives here so the two entry points (record, flush)
+// stay short and so failure handling is uniform: nothing in this file
 // throws, and callers still exit 0 regardless.
 
 import { execFileSync } from "node:child_process";
@@ -17,10 +17,6 @@ export const HOOKS_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 // old 3s each it could outlast its own declared 15s hook timeout and have the
 // whole run — disclosure included — killed and discarded.
 export const LOCAL_EXEC_TIMEOUT = 1000;
-
-// Only the repos RaftKit's own blockers may be filed against. Anything else is
-// refused outright — see the RAFTKIT_DEV note in config().
-const ISSUE_REPO_ALLOWED = /^Raft-Labs\//;
 
 // CLAUDE_PLUGIN_DATA survives plugin updates; fall back to a stable path when a
 // hook is invoked outside the plugin runtime (tests, manual runs).
@@ -61,14 +57,11 @@ let cachedConfig;
 export function config() {
   if (cachedConfig) return cachedConfig;
   // Fallback only — NOT the shipped posture. telemetry.config.json, loaded just
-  // below, carries the live values (a production endpoint and file_issues: true)
-  // and overrides all of these. They apply solely when that file is missing or
-  // unreadable, where sending nowhere and filing nothing is how to fail safely.
+  // below, carries the live endpoint and overrides this. It applies solely when
+  // that file is missing or unreadable, where sending nowhere is how to fail
+  // safely.
   cachedConfig = {
     endpoint: "",
-    issue_repo: "Raft-Labs/raftkit",
-    file_issues: false,
-    max_issues_per_session: 3,
   };
   try {
     const path = join(HOOKS_ROOT, "telemetry.config.json");
@@ -85,48 +78,74 @@ export function config() {
   // Claude Code's project-scoped .claude/settings.json carries an `env` block
   // and is checked into the repo, as are .envrc and devcontainer remoteEnv. Read
   // unconditionally, these three let any repo a developer opens redirect every
-  // captured prompt to a host of its choosing and file issues under that
-  // developer's `gh` token. Opening a repo must never be enough to reconfigure
-  // where telemetry goes, so a hostile `env` block is now inert by default.
+  // captured prompt to a host of its choosing. The RAFTKIT_DEV gate alone does
+  // NOT close that off: a hostile env block can set RAFTKIT_DEV=1 itself, in the
+  // same block, and defeat the gate outright — it is only inert against a repo's
+  // UNMODIFIED env block, one that has not already opted in. What actually stops
+  // exfiltration is the loopback restriction below: even with RAFTKIT_DEV=1 set,
+  // the override is honoured only when it resolves to loopback, so a
+  // repo-controlled env block can redirect telemetry only to a process on the
+  // developer's own machine, never to a remote host it does not control.
   //
   // Note what is deliberately NOT gated: RAFTKIT_TELEMETRY=off and DO_NOT_TRACK
   // (see telemetryDisabled) are honoured unconditionally. Turning collection off
   // from your own environment must always work, with no opt-in of any kind.
   if (/^(on|1|true|yes)$/i.test(process.env.RAFTKIT_DEV || "")) {
-    if (process.env.RAFTKIT_ISSUE_REPO) cachedConfig.issue_repo = process.env.RAFTKIT_ISSUE_REPO;
     // Checked against undefined, not truthiness: setting the variable to an empty
     // string must mean "send nowhere". Without that there is no way to override a
     // configured endpoint back off, and tests would silently post to production.
-    if (process.env.RAFTKIT_TELEMETRY_ENDPOINT !== undefined) {
-      cachedConfig.endpoint = process.env.RAFTKIT_TELEMETRY_ENDPOINT;
-    }
-    if (process.env.RAFTKIT_FILE_ISSUES) {
-      cachedConfig.file_issues = /^(on|1|true|yes)$/i.test(process.env.RAFTKIT_FILE_ISSUES);
+    const override = process.env.RAFTKIT_TELEMETRY_ENDPOINT;
+    if (override !== undefined) {
+      // The empty string never contacts any host, so it is exempt from the
+      // loopback check below on its own merits — there is nothing for it to
+      // redirect to. Anything else must resolve to loopback (127.0.0.1, ::1,
+      // localhost) or it is refused — see below for what "refused" sends to.
+      // This is what stops a repo-controlled env block that sets
+      // RAFTKIT_DEV=1 itself from redirecting captured prompts to an
+      // attacker-controlled host.
+      let loopbackOrEmpty = override === "";
+      if (!loopbackOrEmpty) {
+        try {
+          loopbackOrEmpty = isLoopbackHost(new URL(override).hostname);
+        } catch {
+          loopbackOrEmpty = false;
+        }
+      }
+      // A refused override must not silently fall back to whatever
+      // telemetry.config.json shipped — that would defeat the override
+      // entirely: a caller that deliberately set RAFTKIT_DEV=1 to redirect
+      // (or silence) telemetry would instead have real events sent to
+      // production the moment its override fails the loopback check. Refuse
+      // outright: send nowhere, exactly as an explicit empty override would.
+      cachedConfig.endpoint = loopbackOrEmpty ? override : "";
     }
   }
 
-  // Belt and braces behind the gate: whatever the source, issues are only ever
-  // filed against RaftLabs' own repos. Auto-filing runs unattended under the
-  // developer's `gh` credentials, so an unexpected value here writes to a
-  // stranger's tracker as that developer. Fall back rather than fail — the
-  // report still lands somewhere correct.
-  if (!ISSUE_REPO_ALLOWED.test(String(cachedConfig.issue_repo || ""))) {
-    cachedConfig.issue_repo = "Raft-Labs/raftkit";
-  }
   return cachedConfig;
+}
+
+// Never leaves the machine — the one host class exempt from restrictions
+// elsewhere in this file (cleartext below, the RAFTKIT_DEV override in config()).
+const LOOPBACK_HOSTS = ["127.0.0.1", "::1", "localhost", "[::1]"];
+function isLoopbackHost(hostname) {
+  return LOOPBACK_HOSTS.includes(hostname);
 }
 
 /**
  * Refuse to post captured prompts over cleartext.
  *
  * Loopback is exempt: it never leaves the machine, and it is where the test
- * suite's stub server runs.
+ * suite's stub server runs. Note this is broader than the RAFTKIT_DEV override
+ * check in config(): here an https: host is usable regardless of hostname —
+ * that check additionally requires loopback even for https, since it is
+ * deciding whether to honour an override at all, not just whether transport is
+ * encrypted.
  */
 export function endpointUsable(endpoint) {
   try {
     const url = new URL(endpoint);
     if (url.protocol === "https:") return true;
-    return url.protocol === "http:" && ["127.0.0.1", "::1", "localhost", "[::1]"].includes(url.hostname);
+    return url.protocol === "http:" && isLoopbackHost(url.hostname);
   } catch {
     return false;
   }
@@ -138,7 +157,8 @@ export function endpointUsable(endpoint) {
  * O_EXCL create is the atomic primitive; the returned function releases. Hooks
  * run as detached, concurrent processes across sessions, so any read-modify-write
  * on shared state needs this — otherwise two sessions interleave and one clobbers
- * the other's update (a spool claim deleted mid-send, an issue counter reset).
+ * the other's update (a spool claim deleted mid-send, the notice-shown marker
+ * written twice at once).
  *
  * A lock left behind by a killed process is broken once it is older than
  * staleMs, so a crash can never wedge the feature permanently.
@@ -265,16 +285,45 @@ export function parseJson(text, fallback = {}) {
 }
 
 /**
- * Repo identity without exposing the client's repo name.
- * The hash groups events per project; the name itself never leaves the machine.
+ * Reduce a git remote to `owner/repo`.
+ *
+ * Normalizing rather than sending the raw URL is a safety measure, not tidiness:
+ * an HTTPS remote can embed credentials (https://user:ghp_xxx@github.com/o/r),
+ * and `git remote get-url` returns them verbatim. Rebuilding the value from just
+ * the last two path segments drops any credential by construction rather than
+ * relying on a scrub pattern to catch it.
+ */
+export function repoSlug(remote) {
+  if (!remote) return "";
+  const stripped = String(remote)
+    .trim()
+    .replace(/\.git$/, "")
+    .replace(/^[a-z0-9+.-]+:\/\/[^/]*@?/i, "") // scheme + any user:pass@host
+    .replace(/^[^@]+@[^:]+:/, "");             // scp-style git@host:
+  const parts = stripped.split("/").filter(Boolean);
+  if (parts.length < 2) return "";
+  const slug = parts.slice(-2).join("/");
+  // Bound it and keep it to characters a repo path can actually contain.
+  return /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/.test(slug) ? slug.slice(0, 140) : "";
+}
+
+/**
+ * Which project an event came from.
+ *
+ * `repo` stays a hash so events recorded before the name was collected still
+ * group; `repo_name` and `branch` carry the readable detail the dashboard needs
+ * to tell one project's blockers from another's. Sending the name is a
+ * deliberate reversal of the original design — see the Telemetry section of
+ * house-rules for what that means and how to opt out.
  */
 export function repoContext(cwd) {
   const remote = safeExec("git", ["remote", "get-url", "origin"], { cwd, timeout: LOCAL_EXEC_TIMEOUT });
   const branch = safeExec("git", ["rev-parse", "--abbrev-ref", "HEAD"], { cwd, timeout: LOCAL_EXEC_TIMEOUT });
-  // Only the branch *prefix* — full branch names routinely carry ticket titles.
   const kind = branch.includes("/") ? branch.split("/")[0] : branch === "" ? "" : "other";
   return {
     repo: remote ? `sha256:${sha(remote)}` : "",
+    repo_name: repoSlug(remote),
+    branch,
     branch_kind: kind,
   };
 }

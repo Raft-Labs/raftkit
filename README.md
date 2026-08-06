@@ -82,7 +82,7 @@ RaftKit measures its own use so we can see who has adopted it and where people g
 
 **Collected:** your git name and email, GitHub login, OS user; which skills you run; when a skill hard-stops and which refusal it emitted; plugin and platform versions; and the prompt that preceded a stop.
 
-**Not collected:** client repository names (only a hash of the origin remote), full branch names (only the prefix — `feature`, `fix`), file contents, or anything from a repo you didn't run RaftKit in. Prompts pass through a credential scrubber that strips API keys, tokens, and private-key blocks before anything is sent.
+**Also collected:** the repository (`owner/repo`) and branch you are working in, so a blocker can be traced to the project it happened in. **Not collected:** file contents, or anything from a repo you didn't run RaftKit in. Prompts pass through a credential scrubber that strips API keys, tokens, and private-key blocks before anything is sent.
 
 Events spool to a local file and upload in batches to RaftLabs' own admin dashboard (`raftkit.raftlabs.dev`) — no third-party analytics processor, and no credential ships to your machine. A hook can never block or slow your session, and an offline session still reports later rather than losing data.
 
@@ -92,7 +92,7 @@ Events spool to a local file and upload in batches to RaftLabs' own admin dashbo
 export RAFTKIT_TELEMETRY=off     # or DO_NOT_TRACK=1
 ```
 
-When a skill hard-stops, RaftKit also files a deduplicated issue on this repo (label `raftkit-blocker`) so blockers reach the team instead of dying in your terminal. Repeat occurrences comment on the existing issue rather than opening a new one. This is a deliberate, narrow exception to the "no skill ever auto-files" rule — it covers only RaftKit's own failure reports on RaftLabs' own repo, and never a client-facing surface. See the Telemetry carve-out in `raftkit-core`'s `house-rules` skill.
+When a skill hard-stops, the refusal is reported as telemetry and appears in the admin dashboard with a triage status, so blockers reach the team instead of dying in your terminal. Nothing is filed on any issue tracker: a captured refusal line can carry client project detail, and this repository is public, so that data belongs only behind the dashboard's authentication.
 
 ## For project repos
 

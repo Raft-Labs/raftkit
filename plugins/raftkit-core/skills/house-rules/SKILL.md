@@ -14,7 +14,7 @@ These are the rules every RaftKit role plugin inherits. They are authored once h
 - **Project facts live in Project Profiles, never in plugins.** Plugins stay project-independent. Anything specific to one client or codebase belongs in that project's profile, not in a skill.
 - **Sources and destinations are access-path-agnostic.** A named source or output home may arrive via a connector (Google Drive, Gmail, Fathom, Asana), a file uploaded into the conversation, a file in a synced local folder (e.g. Google Drive for Desktop, where a Drive doc is a local file), or a pasted link. Accept whichever path the session provides — never insist on one. Every gate, citation rule, and approval applies identically on every path. Cite an upload as "uploaded file, as-of \<date\>" — it carries no live URL.
 - **Asana free tier only.** Nothing a skill creates may rely on paid features: no dependencies, custom fields, milestones, start dates, or approval tasks. Express relationships between tasks as links in the description instead.
-- **Human gates everywhere.** Skills draft; humans approve. The gates are: story approval, plan approval, PR merge, and bug close. No skill advances past a gate on its own, and only the two exceptions enumerated below write anything automatically. For the mechanics of outward writes, see [write-protocol](../write-protocol/SKILL.md).
+- **Human gates everywhere.** Skills draft; humans approve. The gates are: story approval, plan approval, PR merge, and bug close. No skill advances past a gate on its own, and only the one exception enumerated below writes anything automatically. For the mechanics of outward writes, see [write-protocol](../write-protocol/SKILL.md).
 
 ## How skills talk to humans
 
@@ -26,19 +26,15 @@ it. The full rules, the banned-phrase list, the house glossary, and the
 `output`-fence convention that makes this checkable are in
 [references/plain-language.md](references/plain-language.md).
 
-## The two automatic-write exceptions
+## The one automatic-write exception
 
 The four gates above — story approval, plan approval, PR merge, bug close —
-are unchanged and still human-only. Exactly two RaftKit mechanisms write
-without a per-write human approval, and neither of them advances a gate. They
-are enumerated here and mirrored in
+are unchanged and still human-only. Exactly one RaftKit mechanism writes
+without a per-write human approval, and it does not advance a gate. It is
+enumerated here and mirrored in
 [write-protocol](../write-protocol/SKILL.md):
 
-1. **Blocker telemetry auto-file (hook layer).** RaftKit's own failure reports
-   land as deduplicated issues on RaftLabs' own tooling repo. Its scope,
-   limits, and opt-out are in "The auto-file carve-out" under Telemetry and
-   blocker capture below.
-2. **`pr-auto-review` Critical-fix commits (CI layer).** `raftkit-dev`'s
+1. **`pr-auto-review` Critical-fix commits (CI layer).** `raftkit-dev`'s
    `pr-auto-review` skill adds Critical-fix commits on a PR branch as
    intermediate, non-gate-advancing writes: a Critical-fix commit does not
    complete the PR-merge gate, does not close a bug, and does not advance any
@@ -48,9 +44,14 @@ are enumerated here and mirrored in
    commit-level boundary (Critical-only, one commit per fix, auto-reverted on
    a red check, never a merge).
 
-A future skill tempted to read either entry as license to add its own
-auto-write may not — a third exception needs its own named amendment to this
-list, not an inference from these two.
+Blocker telemetry used to be a second exception, filing issues on this repo's
+tracker. It no longer writes anywhere outward: blockers are reported to the
+admin dashboard as ordinary telemetry and triaged there. The exception was
+removed rather than narrowed — see Telemetry and blocker capture below.
+
+A future skill tempted to read the entry above as license to add its own
+auto-write may not — a second exception needs its own named amendment to this
+list, not an inference from this one.
 
 ## Escalate to founders
 
@@ -66,26 +67,29 @@ RaftKit measures its own use, so the team can see who has adopted it and where p
 
 Events go to RaftLabs' own admin API — never a third-party analytics processor.
 
-**What is collected:** the developer's git name and email, GitHub login and OS user; which skills run; when a skill hard-stops, and which refusal it emitted; plugin and platform versions; **every prompt the developer submits**, captured in full; and **every failed tool call** — the tool's name and its error output. The prompt attached to a blocker report is not a separate capture: it is that session's most recent prompt, already collected under the every-prompt rule. Repository identity is a **hash** of the origin remote and only the branch **prefix** is kept, so client repo and branch names never leave the machine.
+**What is collected:** the developer's git name and email, GitHub login and OS user; which skills run; when a skill hard-stops, and which refusal it emitted; plugin and platform versions; **every prompt the developer submits**, captured in full; and **every failed tool call** — the tool's name and its error output. The prompt attached to a blocker report is not a separate capture: it is that session's most recent prompt, already collected under the every-prompt rule. Repository identity is sent as **`owner/repo`** together with the full branch name, so a blocker can be traced to the project it happened in. (It was previously hashed; that was reversed deliberately — without it the dashboard cannot tell one project's failures from another's.) The remote is normalized to `owner/repo` rather than sent raw, which drops any credential embedded in an HTTPS remote by construction.
 
 **What the scrubber does and does not do.** All free text — prompts and tool errors alike — passes through a credential scrubber before it is spooled. Be precise about its scope, because the difference matters to how the resulting data must be handled:
 
 - It removes **credentials**: API keys and provider tokens, `Authorization` headers, private key blocks, JWTs, connection-string passwords, and secret-looking `key=value` assignments. Best-effort over known shapes, not a guarantee.
 - It removes **no PII whatsoever**, by design. Client and company names, customer emails and phone numbers, addresses, pasted database rows, ticket contents and file paths all reach the endpoint verbatim. That project detail is the signal the telemetry exists to collect, so filtering it would defeat the purpose.
 
-The consequence is the operative rule: **the telemetry store holds client-identifying content and must be treated as such** — access-controlled, never re-exported, and never copied into a public surface. That last point is why an auto-filed blocker issue carries only a correlation id back to the admin DB, never the prompt itself: the tooling repo is public, and "credentials scrubbed" was never the same claim as "safe to publish".
+The consequence is the operative rule: **the telemetry store holds client-identifying content and must be treated as such** — access-controlled, never re-exported, and never copied into a public surface. That last point is why nothing derived from a captured prompt is ever published to a public surface at all, full stop: the tooling repo is public, and "credentials scrubbed" was never the same claim as "safe to publish".
 
 **Opt out** with `RAFTKIT_TELEMETRY=off` (or `DO_NOT_TRACK=1`) in the environment. A one-time notice discloses collection on first run.
 
-**The auto-file carve-out.** [write-protocol](../write-protocol/SKILL.md) states that no skill ever auto-files. Blocker capture is the first of the two enumerated exceptions above, and it is narrow:
+**Blockers go to the dashboard, not to a tracker.** When a skill hard-stops,
+the refusal is reported as a `raftkit_blocked` telemetry event and appears in
+the admin dashboard with a triage status. Nothing is filed, commented, or
+reopened on any Git host, so `write-protocol`'s "no skill ever auto-files"
+holds without an exception for this.
 
-- It applies **only** to RaftKit's own failure reports landing on RaftLabs' own tooling repo.
-- It never touches a client-facing surface. Asana, client docs, PRs, and every other outward write remain fully gated by draft → approve → push.
-- It is a mechanical report of a stop RaftKit itself produced — not work performed on a client's behalf, which is the thing the gate exists to protect.
-- It makes exactly **three** automatic writes to that repo, all through the `gh` CLI: it **creates** a deduplicated issue for a blocker never seen before, **comments** a "+1 occurrence" note on the matching existing issue, and **reopens** that issue when the blocker recurs after someone closed it. The reopen is the one to know about — a closed issue is a human triage decision, and a recurrence overrides it with no one in the loop.
-- The limits are the ones the code actually enforces: at most **3 issues per session** (`max_issues_per_session`), `info`-severity stops are **never** filed, repeat occurrences of a known problem collapse onto the one issue by fingerprint, and nothing is written at all when telemetry is opted out, when `file_issues` is off, or when `gh` is absent or unauthenticated.
-
-The rule's purpose is that an automated write which turns out wrong is visible to a client before anyone can catch it. A deduplicated issue on an internal repo carries none of that risk, and gating it would defeat the point — a developer mid-task declines, and the blocker is lost. That trade is the reason for the exception, and it does not generalise beyond the two entries enumerated above.
+That is deliberate, and the reason is exposure. `scrub()` removes credentials
+only — it is explicitly not a PII filter, so a captured refusal line or prompt
+can carry client project detail. An issue tracker is the wrong place for that:
+it notifies, it is searchable, it is reachable by every integration wired into
+the repo, and `Raft-Labs/raftkit` is a public repository. The dashboard is
+behind authentication and is the only surface that sees this data.
 
 ## find-skills governance
 
