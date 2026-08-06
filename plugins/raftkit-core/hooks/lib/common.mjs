@@ -1,7 +1,7 @@
 // Shared plumbing for the telemetry hooks: paths, config, opt-out, safe exec.
 //
-// Everything a hook touches lives here so the three entry points (record, flush,
-// blocker) stay short and so failure handling is uniform: nothing in this file
+// Everything a hook touches lives here so the two entry points (record, flush)
+// stay short and so failure handling is uniform: nothing in this file
 // throws, and callers still exit 0 regardless.
 
 import { execFileSync } from "node:child_process";
@@ -78,9 +78,14 @@ export function config() {
   // Claude Code's project-scoped .claude/settings.json carries an `env` block
   // and is checked into the repo, as are .envrc and devcontainer remoteEnv. Read
   // unconditionally, these three let any repo a developer opens redirect every
-  // captured prompt to a host of its choosing. Opening a repo must never be
-  // enough to reconfigure where telemetry goes, so a hostile `env` block is now
-  // inert by default.
+  // captured prompt to a host of its choosing. The RAFTKIT_DEV gate alone does
+  // NOT close that off: a hostile env block can set RAFTKIT_DEV=1 itself, in the
+  // same block, and defeat the gate outright — it is only inert against a repo's
+  // UNMODIFIED env block, one that has not already opted in. What actually stops
+  // exfiltration is the loopback restriction below: even with RAFTKIT_DEV=1 set,
+  // the override is honoured only when it resolves to loopback, so a
+  // repo-controlled env block can redirect telemetry only to a process on the
+  // developer's own machine, never to a remote host it does not control.
   //
   // Note what is deliberately NOT gated: RAFTKIT_TELEMETRY=off and DO_NOT_TRACK
   // (see telemetryDisabled) are honoured unconditionally. Turning collection off
@@ -89,25 +94,52 @@ export function config() {
     // Checked against undefined, not truthiness: setting the variable to an empty
     // string must mean "send nowhere". Without that there is no way to override a
     // configured endpoint back off, and tests would silently post to production.
-    if (process.env.RAFTKIT_TELEMETRY_ENDPOINT !== undefined) {
-      cachedConfig.endpoint = process.env.RAFTKIT_TELEMETRY_ENDPOINT;
+    const override = process.env.RAFTKIT_TELEMETRY_ENDPOINT;
+    if (override !== undefined) {
+      // The empty string never contacts any host, so it is exempt from the
+      // loopback check below on its own merits — there is nothing for it to
+      // redirect to. Anything else must resolve to loopback (127.0.0.1, ::1,
+      // localhost) or it is refused and the configured production endpoint
+      // stands, exactly as if RAFTKIT_DEV were unset for this one field. This is
+      // what stops a repo-controlled env block that sets RAFTKIT_DEV=1 itself
+      // from redirecting captured prompts to an attacker-controlled host.
+      let loopbackOrEmpty = override === "";
+      if (!loopbackOrEmpty) {
+        try {
+          loopbackOrEmpty = isLoopbackHost(new URL(override).hostname);
+        } catch {
+          loopbackOrEmpty = false;
+        }
+      }
+      if (loopbackOrEmpty) cachedConfig.endpoint = override;
     }
   }
 
   return cachedConfig;
 }
 
+// Never leaves the machine — the one host class exempt from restrictions
+// elsewhere in this file (cleartext below, the RAFTKIT_DEV override in config()).
+const LOOPBACK_HOSTS = ["127.0.0.1", "::1", "localhost", "[::1]"];
+function isLoopbackHost(hostname) {
+  return LOOPBACK_HOSTS.includes(hostname);
+}
+
 /**
  * Refuse to post captured prompts over cleartext.
  *
  * Loopback is exempt: it never leaves the machine, and it is where the test
- * suite's stub server runs.
+ * suite's stub server runs. Note this is broader than the RAFTKIT_DEV override
+ * check in config(): here an https: host is usable regardless of hostname —
+ * that check additionally requires loopback even for https, since it is
+ * deciding whether to honour an override at all, not just whether transport is
+ * encrypted.
  */
 export function endpointUsable(endpoint) {
   try {
     const url = new URL(endpoint);
     if (url.protocol === "https:") return true;
-    return url.protocol === "http:" && ["127.0.0.1", "::1", "localhost", "[::1]"].includes(url.hostname);
+    return url.protocol === "http:" && isLoopbackHost(url.hostname);
   } catch {
     return false;
   }
@@ -119,7 +151,8 @@ export function endpointUsable(endpoint) {
  * O_EXCL create is the atomic primitive; the returned function releases. Hooks
  * run as detached, concurrent processes across sessions, so any read-modify-write
  * on shared state needs this — otherwise two sessions interleave and one clobbers
- * the other's update (a spool claim deleted mid-send, an issue counter reset).
+ * the other's update (a spool claim deleted mid-send, the notice-shown marker
+ * written twice at once).
  *
  * A lock left behind by a killed process is broken once it is older than
  * staleMs, so a crash can never wedge the feature permanently.
