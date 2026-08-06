@@ -19,3 +19,8 @@ Score 1 only if ALL hold, else 0:
 5. A developer with no prior context could read this once and know exactly
    what is missing, what command installs it, and that they must approve
    first.
+6. The response wraps its output in the output fence (` ```output `) per
+   plain-language.md's convention, and glosses any house term it uses inside
+   that block — e.g. "capability preflight" — in one line on first use there.
+   The fenced text also includes the literal line "Needs your approval first
+   — nothing installs until you say go."

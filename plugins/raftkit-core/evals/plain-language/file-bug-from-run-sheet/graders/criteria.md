@@ -16,3 +16,6 @@ Score 1 only if ALL hold, else 0:
 5. A QA engineer with no prior context on this specific failure could read
    the draft once and know exactly what broke and where, with no follow-up
    question needed.
+6. The draft is wrapped in the output fence (` ```output `), and any house
+   term it uses inside that block — e.g. "run sheet" — is glossed in one line
+   on its first use there, per plain-language.md's glossary.

@@ -17,3 +17,6 @@ Score 1 only if ALL hold, else 0:
    like "Great question" or "Certainly" anywhere in the draft.
 5. A reader with no Asana or RaftKit background could read the draft once and
    know exactly what to decide.
+6. The draft is wrapped in the output fence (` ```output `), and any house
+   term it uses inside that block is glossed in one line on its first use
+   there, per plain-language.md's glossary.

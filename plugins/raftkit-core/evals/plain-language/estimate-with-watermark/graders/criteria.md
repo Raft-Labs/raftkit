@@ -18,3 +18,7 @@ Score 1 only if ALL hold, else 0:
    elsewhere in the response.
 5. A founder skimming this for the first time could tell, in one read, what
    is being estimated and on what assumptions, without opening the story.
+6. The estimate's human-facing text is wrapped in the output fence
+   (` ```output `), and any house term it uses inside that block — e.g.
+   "watermark", "[AC]" — is glossed in one line on its first use there, per
+   plain-language.md's glossary.

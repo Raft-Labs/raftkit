@@ -16,3 +16,6 @@ Score 1 only if ALL hold, else 0:
    should be noted, facilitate, going forward).
 5. A developer with no prior context could read this once and know exactly
    which file is the problem and exactly what their two options are.
+6. The report is wrapped in the output fence (` ```output `), and any house
+   term it uses inside that block — e.g. "scope contract" — is glossed in one
+   line on its first use there, per plain-language.md's glossary.

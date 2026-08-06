@@ -17,3 +17,7 @@ Score 1 only if ALL hold, else 0:
    out in plain words (e.g. "the Error row").
 5. The response does not proceed to plan or code — it stops, matching Gate
    0's no-override rule.
+6. The reported message is wrapped in the output fence (` ```output `), and
+   any house term it uses inside that block — e.g. "Gate 0", "[AC]" — is
+   glossed in one line on its first use there, per plain-language.md's
+   glossary.
