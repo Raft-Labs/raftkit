@@ -69,9 +69,8 @@ rules below), not only into the dev's chat:
 
 ```output
 Can't start the fix — the bug task is missing <Environment | Steps to Reproduce |
-"Done when" | the relevant combination>. The Bug Template needs <that section /
-those sections> filled before a failing repro test can be written and its fix
-scoped. Back to QA to complete it.
+"Done when" | the relevant combination>. Add <that section / those sections>
+before a repro test can be written and scoped. Back to QA to complete it.
 ```
 
 Name the section(s) by their template heading. The template is the contract both

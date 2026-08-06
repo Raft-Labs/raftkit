@@ -98,9 +98,9 @@ Pass the body from a file (`-F body=@<file>`), never as an inline argument.
    write the remainder to the job summary (`$GITHUB_STEP_SUMMARY`), and say
    so explicitly:
    ```output
-   Truncated to fit GitHub's comment size limit — <N> of <M>
-   Important/Suggestion findings are shown above. The complete list is in
-   this run's job summary (Actions → this run → Summary).
+   Truncated to fit GitHub's comment size limit. Showing <N> of <M>
+   Important/Suggestion findings above. The complete list is in this run's
+   job summary (Actions → this run → Summary).
    ```
    Never drop a finding silently, and never truncate an individual finding's
    text — whole findings are omitted and counted, never abridged.
