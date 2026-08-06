@@ -99,10 +99,10 @@ export function config() {
       // The empty string never contacts any host, so it is exempt from the
       // loopback check below on its own merits — there is nothing for it to
       // redirect to. Anything else must resolve to loopback (127.0.0.1, ::1,
-      // localhost) or it is refused and the configured production endpoint
-      // stands, exactly as if RAFTKIT_DEV were unset for this one field. This is
-      // what stops a repo-controlled env block that sets RAFTKIT_DEV=1 itself
-      // from redirecting captured prompts to an attacker-controlled host.
+      // localhost) or it is refused — see below for what "refused" sends to.
+      // This is what stops a repo-controlled env block that sets
+      // RAFTKIT_DEV=1 itself from redirecting captured prompts to an
+      // attacker-controlled host.
       let loopbackOrEmpty = override === "";
       if (!loopbackOrEmpty) {
         try {
