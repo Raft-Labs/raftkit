@@ -406,6 +406,55 @@ d="$(new_sandbox)"
 printf '{"session_id":"s1"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" skill >/dev/null 2>&1
 expect_eq "a nameless skill payload is not recorded as a skill" "raftkit_unknown_event" "$(last_event_field "$d/spool/events.jsonl" 'event')"
 
+# D6: the assertion above only checks the EVENT NAME is not "skill"-shaped —
+# it still allows a raftkit_unknown_event row to be spooled. A PostToolUse or
+# UserPromptExpansion event that never resolves to a skill name is not
+# telemetry at all; it must leave the spool exactly as it was, not grow it by
+# one line. Seed the spool with a real, unrelated event first so "unchanged"
+# means something (a fresh/absent file passing trivially would prove nothing).
+d="$(new_sandbox)"
+echo "{\"session_id\":\"seed\",\"cwd\":\"$PWD\"}" | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
+before_spool="$(cat "$d/spool/events.jsonl")"
+printf '{"session_id":"s1","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{}}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" skill >/dev/null 2>&1
+after_spool="$(cat "$d/spool/events.jsonl" 2>/dev/null)"
+expect_eq "a nameless skill payload leaves the spool byte-identical (no raftkit_unknown_event line added)" \
+  "$before_spool" "$after_spool"
+
+# D8: a skill outside the raftkit-* namespace (the model exploring another
+# installed plugin, or a developer typing a third-party slash command) is not
+# RaftKit usage and must not be recorded — the dashboard exists to measure
+# RaftKit adoption, not every plugin a developer happens to have installed.
+d="$(new_sandbox)"
+printf '{"session_id":"s1","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"superpowers:brainstorming"}}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" skill >/dev/null 2>&1
+if [[ ! -f "$d/spool/events.jsonl" ]]; then
+  echo "PASS: a non-raftkit-* skill invocation (superpowers:brainstorming) is not recorded"
+else
+  echo "FAIL: a non-raftkit-* skill invocation was spooled ($(last_event_field "$d/spool/events.jsonl" 'props.skill'))"
+  failures=$((failures + 1))
+fi
+
+d="$(new_sandbox)"
+printf '{"session_id":"s1","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"vercel:deploy"}}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" skill >/dev/null 2>&1
+if [[ ! -f "$d/spool/events.jsonl" ]]; then
+  echo "PASS: a non-raftkit-* skill invocation (vercel:deploy) is not recorded"
+else
+  echo "FAIL: a non-raftkit-* skill invocation was spooled ($(last_event_field "$d/spool/events.jsonl" 'props.skill'))"
+  failures=$((failures + 1))
+fi
+
+# ...while a raftkit-* skill must still be recorded normally — this is a
+# guard against a fix that overcorrects into recording nothing.
+d="$(new_sandbox)"
+printf '{"session_id":"s1","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-dev:implement"}}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" skill >/dev/null 2>&1
+expect_eq "a raftkit-* skill invocation is still recorded" "raftkit_skill_invoked" \
+  "$(last_event_field "$d/spool/events.jsonl" 'event')"
+expect_eq "  with the skill name preserved" "raftkit-dev:implement" \
+  "$(last_event_field "$d/spool/events.jsonl" 'props.skill')"
+
 # The hooks must actually be wired, or none of the above ever fires in practice.
 node -e '
   const h = JSON.parse(require("fs").readFileSync("plugins/raftkit-core/hooks/hooks.json", "utf8"));
@@ -511,6 +560,25 @@ check "no blocker-filing hook remains" ok $?
 ! grep -rqE 'gh["'"'"' ]+issue|issue create|issue comment' plugins/raftkit-core/hooks/ 2>/dev/null
 check "hooks never invoke gh issue" ok $?
 
+# CR-B: the guard above only knows the `gh issue ...` subcommand form. A hook
+# can file the exact same issue two other ways — a raw REST POST to the issues
+# route via `gh api`, or a `createIssue` GraphQL mutation via `gh api graphql`
+# — and the narrower pattern above lets both through unnoticed.
+GH_ISSUE_GUARD='gh["'"'"' ]+issue|issue create|issue comment|-X[[:space:]]*POST[[:space:]]+repos/[^[:space:]]+/issues|createIssue'
+! grep -rqE "$GH_ISSUE_GUARD" plugins/raftkit-core/hooks/ 2>/dev/null
+check "hooks never invoke gh issue (extended: REST POST or GraphQL createIssue)" ok $?
+
+# Prove the extended pattern actually catches what it claims to, rather than
+# merely failing to match nothing. Fixtures are not present in hooks/ — this
+# is a direct test of the guard's own regex.
+gh_issues_post_fixture='gh api -X POST repos/foo/bar/issues -f title=x'
+grep -qE "$GH_ISSUE_GUARD" <<<"$gh_issues_post_fixture"
+check "the extended guard catches a REST POST to repos/OWNER/REPO/issues via gh api" ok $?
+
+gh_graphql_fixture='gh api graphql -f query=mutation{createIssue(input:{repositoryId:"R_1"}){issue{id}}}'
+grep -qE "$GH_ISSUE_GUARD" <<<"$gh_graphql_fixture"
+check "the extended guard catches a createIssue GraphQL mutation via gh api graphql" ok $?
+
 grep -qi 'dashboard' <<<"$(awk '/^\*\*Blockers go to the dashboard/,/^## find-skills/' "$HOUSE_RULES")"
 check "house-rules states blockers go to the dashboard" ok $?
 
@@ -519,6 +587,30 @@ check "house-rules lists exactly one automatic-write exception" ok $?
 
 grep -qi 'one documented exception' "$WRITE_PROTOCOL"
 check "write-protocol lists exactly one documented exception" ok $?
+
+# CR-C: the two checks above are claim-based — they pass as soon as the phrase
+# "one automatic-write exception" / "one documented exception" appears
+# anywhere in the file, even if older "two exceptions" language survives
+# alongside it (blocker-issue-filing was removed as a second exception, but
+# the prose that used to count it may not have been). Assert directly that no
+# stale two-exception phrasing remains anywhere docs describe this gate.
+! grep -qiE 'two exceptions?|these two|two named|two documented|two automatic' \
+  "$HOUSE_RULES" "$WRITE_PROTOCOL" CLAUDE.md
+check "no stale two-exception phrasing remains in house-rules, write-protocol, or CLAUDE.md" ok $?
+
+# Count-based: the claim is "exactly one", so assert exactly one entry is
+# listed in each section, and that the one entry is pr-auto-review.
+hr_exception_section="$(awk '/^## The one automatic-write exception/,/^## Escalate to founders/' "$HOUSE_RULES")"
+hr_exception_entries="$(grep -cE '^[0-9]+\.' <<<"$hr_exception_section")"
+expect_eq "house-rules' automatic-write exception section lists exactly 1 entry" "1" "$hr_exception_entries"
+grep -qi 'pr-auto-review' <<<"$hr_exception_section"
+check "house-rules' one exception entry names pr-auto-review" ok $?
+
+wp_exception_section="$(awk '/^## The one documented exception/,/^## Asana HTML rules/' "$WRITE_PROTOCOL")"
+wp_exception_entries="$(grep -cE '^(### |[0-9]+\.)' <<<"$wp_exception_section")"
+expect_eq "write-protocol's documented exception section lists exactly 1 entry" "1" "$wp_exception_entries"
+grep -qi 'pr-auto-review' <<<"$wp_exception_section"
+check "write-protocol's one exception entry names pr-auto-review" ok $?
 
 grep -qi 'every prompt' "$HOUSE_RULES" && grep -qi 'failed tool call' "$HOUSE_RULES"
 check "house-rules states every prompt and every failed tool call is captured" ok $?
@@ -557,6 +649,22 @@ else
   failures=$((failures + 1))
 fi
 expect_eq "disclosure is one-time, not once per session" "" "$second"
+
+# D5: noticePending() only checks whether the marker FILE exists, not what
+# notice version it recorded. A marker written by a pre-upgrade install (the
+# format the code writes today: an ISO timestamp, nothing else) must not
+# forever suppress a disclosure whose wording has since changed — the whole
+# point of the marker is that the developer saw THIS notice, not some notice.
+d="$(new_sandbox)"
+echo "2020-01-01T00:00:00.000Z" > "$d/notice-shown"
+stale_marker_out="$(echo '{"session_id":"pre-upgrade","hook_event_name":"SessionStart"}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start 2>/dev/null)"
+if [[ "$stale_marker_out" == *systemMessage* && "$stale_marker_out" == *'RAFTKIT_TELEMETRY=off'* ]]; then
+  echo "PASS: a pre-existing (pre-upgrade) notice-shown marker does not suppress the current notice"
+else
+  echo "FAIL: a stale notice-shown marker suppressed re-disclosure of the changed notice ('$stale_marker_out')"
+  failures=$((failures + 1))
+fi
 
 # Version + description lockstep. The minimum is this story's introduced version;
 # later work bumps further, and the repository version gate owns the exact one.
@@ -697,11 +805,34 @@ node -e '
   const hostile = read({ ...clear, RAFTKIT_TELEMETRY_ENDPOINT: "https://evil.example/collect" });
   if (hostile.endpoint === "https://evil.example/collect") { console.error("  endpoint hijacked without RAFTKIT_DEV"); bad++; }
   // The override still works when deliberately opted in.
-  const ep = read({ ...clear, RAFTKIT_DEV: "1", RAFTKIT_TELEMETRY_ENDPOINT: "https://stub.example/x" });
-  if (ep.endpoint !== "https://stub.example/x") { console.error("  RAFTKIT_DEV endpoint override stopped working"); bad++; }
+  //
+  // CR-A: this used to point at "https://stub.example/x" — an off-box HTTPS
+  // host. Once RAFTKIT_DEV=1 stops honouring an off-box HTTPS override (see
+  // the new assertion right below), that URL would no longer take effect and
+  // this specific assertion would become a false failure having nothing to
+  // do with what it is meant to prove ("the RAFTKIT_DEV override mechanism
+  // still works at all"). A loopback URL is opted-in AND still allowed post-fix.
+  const ep = read({ ...clear, RAFTKIT_DEV: "1", RAFTKIT_TELEMETRY_ENDPOINT: "http://127.0.0.1:1/x" });
+  if (ep.endpoint !== "http://127.0.0.1:1/x") { console.error("  RAFTKIT_DEV endpoint override stopped working"); bad++; }
   process.exit(bad === 0 ? 0 : 1);
 ' >/dev/null 2>&1
 check "project env cannot redirect telemetry without RAFTKIT_DEV" ok $?
+
+# CR-A: RAFTKIT_DEV=1 means "I am a developer deliberately testing hooks", not
+# "accept any endpoint literally". An off-box HTTPS host must still be refused
+# even when opted in — only loopback (the test suite's own stub servers) may
+# bypass the cleartext-remote restriction endpointUsable() enforces elsewhere.
+node -e '
+  const { execFileSync } = require("child_process");
+  const read = (env) => JSON.parse(execFileSync(process.execPath, ["--input-type=module", "-e",
+    "import { config } from \"./plugins/raftkit-core/hooks/lib/common.mjs\"; process.stdout.write(JSON.stringify(config()));"
+  ], { encoding: "utf8", env: { ...process.env, ...env } }));
+  const clear = { RAFTKIT_DEV: undefined, RAFTKIT_TELEMETRY_ENDPOINT: undefined };
+  const evil = read({ ...clear, RAFTKIT_DEV: "1", RAFTKIT_TELEMETRY_ENDPOINT: "https://evil.example/collect" });
+  if (evil.endpoint === "https://evil.example/collect") { console.error("  off-box HTTPS override was accepted under RAFTKIT_DEV=1: " + evil.endpoint); process.exit(1); }
+  process.exit(0);
+' >/dev/null 2>&1
+check "RAFTKIT_DEV=1 refuses an off-box HTTPS override (evil.example is not honoured)" ok $?
 
 # Opting OUT must never require an opt-in. Explicitly without RAFTKIT_DEV.
 for var in "RAFTKIT_TELEMETRY=off" "DO_NOT_TRACK=1"; do
