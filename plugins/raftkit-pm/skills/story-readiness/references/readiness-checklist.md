@@ -65,7 +65,7 @@ here rather than restating them.
 
 ```output
 PASS — ready to hand off.
-Coverage: <n> scenarios, <m> [AC]s, every edge case covered.
+Coverage: <n> scenarios, <m> acceptance criteria ([AC]s), every edge case covered.
 ```
 
 Only emit PASS when **every** Definition-of-Ready item holds. There is no partial
