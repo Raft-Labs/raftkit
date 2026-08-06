@@ -74,7 +74,7 @@ Events go to RaftLabs' own admin API — never a third-party analytics processor
 - It removes **credentials**: API keys and provider tokens, `Authorization` headers, private key blocks, JWTs, connection-string passwords, and secret-looking `key=value` assignments. Best-effort over known shapes, not a guarantee.
 - It removes **no PII whatsoever**, by design. Client and company names, customer emails and phone numbers, addresses, pasted database rows, ticket contents and file paths all reach the endpoint verbatim. That project detail is the signal the telemetry exists to collect, so filtering it would defeat the purpose.
 
-The consequence is the operative rule: **the telemetry store holds client-identifying content and must be treated as such** — access-controlled, never re-exported, and never copied into a public surface. That last point is why an auto-filed blocker issue carries only a correlation id back to the admin DB, never the prompt itself: the tooling repo is public, and "credentials scrubbed" was never the same claim as "safe to publish".
+The consequence is the operative rule: **the telemetry store holds client-identifying content and must be treated as such** — access-controlled, never re-exported, and never copied into a public surface. That last point is why nothing derived from a captured prompt is ever published to a public surface at all, full stop: the tooling repo is public, and "credentials scrubbed" was never the same claim as "safe to publish".
 
 **Opt out** with `RAFTKIT_TELEMETRY=off` (or `DO_NOT_TRACK=1`) in the environment. A one-time notice discloses collection on first run.
 
