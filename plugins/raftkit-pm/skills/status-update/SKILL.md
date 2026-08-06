@@ -82,6 +82,7 @@ message from `raftkit-core/workflow-constants` rather than proceeding.
   relationship risk, or anything that reads as a client commitment — surface it in
   the draft for the PM; the skill never commits on RaftLabs' behalf.
 - **Client updates only** in v1 — not internal standups.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Reference file
 

@@ -83,3 +83,7 @@ reviewed the same way any other RaftKit skill content is reviewed. It is not
 subject to `governance-protocols`' verbatim-from-source discipline, and it
 does not install "whole or none" alongside the five protocols — it is its own
 component, versioned and updated independently.
+
+## Guardrails
+
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.

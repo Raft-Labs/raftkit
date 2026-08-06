@@ -43,7 +43,7 @@ count — route it back to re-scope, do not approve it.
 **Zero is legitimate and must stay cheap.** Most stories are not
 architecturally interesting:
 
-```markdown
+```output
 ## Design Approach
 No new structure — this story extends `TierSettingsForm` and `PATCH
 /api/tiers` in place, following the existing form/handler split.

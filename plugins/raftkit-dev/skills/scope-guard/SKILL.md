@@ -108,6 +108,7 @@ And a flagged item may only survive with the dev's **explicit, logged sign-off**
 - **One branch = one story** — a multi-story branch is rejected, not audited.
 - **Escalate to founders** per `raftkit-core/house-rules` if a flagged item
   implies a budget, contract, or client-relationship risk beyond scope itself.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Out of scope
 

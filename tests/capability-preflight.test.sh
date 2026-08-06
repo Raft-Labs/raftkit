@@ -166,8 +166,17 @@ S=$SKILL/SKILL.md
 grep -qF 'user-invocable: false' "$S" 2>/dev/null;                                   check "T12a skill is not user-invocable" ok $?
 grep -qF 'Capability preflight: all required capabilities ready.' "$S" 2>/dev/null;  check "T12b all-ready line in contract" ok $?
 grep -qF 'install plan awaiting approval.' "$S" 2>/dev/null;                          check "T12c plan-summary line in contract" ok $?
-grep -qF 'Required capability unavailable: <capability>. Proposed install command (human approval required): <exact command>. Stopping — no fallback.' "$S" 2>/dev/null
+grep -qF 'Missing: <capability>. Install it with: <exact command>' "$S" 2>/dev/null
 check "T12d exact refusal error copy" ok $?
+# T12d extended: the refusal must be wrapped in the plain-language.md output
+# fence (not just present as loose text), and the human-approval-gate line
+# must accompany it verbatim inside that same fenced block.
+fence=$(grep -A3 -F '```output' "$S" 2>/dev/null)
+grep -qF 'Missing: <capability>. Install it with: <exact command>' <<<"$fence" \
+  && tail -n1 <<<"$fence" | grep -qF '```'
+check "T12d-fence refusal is wrapped in the output fence (plain-language.md)" ok $?
+grep -qF 'Needs your approval first — nothing installs until you say go.' <<<"$fence"
+check "T12d-gate human-approval-gate line accompanies the refusal verbatim" ok $?
 grep -qF 'installed-but-disabled' "$S" 2>/dev/null;                                   check "T12e canonical installed-but-disabled naming" ok $?
 grep -q 'never adds or installs them at runtime' "$S" 2>/dev/null;                    check "T12f declared-vs-runtime separation stated" ok $?
 grep -q 'npx skills find' "$S" 2>/dev/null && grep -q 'never install' "$S" 2>/dev/null

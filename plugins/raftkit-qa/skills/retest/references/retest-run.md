@@ -39,7 +39,7 @@ dev claims a fix in build 42 proves nothing about the fix.
 A fix handed back with **"Fixed in build ___"** empty cannot be retested — there
 is nothing to verify against. Do not retest; bounce to the dev with:
 
-```
+```output
 Can't retest — "Fixed in build ___" is empty. The retest contract needs a build to test against. Fill the build number and hand it back.
 ```
 
@@ -48,7 +48,7 @@ Can't retest — "Fixed in build ___" is empty. The retest contract needs a buil
 The build is stated but cannot be obtained in the environment to retest in. Do not
 substitute another build; bounce, naming both:
 
-```
+```output
 Can't retest — build <build> isn't available in <environment>. Provide build <build> in <environment>, or tell me which environment to retest it in.
 ```
 
@@ -61,7 +61,7 @@ The "Done when" checklist is the retest contract; with none, there is no pass li
 to run. Do not invent one. Route back through `raftkit-qa/file-bug` discipline so
 the checklist is added to the bug, then re-run retest:
 
-```
+```output
 Can't retest — this bug has no "Done when" checklist, which is the retest contract. Add it via file-bug, then re-run retest.
 ```
 
@@ -71,7 +71,7 @@ When **every** item on the sheet passes on the stated build, close the bug (only
 QA closes) and post this confirmation comment, filled with the run's numbers and
 build — emit it exactly, only after the write actually lands:
 
-```
+```output
 Closed — all N done-when items + M regression checks green on build X
 ```
 

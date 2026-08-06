@@ -129,6 +129,10 @@ base/ref/diff or the user-confirmed working diff — never a silently chosen Git
 range. Capability needs route through the sibling `capability-preflight`
 contract; this skill never improvises an install.
 
+## Guardrails
+
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
+
 ## Out of scope
 
 - Asana writes of any kind from this skill directly; ticking ACs or Testing.

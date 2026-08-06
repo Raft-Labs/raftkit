@@ -54,7 +54,7 @@ the success-summary format are in `references/profile-format.md`.
 **Empty state — no sources named.** Stop with this exact message, and create
 nothing:
 
-```
+```output
 I need at least one source — a PRD, SOW, master doc, email thread, or meeting recording.
 ```
 
@@ -107,6 +107,7 @@ I need at least one source — a PRD, SOW, master doc, email thread, or meeting 
   any source the PM did not name.
 - **Escalate to founders** (`raftkit-core/house-rules`) on budget, contracts,
   relationship risk, or anything that reads as a client commitment.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Reference files
 

@@ -107,6 +107,7 @@ required input is missing, stop and ask — naming exactly what is missing.
   free-tier. Express relationships as task links.
 - **Escalate to founders** per `raftkit-core/house-rules` if a reopen implies a
   budget, contract, or client-relationship risk beyond the defect itself.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Out of scope
 

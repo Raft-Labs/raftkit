@@ -41,3 +41,7 @@ setup-project (M3, out of scope here) reads these four files and installs each t
 The protocol bodies and all four exact strings — ⚠️ EFFICIENCY WARNING, ❌ ORCHESTRATION REJECTED, ⚠️ SUBAGENT LOOP WARNING, and the 📊 Session Health Check nudge — are copied verbatim from the source doc (Asana task `1216375937893602`). This is the deliverable: versioned, faithful content. It is distinct from the live-read Asana templates that [house-rules](../house-rules/SKILL.md) forbids caching — those are workflow templates fetched live; this is the governance text this story exists to freeze.
 
 Amending protocol *substance* is out of scope: content changes go through Ashit as a PR to this file set. The pack installs whole — all five protocols or none.
+
+## Guardrails
+
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.

@@ -430,3 +430,7 @@ into the rest of raftkit-dev:
 - **docs schema/architecture sync** — a schema change that lands here triggers
   the docs skill's change-tracking lifecycle so the schema and architecture
   docs stay in lockstep; the DBML snapshot refresh feeds that sync.
+
+## Guardrails
+
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.

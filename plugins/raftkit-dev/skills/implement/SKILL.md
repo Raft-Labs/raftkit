@@ -129,6 +129,7 @@ on an Asana write failure, give the dev the exact manual-link text. See
 - **Never merge, never over-tick** — `implement` raises and hands to a human; it
   does not merge, does not tick `[AC]`/`Testing`, and does not close the story.
 - **Escalate to founders** per `house-rules` on budget, contracts, or client risk.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Out of scope
 

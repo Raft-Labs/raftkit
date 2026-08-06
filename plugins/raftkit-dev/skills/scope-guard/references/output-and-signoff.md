@@ -8,7 +8,7 @@ verbatim.
 
 Exactly two lists, always these headers, in this order:
 
-```
+```output
 BEYOND THE STORY
 MISSING FROM THE STORY
 ```
@@ -28,7 +28,7 @@ MISSING FROM THE STORY
 
 - **Both lists empty** → pass. Emit the fixed clean-pass line exactly:
 
-  ```
+  ```output
   Scope-guard: clean — 0 beyond, 0 missing
   ```
 
@@ -62,7 +62,7 @@ from BEYOND — the audit trail shows both that it was flagged and who cleared i
   unreachable) → **stop and name the access problem** with scope-guard's own
   fixed line:
 
-  ```
+  ```output
   Can't read the story — check your Asana connector, then retry.
   ```
 

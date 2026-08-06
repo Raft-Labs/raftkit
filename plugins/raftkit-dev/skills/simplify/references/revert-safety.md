@@ -50,7 +50,7 @@ green** — no change that turned a test red is ever committed.
   form, e.g. `chore: simplify <area> — remove speculative abstractions`) and
   report the success line **exactly**:
 
-  ```
+  ```output
   Simplify: N removals, suite green (X tests), one commit
   ```
 

@@ -218,7 +218,7 @@ them, one at a time — never batch:
    2. Do not retry more than once, and never with different arguments.
    3. Go to Step 5 and disclose the real reason and the real remote state:
 
-      ```
+      ```output
       Fix loop stopped early — `git push` failed (<one-line reason from
       git's own output>).
       Remote state: commit <short SHA> <is / is NOT> on the remote branch.
@@ -311,11 +311,12 @@ The comment body, in order:
    none, write exactly: "No critical issues found."
 3. This exact line, whenever this run pushed at least one commit:
 
-   ```
-   These commits were pushed by CI and have NOT been exercised by this
-   repository's own workflows — GitHub does not trigger workflow runs for
-   pushes made with GITHUB_TOKEN. Review them before merging; a green check
-   on this PR does not cover them.
+   ```output
+   These commits were pushed by CI. Each fix was verified against the
+   uncommitted working tree before its commit. GitHub does not run this
+   repo's own workflows on pushes made with GITHUB_TOKEN, so the pushed
+   SHA itself was never independently tested. Review them before merging —
+   a green check on this PR does not cover them.
    ```
 4. Every Important/Suggestion finding pr-review-toolkit reported, **exactly
    as it reported them — never paraphrase or summarize the finding text**,
@@ -330,10 +331,10 @@ The comment body, in order:
    (`>> "$GITHUB_STEP_SUMMARY"`), and add this exact line in place of the
    omitted ones:
 
-   ```
-   Truncated to fit GitHub's comment size limit — <N> of <M>
-   Important/Suggestion findings are shown above. The complete list is in
-   this run's job summary (Actions → this run → Summary).
+   ```output
+   Truncated to fit GitHub's comment size limit. Showing <N> of <M>
+   Important/Suggestion findings above. The complete list is in this run's
+   job summary (Actions → this run → Summary).
    ```
 
    Never drop a finding silently, and never truncate an individual

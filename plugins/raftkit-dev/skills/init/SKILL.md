@@ -75,6 +75,7 @@ diff and changes only what the developer explicitly approves. See
 - **Escalate to founders** per `raftkit-core/house-rules` if wiring a repo
   implies a scope, contract, or client-relationship risk beyond the repo
   itself.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Out of scope
 

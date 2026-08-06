@@ -182,3 +182,7 @@ section are sufficient.
   this skill — but do not claim brainstorming/writing-plans wrote nothing when
   they did; disclose their file writes (and brainstorming's commit) as they
   happen.
+
+## Guardrails
+
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.

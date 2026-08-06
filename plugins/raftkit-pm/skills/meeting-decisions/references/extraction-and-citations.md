@@ -26,7 +26,7 @@ An item that is none of these (small talk, a rehash, an aside) is not extracted.
 Every extracted item — in all three categories, and every profile-delta fact derived
 from the call — carries a citation in this single form:
 
-```
+```output
 <meeting> @ <timestamp>
 ```
 
@@ -50,7 +50,7 @@ The flag wording is **fixed and always caps-visible**: the literal token
 `SCOPE CHANGE`, uppercase, is what makes an out-of-scope request impossible to miss.
 Present each flagged item in this shape:
 
-```
+```output
 SCOPE CHANGE — <what the client asked for>  [<meeting> @ <timestamp>]
   Routing: <PM handles / escalate to founders if commercial>
 ```

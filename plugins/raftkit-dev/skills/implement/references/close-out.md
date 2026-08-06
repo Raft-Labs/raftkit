@@ -29,7 +29,7 @@ On a clean raise with the close-out written, report `implement`'s own success li
 (this string is `implement`'s, distinct from `scope-guard`'s clean line and `pr`'s
 review line):
 
-```
+```output
 PR #n raised — link on the story, Development ticked. Suite green: X tests. Scope-guard: clean.
 ```
 

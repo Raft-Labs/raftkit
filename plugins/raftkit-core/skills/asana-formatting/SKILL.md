@@ -48,3 +48,7 @@ minimum, refined by the references above:
 Formats and verifies only. Never sends without the write-protocol gate; never
 overwrites an approved draft's content silently; when in doubt, prefer plain
 text with line breaks over rich formatting — it always renders.
+
+## Guardrails
+
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.

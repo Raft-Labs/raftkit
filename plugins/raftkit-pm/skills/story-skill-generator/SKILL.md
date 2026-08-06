@@ -34,7 +34,7 @@ Profile, do not proceed and do not improvise one from raw sources.
 
 **Empty state — no approved profile.** Stop with this exact message, and do nothing else:
 
-```
+```output
 Run project-onboarding first — I need an approved Project Profile to bake from.
 ```
 
@@ -105,6 +105,7 @@ already-delivered skill with an unvalidated one (`raftkit-core/write-protocol`).
   (`references/baked-context.md`).
 - **Escalate to founders** (`raftkit-core/house-rules`) on budget, contracts, relationship
   risk, or anything that reads as a client commitment.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Reference files
 

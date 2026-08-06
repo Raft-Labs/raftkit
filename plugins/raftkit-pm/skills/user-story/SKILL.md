@@ -95,6 +95,7 @@ If any of these is missing, **ask before doing anything else** (the Empty state)
   ↔ sub-story, depends-on) as task links in the description.
 - **Escalate to founders** on budget, contracts, relationship risk, or anything
   that reads as a client commitment — never decide it inside the story.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Reference files
 

@@ -63,9 +63,9 @@ here rather than restating them.
 
 ### PASS
 
-```
+```output
 PASS — ready to hand off.
-Coverage: scenarios <n>, [AC]s <m>, WEESLD complete.
+Coverage: <n> scenarios, <m> acceptance criteria ([AC]s), every edge case covered.
 ```
 
 Only emit PASS when **every** Definition-of-Ready item holds. There is no partial
@@ -73,10 +73,10 @@ pass.
 
 ### NOT READY
 
-```
+```output
 NOT READY — <k> gap(s):
 - Section <N> "<title>" — <exactly what is missing>
-- [AC] coverage — <the uncovered scenario / rule / edge-case row / boundary>
+- acceptance criteria ([AC]) coverage — <the uncovered scenario / rule / edge-case row / boundary>
 - ...
 Owner: PM (fix the story, then re-run the gate).
 ```
@@ -89,7 +89,7 @@ Bad: `WEESLD incomplete.`
 
 For the empty-description state, the single line is the verdict:
 
-```
+```output
 NOT READY — the task description is empty — generate the story first.
 ```
 

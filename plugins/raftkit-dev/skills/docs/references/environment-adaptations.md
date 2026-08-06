@@ -35,7 +35,7 @@ Claude Code has:
 
 Replace every structured-question call with this template:
 
-```
+```output
 **<Question text>?**
 
 Options:
@@ -49,7 +49,7 @@ Reply with the number, or describe your own.
 
 If the question has only 2 options (yes/no or A/B):
 
-```
+```output
 **<Question>?**
 
 - Yes/A — <implication>
@@ -60,7 +60,7 @@ Recommendation: <X> because <reason>.
 
 For open-ended answers (no fixed options):
 
-```
+```output
 **<Question>?**
 
 I need: <specific format / examples>.

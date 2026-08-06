@@ -141,6 +141,7 @@ App-token upgrade as an optional future path and the tradeoff it carries.
 - **Escalate to founders** per `raftkit-core/house-rules` if an install of
   this skill implies a scope, contract, or client-relationship risk beyond
   the repo itself.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Known interaction — `/implement`'s Gate 2 and `pr`
 
