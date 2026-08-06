@@ -11,7 +11,7 @@
 //   npm run lint
 export default [
   {
-    files: ["plugins/**/*.mjs", "scripts/*.mjs"],
+    files: ["plugins/**/*.mjs", "scripts/**/*.mjs"],
     languageOptions: {
       ecmaVersion: 2023,
       sourceType: "module",
