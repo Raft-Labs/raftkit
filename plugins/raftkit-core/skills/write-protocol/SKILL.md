@@ -6,7 +6,7 @@ user-invocable: false
 
 # RaftKit Write Protocol
 
-Every outward write — Asana, a Drive doc, a local or synced file, or any client-facing surface — passes through one gate: **draft → approve → push**. RaftKit skills draft; humans approve; only then does anything leave the chat. This holds for task creation and edits, comments, status updates, subtask completion, file creation and updates, and any message a client will see — no exceptions beyond the two named below.
+Every outward write — Asana, a Drive doc, a local or synced file, or any client-facing surface — passes through one gate: **draft → approve → push**. RaftKit skills draft; humans approve; only then does anything leave the chat. This holds for task creation and edits, comments, status updates, subtask completion, file creation and updates, and any message a client will see — no exceptions beyond the one named below.
 
 The reason is trust. An automated write that turns out wrong is visible to a client or teammate before anyone can catch it. Keeping a human in the loop on every outward write means mistakes get caught while they are still drafts.
 
@@ -70,7 +70,7 @@ far and no further:
   before the human's merge decision" (the only gate a CI-native workflow can
   offer).
 
-Nothing beyond these two is exempt. If you are reasoning about a client-facing
+Nothing beyond this is exempt. If you are reasoning about a client-facing
 write, the gate above applies without exception, and no skill may extend this
 entry by analogy. A future skill that wants to auto-write anything else needs
 its own named, reviewed amendment to this list — the entry above authorizes
