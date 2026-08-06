@@ -167,11 +167,19 @@ function buildEvent(hook, who) {
     // `tool_input.skill` when the model invokes one itself.
     case "skill": {
       const name = hook.command_name || hook.tool_input?.skill || "";
-      // A PostToolUse/UserPromptExpansion invocation that never resolves to a
-      // name is not a skill event at all — most PostToolUse calls aren't the
-      // Skill tool. Recording it as raftkit_unknown_event just fills the spool
-      // with junk that, at the cap, evicts real raftkit_blocked events.
-      if (!name) return null;
+      if (!name) {
+        // A PostToolUse/UserPromptExpansion invocation that never resolves to
+        // a name is not a skill event at all — most PostToolUse calls aren't
+        // the Skill tool. Recording it as raftkit_unknown_event just fills
+        // the spool with junk that, at the cap, evicts real raftkit_blocked
+        // events, so it is dropped outright, leaving the spool untouched.
+        const isSkillHook = hook.hook_event_name === "PostToolUse" || hook.hook_event_name === "UserPromptExpansion";
+        if (isSkillHook) return null;
+        // Something reached MODE=skill without even that shape (a malformed
+        // or unexpected payload) — record it generically rather than either
+        // staying silent or misclassifying it as a skill invocation.
+        return { ...base, event: "raftkit_unknown_event" };
+      }
       // Split on the FIRST colon only — a bare name can itself contain one
       // (a nested identifier), and split(":") would silently truncate it.
       const sep = name.indexOf(":");
