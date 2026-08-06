@@ -111,7 +111,13 @@ export function config() {
           loopbackOrEmpty = false;
         }
       }
-      if (loopbackOrEmpty) cachedConfig.endpoint = override;
+      // A refused override must not silently fall back to whatever
+      // telemetry.config.json shipped — that would defeat the override
+      // entirely: a caller that deliberately set RAFTKIT_DEV=1 to redirect
+      // (or silence) telemetry would instead have real events sent to
+      // production the moment its override fails the loopback check. Refuse
+      // outright: send nowhere, exactly as an explicit empty override would.
+      cachedConfig.endpoint = loopbackOrEmpty ? override : "";
     }
   }
 
