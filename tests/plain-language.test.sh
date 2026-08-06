@@ -3,13 +3,16 @@
 # English output across all skills).
 #
 # The checker (scripts/check-plain-language.mjs) scans every ```output
-# fenced block repo-wide for banned filler, over-length sentences, named
-# HTML entities, and leaked internal-only labels (WEESLD). This suite pins:
-# the contract exists in house-rules, every skill except house-rules itself
+# fenced block repo-wide for banned filler, over-length sentences (measured
+# after rejoining hard-wrapped lines), block-average sentence length,
+# uncovered Gate-N references, named HTML entities, an unclosed fence, and
+# leaked internal-only labels (WEESLD, any case). This suite pins: the
+# contract exists in house-rules, every skill except house-rules itself
 # carries the propagated guardrail bullet, the real repo content is clean,
-# and — so a green run here is trustworthy, not a rubber stamp — four
-# fixtures each deliberately fail one rule and one fixture deliberately
-# passes all of them.
+# and — so a green run here is trustworthy, not a rubber stamp — one
+# fixture per rule deliberately fails it, plus two fixtures that
+# deliberately pass everything (a clean block, and near-miss words that
+# only contain a banned phrase as a substring).
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 
@@ -73,6 +76,9 @@ check "PL6a checker script exists" ok $?
 node --check "$CHECKER" >/dev/null 2>&1
 check "PL6b checker script is syntactically valid" ok $?
 
+grep -qF 'house-rules/references/plain-language.md' "$CHECKER"
+check "PL6c checker parses the glossary from plain-language.md rather than hardcoding it" ok $?
+
 # --- NEGATIVE CONTROLS: prove the checker actually catches problems ---
 
 FIX=tests/fixtures/plain-language
@@ -91,6 +97,24 @@ check "PL7d rejects a named HTML entity" fail $?
 
 node "$CHECKER" "$FIX/good.md" >/dev/null 2>&1
 check "PL7e accepts a compliant output block (no over-firing)" ok $?
+
+node "$CHECKER" "$FIX/bad-wrapped-long-sentence.md" >/dev/null 2>&1
+check "PL7f rejects a >25-word sentence hard-wrapped across lines" fail $?
+
+node "$CHECKER" "$FIX/bad-unclosed-fence.md" >/dev/null 2>&1
+check "PL7g rejects an output fence that's opened but never closed" fail $?
+
+node "$CHECKER" "$FIX/bad-unglossed-term.md" >/dev/null 2>&1
+check "PL7h rejects a Gate number the glossary doesn't cover" fail $?
+
+node "$CHECKER" "$FIX/bad-block-average.md" >/dev/null 2>&1
+check "PL7i rejects a block averaging over 15 words/sentence" fail $?
+
+node "$CHECKER" "$FIX/bad-lowercase-weesld.md" >/dev/null 2>&1
+check "PL7j rejects a lowercase weesld leak" fail $?
+
+node "$CHECKER" "$FIX/good-boundaries.md" >/dev/null 2>&1
+check "PL7k accepts near-miss words that only contain a banned phrase as a substring" ok $?
 
 # --- REAL CONTENT: every existing output block in the repo passes ---
 

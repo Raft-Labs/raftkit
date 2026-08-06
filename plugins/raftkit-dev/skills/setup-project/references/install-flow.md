@@ -177,6 +177,9 @@ keep their exact wording):
 
 ```output
 Governance pack v<X> installed: 5 protocols, spec template, hook, CI, CodeRabbit, design standard, MDS ESLint config, pr-auto-review workflow — verified
+```
+
+```output
 Required next step: add ANTHROPIC_API_KEY to this repo's Actions secrets — Settings → Secrets and variables → Actions → New repository secret.
 ```
 
