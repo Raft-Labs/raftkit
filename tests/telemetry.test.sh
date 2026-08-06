@@ -354,12 +354,16 @@ printf '{"session_id":"s1","last_assistant_message":"Missing: superpowers. Insta
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "plain capability refusal classifies" "capability-unavailable" \
   "$(last_event_field "$d/spool/events.jsonl" 'props.refusal_id')"
+expect_eq "plain capability refusal captures the detail" "superpowers" \
+  "$(last_event_field "$d/spool/events.jsonl" 'props.detail')"
 
 d="$(new_sandbox)"
 printf '{"session_id":"s1","last_assistant_message":"**Missing:** superpowers. Install it with: claude plugin install superpowers@claude-plugins-official"}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "bold-prefixed capability refusal still classifies" "capability-unavailable" \
   "$(last_event_field "$d/spool/events.jsonl" 'props.refusal_id')"
+expect_eq "bold-prefixed capability refusal captures the detail" "superpowers" \
+  "$(last_event_field "$d/spool/events.jsonl" 'props.detail')"
 
 d="$(new_sandbox)"
 printf '{"session_id":"s1","last_assistant_message":"The dev said Missing: superpowers. Install it with: something, but that was a quote."}' \
