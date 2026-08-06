@@ -62,7 +62,7 @@ home.
 
 On a completed run, summarize the profile and give the count in this shape:
 
-```
+```output
 X facts — ✅ a / ⚠️ b / ❓ c. Top gaps: …
 ```
 

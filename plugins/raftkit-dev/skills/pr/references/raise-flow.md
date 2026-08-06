@@ -16,7 +16,7 @@ The PR targets the repo's documented squash target, resolved live in this order:
    the target it names.
 3. **Refuse.** If neither names one, stop — do not guess, do not target `main`:
 
-   ```
+   ```output
    no documented squash target — name one in the repo docs
    ```
 
@@ -28,7 +28,7 @@ target is data read at run time.
 Diff the branch against the resolved target (`git log <target>..HEAD`,
 `git rev-list --count <target>..HEAD`). Zero commits beyond the target ⇒ refuse:
 
-```
+```output
 nothing to raise — branch has no commits beyond target
 ```
 
@@ -39,7 +39,7 @@ require its clean-pass line **verbatim** before proceeding (a standalone run
 invokes it; an `/implement` run may reuse the Gate 2 result if it is still fresh
 for this branch):
 
-```
+```output
 Scope-guard: clean — 0 beyond, 0 missing
 ```
 

@@ -14,7 +14,17 @@ These are the rules every RaftKit role plugin inherits. They are authored once h
 - **Project facts live in Project Profiles, never in plugins.** Plugins stay project-independent. Anything specific to one client or codebase belongs in that project's profile, not in a skill.
 - **Sources and destinations are access-path-agnostic.** A named source or output home may arrive via a connector (Google Drive, Gmail, Fathom, Asana), a file uploaded into the conversation, a file in a synced local folder (e.g. Google Drive for Desktop, where a Drive doc is a local file), or a pasted link. Accept whichever path the session provides — never insist on one. Every gate, citation rule, and approval applies identically on every path. Cite an upload as "uploaded file, as-of \<date\>" — it carries no live URL.
 - **Asana free tier only.** Nothing a skill creates may rely on paid features: no dependencies, custom fields, milestones, start dates, or approval tasks. Express relationships between tasks as links in the description instead.
-- **Human gates everywhere.** Skills draft; humans approve. The gates are: story approval, plan approval, PR merge, and bug close. No skill advances past a gate on its own, and only the two exceptions enumerated below write anything automatically. For the mechanics of outward writes, see [write-protocol](../write-protocol/SKILL.md).
+- **Human gates everywhere.** Skills draft; humans approve. The gates are: story approval, plan approval, PR merge, and bug close. No skill advances past a gate on its own, and only the one exception enumerated below writes anything automatically. For the mechanics of outward writes, see [write-protocol](../write-protocol/SKILL.md).
+
+## How skills talk to humans
+
+Every line a human reads — a status, a refusal, a success report, a question —
+is short, plain, and ends on the next action or decision. House terms
+(`Gate 0`, `scope contract`, `[AC]`, and the rest) stay — they are shared
+vocabulary — but each gets a one-line gloss the first time a run's output uses
+it. The full rules, the banned-phrase list, the house glossary, and the
+`output`-fence convention that makes this checkable are in
+[references/plain-language.md](references/plain-language.md).
 
 ## The one automatic-write exception
 

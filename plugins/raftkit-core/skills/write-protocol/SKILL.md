@@ -97,3 +97,7 @@ After the push, read the result back and verify the render (`asana-formatting`
 → `references/verification.md`); a mismatch is reported, never silently
 rewritten. When in doubt, prefer plain text with line breaks over rich
 formatting — it always renders and never gets rejected.
+
+## Guardrails
+
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.

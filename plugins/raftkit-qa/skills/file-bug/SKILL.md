@@ -97,6 +97,7 @@ a required input is missing, stop and ask — naming exactly what is missing.
   free-tier and story-mandated. Express relationships as task links.
 - **Escalate to founders** per `raftkit-core/house-rules` if a bug implies a
   scope, contract, or client-relationship risk beyond the defect itself.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Out of scope
 

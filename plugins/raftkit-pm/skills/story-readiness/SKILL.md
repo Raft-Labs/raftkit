@@ -67,7 +67,7 @@ both sides. Building that dev-side enforcement is out of scope here.
 
 4. **Emit the verdict** in the exact shape defined in
    `references/readiness-checklist.md` (the single source for the verdict strings):
-   - **PASS** → a one-line coverage summary (scenarios, `[AC]`s, WEESLD complete).
+   - **PASS** → a one-line coverage summary (scenarios, `[AC]`s, every edge case covered).
    - **NOT READY** → the gap list: one line per gap, each naming the **section** and
      **exactly what is missing**, actionable without re-reading the template.
 
@@ -96,6 +96,7 @@ both sides. Building that dev-side enforcement is out of scope here.
   reconciles a comment-only clarification **itself** and never asks this gate to
   re-bless a state it structurally cannot see. Only a real description edit or an
   added `[AC]` subtask moves this audit's verdict on a later run.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Reference file
 

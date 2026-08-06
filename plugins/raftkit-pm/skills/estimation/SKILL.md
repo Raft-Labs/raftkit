@@ -93,6 +93,7 @@ the breakdown; it never turns one into a price, a quote, or a promise.
 - **No cached template.** Estimation consumes the story's own structure and delegates
   the live-template read to story-readiness; it stores no template text
   (`raftkit-core/house-rules`).
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Reference file
 

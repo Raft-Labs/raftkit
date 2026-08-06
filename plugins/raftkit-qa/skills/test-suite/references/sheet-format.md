@@ -30,13 +30,15 @@ propose changes, but it never reorders, renames, or drops these columns.
 Every case carries exactly one coverage tag:
 
 - `happy` — the intended, valid path.
-- `WEESLD` — an edge case in the WEESLD frame (Waiting, Empty, Error, Success,
-  Limits, Default values).
+- `edge-case` — waiting, empty, error, success-confirmation, a limit, or a
+  default value (the WEESLD frame the story's edge-cases section uses — see
+  `raftkit-core/house-rules`' plain-language glossary; `WEESLD` itself is
+  internal shorthand and never the tag QA sees in the Sheet).
 - `permission` — an access-control / role-boundary case.
 
 A case exercising a business rule takes the tag of the path it runs — `happy` for
-the rule's enforced behaviour, `WEESLD` or `permission` when the rule shows up as
-an edge state or boundary.
+the rule's enforced behaviour, `edge-case` or `permission` when the rule shows up
+as an edge state or boundary.
 
 A generated case with no coverage tag is not emitted — the tag is part of what
 makes a case complete.
@@ -76,7 +78,7 @@ cases need no citation; they are first-class on QA's authority.
 
 On a completed sync, report exactly:
 
-```
+```output
 Suite: N cases (X generated, Y QA-authored) — Sheet in sync
 ```
 

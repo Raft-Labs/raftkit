@@ -59,3 +59,5 @@ logged with its reason and the module status stays Draft.
   team's approval flow own the write.
 - The docs tree's own conventions always win over any structure this skill
   would prefer.
+- **Plain English out** — every line a human reads is short, active-voice,
+  and free of filler; a house term gets its one-line gloss on first use.

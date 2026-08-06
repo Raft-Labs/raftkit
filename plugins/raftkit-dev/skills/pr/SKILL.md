@@ -30,7 +30,7 @@ Each is a hard stop with a fixed message; do not raise until all pass.
 1. **Commits exist.** Diff the branch against the resolved squash target. If there
    are no commits beyond the target, refuse — exact string:
 
-   ```
+   ```output
    nothing to raise — branch has no commits beyond target
    ```
 
@@ -39,7 +39,7 @@ Each is a hard stop with a fixed message; do not raise until all pass.
    invokes it; an `/implement` run may reuse the Gate 2 result if it is still fresh
    for this branch. Proceed only when it reports the line **verbatim**:
 
-   ```
+   ```output
    Scope-guard: clean — 0 beyond, 0 missing
    ```
 
@@ -103,6 +103,7 @@ Work `references/raise-flow.md` then `references/automated-review.md` in order.
   pr-review-toolkit findings are addressed or answered.
 - **Escalate to founders** per `raftkit-core/house-rules` if the PR implies a
   budget, contract, or client-relationship risk beyond the code.
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Out of scope
 

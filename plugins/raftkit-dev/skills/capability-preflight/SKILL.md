@@ -91,7 +91,12 @@ declared — optional, conditional, community — flows propose → approve → 
   rows are listed but not counted)
 - Refusal downstream: when a required capability stays unavailable after a
   refused or unanswered plan, the calling flow stops with:
-  `Required capability unavailable: <capability>. Proposed install command (human approval required): <exact command>. Stopping — no fallback.`
+
+  ```output
+  Missing: <capability>. Install it with: <exact command>
+  Needs your approval first — nothing installs until you say go.
+  ```
+
   It never degrades to a copied implementation of the missing engine.
 
 ## Skill discovery
@@ -102,6 +107,10 @@ suggestions with provenance for the human to judge; this skill never installs
 them. Secrets are never read or printed while detecting stack signals (e.g.
 envx: the *presence* of `.envxrc` / `.env.*.gpg` is the signal, their contents
 are off-limits).
+
+## Guardrails
+
+- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Out of scope
 
