@@ -312,9 +312,11 @@ The comment body, in order:
 3. This exact line, whenever this run pushed at least one commit:
 
    ```output
-   These commits were pushed by CI. GitHub does not run this repo's own
-   workflows on pushes made with GITHUB_TOKEN, so they were never tested.
-   Review them before merging — a green check on this PR does not cover them.
+   These commits were pushed by CI. Each fix was verified against the
+   uncommitted working tree before its commit. GitHub does not run this
+   repo's own workflows on pushes made with GITHUB_TOKEN, so the pushed
+   SHA itself was never independently tested. Review them before merging —
+   a green check on this PR does not cover them.
    ```
 4. Every Important/Suggestion finding pr-review-toolkit reported, **exactly
    as it reported them — never paraphrase or summarize the finding text**,

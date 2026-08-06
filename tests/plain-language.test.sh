@@ -126,7 +126,7 @@ out="$(node "$CHECKER" "$FIX/bad-unglossed-term.md" 2>&1)"; code=$?
 check_exit "PL6e an unglossed Gate reference exits 1" 1 "$code"
 check_contains "PL6e names the unglossed term" "$out" 'house term "Gate 3"'
 
-node "$CHECKER" "$FIX/good-glossed-term.md" >/dev/null 2>&1
+node "$CHECKER" "$FIX/good-known-gate.md" >/dev/null 2>&1
 check_exit "PL6f a Gate reference the glossary already covers exits 0 (no over-firing)" 0 $?
 
 # --- NEGATIVE CONTROLS: prove the checker actually catches problems ---

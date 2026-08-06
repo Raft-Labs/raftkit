@@ -76,7 +76,7 @@ pass.
 ```output
 NOT READY — <k> gap(s):
 - Section <N> "<title>" — <exactly what is missing>
-- [AC] coverage — <the uncovered scenario / rule / edge-case row / boundary>
+- acceptance criteria ([AC]) coverage — <the uncovered scenario / rule / edge-case row / boundary>
 - ...
 Owner: PM (fix the story, then re-run the gate).
 ```

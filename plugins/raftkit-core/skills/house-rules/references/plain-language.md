@@ -23,7 +23,8 @@ the rules below. A block a human never sees (an internal instruction to the
 model) is never fenced this way.
 
 ```output
-Scope-guard: clean. 3 tests failed, 0 fixed. Suite green — ready to raise.
+Scope-guard (checks the diff against the agreed scope): clean.
+Suite green — 128 tests, 0 failed. Ready to raise.
 ```
 
 ## What CI checks, and what a human reviewer checks

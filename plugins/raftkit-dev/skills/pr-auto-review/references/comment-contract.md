@@ -78,9 +78,11 @@ Pass the body from a file (`-F body=@<file>`), never as an inline argument.
    cover them. The reviewer has to be told that in the artifact they are
    reading:
    ```output
-   These commits were pushed by CI. GitHub does not run this repo's own
-   workflows on pushes made with GITHUB_TOKEN, so they were never tested.
-   Review them before merging — a green check on this PR does not cover them.
+   These commits were pushed by CI. Each fix was verified against the
+   uncommitted working tree before its commit. GitHub does not run this
+   repo's own workflows on pushes made with GITHUB_TOKEN, so the pushed
+   SHA itself was never independently tested. Review them before merging —
+   a green check on this PR does not cover them.
    ```
 3. **Important/Suggestion findings**, each as one line:
    ```
