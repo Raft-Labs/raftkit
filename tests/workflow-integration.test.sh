@@ -165,6 +165,16 @@ done
 check "W15a owner strings exist in the docs skill" ok $?
 grep -qF 'Missing: <capability>. Install it with: <exact command>' "$DEV/capability-preflight/SKILL.md"
 check "W15b preflight refusal string exists at its owner" ok $?
+# W15c/d: the owner's refusal must be wrapped in the plain-language.md output
+# fence, and the human-approval-gate line must accompany it verbatim — the
+# fence convention and the gate line are part of the refusal's shape, not
+# just the "what's missing" half of the contract.
+pf_fence=$(grep -A3 -F '```output' "$DEV/capability-preflight/SKILL.md" 2>/dev/null)
+grep -qF 'Missing: <capability>. Install it with: <exact command>' <<<"$pf_fence" \
+  && tail -n1 <<<"$pf_fence" | grep -qF '```'
+check "W15c preflight refusal is wrapped in the output fence" ok $?
+grep -qF 'Needs your approval first — nothing installs until you say go.' <<<"$pf_fence"
+check "W15d human-approval-gate line accompanies the preflight refusal verbatim" ok $?
 
 # W16 · ownership preservation: delivery skills never enumerate the five-state
 # contract, never use the classification term 'incompatible', and any provider
