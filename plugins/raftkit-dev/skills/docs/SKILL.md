@@ -41,8 +41,10 @@ a seventh command.
 - **design** — the full co-authoring flow (`references/orchestration.md`):
   classify the project, discover business context, select the stack, design
   auth/tenancy/RBAC, inventory modules, run the 20+1-step per-module deep
-  dive, capture cross-cuts, confirm — then generate. One adaptive question at
-  a time; recommendation-first; nothing written before sign-off.
+  dive, capture cross-cuts, confirm — then generate. The interview itself runs
+  under `raftkit-core/discovery-interview` — one adaptive question at a time,
+  recommendation-first, push-back on vague answers, its proactive and
+  edge-case catalogs. Nothing is written before sign-off.
 - **init** — materialize a documentation foundation from **approved planning
   outputs** (story, Project Profile, spec, or a completed design session).
   With no approved planning, offer design mode; if the developer declines,
@@ -146,15 +148,13 @@ contract; this skill never improvises an install.
 
 - `references/orchestration.md` — the 12-phase design flow, entry branches,
   mutual-agreement and confirmation gates, refinement loop.
-- `references/discovery-questions.md` — adaptive question scripts; one
-  question at a time; recommend-first with caveats.
+- `references/discovery-questions.md` — the stack question scripts, §1-§13.
 - `references/stack-and-domain-recipes.md` — archetype decision tree,
   bootstrap recipes, domain recipes, anti-recipes.
 - `references/module-decomposition.md` — module inventory + the 20+1-step
   per-module loop with the always-on compliance/PII/tests cross-cut.
-- `references/edge-cases.md` — the 24-category edge-case walk.
-- `references/proactive-prompts.md` · `references/push-back.md` — volunteered
-  suggestions and vague-answer push-back catalogs.
+- `references/stack-anti-patterns.md` — the stack half of the proactive scan
+  (ORM, hosting, SDK, provider picks to steer away from).
 - `references/rbac-guide.md` — the three nested matrices; the auth phase
   cannot exit without a drafted matrix.
 - `references/generation.md` — adaptive generation: greenfield default tree,

@@ -1,16 +1,17 @@
 # Discovery Questions (one question at a time, adaptive)
 
-Rules in force throughout:
+The interview rules are `raftkit-core/discovery-interview` — one question at a
+time, recommendation first with a reason and a "don't pick this if…" caveat,
+push back on vague answers (its `push-back.md`), volunteer what people forget
+(its `proactive-prompts.md`), never guess. They are in force throughout this
+file and are not restated here.
 
-- **ONE question at a time.** Never batch. Ask one question at a time,
-  adapting each next question to the previous answer.
-- **Recommend, don't just list.** Put your recommended option first, append
-  `(Recommended)`. Always give a one-sentence reason. Always give a
-  "don't pick this if…" caveat for the alternatives.
-- **Push back on vague answers** (see `push-back-triggers.md`).
-- **Fire proactive suggestions** when a trigger matches `proactive-prompts.md`.
-- **Adapt the next question** based on the previous answer. Skip irrelevant
-  questions silently.
+Two additions on top of the core contract, both stack-level and owned here:
+
+- **Scan every answer against `stack-anti-patterns.md` too** — the
+  implementation-stack half of the proactive scan.
+- **Archetype gates the question set.** After the archetype is confirmed, ask
+  only that archetype's deltas (§3 below) and skip the rest silently.
 
 This file is organized by section. Each section corresponds to a phase in
 `orchestration.md`. Each section is an ordered question list — ask in order,

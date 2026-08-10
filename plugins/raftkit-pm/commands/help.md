@@ -20,6 +20,8 @@ Everything a RaftLabs PM produces — project profiles, user stories, readiness 
 ```
 project-onboarding   → one tagged Project Profile (✅/⚠️/❓, every fact cited)
    ↓
+feature-brainstorm   → an idea interviewed into a spec doc (optional, when there isn't one)
+   ↓
 user-story           → template-perfect story into a named Asana task
   (or story-skill-generator → a reusable <project>-user-story skill)
    ↓
@@ -38,6 +40,7 @@ Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls →
 | Skill | Use it when | Say |
 | --- | --- | --- |
 | `project-onboarding` | New project, or new sources arrived | "onboard project X with this PRD and these emails" |
+| `feature-brainstorm` | A feature idea with no spec behind it yet | "brainstorm this feature into a spec doc" |
 | `user-story` | Writing one story into an Asana task, sizing one story, or amending a story that already exists | "write the story for password reset into \<task-url\>" · "size this story" · "extend \<task-url\> with the onboarding changes" |
 | `story-skill-generator` | A project needs its own baked story skill | "generate the story skill for project X" |
 | `story-readiness` | Checking a story before dev handoff | "is this story ready? \<url\>" |

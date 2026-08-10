@@ -6,10 +6,31 @@ happen here?" and documenting the answer. Never let a category go silent.
 
 ## How to use
 
-For each feature in a module, run this checklist. Each category is either
-answered (capture the user's decision) OR marked `N/A — <reason>`. The
-rule: never let a category go silent — each category is answered or marked
-N/A with a reason.
+For each feature (or each module, when the consuming skill works at module
+grain), run this checklist. Each category is either answered (capture the
+user's decision) OR marked `N/A — <reason>`. The rule: never let a category
+go silent — each category is answered or marked N/A with a reason.
+
+## Two passes over one catalog
+
+A short pass and an exhaustive pass are the same catalog at two grains, never
+two competing lists. The short pass walks the six house buckets below; the
+exhaustive pass walks all 24 categories individually. The six buckets are the
+`WEESLD` shorthand used in the Asana Feature Template — internal shorthand
+only, never shown to a human, so spell the bucket out in any question or
+summary a person reads.
+
+| Bucket (short pass) | Categories it covers (exhaustive pass) |
+|---|---|
+| Waiting | 15 eventual consistency · 16 queue back-pressure · 17 cold starts · 5 network (slow / timeout) |
+| Empty | 1 empty states |
+| Error | 5 network · 6 data integrity · 9 external dependencies · 13 retry · 19 partial failure · 23 time skew |
+| Success | 10 state transitions · 12 idempotency · 14 deduplication · 20 audit gaps · 21 impersonation traces |
+| Limits | 2 boundary / limits · 11 rate limiting · 22 multi-region |
+| Default values | 3 permission / access · 4 concurrency · 7 time-based · 8 deletion · 18 secrets rotation · 24 mobile / PWA |
+
+A category listed under more than one bucket is asked once, under whichever
+bucket the conversation reaches first.
 
 ## The 24 categories
 

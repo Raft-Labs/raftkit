@@ -33,9 +33,10 @@ After confirmation, you have the module list. Now Phase 6 begins.
 
 ## The 20-step per-module loop
 
-For each module, walk these in order. One question at a time. Adaptive.
-Recommend with reasoning. Push back on vague answers. Apply proactive
-prompts from the proactive-prompts reference.
+For each module, walk these in order, under the
+`raftkit-core/discovery-interview` contract: one question at a time, adaptive,
+recommend with reasoning, push back on vague answers, apply its proactive
+prompts — plus this plugin's `stack-anti-patterns.md`.
 
 1. **Module purpose & ownership**
 
@@ -155,7 +156,8 @@ For each:
 
 10. **Edge cases (walked through, not just listed)**
 
-Load the edge-case guide and walk every applicable category. For each
+Load the edge-case guide (`raftkit-core/discovery-interview` →
+`references/edge-cases.md`) and walk every applicable category. For each
 category, ask the user "what should happen here?" — never accept silence.
 
 Categories: empty / boundary / permission / concurrency / network /

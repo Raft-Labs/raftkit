@@ -28,7 +28,7 @@ Installing any role plugin automatically installs `raftkit-core` alongside it. `
 | Plugin | Who | What |
 | --- | --- | --- |
 | `raftkit-core` | everyone (auto-installed) | House rules, workflow constants, governance protocols |
-| `raftkit-pm` | PMs | Onboarding, user stories, story readiness, status updates, meeting decisions, estimation |
+| `raftkit-pm` | PMs | Onboarding, feature brainstorming, user stories, story readiness, status updates, meeting decisions, estimation |
 | `raftkit-dev` | Developers | Init, ultrathink planning, implement, scope guard, simplify, PR, bug fix, UI creation, project setup, recipes, capability preflight, docs, Hasura |
 | `raftkit-qa` | QA | Test suites, test run sheets, bug filing, retest |
 

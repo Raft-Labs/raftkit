@@ -1,0 +1,26 @@
+# Stack Anti-Patterns (steer the developer away)
+
+The implementation-stack half of the proactive scan. The product-level trigger
+catalogue lives in `raftkit-core/discovery-interview` →
+`references/proactive-prompts.md`; this table is the part that only makes sense
+once an archetype is on the table, so it stays here with the rest of the stack
+opinion (`stack-and-domain-recipes.md`).
+
+Scan every developer answer against both. When a row below fires, say so before
+moving on.
+
+| If user proposes… | Skill pushes back with… |
+|---|---|
+| Storing raw passwords | "Better Auth handles hashing — never store raw" |
+| Storing raw API keys | "SHA-256 hashed at rest, shown once on creation" |
+| Using `db:push` for migrations | "Always generate migrations + drizzle-kit migrate" |
+| Single Vercel project switching via `.vercel/<app>.project.json` swap | "Use one Vercel project per app — swap pattern is fragile" |
+| Custom Upstash REST client | "@upstash/redis + @upstash/ratelimit handle this — avoid reinventing" |
+| Env var > 4 KB | "Lambda env limit — use SST Secret or Secrets Manager" |
+| Sentry only on backend | "Wire @sentry/nextjs and @sentry/expo from day 1 — backfill is painful" |
+| Permission table duplicated in router | "Import from packages/auth — duplicates drift" |
+| Drizzle in a Hasura+Amplify project | "Hasura is your ORM — Drizzle duplicates" |
+| Expo Push at scale | "Direct FCM + APNs via firebase-admin scales better past ~10k DAU receivers" |
+| Stripe for a single-region product where a local provider fits better (e.g. India-only) | "A local-market provider (e.g. Dodopayments for INR) can have a better regional experience + Better Auth plugin" |
+| NativeWind for new Expo project | "Uniwind 1.6 is the newer successor" |
+| Cognito for greenfield BTS project | "Better Auth more flexible and matches the rest of the stack" |

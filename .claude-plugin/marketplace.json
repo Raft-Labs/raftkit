@@ -12,13 +12,13 @@
     {
       "name": "raftkit-core",
       "source": "./plugins/raftkit-core",
-      "description": "RaftKit house rules, workflow constants, governance protocols pack, the Module Design Standard, the Asana write-protocol gate, the asana-formatting rendering capability, and usage telemetry, including blocker events surfaced in the admin dashboard.",
+      "description": "RaftKit house rules, workflow constants, governance protocols pack, the Module Design Standard, the Asana write-protocol gate, the asana-formatting rendering capability, the shared discovery-interview contract, and usage telemetry, including blocker events surfaced in the admin dashboard.",
       "category": "core"
     },
     {
       "name": "raftkit-pm",
       "source": "./plugins/raftkit-pm",
-      "description": "PM skills: onboarding, user stories, story skill generator, story readiness, status updates, meeting decisions, estimation.",
+      "description": "PM skills: onboarding, feature brainstorming into a spec doc, user stories, story skill generator, story readiness, status updates, meeting decisions, estimation.",
       "category": "role"
     },
     {

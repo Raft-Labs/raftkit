@@ -20,7 +20,8 @@ current phase needs (progressive disclosure).
 1. **Classify the project** — one of the project types, inferred confidently
    where evidence allows, confirmed with the developer.
 2. **Business context** — persona, geography, regulatory constraints, realistic
-   scale, pricing (`discovery-questions.md`; push-back on vague answers).
+   scale, pricing (`discovery-questions.md`; push-back on vague answers per
+   `raftkit-core/discovery-interview`).
 3. **Stack archetype** — decision tree, recommendation-first with reasoning
    and caveats (`stack-and-domain-recipes.md`).
 4. **Auth, tenancy, roles, RBAC** — the auth phase cannot exit without a
@@ -46,12 +47,14 @@ seven-step lifecycle (`change-tracking.md`).
 
 ## Gates that never move
 
-- One adaptive question at a time; recommendation listed first as
-  `(Recommended)` with reasoning; every alternative carries a
-  "don't pick this if…" caveat (`discovery-questions.md`).
-- Vague answers get pushed back per `push-back.md`; complete answers are never
-  interrogated.
-- Every developer answer is scanned against `proactive-prompts.md`.
+- The whole interview runs under `raftkit-core/discovery-interview`: one
+  adaptive question at a time, recommendation listed first as `(Recommended)`
+  with reasoning, every alternative carrying a "don't pick this if…" caveat,
+  vague answers pushed back (its `push-back.md`), complete answers never
+  interrogated, every developer answer scanned against its
+  `proactive-prompts.md`.
+- Every developer answer is scanned against `stack-anti-patterns.md` as well —
+  the stack half of that scan lives here, not in core.
 - Module completion is mutual agreement — the skill's self-assessment AND the
   developer's confirmation; only then the next module.
 - Refinement ends when the developer says it is good enough — never silently.
