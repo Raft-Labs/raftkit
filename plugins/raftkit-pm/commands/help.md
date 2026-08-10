@@ -60,4 +60,4 @@ Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls →
 
 Board: Asana project `raftkit` (gid `1216551447756315`) · Format authority: the live Feature Template (gid in raftkit-core workflow-constants) · Shared rules: `raftkit-core` (auto-installed). For dev skills see `/raftkit-dev:help`; for QA see `/raftkit-qa:help`.
 
-Close by asking what they're trying to do — new project → onboarding; new feature → user-story; handoff → story-readiness; a gap found by dev or QA in a story that already exists → user-story amend mode.
+Close by asking what they're trying to do — new project → onboarding; a feature idea with nothing written down yet → feature-brainstorm; a feature that already has a source of truth → user-story; handoff → story-readiness; a gap found by dev or QA in a story that already exists → user-story amend mode.

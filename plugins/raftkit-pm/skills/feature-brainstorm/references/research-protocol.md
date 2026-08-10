@@ -46,12 +46,40 @@ A line that came from research and a line that came from the person must be
 tellable apart by reading the doc alone, by someone who was not in the
 session.
 
-## Research does not decide anything
+## Research does not decide anything — with one boundary
 
 A researched fact is input to a question, not a substitute for asking it.
 Present what it says, then ask what the person wants to do about it. If they
 disagree with it, their answer is what goes in the doc — with the research
 noted alongside as the thing they decided against.
+
+That holds for product choices. It does not hold for an authoritative
+requirement.
+
+## A requirement is not a preference
+
+A law, a regulation, a platform rule, or a term in a signed contract is a
+constraint the feature has to live inside. It is not a recommendation someone
+can decline.
+
+When research surfaces one of those and it conflicts with what the person
+wants the feature to do, do not record it as a decision they made against it.
+Record it as a conflict, stop treating that part of the spec as settled, and
+escalate — contracts and regulatory exposure are founder-level calls, never a
+spec doc's (`raftkit-core/house-rules`).
+
+```output
+This conflicts with a rule the feature has to follow, not a preference.
+Flagged as blocked and routed to the founders — the rest of the spec continues.
+```
+
+Two judgement calls this needs, both of which stay with a person:
+
+- **Does the requirement actually apply here?** Often unclear. If it is
+  unclear, that uncertainty is the open question — not the behaviour.
+- **Is it really authoritative?** A vendor's recommendation, an industry
+  convention, and a statute are three different things. Only the last one
+  binds. Say which you found.
 
 ## When a search comes back thin
 

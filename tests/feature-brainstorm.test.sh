@@ -87,6 +87,14 @@ grep -qi 'never automatic' "$RESEARCH" 2>/dev/null \
   && joined "$RESEARCH" | grep -qi 'tellable apart'
 check "FB4 research is announced, labelled inline, and never blended in as fact" ok $?
 
+# A law, platform rule or contract term is a constraint, not an option the
+# person can decline — that path escalates instead of recording a preference.
+joined "$RESEARCH" | grep -qi 'A requirement is not a preference' \
+  && joined "$RESEARCH" | grep -qi 'do not record it as a decision they made against it' \
+  && grep -q 'raftkit-core/house-rules' "$RESEARCH" 2>/dev/null \
+  && joined "$RESEARCH" | grep -qi 'escalate'
+check "FB4b an authoritative requirement is escalated, never overridden by preference" ok $?
+
 # --- FB5 [AC] error handling: contradictions flagged and re-asked, never guessed ---
 
 joined "$FB/SKILL.md" | grep -qi 'Flag, never guess' \
