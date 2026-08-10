@@ -163,6 +163,19 @@ grep -qi 'Must ask' "$MAP" 2>/dev/null \
   && joined "$FB/SKILL.md" | grep -qi 'Triage what is left'
 check "FB11 leftover questions are triaged by who has to answer them" ok $?
 
+# The whole point of the 🟢 label is that those questions stay internal. A doc
+# that carries them outward makes the triage decorative.
+joined "$MAP" | grep -qi 'It never goes out' \
+  && joined "$FB/SKILL.md" | grep -qi 'Team decides never leaves the building' \
+  && joined "$FB/SKILL.md" | grep -qi 'stripped from anything built to go to a client'
+check "FB11b team-decides questions are marked internal and never sent outward" ok $?
+
+# Every compiled fact carries a citation, not just a confidence tag — a session
+# answer needs one as much as a researched line does.
+joined "$FB/SKILL.md" | grep -qi 'a citation naming where it came from' \
+  && joined "$FB/SKILL.md" | grep -qi 'required for a session answer too'
+check "FB11c every compiled fact carries a citation, session answers included" ok $?
+
 # Facts carry the same tags project-onboarding uses, not a second scheme.
 grep -qi 'Confirmed' "$MAP" 2>/dev/null \
   && grep -qi 'Partial' "$MAP" 2>/dev/null \
@@ -177,6 +190,12 @@ joined "$NOTES" | grep -qi 'Offer, never save silently' \
   && joined "$NOTES" | grep -qi 'read the notes before re-scanning' \
   && joined "$FB/SKILL.md" | grep -qi 'Notes are never saved silently'
 check "FB13 session notes are read first, and saved only through the gate" ok $?
+
+# A note is not automatically true later. Only Confirmed carries forward.
+joined "$NOTES" | grep -qi 'Confirmed entries carry forward as settled' \
+  && joined "$NOTES" | grep -qi 'are leads, not answers' \
+  && joined "$NOTES" | grep -qi 'never carry a stale note forward as fact'
+check "FB13b only confirmed notes suppress re-asking; the rest are re-checked" ok $?
 
 # --- Batching: the shipped contract must not still say one-at-a-time ---
 

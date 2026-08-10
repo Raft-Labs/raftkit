@@ -11,9 +11,11 @@ document deep enough to write precise, gap-free stories from. A one-line idea
 is a complete starting point — the depth comes out of the conversation, not out
 of what the person walked in with.
 
-This exists because story quality tracks source-material quality. On the one
-project that had a detailed client-written feature doc, stories came out tight
-and fast; everywhere else they start thin and the gaps surface later as bugs.
+This exists because story quality tracks source-material quality. Where a
+feature has been thought through in detail first, the stories come out tight
+and fast; where it has not, they start thin and the gaps surface later as bugs.
+A client having already written that detail is luck, not a plan — this produces
+it either way.
 
 The job is not to fill in a form. By the end of a session the person should
 understand the feature better than when they started, and know exactly what
@@ -102,11 +104,19 @@ the person having material to hand.
    (`references/interview-map.md`). Sending a client a question the team could
    have settled itself costs goodwill and a week.
 
-10. **Compile.** Fill the live template's sections from the answers, tagging
-    each fact ✅ Confirmed / ⚠️ Partial / ❓ Missing the same way
-    `project-onboarding` does. Everything unresolved goes to the
+10. **Compile.** Fill the live template's sections from the answers. Every
+    fact carries both a tag — ✅ Confirmed / ⚠️ Partial / ❓ Missing — and a
+    citation naming where it came from, the same way `project-onboarding`
+    does. A citation is required for a session answer too, not only for
+    research; "you said this on <date>" is what makes the doc readable by
+    someone who was not in the room. Everything unresolved goes to the
     open-questions section with its triage label. An untouched section is
     marked not applicable with the reason, never left blank and never padded.
+
+    **🟢 Team decides never leaves the building.** Those questions are for the
+    team, so they are marked internal in the doc and stripped from anything
+    built to go to a client. A client asked to settle a question the team
+    could have settled learns the team does not know its own job.
 
 11. **Draft, approve, push.** Follow `raftkit-core/write-protocol`: show the
     full compiled doc in chat, name the exact destination, wait for explicit
@@ -114,9 +124,11 @@ the person having material to hand.
     `asana-formatting` when the destination is Asana, as-is on any other
     destination.
 
-12. **Offer to save the session notes**, then report and stop. Give the link,
-    the count of open questions by triage label, and the offer to run
-    `user-story` next. Notes are never saved silently
+12. **Offer to save the session notes**, then report and stop. Name where the
+    doc landed — the link when the destination has one, the exact path or task
+    otherwise. Never invent a link for a destination that has none. Give the
+    count of open questions by triage label, and the offer to run `user-story`
+    next. Notes are never saved silently
     (`references/sources-and-notes.md`).
 
 ## Depth

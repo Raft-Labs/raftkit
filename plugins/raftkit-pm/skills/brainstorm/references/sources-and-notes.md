@@ -15,8 +15,13 @@ Check in this order, and stop early when what you have is enough:
 
 1. **Session notes for this project.** What earlier sessions already settled.
    Read these first — they are faster than re-deriving, and they stop the
-   person re-explaining what they already explained. Anything recorded here
-   counts as settled context; build on it rather than re-verifying it.
+   person re-explaining what they already explained.
+
+   Only ✅ Confirmed entries carry forward as settled. ⚠️ Partial, ❓ Missing,
+   and anything still open are leads, not answers — check each against the
+   current sources and raise it again if it is still unresolved. Where a note
+   and a live source now disagree, surface both and ask which holds; never
+   carry a stale note forward as fact because it was written down once.
 2. **Asana.** Search the workspace from `raftkit-core/workflow-constants` for a
    task or project matching the name. Pull the task, its full description, and
    its comment history — decisions often live only in comments.

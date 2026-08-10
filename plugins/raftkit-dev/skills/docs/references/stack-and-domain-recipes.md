@@ -121,7 +121,10 @@ Concrete phrases in answers → what the skill should do:
 
 ## Decision tree the skill walks (in small, adaptive batches)
 
-Narrate each answer. Don't ask all at once — adapt based on prior answers.
+Narrate each answer. Ask up to three related questions per turn, never the
+whole tree at once, and adapt each set based on the prior answers
+(`raftkit-core/discovery-interview`). Where an answer decides which branch
+comes next, that question goes in its own turn.
 
 ```
 Q1: Internal tool with <20 fixed users?
