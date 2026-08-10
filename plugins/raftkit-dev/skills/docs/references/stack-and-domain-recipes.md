@@ -119,7 +119,7 @@ Concrete phrases in answers → what the skill should do:
 | "Should work offline" | Probe scope: read-only → TanStack Query + MMKV; write-too → CRDT design |
 | "Notifications / reminders" | User-specific timing → EventBridge Scheduler per-row; global daily → SST Cron |
 
-## Decision tree the skill walks (one question at a time)
+## Decision tree the skill walks (in small, adaptive batches)
 
 Narrate each answer. Don't ask all at once — adapt based on prior answers.
 

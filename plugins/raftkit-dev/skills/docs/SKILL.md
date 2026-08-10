@@ -1,6 +1,6 @@
 ---
 name: docs
-description: This skill should be used when a RaftLabs developer wants to design a project's documentation from scratch, document an existing codebase, or keep project documentation initialized, audited, synchronized, and verified — e.g. "help me design this project", "document this codebase for me", "set up the project docs", "do the docs still match the code?", "sync the docs for this story", "are the docs done for this change?", "scaffold the project" — or when a delivery workflow needs docs parity before a PR. It runs the full co-authoring design flow (one adaptive question at a time, recommendation-first), generates docs and diagrams from adaptable templates after human sign-off, discovers and preserves the repository's OWN documentation system, consumes approved handoffs instead of re-asking, runs a confirmed seven-step change lifecycle with no silent rewrites, verifies parity with evidence, and reverse-engineers existing code marking every fact confirmed, inferred, or unknown. It never restructures without an approved proposal, never chooses a Git range silently, and never writes to Asana directly.
+description: This skill should be used when a RaftLabs developer wants to design a project's documentation from scratch, document an existing codebase, or keep project documentation initialized, audited, synchronized, and verified — e.g. "help me design this project", "document this codebase for me", "set up the project docs", "do the docs still match the code?", "sync the docs for this story", "are the docs done for this change?", "scaffold the project" — or when a delivery workflow needs docs parity before a PR. It runs the full co-authoring design flow (a few related questions at a time, recommendation-first), generates docs and diagrams from adaptable templates after human sign-off, discovers and preserves the repository's OWN documentation system, consumes approved handoffs instead of re-asking, runs a confirmed seven-step change lifecycle with no silent rewrites, verifies parity with evidence, and reverse-engineers existing code marking every fact confirmed, inferred, or unknown. It never restructures without an approved proposal, never chooses a Git range silently, and never writes to Asana directly.
 user-invocable: true
 ---
 
@@ -42,7 +42,7 @@ a seventh command.
   classify the project, discover business context, select the stack, design
   auth/tenancy/RBAC, inventory modules, run the 20+1-step per-module deep
   dive, capture cross-cuts, confirm — then generate. The interview itself runs
-  under `raftkit-core/discovery-interview` — one adaptive question at a time,
+  under `raftkit-core/discovery-interview` — a few related questions at a time,
   recommendation-first, push-back on vague answers, its proactive and
   edge-case catalogs. Nothing is written before sign-off.
 - **init** — materialize a documentation foundation from **approved planning

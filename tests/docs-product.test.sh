@@ -74,11 +74,12 @@ cat_count=$(grep -cE '^[0-9]+\. \*\*' "$DIR_/edge-cases.md" 2>/dev/null || echo 
 [[ "$cat_count" -ge 24 ]] && grep -qi 'never let a category go silent\|answered or.*N/A' "$DIR_/edge-cases.md" 2>/dev/null
 check "DP6 edge-case guide walks at least 24 categories, none silent" ok $?
 
-grep -qi 'one question at a time' "$DI/SKILL.md" 2>/dev/null \
+grep -qi 'a few related questions at a time' "$DI/SKILL.md" 2>/dev/null \
+  && grep -qi 'three at most' "$DI/SKILL.md" 2>/dev/null \
   && grep -q '(Recommended)' "$DI/SKILL.md" 2>/dev/null \
   && grep -qi "don't pick this if\|do not pick this if" "$DI/SKILL.md" 2>/dev/null \
   && grep -q 'raftkit-core/discovery-interview' "$R/discovery-questions.md" 2>/dev/null
-check "DP7 co-authoring contract: one adaptive question, recommend-first, don't-pick-this-if caveats" ok $?
+check "DP7 co-authoring contract: small adaptive batches, recommend-first, don't-pick-this-if caveats" ok $?
 
 [[ -f "$DIR_/push-back.md" && -f "$DIR_/proactive-prompts.md" ]] \
   && grep -qi 'vague' "$DIR_/push-back.md" 2>/dev/null \

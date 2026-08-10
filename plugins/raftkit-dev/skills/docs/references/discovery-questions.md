@@ -1,4 +1,4 @@
-# Discovery Questions (one question at a time, adaptive)
+# Discovery Questions (asked in small, adaptive batches)
 
 The interview rules are `raftkit-core/discovery-interview` — one question at a
 time, recommendation first with a reason and a "don't pick this if…" caveat,
@@ -87,7 +87,7 @@ If usage-based → trigger credit-metering middleware pattern.
 
 ## §3 — Stack archetype
 
-Run the decision tree in `stack-selection.md` §7.5 verbatim, one question at a time.
+Run the decision tree in `stack-selection.md` §7.5 verbatim, in small batches.
 After landing on an archetype, RECAP with reasoning before asking the user to
 confirm. See example narration in `stack-selection.md`.
 

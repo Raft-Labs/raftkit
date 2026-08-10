@@ -27,7 +27,7 @@ Methodology of everything RaftKit produces (and of building RaftKit itself): **S
 plugins/
   raftkit-core/   # house rules, workflow constants, governance protocols pack,
                   # discovery-interview (the shared interview contract)
-  raftkit-pm/     # onboarding, feature-brainstorm, user-story, story-skill-generator,
+  raftkit-pm/     # onboarding, brainstorm, user-story, story-skill-generator,
                   # story-readiness, status-update, meeting-decisions,
                   # estimation                                          (Cowork)
   raftkit-dev/    # init, ultrathink, implement, scope-guard, simplify, pr,

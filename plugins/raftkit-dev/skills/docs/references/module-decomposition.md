@@ -34,7 +34,7 @@ After confirmation, you have the module list. Now Phase 6 begins.
 ## The 20-step per-module loop
 
 For each module, walk these in order, under the
-`raftkit-core/discovery-interview` contract: one question at a time, adaptive,
+`raftkit-core/discovery-interview` contract: a few related questions at a time,
 recommend with reasoning, push back on vague answers, apply its proactive
 prompts — plus this plugin's `stack-anti-patterns.md`.
 
