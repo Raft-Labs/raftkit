@@ -42,6 +42,19 @@ The protocol bodies and all four exact strings — ⚠️ EFFICIENCY WARNING, �
 
 Amending protocol *substance* is out of scope: content changes go through Ashit as a PR to this file set. The pack installs whole — all five protocols or none.
 
+## Pending amendment — Protocol 1's model-switching premise
+
+Recorded here, unresolved, because the payload cannot be edited to fix it and a reader of both documents needs to know which one governs.
+
+Protocol 1 states: "You cannot switch models programmatically mid-session, so you must prompt the user or parent session when an override is needed." That is a **premise plus a rule**, and only the premise has aged:
+
+- **The rule stands, unchanged.** Prompt the human when an override is needed. `house-rules`' cheapest-capable-tier rule keeps it — an unclear tier stops and asks rather than picking one.
+- **The premise is now only partly true.** A skill still cannot change the model of the session it is running in. It *can* name the model for a subagent it dispatches, which is what `raftkit-dev:implement` relies on when it binds the target-model column at Gate 1.
+
+**Which governs until Ashit rules:** Protocol 1's text is authoritative for the session model, and nothing in RaftKit switches that programmatically. The dispatch capability is an addition to the tier table's reach, not a licence to skip the prompt — read it that way anywhere the two documents appear together.
+
+**Decision owner:** Ashit, via a PR to this file set. Flagged on Asana task `1216383018361190`. Until it lands, the payload ships exactly as written and this note is the reconciliation.
+
 ## Guardrails
 
 - **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
