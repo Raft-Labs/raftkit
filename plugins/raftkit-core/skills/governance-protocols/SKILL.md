@@ -42,18 +42,17 @@ The protocol bodies and all four exact strings — ⚠️ EFFICIENCY WARNING, �
 
 Amending protocol *substance* is out of scope: content changes go through Ashit as a PR to this file set. The pack installs whole — all five protocols or none.
 
-## Pending amendment — Protocol 1's model-switching premise
+## Open question for Ashit — does Protocol 1 reach dispatched subagents?
 
-Recorded here, unresolved, because the payload cannot be edited to fix it and a reader of both documents needs to know which one governs.
+Recorded here because it affects shipped behaviour and only Ashit can settle it. This note asks a question; it does not answer one, and nothing in the payload has been edited or reinterpreted.
 
-Protocol 1 states: "You cannot switch models programmatically mid-session, so you must prompt the user or parent session when an override is needed." That is a **premise plus a rule**, and only the premise has aged:
+Protocol 1 says a model cannot be switched programmatically mid-session, so the user or parent session must be prompted when an override is needed.
 
-- **The rule stands, unchanged.** Prompt the human when an override is needed. `house-rules`' cheapest-capable-tier rule keeps it — an unclear tier stops and asks rather than picking one.
-- **The premise is now only partly true.** A skill still cannot change the model of the session it is running in. It *can* name the model for a subagent it dispatches, which is what `raftkit-dev:implement` relies on when it binds the target-model column at Gate 1.
+**What RaftKit does today, and the assumption underneath it.** `raftkit-dev:implement` names a model per phase in its Gate 1 decomposition table, which the developer approves before any phase runs, and `house-rules` requires the cheapest capable tier plus an explicit ask when the tier is unclear. That behaviour assumes Protocol 1's sentence speaks to the session a skill is running in — which RaftKit never changes programmatically — and that a per-phase model a human has approved is the prompt Protocol 1 asks for rather than a way around it.
 
-**Which governs until Ashit rules:** Protocol 1's text is authoritative for the session model, and nothing in RaftKit switches that programmatically. The dispatch capability is an addition to the tier table's reach, not a licence to skip the prompt — read it that way anywhere the two documents appear together.
+**The question:** is that reading correct? If Protocol 1's sentence is meant to cover dispatched subagents too, then the Gate 1 binding needs Ashit's amendment or removal, and the `house-rules` dispatch rule narrows to prompting only.
 
-**Decision owner:** Ashit, via a PR to this file set. Flagged on Asana task `1216383018361190`. Until it lands, the payload ships exactly as written and this note is the reconciliation.
+**Owner:** Ashit, by PR to this file set. Raised on Asana task `1216383018361190`. Until he rules, the payload ships exactly as written, and no skill may extend named dispatch to any path without a human approval gate in front of it.
 
 ## Guardrails
 
