@@ -9,8 +9,9 @@ verified evidence or marked as discovered-at-verification — never memory.
 Registry contract: one row per capability. `Policy` values: `required (declared)`
 (a plugin.json dependency, resolved only by a human-approved RaftKit
 install/update), `required (core-inherited)` (owned by raftkit-core, not
-classified here), `recommended`, `conditional: <when>`, `optional`. The
-classifier (`scripts/classify.mjs`) parses this table verbatim.
+classified here), `conditional (core-inherited): <when>` (the same core ownership,
+but needed only in the stated case), `recommended`, `conditional: <when>`,
+`optional`. The classifier (`scripts/classify.mjs`) parses this table verbatim.
 
 | Capability | Provider | Marketplace | Components | Policy | Ownership |
 |---|---|---|---|---|---|
@@ -37,12 +38,13 @@ classifier (`scripts/classify.mjs`) parses this table verbatim.
 ## Connector rows
 
 Two rows name a **connector**, not a plugin: `asana-connectivity` and
-`sheets-connectivity`. A connector cannot be checked the way a plugin can —
-`claude plugin list` does not see it, and its authentication is a human setup
-step. Both are therefore marked core-inherited, and the classifier reports them
-as not classified here rather than inventing an install command for them. They
-are listed so the seam is written down and a run can name what it needs, not so
-a script can prove it.
+`sheets-connectivity`. A connector is not installed or enabled the way a plugin
+is, and its authentication is a human setup step, so the classifier cannot prove
+it is present. Both are therefore marked core-inherited: the classifier reports
+them as not classified here rather than inventing an install command for them.
+They are listed so the seam is written down and a run can name what it needs —
+readiness for these two is confirmed by the run itself failing or succeeding to
+reach the connector, not by this preflight.
 
 `sheets-connectivity` is the seam `raftkit-qa`'s `test-suite` needs for its Sheet
 sync. It was **not** part of the 2026-07-21 installation sweep below and carries

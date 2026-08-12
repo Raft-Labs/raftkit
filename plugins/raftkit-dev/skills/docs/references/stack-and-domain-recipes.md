@@ -12,9 +12,12 @@ geospatial delivery, and consumer mobile.
 
 The archetypes below are also the **named-library layer** that
 `recipes`' [web-defaults.md](../../recipes/references/web-defaults.md) points to
-for library choices it leaves open. That file owns the resolution order — a
-Project Profile entry beats an archetype, and a story's explicit requirement
-beats both. Nothing here is house law on its own.
+for library choices it leaves open. `recipes`' own
+[SKILL.md](../../recipes/SKILL.md) owns the resolution order, and this layer sits
+last in it: a Project Profile entry beats an archetype, a story's explicit
+requirement beats both, and an archetype never overrides the web-stack House law
+in `web-defaults.md`. These are descriptions of what specific reference projects
+run — nothing here is house law on its own.
 
 ## The three archetypes
 

@@ -58,7 +58,8 @@ Execute the decomposition table one phase at a time.
   phases is the point: a subagent that sees the whole conversation drifts.
 - **Model per phase** from the table; **Sonnet is the default workhorse.** Dispatch
   each phase's subagent on the model its approved row names — the column binds
-  here, it is not advisory. With no model on the row, the subagent inherits the
+  here, it is not advisory. A row that reached approval without a model runs on
+  Sonnet, matching the table's stated default; never silently promote it to the
   session's model (`raftkit-core/house-rules`, cheapest-capable-tier rule).
 - **Test-first (TDD is mandatory), per `superpowers:test-driven-development`.**
   Each phase starts **red**: write the failing tests derived from the phase's

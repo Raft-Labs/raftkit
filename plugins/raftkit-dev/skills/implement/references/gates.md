@@ -75,7 +75,9 @@ close its own loop).
    phases that genuinely need it and say why in the row. Drop a mechanical phase
    (a rename, a find-and-replace, generated fixtures) to Haiku. The value in this
    column is the model the phase's subagent is actually dispatched on, not a
-   note — so the dev is approving the spend when they approve the table.
+   note — so the dev is approving the spend when they approve the table. When a
+   phase's tier is genuinely unclear, ask in this gate rather than picking upward
+   (`raftkit-core/house-rules`).
 4. **Design Approach.** State the story's structural decisions — 0 to 6 rows,
    each naming a Decision, the Alternative rejected, the Why, and the Phases it
    governs (the decomposition table's row numbers), plus a **Deliberately not

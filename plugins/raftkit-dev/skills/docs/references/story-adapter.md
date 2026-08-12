@@ -1,7 +1,7 @@
 # Story adapter — docs → Asana user stories, live template
 
 Generates one Asana user story per feature from the generated docs, using the
-organization's **live** User Story Template fetched at run time. No template
+organization's **live** Feature Template fetched at run time. No template
 body is ever cached in this plugin; the template is read live by GID (via the
 core workflow-constants) and its section structure drives the render. All
 writes go through core `asana-formatting` and the `write-protocol` gate —

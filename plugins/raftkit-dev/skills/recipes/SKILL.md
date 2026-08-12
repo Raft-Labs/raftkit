@@ -60,6 +60,9 @@ decision, resolve in this order — highest wins:
    requirement. Surface the conflict to the PM as a **possible recipe update**, so
    the recipe can be corrected by PR if the story revealed a better default.
 3. **The recipe / default itself**, as the fallback when nothing above speaks.
+4. **The named-library layer**, last: the archetype stacks
+   `web-defaults.md` points to, for a library choice the defaults leave open. It
+   never overrides the web-stack House law above it.
 
 A Project Profile override and a story conflict are different events: the first is
 a sanctioned, pre-declared deviation (note it, move on); the second is an

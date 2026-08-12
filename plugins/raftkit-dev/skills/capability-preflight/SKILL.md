@@ -49,9 +49,11 @@ Every registry capability lands in exactly one, with its evidence source named:
 5. **optional-not-selected** — optional/conditional and not selected by the
    current scope; noted, never proposed unprompted.
 
-Rows owned elsewhere are labelled, not classified: Asana connectivity is
-`raftkit-core (inherited)` — this preflight never claims or duplicates it — and
-the Skills CLI is verified at run time.
+Rows owned elsewhere are labelled, not classified: the two connector rows —
+Asana connectivity and Google Sheets connectivity — are `raftkit-core
+(inherited)`, and this preflight never claims or duplicates them. The Skills CLI
+is verified at run time. A connector's readiness is not machine-checkable here;
+see the registry's Connector rows section.
 
 ## Declared dependencies vs runtime installs
 
@@ -115,7 +117,8 @@ are off-limits).
 ## Out of scope
 
 - Installing the governance pack (setup-project owns it; it calls this preflight).
-- Asana connectivity ownership (raftkit-core; inherited, never duplicated here).
+- Connector ownership — Asana and Google Sheets (raftkit-core; inherited, never
+  duplicated here).
 - Editing plugin.json dependencies at run time (a RaftKit code change by PR).
 - Any auto-install, auto-enable, or removal; removal is a separate destructive
   action needing its own explicit approval.
