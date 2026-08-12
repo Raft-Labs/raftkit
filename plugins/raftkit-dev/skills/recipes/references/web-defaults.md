@@ -34,6 +34,22 @@ settles them — expect a Project Profile to override per project.
 | Language | **TypeScript** across the codebase | Project Profile |
 | Localization | User-facing strings localized, not hardcoded; the story's exact strings are the source language | Project Profile |
 
-If a decision is not covered here and no source states it, decide it for the story
-at hand and, if it looks reusable, **propose it as a default by PR** — do not
-silently bake an invented specific in as house law.
+## Named libraries (the layer below)
+
+The tables above deliberately name no libraries — a form-validation package, a
+data-fetching client, a styling kit. Those choices do exist in writing: the
+`docs` skill's archetype recipes record the exact stacks RaftLabs' reference
+implementations run on, library by library and version by version, in
+[stack-and-domain-recipes.md](../../docs/references/stack-and-domain-recipes.md).
+
+Treat that file as the **named-library layer**: the starting point when a web
+story needs a library this file leaves open, so the story does not re-argue a
+choice the reference projects already made. It sits below everything above it in
+the resolution order — a Project Profile entry still wins, and the story's
+explicit requirement still beats both. Read the archetype that matches the
+project, not the whole file, and note in the plan when the project departs from
+it.
+
+If a decision is covered in neither place and no source states it, decide it for
+the story at hand and, if it looks reusable, **propose it as a default by PR** —
+do not silently bake an invented specific in as house law.

@@ -10,6 +10,12 @@ All recommendations are evidence-backed by analysis of six production
 reference implementations across B2B SaaS, AI content, voice agents, ERP,
 geospatial delivery, and consumer mobile.
 
+The archetypes below are also the **named-library layer** that
+`recipes`' [web-defaults.md](../../recipes/references/web-defaults.md) points to
+for library choices it leaves open. That file owns the resolution order — a
+Project Profile entry beats an archetype, and a story's explicit requirement
+beats both. Nothing here is house law on its own.
+
 ## The three archetypes
 
 ### Archetype A — Better-T-Stack (BTS)
