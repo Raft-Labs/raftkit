@@ -20,6 +20,7 @@ classifier (`scripts/classify.mjs`) parses this table verbatim.
 | security-feedback | security-guidance | claude-plugins-official | hooks: SessionStart, UserPromptSubmit, PostToolUse, Stop (hook-only; no invocable component — the seam is "hooks active, Stop-review runs") | required (declared) | raftkit-dev |
 | pr-review | pr-review-toolkit | claude-plugins-official | inventory-at-verification (observed 2026-07-21: skill review-pr; agents code-reviewer, silent-failure-hunter, code-simplifier, comment-analyzer, pr-test-analyzer, type-design-analyzer — its code-simplifier agent collides by bare name with the code-simplifier plugin's; all agent dispatch uses scoped plugin-name:agent-name types, so downstream skills must name the scoped type, never the bare name) | required (declared) | raftkit-dev |
 | asana-connectivity | claude.ai Asana connector or an approved asana plugin | — | connector-or-plugin (authentication is a human/setup gate) | required (core-inherited) | raftkit-core (inherited) |
+| sheets-connectivity | claude.ai Google Sheets connector or an approved sheets plugin | — | connector-or-plugin (authentication is a human/setup gate) | conditional (core-inherited): raftkit-qa suite Sheet sync | raftkit-core (inherited) |
 | pr-annotations | coderabbit | claude-plugins-official | skills: coderabbit-review, autofix | optional (not in use — RaftLabs decided pr-review-toolkit only, Asana 1216551482947559, closed 2026-07-14) | raftkit-dev |
 | ui-implementation | frontend-design | claude-plugins-official | skill: frontend-design | baseline-required | raftkit-dev |
 | ui-polish | impeccable | impeccable | skill: impeccable | required-available (UI work; never replaces frontend-design) | raftkit-dev |
@@ -32,6 +33,23 @@ classifier (`scripts/classify.mjs`) parses this table verbatim.
 | memory-alt | remember | — | agent skill: remember | optional (standalone; never a substitute for claude-mem) | raftkit-dev |
 | skill-discovery | find-skills | — | agent skill: find-skills | baseline-required (the skill plus its Skills CLI seam: npx skills find / add / check / update; suggestions only, never auto-installs) | raftkit-dev |
 | continuous-observation | task-observer | — | agent skill: task-observer | baseline-required (CC BY 4.0 — copy with attribution; activation instruction merged into the project instruction file) | raftkit-dev |
+
+## Connector rows
+
+Two rows name a **connector**, not a plugin: `asana-connectivity` and
+`sheets-connectivity`. A connector cannot be checked the way a plugin can —
+`claude plugin list` does not see it, and its authentication is a human setup
+step. Both are therefore marked core-inherited, and the classifier reports them
+as not classified here rather than inventing an install command for them. They
+are listed so the seam is written down and a run can name what it needs, not so
+a script can prove it.
+
+`sheets-connectivity` is the seam `raftkit-qa`'s `test-suite` needs for its Sheet
+sync. It was **not** part of the 2026-07-21 installation sweep below and carries
+no verification evidence: whether QA's Cowork setup exposes a Sheets connector at
+all is still the open PRD question §10.8. Until that is answered, `test-suite`'s
+own rule stands — if the connector is absent from the run's environment, stop and
+name it, never assume it.
 
 ## Verification evidence (2026-07-21, isolated CLAUDE_CONFIG_DIR)
 
