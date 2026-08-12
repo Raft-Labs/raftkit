@@ -72,7 +72,10 @@ close its own loop).
    Decompose whenever a phase would touch more than `decomposition_threshold`
    files (read the value live from `governance-protocols`). Model per phase from
    the table — **Sonnet is the default workhorse**; reserve a stronger model for
-   phases that genuinely need it and say why in the row.
+   phases that genuinely need it and say why in the row. Drop a mechanical phase
+   (a rename, a find-and-replace, generated fixtures) to Haiku. The value in this
+   column is the model the phase's subagent is actually dispatched on, not a
+   note — so the dev is approving the spend when they approve the table.
 4. **Design Approach.** State the story's structural decisions — 0 to 6 rows,
    each naming a Decision, the Alternative rejected, the Why, and the Phases it
    governs (the decomposition table's row numbers), plus a **Deliberately not
