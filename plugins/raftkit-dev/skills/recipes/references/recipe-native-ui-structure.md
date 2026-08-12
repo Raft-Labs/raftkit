@@ -11,6 +11,12 @@ A **mobile** story builds screens. This recipe governs **structure** —
 navigation, back behaviour, control styles — not brand: the project's design
 tokens still style the UI.
 
+The conventions below are the platform vendors' own, not RaftLabs inventions:
+Apple's Human Interface Guidelines on iOS and Android's Material Design. Where
+this recipe is silent on a structural question, those guidelines are the
+authority to check — read the current published guidance rather than assuming a
+remembered version of it.
+
 ## Story pattern
 
 > As a mobile user, I want the app to navigate and behave the way my platform
