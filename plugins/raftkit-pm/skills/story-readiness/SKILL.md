@@ -96,6 +96,12 @@ both sides. Building that dev-side enforcement is out of scope here.
   reconciles a comment-only clarification **itself** and never asks this gate to
   re-bless a state it structurally cannot see. Only a real description edit or an
   added `[AC]` subtask moves this audit's verdict on a later run.
+- **This gate is also `user-story` amend mode's entry test.** `user-story`
+  (Mode B, `user-story/references/amend-mode.md`) runs this gate before it edits
+  an existing story: PASS lets the amend proceed, NOT READY refuses it outright
+  and hands the PM this gap list. That changes nothing here — the gate stays
+  **read-only** and its verdict stays binary. It never amends anything itself,
+  and it does not soften a verdict because an amend is waiting on it.
 - **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Reference file

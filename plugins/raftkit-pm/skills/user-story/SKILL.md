@@ -1,6 +1,6 @@
 ---
 name: user-story
-description: This skill should be used when a RaftLabs PM wants to write, generate, or draft a user story for a project into an Asana task — e.g. "write a user story", "draft the story for password reset", "turn this scope into a RaftLabs story", "generate the user-story for this feature". Reads the live Feature Template from Asana as the format authority, grounds every claim in the PM-supplied source of truth, and writes only after approval. Also sizes one story on request — "how long will this take to build?", "how long will this story take", "size this story", "is this a day or a week?", "how big is this change request?" — returning one hour range with named assumptions under the founder-review watermark. This answers how big a story is, not what it costs to quote. A task-level breakdown with hours per acceptance criterion belongs to raftkit-pm:estimation, for one story as much as for a whole list.
+description: This skill should be used when a RaftLabs PM wants to write, generate, or draft a user story for a project into an Asana task — e.g. "write a user story", "draft the story for password reset", "turn this scope into a RaftLabs story", "generate the user-story for this feature". It is also the skill for amending a story that already exists — "amend this story", "extend this story with the onboarding changes", "update an existing story", "add these acceptance criteria to <task>", "the dev found a gap in this story, fix it" — which runs as amend mode, a diff-first additive edit that never rewrites the story, tags everyone following the task, and re-runs the readiness gate. Reads the live Feature Template from Asana as the format authority, grounds every claim in the PM-supplied source of truth, and writes only after approval. Also sizes one story on request — "how long will this take to build?", "how long will this story take", "size this story", "is this a day or a week?", "how big is this change request?" — returning one hour range with named assumptions under the founder-review watermark. This answers how big a story is, not what it costs to quote. A task-level breakdown with hours per acceptance criterion belongs to raftkit-pm:estimation, for one story as much as for a whole list.
 user-invocable: true
 ---
 
@@ -15,6 +15,22 @@ a developer or an AI never has to guess — they derive the HOW from the codebas
 This generalizes the proven flowhoney method (PRD §5.2): the template approach cut
 StrikeHoney staging bugs to zero. This skill makes it project-independent by
 reading the format live and grounding content in each project's own sources.
+
+## Two modes
+
+Pick the mode **deterministically on entry** — from the target task's state, never
+from how the request was phrased:
+
+| Mode | Entry condition | What it writes |
+|---|---|---|
+| **Mode A · author** | The target task has **no story body** (an empty description) | The full body, the `[AC]` subtasks, and `Development` / `Testing` / `Bugs` |
+| **Mode B · amend** | The task already holds a story and the PM asks to extend, update, or change it | A merged description, added or reworded `[AC]`s, and one comment tagging every follower of the task |
+
+Mode A is the run flow below. **Mode B runs
+[`references/amend-mode.md`](references/amend-mode.md) instead** — it starts by
+running the readiness gate as its entry test and refuses a story that is not
+ready. A PM asking to amend a task whose description is empty is authoring, not
+amending: say so and run Mode A.
 
 ## The one rule that governs everything
 
@@ -38,7 +54,7 @@ something the PM provided.
 
 If any of these is missing, **ask before doing anything else** (the Empty state).
 
-## Run flow
+## Run flow — Mode A
 
 1. **Resolve constants and fetch the live template.** Get the workspace GID and
    the Feature Template GID from `raftkit-core/workflow-constants`, then fetch
@@ -104,6 +120,12 @@ it names one story — as is a feature list or a backlog. Say so and stop.
   something only the product knows — ask instead.
 - **No cached template text.** The format comes from the live fetch, so a template
   change in Asana is reflected the same day with no plugin release.
+- **An existing story is amended, never rewritten.** Mode B is additive: no
+  section deleted or renumbered, no `[AC]` dropped, an existing `[AC]` reworded
+  only where the PM's instruction names it, and no subtask ever ticked. It
+  refuses outright on a story the readiness gate calls not ready, and it warns
+  and waits for a separate go when the story is already being built
+  (`references/amend-mode.md`).
 - **Sources are confirmed before drafting, every run** — this checkpoint precedes
   the existing draft → approve → push gate for the story body and does not
   replace or duplicate it.
@@ -123,6 +145,10 @@ it names one story — as is a feature list or a backlog. Say so and stop.
 - **`references/sizing.md`** — how one story is sized: the hour range, the named
   assumptions, what widens the range, the hard output cap, and the redirects for
   bulk lists, prices, and dates.
+- **`references/amend-mode.md`** — Mode B: the readiness-gate entry test and its
+  three outcomes, the mid-build warning, the diff-first draft, the additive `[AC]`
+  rules, the comment that tags every follower of the task, and the closing
+  re-audit.
 
 
 ## Asana rendering
