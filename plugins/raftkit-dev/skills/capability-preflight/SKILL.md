@@ -34,7 +34,9 @@ RaftKit install/update; the preflight verifies them but
 
 ## The five readiness states (exhaustive)
 
-Every registry capability lands in exactly one, with its evidence source named:
+Every **classified** registry capability lands in exactly one, with its evidence
+source named. The rows this preflight does not classify are named at the end of
+this section, and they are not counted in any of the five:
 
 1. **ready** — installed, enabled, and the registry's exact components are
    present in the inventory.
