@@ -56,13 +56,12 @@ Execute the decomposition table one phase at a time.
 - **Narrow context only.** Each phase subagent receives **only its phase's files
   and its sub-prompt — never the root chat history.** Context hygiene between
   phases is the point: a subagent that sees the whole conversation drifts.
-- **Model per phase** from the table. Dispatch each phase's subagent on the model
-  its approved row names — the column binds here, it is not advisory, and the
-  dispatched model is always one a human approved at Gate 1. A row that somehow
-  reached approval with no model does **not** get a fallback: stop and ask which
-  tier it should run on, exactly as `raftkit-core/house-rules` requires for an
-  unclear tier. Never substitute a default and never promote it to the session's
-  model.
+- **Model per phase** from the table; **Sonnet is the default workhorse.** The
+  row's tier is a recommendation to the dev, not something this skill switches on
+  its own: before a phase whose row names a cheaper tier than the current session
+  model, surface the row's tier and the switch command, then proceed as the dev
+  directs (`raftkit-core/house-rules`). A row that reached approval with no tier
+  is asked about, not defaulted.
 - **Test-first (TDD is mandatory), per `superpowers:test-driven-development`.**
   Each phase starts **red**: write the failing tests derived from the phase's
   `[AC]`s, then write only the code that turns them **green**. `[AC]`s map

@@ -48,11 +48,11 @@ Recorded here because it affects shipped behaviour and only Ashit can settle it.
 
 Protocol 1 says a model cannot be switched programmatically mid-session, so the user or parent session must be prompted when an override is needed.
 
-**What RaftKit does today, and the assumption underneath it.** `raftkit-dev:implement` names a model per phase in its Gate 1 decomposition table, which the developer approves before any phase runs, and `house-rules` requires the cheapest capable tier plus an explicit ask when the tier is unclear. That behaviour assumes Protocol 1's sentence speaks to the session a skill is running in — which RaftKit never changes programmatically — and that a per-phase model a human has approved is the prompt Protocol 1 asks for rather than a way around it.
+**What RaftKit does today — nothing that needs this question answered.** No skill selects a model programmatically. `raftkit-dev:implement` records a recommended tier per phase in its Gate 1 table and surfaces the switch command when the session is running something more expensive than a phase needs; `house-rules` requires that recommendation plus an explicit ask when the tier is unclear. That is Protocol 1's own instruction — prompt the user when an override is needed — and it stands whichever way the question below is answered.
 
-**The question:** is that reading correct? If Protocol 1's sentence is meant to cover dispatched subagents too, then the Gate 1 binding needs Ashit's amendment or removal, and the `house-rules` dispatch rule narrows to prompting only.
+**The question:** does Protocol 1's sentence leave room for a skill to *dispatch* a subagent on a tier a human approved in advance, or does it rule that out along with mid-session switching? An earlier version of this branch made `implement`'s Gate 1 column bind at dispatch, which needed the permissive reading. That was removed rather than shipped on an unapproved interpretation — the column is a recommendation again.
 
-**Owner:** Ashit, by PR to this file set. Raised on Asana task `1216383018361190`. Until he rules, the payload ships exactly as written, and no skill may extend named dispatch to any path without a human approval gate in front of it.
+**Owner:** Ashit, by PR to this file set. Raised on Asana task `1216383018361190`. Until he rules: the payload ships exactly as written, no skill selects a model programmatically, and the binding stays out. If he confirms the permissive reading, the Gate 1 binding can land as a follow-up.
 
 ## Guardrails
 
