@@ -52,6 +52,8 @@ Protocol 1 says a model cannot be switched programmatically mid-session, so the 
 
 **The question:** does Protocol 1's sentence leave room for a skill to *dispatch* a subagent on a tier a human approved in advance, or does it rule that out along with mid-session switching? An earlier version of this branch made `implement`'s Gate 1 column bind at dispatch, which needed the permissive reading. That was removed rather than shipped on an unapproved interpretation — the column is a recommendation again.
 
+**Evidence already in the pack, for Ashit to weigh.** The orchestrator payload points toward the permissive reading: its Step 2 breakdown table carries a **Target Model** column filled in per phase, and Step 3 then has the skill provision each phase's subagent with `/agents` after the user confirms. Read together, that describes naming a model per phase and then spawning subagents on it — the very thing the question asks about — and it sits in the same pack as Protocol 1's sentence. RaftKit does not act on that reading while the question is open; it is recorded here because it is Ashit's own text and it bears directly on how he decides.
+
 **Owner:** Ashit, by PR to this file set. Raised on Asana task `1216383018361190`. Until he rules: the payload ships exactly as written, no skill selects a model programmatically, and the binding stays out. If he confirms the permissive reading, the Gate 1 binding can land as a follow-up.
 
 ## Guardrails

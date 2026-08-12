@@ -68,7 +68,9 @@ Execute the decomposition table one phase at a time.
   model; record which, so an expensive run is a decision rather than an accident.
   One stop covers a consecutive run of phases sharing the same recommended tier —
   do not re-ask per phase once the dev has answered for that tier. A row that
-  reached approval with no tier is asked about the same way, never defaulted.
+  reached approval with no tier stops the same way, and the dev names one of two
+  things before the phase starts: run it on the current session model, or a tier
+  they switch to. There is no third option and no default.
 - **Test-first (TDD is mandatory), per `superpowers:test-driven-development`.**
   Each phase starts **red**: write the failing tests derived from the phase's
   `[AC]`s, then write only the code that turns them **green**. `[AC]`s map
