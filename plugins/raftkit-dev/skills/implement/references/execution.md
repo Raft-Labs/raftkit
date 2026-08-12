@@ -57,11 +57,18 @@ Execute the decomposition table one phase at a time.
   and its sub-prompt — never the root chat history.** Context hygiene between
   phases is the point: a subagent that sees the whole conversation drifts.
 - **Model per phase** from the table; **Sonnet is the default workhorse.** The
-  row's tier is a recommendation to the dev, not something this skill switches on
-  its own: before a phase whose row names a cheaper tier than the current session
-  model, surface the row's tier and the switch command, then proceed as the dev
-  directs (`raftkit-core/house-rules`). A row that reached approval with no tier
-  is asked about, not defaulted.
+  row's tier is a recommendation to the dev — this skill never switches models
+  itself (`raftkit-core/house-rules`).
+
+  **A cheaper recommended tier is a hard stop.** Before starting a phase whose row
+  names a tier cheaper than the session's current model, stop and name three
+  things: the phase, its recommended tier, and the exact switch command. Then
+  **wait — silence is not an answer, and the phase does not start without one.**
+  The dev either switches and says to continue, or says to proceed on the current
+  model; record which, so an expensive run is a decision rather than an accident.
+  One stop covers a consecutive run of phases sharing the same recommended tier —
+  do not re-ask per phase once the dev has answered for that tier. A row that
+  reached approval with no tier is asked about the same way, never defaulted.
 - **Test-first (TDD is mandatory), per `superpowers:test-driven-development`.**
   Each phase starts **red**: write the failing tests derived from the phase's
   `[AC]`s, then write only the code that turns them **green**. `[AC]`s map

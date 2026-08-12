@@ -74,11 +74,11 @@ close its own loop).
    the table — **Sonnet is the default workhorse**; reserve a stronger model for
    phases that genuinely need it and say why in the row. Drop a mechanical phase
    (a rename, a find-and-replace, generated fixtures) to Haiku. The column is the
-   **recommended** tier per phase, not a switch this skill throws: where a row's
-   tier is cheaper than the dev's current session model, say so with the command
-   to switch and let the dev decide (`raftkit-core/house-rules` — the human does
-   the switching). When a phase's tier is genuinely unclear, ask here rather than
-   picking upward.
+   **recommended** tier per phase, not a switch this skill throws — the human does
+   the switching (`raftkit-core/house-rules`). Say here which rows are cheaper than
+   the dev's current session model, so the approved plan already shows where
+   execution will stop to ask (`references/execution.md`). When a phase's tier is
+   genuinely unclear, settle it here rather than picking upward.
 4. **Design Approach.** State the story's structural decisions — 0 to 6 rows,
    each naming a Decision, the Alternative rejected, the Why, and the Phases it
    governs (the decomposition table's row numbers), plus a **Deliberately not
