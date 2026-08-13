@@ -120,6 +120,12 @@ readiness gate; an unresolved story area becomes a named assumption and widens
 the range instead of blocking the answer. Mechanics and the capped output shape
 are in `references/sizing.md`.
 
+**The implementing developer is a required input** — the name of the developer who
+will build the story and vet the number. Required for any output that carries
+numbers: it fills the vetting link of the approval chain. There is no lookup source
+and no default — the PM names them. If none is given, stop and ask before emitting
+a range; never guess a name, and never emit numbers with that slot unfilled.
+
 The boundary is the kind of answer, not the story count. A task-level breakdown,
 an estimate, or a quote is [estimation](../estimation/SKILL.md)'s lane even when
 it names one story — as is a feature list or a backlog. Say so and stop.
