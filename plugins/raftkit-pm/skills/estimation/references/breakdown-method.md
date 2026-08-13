@@ -52,16 +52,17 @@ sum across N sub-stories.
 
 ## Output shapes
 
-The watermark is always the first line. Use literal `—` and `⚠️`; keep it plain so it
-reads cleanly in chat. On the success shape the approval chain follows the watermark,
-so the numbers below it carry their route to the client. The refusal and empty shapes
-emit no numbers, so there is nothing to route: they carry the watermark alone.
+The watermark is always the first line. Use literal `—`, `→` and `⚠️`; keep it plain
+so it reads cleanly in chat. The approval chain follows the watermark on any shape
+that carries numbers, so those numbers carry their route to the client. Shapes that
+carry no numbers — refusal, empty, error — have nothing to route: they omit the chain
+line and keep their own explanatory text under the watermark.
 
 ### Success
 
 ```output
 Requires founder review — not a client commitment.
-AI estimate → vetted by the developer who will build it → approved by Nirav or Ashit → only then shared with the client.
+AI estimate → vetted by <implementing developer> → approved by Nirav or Ashit → only then shared with the client.
 
 Estimate — <story title>
 

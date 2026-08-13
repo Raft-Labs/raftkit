@@ -22,16 +22,21 @@ the breakdown; it never turns one into a price, a quote, or a promise.
 - **Never a commitment.** Every output opens with the exact watermark
   **`Requires founder review — not a client commitment.`** — first line, every run,
   no flag or option disables it. An estimate that carries numbers also carries the
-  **estimation approval chain** (`raftkit-core/house-rules`): the developer who will
-  build it vets the number, Nirav or Ashit approves it, and only then may a client see
-  it. Estimates are ranges, never single points, and this skill never prices, quotes,
+  **estimation approval chain** (`raftkit-core/house-rules`): the named implementing
+  developer vets the number, Nirav or Ashit approves it, and only then may a client
+  see it. Estimates are ranges, never single points, and this skill never prices, quotes,
   promises a delivery date, or plans capacity: those escalate to founders
   (`raftkit-core/house-rules`).
 
 ## Inputs
 
 1. **The story** — a task link or GID. If none is given, ask for one.
-2. **The Project Profile (optional, read-only)** — consulted only for `⚠️ Partial`
+2. **The implementing developer** — the name of the developer who will build the
+   story and vet the number. Required for any output that carries numbers: it fills
+   the vetting link of the approval chain. There is no lookup source and no default —
+   the PM names them. If none is given, stop and ask before emitting an estimate;
+   never guess a name, and never emit numbers with that slot unfilled.
+3. **The Project Profile (optional, read-only)** — consulted only for `⚠️ Partial`
    markers that widen ranges. Its home is an open decision, so there is no default
    path: the PM points at the approved profile, or there is none. When no profile is
    supplied, say so and estimate without profile-driven widening — never invent a
@@ -71,18 +76,19 @@ the breakdown; it never turns one into a price, a quote, or a promise.
    sub-story by sub-story and summed with the combined assumptions.
 
 6. **Emit.** Output opens with the watermark as its first line, then the approval
-   chain, then the breakdown,
-   the total range, and the assumption list — the exact shape is in
-   `references/breakdown-method.md`. Read-only: nothing is written to Asana.
+   chain naming the implementing developer, then the breakdown, the total range, and
+   the assumption list — the exact shape is in `references/breakdown-method.md`.
+   Read-only: nothing is written to Asana.
 
 ## Guardrails
 
 - **Watermark, always, undisableable.** The exact string
   `Requires founder review — not a client commitment.` is the first line of **every**
   output — happy path, refusal, empty, error. No flag, option, or phrasing suppresses
-  it. On the success shape the approval chain line follows it, and is equally
-  undisableable; the refusal and empty shapes emit no numbers, so they carry the
-  watermark alone.
+  it. The approval chain line follows the watermark on any output that carries
+  numbers, and is equally undisableable there. Outputs that carry no numbers —
+  refusal, empty, error — omit the chain line and keep their own explanatory text
+  under the watermark.
 - **Ranges, never points.** Every number is a low–high range. Confidence is a tight
   range; uncertainty is a wide one; a bare single number is never emitted.
 - **Every range carries an assumption.** A range with no stated assumption is
@@ -105,5 +111,5 @@ the breakdown; it never turns one into a price, a quote, or a promise.
 
 - **`references/breakdown-method.md`** — how to decompose a ready story into dev tasks
   1:1 with its `[AC]`s/scenarios, the range-and-assumption rules (never a point), how
-  `⚠️ Partial` widens a range and names its driver, epic handling, and the exact output
-  shapes (success, refusal, empty).
+  `⚠️ Partial` widens a range and names its driver, epic handling, the exact output
+  shapes (success, refusal, empty), and where the approval chain sits in each.
