@@ -1,6 +1,6 @@
 ---
 name: capability-preflight
-description: This skill is consulted by raftkit-dev skills (setup-project first among them) whenever a workflow needs a third-party capability — before Gate 0 of implement, before setup installs the governance pack, or whenever a provider seam is about to be invoked. It inventories installed plugins and agent skills, classifies every registry capability into one of five readiness states with its evidence, verifies exact components (a named agent, named skills, hooks — never just a plugin name), and drafts install plans that hard-stop for explicit human approval. It never installs, enables, or removes anything on its own, never resolves declared dependencies at runtime, and never lets a downstream skill improvise its own install behavior.
+description: This skill is consulted by raftkit-dev skills (setup-project first among them) whenever a workflow needs a third-party capability — before Gate 0 of implement, before setup installs the governance pack, or whenever a provider seam is about to be invoked. It inventories installed plugins and agent skills, classifies every classifiable registry capability into one of five readiness states with its evidence (connector rows are labelled, not classified), verifies exact components (a named agent, named skills, hooks — never just a plugin name), and drafts install plans that hard-stop for explicit human approval. It never installs, enables, or removes anything on its own, never resolves declared dependencies at runtime, and never lets a downstream skill improvise its own install behavior.
 user-invocable: false
 ---
 
@@ -34,7 +34,9 @@ RaftKit install/update; the preflight verifies them but
 
 ## The five readiness states (exhaustive)
 
-Every registry capability lands in exactly one, with its evidence source named:
+Every **classified** registry capability lands in exactly one, with its evidence
+source named. The rows this preflight does not classify are named at the end of
+this section, and they are not counted in any of the five:
 
 1. **ready** — installed, enabled, and the registry's exact components are
    present in the inventory.
@@ -49,9 +51,11 @@ Every registry capability lands in exactly one, with its evidence source named:
 5. **optional-not-selected** — optional/conditional and not selected by the
    current scope; noted, never proposed unprompted.
 
-Rows owned elsewhere are labelled, not classified: Asana connectivity is
-`raftkit-core (inherited)` — this preflight never claims or duplicates it — and
-the Skills CLI is verified at run time.
+Rows owned elsewhere are labelled, not classified: the two connector rows —
+Asana connectivity and Google Sheets connectivity — are `raftkit-core
+(inherited)`, and this preflight never claims or duplicates them. The Skills CLI
+is verified at run time. A connector's readiness is not machine-checkable here;
+see the registry's Connector rows section.
 
 ## Declared dependencies vs runtime installs
 
@@ -115,7 +119,8 @@ are off-limits).
 ## Out of scope
 
 - Installing the governance pack (setup-project owns it; it calls this preflight).
-- Asana connectivity ownership (raftkit-core; inherited, never duplicated here).
+- Connector ownership — Asana and Google Sheets (raftkit-core; inherited, never
+  duplicated here).
 - Editing plugin.json dependencies at run time (a RaftKit code change by PR).
 - Any auto-install, auto-enable, or removal; removal is a separate destructive
   action needing its own explicit approval.

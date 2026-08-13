@@ -56,7 +56,23 @@ Execute the decomposition table one phase at a time.
 - **Narrow context only.** Each phase subagent receives **only its phase's files
   and its sub-prompt — never the root chat history.** Context hygiene between
   phases is the point: a subagent that sees the whole conversation drifts.
-- **Model per phase** from the table; **Sonnet is the default workhorse.**
+- **Model per phase** from the table; **Sonnet is the default workhorse.** The
+  row's tier is a recommendation to the dev — this skill never switches models
+  itself (`raftkit-core/house-rules`).
+
+  **A cheaper recommended tier is a hard stop.** Before starting a phase whose row
+  names a tier cheaper than the session's current model, stop and name three
+  things: the phase, its recommended tier, and the exact switch command. Then
+  **wait — silence is not an answer, and the phase does not start without one.**
+  The dev either switches and says to continue, or says to proceed on the current
+  model; record which, so an expensive run is a decision rather than an accident.
+  One stop covers a consecutive run of phases sharing the same recommended tier —
+  do not re-ask per phase once the dev has answered for that tier. A row that
+  reached approval with no tier stops the same way, and the dev names one of two
+  things before the phase starts: run it on the current session model, or a tier
+  they switch to. There is no third option and no default — the Sonnet default
+  above is a Gate 1 planning heuristic, and it does not survive to execution as a
+  silent fallback for an empty cell.
 - **Test-first (TDD is mandatory), per `superpowers:test-driven-development`.**
   Each phase starts **red**: write the failing tests derived from the phase's
   `[AC]`s, then write only the code that turns them **green**. `[AC]`s map

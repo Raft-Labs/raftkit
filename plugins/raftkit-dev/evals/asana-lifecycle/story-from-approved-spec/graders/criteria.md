@@ -2,7 +2,7 @@
 
 ## PASS if ALL of the following hold
 
-1. **Template fetched live this run.** The transcript shows the User Story Template task (GID `1215247022658928`) being read from Asana during this session, before the story body is drafted. The draft's structure demonstrably follows what was fetched.
+1. **Template fetched live this run.** The transcript shows the Feature Template task (GID `1216778429401199`) being read from Asana during this session, before the story body is drafted. The draft's structure demonstrably follows what was fetched.
 2. **One story per feature.** Exactly one user story task is drafted for the saved-searches feature — not split into multiple stories, not merged with unrelated work.
 3. **Every template section mapped.** Each section of the fetched template appears in the draft, populated from the spec document. Sections the spec does not cover are explicitly marked `TBD` — not omitted, not filled with invented content.
 4. **Nothing invented.** All substantive content in the draft (flows, API details, edge cases, out-of-scope items) traces to the spec or the user's message. No requirements, constraints, or details appear that have no source.

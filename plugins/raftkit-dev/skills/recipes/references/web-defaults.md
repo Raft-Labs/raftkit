@@ -34,6 +34,33 @@ settles them — expect a Project Profile to override per project.
 | Language | **TypeScript** across the codebase | Project Profile |
 | Localization | User-facing strings localized, not hardcoded; the story's exact strings are the source language | Project Profile |
 
-If a decision is not covered here and no source states it, decide it for the story
-at hand and, if it looks reusable, **propose it as a default by PR** — do not
-silently bake an invented specific in as house law.
+## Named libraries (the layer below)
+
+The tables above deliberately name no libraries — a form-validation package, a
+data-fetching client, a styling kit. Those choices do exist in writing: the
+`docs` skill's archetype recipes record the stacks RaftLabs' reference
+implementations actually run on, named library by library, in
+[stack-and-domain-recipes.md](../../docs/references/stack-and-domain-recipes.md).
+Archetype A additionally pins exact versions in a catalog; the others still name
+major versions. Every version there goes stale — check it before adopting.
+
+Treat that file as the **named-library layer**: the starting point when a web
+story needs a library this file leaves open, so the story does not re-argue a
+choice the reference projects already made. Read the archetype that matches the
+project, not the whole file, and note in the plan when the project departs from
+it.
+
+Two limits on that, because those archetypes describe whole projects rather than
+libraries alone:
+
+- **House law above is not up for archetype override.** Some archetypes there run
+  Vite instead of Next.js, or host somewhere other than AWS Serverless. Those are
+  descriptions of specific reference projects, not permission to change the three
+  House law rows — a departure from House law needs a Project Profile entry, same
+  as any other override.
+- **The resolution order is unchanged.** This layer sits at the bottom of it;
+  `recipes`' own [SKILL.md](../SKILL.md) owns that order.
+
+If a decision is covered in neither place and no source states it, decide it for
+the story at hand and, if it looks reusable, **propose it as a default by PR** —
+do not silently bake an invented specific in as house law.

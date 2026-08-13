@@ -72,7 +72,14 @@ close its own loop).
    Decompose whenever a phase would touch more than `decomposition_threshold`
    files (read the value live from `governance-protocols`). Model per phase from
    the table — **Sonnet is the default workhorse**; reserve a stronger model for
-   phases that genuinely need it and say why in the row.
+   phases that genuinely need it and say why in the row. Drop a mechanical phase to
+   the lowest tier `protocols.md` covers for that kind of work — read the tiers and
+   their examples live from `governance-protocols`, never from a copy. The column is the
+   **recommended** tier per phase, not a switch this skill throws — the human does
+   the switching (`raftkit-core/house-rules`). Say here which rows are cheaper than
+   the dev's current session model, so the approved plan already shows where
+   execution will stop to ask (`references/execution.md`). When a phase's tier is
+   genuinely unclear, settle it here rather than picking upward.
 4. **Design Approach.** State the story's structural decisions — 0 to 6 rows,
    each naming a Decision, the Alternative rejected, the Why, and the Phases it
    governs (the decomposition table's row numbers), plus a **Deliberately not

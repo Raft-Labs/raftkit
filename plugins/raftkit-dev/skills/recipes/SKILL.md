@@ -46,6 +46,12 @@ scratch; the plan then **names which recipes were applied**.
 When defaults, a recipe, the story, and a Project Profile all speak to the same
 decision, resolve in this order — highest wins:
 
+**The story is above all of it.** An explicit story requirement or `[AC]` is
+never overridden by anything below, including a Project Profile. The list starts
+at the Profile only because a Profile is what overrides a *recipe or default
+choice*; where a Profile and the story disagree, the story wins and the clash is
+surfaced. Read the list with that ceiling in mind.
+
 1. **Project Profile override.** A project may override a default or a recipe
    **choice only** through an explicit entry in its Project Profile. Silent
    per-repo divergence is not allowed. When an override applies, it wins and the
@@ -60,6 +66,9 @@ decision, resolve in this order — highest wins:
    requirement. Surface the conflict to the PM as a **possible recipe update**, so
    the recipe can be corrected by PR if the story revealed a better default.
 3. **The recipe / default itself**, as the fallback when nothing above speaks.
+4. **The named-library layer**, last: the archetype stacks
+   `web-defaults.md` points to, for a library choice the defaults leave open. It
+   never overrides the web-stack House law above it.
 
 A Project Profile override and a story conflict are different events: the first is
 a sanctioned, pre-declared deviation (note it, move on); the second is an
