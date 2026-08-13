@@ -45,7 +45,7 @@ Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls →
 | `story-skill-generator` | A project needs its own baked story skill | "generate the story skill for project X" |
 | `story-readiness` | Checking a story before dev handoff | "is this story ready? \<url\>" |
 | `status-update` | Weekly client update from the board | "draft the client update for project X" |
-| `meeting-decisions` | Turning a call (Fathom or uploaded transcript) into decisions + tasks | "extract decisions from \<recording\>" |
+| `meeting-decisions` | Turning a call (Fathom or uploaded transcript) into decisions + tasks, or setting up the scheduled version so every call is captured without you running it | "extract decisions from \<recording\>" · "set up the meeting notes routine for project X" |
 | `estimation` | Task-level effort for a ready story | "estimate this story: \<url\>" |
 
 ## Rules that always apply

@@ -1,0 +1,168 @@
+# Setting up the scheduled meeting-notes routine
+
+A **routine** is a prompt Claude runs on a schedule with nobody watching. Point one
+at a recurring client call and every call turns into notes and assigned follow-ups
+without a PM remembering to do anything.
+
+This file exists because every PM who built one from scratch hit the same four
+failures, and a fifth nobody diagnosed. The prompt below is the version that works.
+Hand it over filled in; do not ask a PM to write their own.
+
+Setting the routine up is the PM's own click-through — RaftKit supplies the prompt
+and the values, nothing more. Once handed over, this skill has no further part in it:
+the routine runs in a blank cloud environment with no plugins installed, so nothing
+here can observe or correct it afterwards. Say so when handing it over, so the PM
+knows where to come back if the output drifts.
+
+## What to ask before handing anything over
+
+Three questions, then fill the blanks yourself. Do not make the PM guess.
+
+1. **Which Asana project do the tasks land in?** Read the exact project name back
+   from Asana rather than accepting what the PM types — stray spaces and odd
+   punctuation in project names are common and an approximate name fails silently.
+2. **Which recording?** Ask for the meeting, then read its name from the PM's Fathom
+   recordings list, not from their calendar. Fathom's stored name is what the routine
+   matches; the calendar shows what the PM meant. Pick a stable fragment of that name
+   for the prompt — see rule 3.
+3. **Who chases action items owned by people outside the Asana workspace?** Usually
+   the PM running the routine. This is the fallback assignee in the prompt.
+
+If the project already names its meeting notes a particular way — many use
+`MOM- DD/MM/YYYY` — match that convention instead of introducing a new one. A PM
+scanning their board should not be able to tell which tasks a routine made.
+
+## The five rules
+
+**1 · Cloud, not local.** `Code → Routines → Cloud`, and add a blank environment —
+this touches Fathom and Asana, not a repository. A local schedule only runs while
+that machine is on, so a routine set up locally silently does nothing whenever the
+laptop is shut.
+
+**2 · Read the full transcript, never the summary.** Ask for "the summary" and Claude
+takes Fathom's AI summary, which is a few lines for a two-hour call. Decisions live in
+short remarks — a throwaway "let it be" that settles a question, an offer to test on
+a particular account, a price said once. Those exist only in the transcript.
+
+**3 · Match the recording by a stable fragment of its name, not the whole title and
+not a link.** Fathom names recordings after the calendar event, so the title is
+configuration that nobody thinks of as configuration. Renaming an event kills an
+exact-match routine with no error at all — it simply finds nothing. Matching a
+fragment that will not change (the client or project name) survives a suffix, an
+added date, or a tidy-up. A real rename still breaks it, but that is a rename someone
+knows about.
+
+**4 · Don't hand-write the prompt.** Start from the prompt below, or describe the
+routine in words to `Create with Claude` and let it write the instruction. A
+hand-written prompt drifts, and every PM's drifts differently — which is how the
+same routine ends up working for one person and failing for four.
+
+**5 · Every run creates new tasks and never edits an earlier run's.** This is the
+failure that took a working routine down after two good runs: run three rewrote what
+runs one and two had recorded. Dated titles and create-only behaviour make repeat runs
+safe. Nothing in the prompt may update, replace, or append to a previous task.
+
+## The prompt
+
+Fill both blanks before handing it over. The routine creates **two** tasks per call —
+notes for reference, and action items whose subtasks reach their owners.
+
+```text
+Find the most recent Fathom recording whose title contains "<STABLE NAME FRAGMENT>".
+
+Go through the full transcript, not the AI summary. The summary is a few lines and
+misses the short remarks where decisions actually get made.
+
+Output only the two tasks. No preamble, no commentary, no notes to the reader.
+Send no push notifications.
+
+Create two new tasks in the Asana project "<EXACT ASANA PROJECT NAME>". Never edit or
+replace a task from an earlier run — always create new ones.
+
+Task 1, titled "<meeting name> — <meeting date> notes":
+
+  Date: <meeting date>
+  Attendees: <names from the call>
+  Recording: <link to the recording>
+
+  Then a numbered section per topic discussed. For each one cover what was asked, who
+  answered, and what was decided. Add an "Owner: <name> — <action>" line wherever
+  someone took on an action. Keep the specifics people mentioned — the account names,
+  the amounts, the deadlines. Do not flatten them into generalities.
+
+  Then an "Open decisions" section: anything raised but not settled, and why it is
+  still open.
+
+Task 2, titled "<meeting name> — <meeting date> action items":
+
+  Add one subtask per action item, titled with the action.
+
+  An open decision is also an action item whenever someone owns the next step towards
+  settling it. Include it here as well as in the notes task's open decisions section —
+  the decision stays visible and somebody stays on the hook. Never drop an item from
+  the action list just because it is unsettled.
+
+  Assign each subtask by looking the owner up in the Asana workspace:
+    - exactly one matching member  -> assign it to them
+    - more than one match          -> leave it unassigned and say which accounts matched
+    - no match                     -> title it "<owner name> — <action>" and assign it
+                                      to <FALLBACK ASSIGNEE>, who chases it
+    - owner unclear in the call     -> leave it unassigned. Never guess a name.
+
+  If you cannot look owners up at all, say so and assign nothing rather than guessing.
+
+  If the call produced no action items, say exactly that. Do not invent any.
+
+Then post one comment on the notes task linking the action-items task, and one on the
+action-items task linking the notes task.
+
+Finally report both task links, how many subtasks you created, and every subtask left
+unassigned with the reason.
+```
+
+Both tasks use only free-tier Asana features — a name, a description, subtasks, and
+assignees. The two tasks are linked by comment, not by an Asana dependency
+(`raftkit-core/house-rules`).
+
+## Before rolling this out
+
+A scheduled routine writes to Asana with nobody approving the draft. That runs against
+`raftkit-core/write-protocol`'s draft → approve → push rule, whose exception list is
+closed and names only `pr-auto-review`. Handing a PM this prompt is not itself a write,
+but rolling the routine out across the team means RaftLabs is running unattended
+Asana writes.
+
+Two ways to resolve it, and the choice belongs to the founders, not to this skill or
+the PM:
+
+- **Amend `house-rules` and `write-protocol`** with a second named exception, scoped as
+  tightly as the first: internal projects only, never a client-visible surface, tasks
+  stamped as machine-generated and pending review, always deletable.
+- **Have the routine draft and stop**, leaving the PM to approve on their next
+  interactive run. Keeps the rule intact; costs the hands-off quality that makes a
+  routine worth having.
+
+Surface this when handing the prompt over. Do not present the routine as house-approved
+until one of those has been decided and recorded.
+
+## When it stops working
+
+Check in this order — the first two cover most failures:
+
+- **Nothing ran at all** → the routine was created as Local, not Cloud. Rebuild it
+  under `Code → Routines → Cloud`.
+- **It ran and found no recording** → the calendar event was renamed and the name
+  fragment no longer matches. Read the current name from Fathom and update the prompt.
+- **Notes are thin, a couple of lines per topic** → the prompt is being read as asking
+  for a summary. Restore the "full transcript, not the AI summary" wording.
+- **An earlier run's task changed** → the prompt has picked up update or append
+  wording. Restore rule 5's create-only phrasing.
+- **Action items came back short** → open decisions with owners were filed only as
+  decisions. Restore the both-lists paragraph in task 2.
+- **A note to the reader is sitting inside a task description** → the output-only line
+  was dropped. Restore it.
+- **Action items appear that nobody committed to** → the no-invention line was dropped
+  from task 2. Restore it.
+- **Everything unassigned** → the Asana connector is not reachable from the routine.
+  Connectors authorised interactively are not always available to a scheduled run;
+  reconnect Asana on the account the routine runs under.

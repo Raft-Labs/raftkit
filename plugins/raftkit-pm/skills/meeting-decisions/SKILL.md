@@ -1,6 +1,6 @@
 ---
 name: meeting-decisions
-description: This skill should be used when a RaftLabs PM wants to turn a client call into cited decisions, a Project Profile update, and Asana tasks — e.g. "extract the decisions from this Fathom call", "run meeting-decisions on <recording>", "turn this call into action items and tasks", "what did we decide and who owns what on that call", or an uploaded transcript file to process. It reads one transcript (Fathom recording or uploaded file), extracts decisions / scope changes / action items each cited to a transcript timestamp, flags out-of-scope requests as SCOPE CHANGE, and proposes a Project Profile delta and an Asana task batch as two separately PM-approved gates. Requires an existing Project Profile (routes to project-onboarding if missing); writes and creates nothing without approval.
+description: This skill should be used when a RaftLabs PM wants to turn a client call into cited decisions, a Project Profile update, and Asana tasks — e.g. "extract the decisions from this Fathom call", "run meeting-decisions on <recording>", "turn this call into action items and tasks", "what did we decide and who owns what on that call", or an uploaded transcript file to process. It reads one transcript (Fathom recording or uploaded file), extracts decisions / scope changes / action items each cited to a transcript timestamp, flags out-of-scope requests as SCOPE CHANGE, and proposes a Project Profile delta and an Asana task batch as two separately PM-approved gates. Requires an existing Project Profile (routes to project-onboarding if missing); writes and creates nothing without approval. It also sets up the scheduled version of this workflow on request — "set up the meeting notes routine", "automate the MOM for this project", "schedule the meeting notes for my weekly call" — asking which Asana project, which recording, and who chases outside owners, then handing over a filled-in routine prompt for the PM to paste into Claude's Routines themselves; it never creates or runs a routine.
 user-invocable: true
 ---
 
@@ -83,6 +83,20 @@ that (see Guardrails).
    approved), and which tasks were created with links (if confirmed) — naming any gate
    the PM declined so nothing looks done that was not.
 
+## Setting up the scheduled version
+
+A PM who wants this to happen after every call without running it by hand is asking for
+a **routine** — a prompt Claude runs on a schedule. Follow
+`references/scheduled-routine.md`: ask its three questions, fill the blanks yourself
+(read the Asana project name back from Asana and the recording name from Fathom — never
+accept a guess), and hand over the completed prompt plus the setup steps.
+
+Hand it over and stop. This skill never creates a routine, never schedules one, and has
+no visibility into one after handover — a routine runs in a blank environment with no
+plugins loaded. Say that when handing over, along with the unattended-write question the
+reference file raises, so the PM knows what they are switching on and where to come back
+if the output drifts.
+
 ## Edge cases — WEESLD
 
 - **Waiting** — a long transcript announces chunked processing and reports progress
@@ -125,6 +139,12 @@ that (see Guardrails).
   single citation form (`<meeting> @ <timestamp>` deep link) and the no-citation-no-
   claim rule, the fixed always-caps **SCOPE CHANGE** flag wording and its routing, and
   chunked processing of long transcripts.
+- **`references/scheduled-routine.md`** — how to set a PM up with the scheduled version:
+  the three questions to ask, the five rules that keep a routine working (cloud not
+  local, full transcript, fragment-matched recording name, don't hand-write the prompt,
+  create-only on every run), the filled-in routine prompt producing a notes task and an
+  action-items task, the unattended-write question to raise before rollout, and a
+  failure-to-cause checklist for when a routine stops working.
 - **`references/gates-and-writes.md`** — the two independent approval gates: the
   Project Profile delta (changed / new / now-confirmed, aligned with
   `project-onboarding`'s profile format) and the task batch (assignee resolution,
