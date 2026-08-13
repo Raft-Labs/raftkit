@@ -47,7 +47,7 @@ Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls →
 - **Nothing is written without your approval** — every outward write (Asana, Drive docs, files) and client-facing draft is draft → approve → push.
 - **No invented facts** — every claim cites a source; gaps stay ❓ and get asked, not guessed.
 - **Scope changes are flagged, never absorbed** — out-of-scope client asks are labelled SCOPE CHANGE.
-- **Estimates are never client commitments** — every estimation output opens with the founder-review watermark.
+- **Estimates are never client commitments** — every output carrying an effort number, `estimation` breakdowns and `user-story` sizing alike, opens with the founder-review watermark.
 - **Asana free tier only** — relationships are task links, not dependency features.
 
 ## Where things live

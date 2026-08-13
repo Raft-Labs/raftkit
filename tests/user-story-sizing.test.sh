@@ -34,6 +34,7 @@ SKILL=plugins/raftkit-pm/skills/user-story/SKILL.md
 SIZING=plugins/raftkit-pm/skills/user-story/references/sizing.md
 MANIFEST=plugins/raftkit-pm/.claude-plugin/plugin.json
 WATERMARK='Requires founder review — not a client commitment.'
+CHAIN='AI estimate → vetted by the developer who will build it → approved by Nirav or Ashit → only then shared with the client.'
 
 # --- DISCOVERY: a PM must be able to find the path from the skill itself ---
 
@@ -72,7 +73,9 @@ check "S7 SKILL.md states the watermark obligation verbatim" ok $?
 
 # --- THE NUMBER: hour range, never a point, never converted to days ---
 
-grep -qiE 'range' "$SIZING"
+# Anchored to the section and its own bullet: the bare word "range" appears
+# throughout the file, so deleting the whole rule left this check green.
+grep -qE '^## The number' "$SIZING" && grep -qE '^- \*\*A range in hours' "$SIZING"
 check "S8 sizing.md requires a range" ok $?
 
 grep -qiE 'never a (single|point)|not a single number|single number' "$SIZING"
@@ -83,7 +86,9 @@ check "S9 sizing.md forbids a single-number answer" ok $?
 grep -qiE 'never convert hours into days' "$SIZING"
 check "S10 sizing.md forbids converting hours into days" ok $?
 
-grep -qiE 'assumption' "$SIZING"
+# The literal rule, not the word: 'assumption' also matches the example's
+# `Assumptions:` label, which kept this green with the rule deleted.
+grep -qF 'at least two named assumptions' "$SIZING"
 check "S11 sizing.md requires named assumptions" ok $?
 
 # --- UNCERTAINTY: thin sources widen, gaps get named ---
@@ -91,17 +96,22 @@ check "S11 sizing.md requires named assumptions" ok $?
 grep -qF '⚠️ Partial' "$SIZING"
 check "S12 sizing.md widens on a partly-known profile area" ok $?
 
-grep -qiE 'unresolved|gap|thin|missing' "$SIZING"
+# 'thin' needs word boundaries — it matches inside "nothing" a dozen times over
+# — and the gap rule is pinned by its own words, not by the word "gap".
+grep -qiE 'unresolved|missing' "$SIZING" && grep -qiE '\bthin\b' "$SIZING"
 check "S13 sizing.md names story gaps as assumptions rather than gating" ok $?
 
 # Decision: sizing does NOT run the readiness gate — that reintroduces the
-# two-hop bounce this path exists to remove.
-grep -qiE '(does not|never|no).{0,30}(readiness|gate)' "$SIZING"
+# two-hop bounce this path exists to remove. Pinned to the heading: the earlier
+# loose pattern was satisfied by "no trailing advice, no readiness" elsewhere.
+grep -qE '^## Sizing does not run the readiness gate' "$SIZING"
 check "S14 sizing.md states it does not gate on readiness" ok $?
 
 # --- THE HARD CAP: the live run answered "day or week" in 500 words ---
+#
+# Pinned to the heading: 'cap' matches inside "Capacity planning" further down.
 
-grep -qiE 'cap|no more than|nothing more|at most' "$SIZING"
+grep -qE '^## Hard cap' "$SIZING"
 check "S15 sizing.md caps the output length" ok $?
 
 # --- OUT OF SCOPE: bulk, pricing, timelines ---
@@ -109,7 +119,9 @@ check "S15 sizing.md caps the output length" ok $?
 grep -qF 'estimation' "$SIZING"
 check "S16 sizing.md routes bulk feature-list work to estimation" ok $?
 
-grep -qiE 'pric|quot|timeline|founder' "$SIZING"
+# The closing line itself, not the word 'founder' — which matches the
+# watermark, so the closing line could be deleted with this check still green.
+grep -qF 'Pricing, dates and programme totals are founder calls.' "$SIZING"
 check "S17 sizing.md keeps pricing and timelines with founders" ok $?
 
 # A new "Can't ..." string would be caught by the generic-cant refusal
@@ -202,18 +214,30 @@ check "S30 raftkit-pm version is at least 0.16.0" ok $?
 # chain, and estimation carries it on every output that has numbers. Sizing
 # emits an hour range outside the estimation skill, so the chain travels too.
 
-grep -qF 'approved by Nirav or Ashit' "$SIZING"
-check "S31 sizing output carries the estimation approval chain" ok $?
+# The chain rides in the output, directly under the watermark — the same shape
+# S6 pins. A file-wide grep stayed green with the chain moved out into prose.
+awk -v chain="$CHAIN" '
+  /^```output$/ { inblock = 1; n = 0; hours = 0; second = ""; next }
+  /^```$/       { if (inblock && hours) { blocks++; if (second != chain) bad++ } inblock = 0; next }
+  inblock {
+    n++
+    if (n == 2) { second = $0 }
+    if ($0 ~ /[0-9][[:space:]]*h([^a-zA-Z]|$)/) { hours = 1 }
+  }
+  END { exit (bad > 0 || blocks == 0) ? 1 : 0 }
+' "$SIZING"
+check "S31 every output block with an hour figure carries the approval chain on line 2" ok $?
 
 # The hard cap allows two to four assumption bullets. An example that breaks its
 # own cap teaches the cap is soft — the first draft of this file shipped five.
+# Both ends are pinned: a one-bullet example teaches the floor is soft too.
 awk '
   /^```output$/ { inblock = 1; n = 0; next }
-  /^```$/       { if (inblock && n > 4) bad++; inblock = 0; next }
+  /^```$/       { if (inblock && (n > 4 || n < 2)) bad++; inblock = 0; next }
   inblock && /^- / { n++ }
   END { exit (bad > 0) ? 1 : 0 }
 ' "$SIZING"
-check "S32 no output block exceeds four assumption bullets" ok $?
+check "S32 every output block lists two to four assumption bullets" ok $?
 
 echo
 if [[ "$failures" -gt 0 ]]; then
