@@ -7,8 +7,7 @@ X — should we cover Y?"
 These are product-level triggers — they hold whether the conversation is a PM
 speccing a feature or a developer designing a repo's docs. Stack-specific
 anti-patterns (ORM choice, hosting, SDK picks) are not here; the consuming
-skill owns those, e.g. `raftkit-dev:docs` →
-`references/stack-anti-patterns.md`.
+skill owns those.
 
 ## Format
 
