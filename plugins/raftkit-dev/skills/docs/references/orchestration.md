@@ -47,12 +47,11 @@ seven-step lifecycle (`change-tracking.md`).
 
 ## Gates that never move
 
-- The whole interview runs under `raftkit-core/discovery-interview`: one
-  adaptive question at a time, recommendation listed first as `(Recommended)`
-  with reasoning, every alternative carrying a "don't pick this if…" caveat,
-  vague answers pushed back (its `push-back.md`), complete answers never
-  interrogated, every developer answer scanned against its
-  `proactive-prompts.md`.
+- The whole interview runs under `raftkit-core/discovery-interview`. That
+  contract is in force here in full — how many questions per turn, recommend
+  first, push back on vague answers, never interrogate a complete one, scan
+  every answer against its catalogs. It is not restated here, because a
+  restatement is a copy that drifts.
 - Every developer answer is scanned against `stack-anti-patterns.md` as well —
   the stack half of that scan lives here, not in core.
 - Module completion is mutual agreement — the skill's self-assessment AND the

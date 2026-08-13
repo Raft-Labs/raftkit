@@ -1,10 +1,8 @@
 # Discovery Questions (asked in small, adaptive batches)
 
-The interview rules are `raftkit-core/discovery-interview` — a few related
-questions at a time (three at most), recommendation first with a reason and a
-"don't pick this if…" caveat, push back on vague answers (its `push-back.md`),
-volunteer what people forget (its `proactive-prompts.md`), never guess. They are
-in force throughout this file and are not restated here.
+The interview rules are `raftkit-core/discovery-interview` — in force throughout
+this file, and not restated here. Read them there; a second copy is a copy that
+drifts.
 
 Two additions on top of the core contract, both stack-level and owned here:
 

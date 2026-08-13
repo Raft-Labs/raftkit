@@ -75,8 +75,8 @@ For an existing docs tree:
 > Detected `docs/project/` for **<project-name>** · Archetype <X> · <N>
 > modules · drift: <none / P0:n / P1:n / P2:n>.
 >
-> I'm running in Claude Code with full code edit + Bash — one focused
-> question at a time, recommendations with reasoning, push-back on vague
+> I'm running in Claude Code with full code edit + Bash — a few related
+> questions at a time, recommendations with reasoning, push-back on vague
 > answers, change-tracking on every edit. I own the whole loop here.
 >
 > What are we doing today?
