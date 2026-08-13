@@ -35,7 +35,7 @@ Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls →
 | Skill | Use it when | Say |
 | --- | --- | --- |
 | `project-onboarding` | New project, or new sources arrived | "onboard project X with this PRD and these emails" |
-| `user-story` | Writing one story into an Asana task | "write the story for password reset into \<task-url\>" |
+| `user-story` | Writing one story into an Asana task, or sizing one story | "write the story for password reset into \<task-url\>" · "size this story" |
 | `story-skill-generator` | A project needs its own baked story skill | "generate the story skill for project X" |
 | `story-readiness` | Checking a story before dev handoff | "is this story ready? \<url\>" |
 | `status-update` | Weekly client update from the board | "draft the client update for project X" |

@@ -1,6 +1,6 @@
 ---
 name: user-story
-description: This skill should be used when a RaftLabs PM wants to write, generate, or draft a user story for a project into an Asana task — e.g. "write a user story", "draft the story for password reset", "turn this scope into a RaftLabs story", "generate the user-story for this feature". Reads the live Feature Template from Asana as the format authority, grounds every claim in the PM-supplied source of truth, and writes only after approval.
+description: This skill should be used when a RaftLabs PM wants to write, generate, or draft a user story for a project into an Asana task — e.g. "write a user story", "draft the story for password reset", "turn this scope into a RaftLabs story", "generate the user-story for this feature". Reads the live Feature Template from Asana as the format authority, grounds every claim in the PM-supplied source of truth, and writes only after approval. Also sizes one story on request — "how long will this take to build?", "how long will this story take", "size this story", "is this a day or a week?", "how big is this change request?" — returning one hour range with named assumptions under the founder-review watermark. This answers how big a story is, not what it costs to quote. A task-level breakdown with hours per acceptance criterion belongs to raftkit-pm:estimation, for one story as much as for a whole list.
 user-invocable: true
 ---
 
@@ -81,6 +81,21 @@ If any of these is missing, **ask before doing anything else** (the Empty state)
 7. **Confirm back** with the task link and a one-line summary
    ("story + N `[AC]`s + Dev/Testing/Bugs created").
 
+## Sizing one story
+
+A PM may ask how long a story will take — right after this skill writes it, or
+later against an existing story.
+
+**One story is this skill's job.** Return an hour range with named assumptions,
+opened by the watermark `Requires founder review — not a client commitment.` as
+its first line. Hours only, never days. Sizing does **not** run the readiness
+gate; an unresolved story area becomes a named assumption and widens the range
+instead of blocking the answer. Mechanics and the capped output shape are in
+`references/sizing.md`.
+
+A feature list or a backlog is not one story. That is
+[estimation](../estimation/SKILL.md)'s lane — say so and stop.
+
 ## Guardrails
 
 - **No invented facts.** Never write "add appropriate text" or a placeholder for
@@ -103,6 +118,9 @@ If any of these is missing, **ask before doing anything else** (the Empty state)
   and derive the `[AC]` + fixed subtasks from the story's content.
 - **`references/epic-splitting.md`** — the cohesive-vs-epic judgment and how epics
   are structured one sub-story at a time.
+- **`references/sizing.md`** — how one story is sized: the hour range, the named
+  assumptions, what widens the range, the hard output cap, and the redirects for
+  bulk lists, prices, and dates.
 
 
 ## Asana rendering
