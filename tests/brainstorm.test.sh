@@ -181,9 +181,11 @@ joined "$FB/SKILL.md" | grep -qi 'a citation naming where it came from' \
 check "FB11c every compiled fact carries a citation, session answers included" ok $?
 
 # Facts carry the same tags project-onboarding uses, not a second scheme.
-grep -qi 'Confirmed' "$MAP" 2>/dev/null \
-  && grep -qi 'Partial' "$MAP" 2>/dev/null \
-  && grep -qi 'Missing' "$MAP" 2>/dev/null \
+# Bare word greps pass on incidental prose ("not clearly confirmed",
+# "confirmed lens by lens"), so bind to the glyph-bearing tag rows themselves.
+grep -q '| ✅ Confirmed |' "$MAP" 2>/dev/null \
+  && grep -q '| ⚠️ Partial |' "$MAP" 2>/dev/null \
+  && grep -q '| ❓ Missing |' "$MAP" 2>/dev/null \
   && joined "$MAP" | grep -qi 'defaults to .. Partial'
 check "FB12 facts carry the house confidence tags, defaulting to Partial" ok $?
 
@@ -203,8 +205,21 @@ check "FB13b only confirmed notes suppress re-asking; the rest are re-checked" o
 
 # --- Batching: the shipped contract must not still say one-at-a-time ---
 
+# The regression this guards against lands in raftkit-dev:docs, which consumes
+# the same contract — searching only core and pm would miss every real case.
+# The old rule also sits wrapped across two lines in prose, so each file is
+# scanned with its newlines collapsed; a line-based grep walks straight past it.
+# flat() also drops blockquote markers: the docs greeting is a quoted block, so
+# a collapsed line reads "one focused > question at a time" without it.
+flat() { cat "$1" 2>/dev/null | tr '\n>' '  ' | tr -s ' '; }
+STALE_RULE='one [a-z]* ?question at a time|questions? one at a time|single adaptive question'
+one_at_a_time=0
+while IFS= read -r f; do
+  flat "$f" | grep -qiE "$STALE_RULE" && { echo "  still one-at-a-time: $f"; one_at_a_time=1; }
+done < <(find "$DI" "$FB" plugins/raftkit-dev/skills/docs -name '*.md' 2>/dev/null)
+
 joined "$DI/SKILL.md" | grep -qi 'A few related questions at a time — three at most' \
-  && ! grep -rqi 'one question at a time\|one adaptive question' "$DI" "$FB" 2>/dev/null \
+  && [[ "$one_at_a_time" -eq 0 ]] \
   && joined "$FB/SKILL.md" | grep -qi 'three at most'
 check "FB14 questions come in small related batches, capped, never one-at-a-time" ok $?
 

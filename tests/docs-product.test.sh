@@ -84,8 +84,16 @@ check "DP7 co-authoring contract: small adaptive batches, recommend-first, don't
 # DP7b: the batch rule only takes effect if nothing downstream still demands the
 # old one-per-turn behaviour. The docs references and the greenfield grader that
 # scores them are the two places that can quietly revert it.
-! grep -rqiE 'one (question|at a time)|single adaptive question|questions one at a time' \
-    "$R" "$DOCS/SKILL.md" plugins/raftkit-dev/evals/docs-product 2>/dev/null
+# Scanned per file with newlines AND blockquote markers collapsed: the old rule
+# wraps across two lines, and inside the quoted greeting it wraps across a "> "
+# too. A line-based grep walks straight past both.
+flat() { cat "$1" 2>/dev/null | tr '\n>' '  ' | tr -s ' '; }
+stale=0
+while IFS= read -r f; do
+  flat "$f" | grep -qiE 'one [a-z]* ?question at a time|questions? one at a time|single adaptive question' \
+    && { echo "  still one-at-a-time: $f"; stale=1; }
+done < <(find "$R" "$DOCS/SKILL.md" plugins/raftkit-dev/evals/docs-product -name '*.md' 2>/dev/null)
+[[ "$stale" -eq 0 ]]
 check "DP7b nothing in docs or its graders still demands one question per turn" ok $?
 
 [[ -f "$DIR_/push-back.md" && -f "$DIR_/proactive-prompts.md" ]] \
