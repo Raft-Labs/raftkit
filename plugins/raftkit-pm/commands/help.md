@@ -26,6 +26,9 @@ user-story           → template-perfect story into a named Asana task
 story-readiness      → PASS / NOT READY gate before any dev sees it
    ↓
 hand to raftkit-dev  → /implement refuses stories that fail readiness
+   ↓
+gap found downstream → user-story amend mode: extend the story in place,
+                       tag its followers, re-run readiness
 ```
 
 Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls → decisions + tasks), `estimation` (founder-gated breakdowns).
@@ -35,7 +38,7 @@ Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls →
 | Skill | Use it when | Say |
 | --- | --- | --- |
 | `project-onboarding` | New project, or new sources arrived | "onboard project X with this PRD and these emails" |
-| `user-story` | Writing one story into an Asana task, or sizing one story | "write the story for password reset into \<task-url\>" · "size this story" |
+| `user-story` | Writing one story into an Asana task, sizing one story, or amending a story that already exists | "write the story for password reset into \<task-url\>" · "size this story" · "extend \<task-url\> with the onboarding changes" |
 | `story-skill-generator` | A project needs its own baked story skill | "generate the story skill for project X" |
 | `story-readiness` | Checking a story before dev handoff | "is this story ready? \<url\>" |
 | `status-update` | Weekly client update from the board | "draft the client update for project X" |
@@ -54,4 +57,4 @@ Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls →
 
 Board: Asana project `raftkit` (gid `1216551447756315`) · Format authority: the live Feature Template (gid in raftkit-core workflow-constants) · Shared rules: `raftkit-core` (auto-installed). For dev skills see `/raftkit-dev:help`; for QA see `/raftkit-qa:help`.
 
-Close by asking what they're trying to do — new project → onboarding; new feature → user-story; handoff → story-readiness.
+Close by asking what they're trying to do — new project → onboarding; new feature → user-story; handoff → story-readiness; a gap found by dev or QA in a story that already exists → user-story amend mode.
