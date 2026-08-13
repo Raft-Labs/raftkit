@@ -117,7 +117,10 @@ grep -qE 'CC:' <<<"$tag" && grep -qiE 'last line' <<<"$tag"
 check "C9e followers are carried on a closing CC: line" ok $?
 # The worked example must actually END on the CC: line — a rule stated in prose
 # but contradicted by the sample is the version people copy.
-[[ "$(sed -n '/^```output/,/^```$/p' <<<"$tag" | sed -n '$!{/^```$/!p}' | tail -1)" =~ ^CC: ]]
+# Both fence lines are stripped with grep: BSD sed rejects `$!{...}` without a
+# separator before the brace, so the earlier one-liner errored out and reported
+# FAIL on macOS no matter what the file said, while passing under GNU sed in CI.
+[[ "$(sed -n '/^```output/,/^```$/p' <<<"$tag" | grep -v '^```' | tail -1)" =~ ^CC: ]]
 check "C9f the example comment's final line is the CC: line" ok $?
 grep -qF 'data-asana-gid' <<<"$tag" && grep -qiE 'fallback|plain text' <<<"$tag"
 check "C9b mention mechanics cite the gid form and its plain-text fallback" ok $?
