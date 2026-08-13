@@ -70,7 +70,9 @@ Execute the decomposition table one phase at a time.
   do not re-ask per phase once the dev has answered for that tier. A row that
   reached approval with no tier stops the same way, and the dev names one of two
   things before the phase starts: run it on the current session model, or a tier
-  they switch to. There is no third option and no default.
+  they switch to. There is no third option and no default — the Sonnet default
+  above is a Gate 1 planning heuristic, and it does not survive to execution as a
+  silent fallback for an empty cell.
 - **Test-first (TDD is mandatory), per `superpowers:test-driven-development`.**
   Each phase starts **red**: write the failing tests derived from the phase's
   `[AC]`s, then write only the code that turns them **green**. `[AC]`s map

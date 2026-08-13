@@ -41,7 +41,8 @@ data-fetching client, a styling kit. Those choices do exist in writing: the
 `docs` skill's archetype recipes record the stacks RaftLabs' reference
 implementations actually run on, named library by library, in
 [stack-and-domain-recipes.md](../../docs/references/stack-and-domain-recipes.md).
-Only its first archetype pins versions; the others name libraries without them.
+Archetype A additionally pins exact versions in a catalog; the others still name
+major versions. Every version there goes stale — check it before adopting.
 
 Treat that file as the **named-library layer**: the starting point when a web
 story needs a library this file leaves open, so the story does not re-argue a
