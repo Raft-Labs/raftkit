@@ -34,7 +34,8 @@ SKILL=plugins/raftkit-pm/skills/user-story/SKILL.md
 SIZING=plugins/raftkit-pm/skills/user-story/references/sizing.md
 MANIFEST=plugins/raftkit-pm/.claude-plugin/plugin.json
 WATERMARK='Requires founder review — not a client commitment.'
-CHAIN='AI estimate → vetted by the developer who will build it → approved by Nirav or Ashit → only then shared with the client.'
+CHAIN='AI estimate → vetted by <implementing developer> → approved by Nirav or Ashit → only then shared with the client.'
+PROSE_CHAIN='vetted by the developer who will build it'
 
 # --- DISCOVERY: a PM must be able to find the path from the skill itself ---
 
@@ -238,6 +239,27 @@ awk '
   END { exit (bad > 0) ? 1 : 0 }
 ' "$SIZING"
 check "S32 every output block lists two to four assumption bullets" ok $?
+
+# --- THE CHAIN NAMES A PERSON ---
+#
+# The chain has two forms and only one belongs in emitted output.
+# raftkit-core/house-rules states the policy in prose — "the developer who will
+# build it" — which is correct as a statement of the rule and useless in a
+# generated reply: it identifies nobody as the vetter. The emitted form carries
+# a slot the PM fills. PR #53 fixed exactly this in estimation; sizing shipped
+# the prose form into its own output block.
+
+grep -qF "$CHAIN" "$SIZING" && ! grep -qF "$PROSE_CHAIN" "$SIZING"
+check "S33 sizing.md emits the chain with a fillable vetter slot, not the prose form" ok $?
+
+# The slot is only fillable if the skill demands the name, on estimation's terms.
+# Whitespace-normalised because the obligation wraps across lines, and anchored
+# on the full sentence: "stop and ask" alone appears three times in this file
+# for other missing inputs, and stayed green with the rule deleted.
+skill_norm="$(tr -s '[:space:]' ' ' < "$SKILL")"
+printf '%s' "$skill_norm" | grep -qF 'the name of the developer who will build the story and vet the number' &&
+  printf '%s' "$skill_norm" | grep -qF 'stop and ask before emitting a range; never guess a name, and never emit numbers with that slot unfilled.'
+check "S34 SKILL.md requires the implementing developer before a range is emitted" ok $?
 
 echo
 if [[ "$failures" -gt 0 ]]; then

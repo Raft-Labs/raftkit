@@ -99,7 +99,7 @@ asked right after this skill wrote one.
 
 ```output
 Requires founder review — not a client commitment.
-AI estimate → vetted by the developer who will build it → approved by Nirav or Ashit → only then shared with the client.
+AI estimate → vetted by <implementing developer> → approved by Nirav or Ashit → only then shared with the client.
 
 Sizing — calendar sync (one-way, Microsoft)
 
