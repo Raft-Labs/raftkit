@@ -1,6 +1,6 @@
 ---
 name: estimation
-description: This skill should be used when a RaftLabs PM wants a task-level effort estimate for a ready story before fixed-scope quoting — e.g. "estimate this story", "break this story into dev tasks with hours", "how long will this task take to build", "give me the estimate for this Asana story". It gates on story-readiness (estimates only ready stories), decomposes the story into dev tasks mapped 1:1 to its ACs/scenarios, gives every task an hour RANGE with named assumptions, widens ranges for ⚠️ Partial profile areas, and opens every output with the mandatory founder-review watermark. Read-only; it never prices, quotes, promises timelines, or plans capacity — those are founder decisions.
+description: This skill should be used when a RaftLabs PM wants a task-level effort estimate for a ready story before fixed-scope quoting — e.g. "estimate this story", "break this story into dev tasks with hours", "how long will this task take to build", "give me the estimate for this Asana story". It gates on story-readiness (estimates only ready stories), decomposes the story into dev tasks mapped 1:1 to its ACs/scenarios, gives every task an hour RANGE with named assumptions, widens ranges for ⚠️ Partial profile areas, and opens every output with the mandatory founder-review watermark, followed on the success shape by the estimation approval chain naming who vets and who approves the number. Read-only; it never prices, quotes, promises timelines, or plans capacity — those are founder decisions.
 user-invocable: true
 ---
 
@@ -21,9 +21,12 @@ the breakdown; it never turns one into a price, a quote, or a promise.
   unspecified scope produces fiction, not an estimate.
 - **Never a commitment.** Every output opens with the exact watermark
   **`Requires founder review — not a client commitment.`** — first line, every run,
-  no flag or option disables it. Estimates are ranges, never single points, and this
-  skill never prices, quotes, promises a delivery date, or plans capacity: those
-  escalate to founders (`raftkit-core/house-rules`).
+  no flag or option disables it. An estimate that carries numbers also carries the
+  **estimation approval chain** (`raftkit-core/house-rules`): the developer who will
+  build it vets the number, Nirav or Ashit approves it, and only then may a client see
+  it. Estimates are ranges, never single points, and this skill never prices, quotes,
+  promises a delivery date, or plans capacity: those escalate to founders
+  (`raftkit-core/house-rules`).
 
 ## Inputs
 
@@ -67,7 +70,8 @@ the breakdown; it never turns one into a price, a quote, or a promise.
    gather every assumption into one list. One story per run; an epic is estimated
    sub-story by sub-story and summed with the combined assumptions.
 
-6. **Emit.** Output opens with the watermark as its first line, then the breakdown,
+6. **Emit.** Output opens with the watermark as its first line, then the approval
+   chain, then the breakdown,
    the total range, and the assumption list — the exact shape is in
    `references/breakdown-method.md`. Read-only: nothing is written to Asana.
 
@@ -76,7 +80,9 @@ the breakdown; it never turns one into a price, a quote, or a promise.
 - **Watermark, always, undisableable.** The exact string
   `Requires founder review — not a client commitment.` is the first line of **every**
   output — happy path, refusal, empty, error. No flag, option, or phrasing suppresses
-  it.
+  it. On the success shape the approval chain line follows it, and is equally
+  undisableable; the refusal and empty shapes emit no numbers, so they carry the
+  watermark alone.
 - **Ranges, never points.** Every number is a low–high range. Confidence is a tight
   range; uncertainty is a wide one; a bare single number is never emitted.
 - **Every range carries an assumption.** A range with no stated assumption is
