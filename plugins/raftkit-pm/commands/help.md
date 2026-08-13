@@ -20,6 +20,8 @@ Everything a RaftLabs PM produces — project profiles, user stories, readiness 
 ```
 project-onboarding   → one tagged Project Profile (✅/⚠️/❓, every fact cited)
    ↓
+brainstorm           → an idea thought through into a spec doc (when there isn't one)
+   ↓
 user-story           → template-perfect story into a named Asana task
   (or story-skill-generator → a reusable <project>-user-story skill)
    ↓
@@ -38,6 +40,7 @@ Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls →
 | Skill | Use it when | Say |
 | --- | --- | --- |
 | `project-onboarding` | New project, or new sources arrived | "onboard project X with this PRD and these emails" |
+| `brainstorm` | A feature idea with no spec behind it yet | "brainstorm this feature into a spec doc" |
 | `user-story` | Writing one story into an Asana task, sizing one story, or amending a story that already exists | "write the story for password reset into \<task-url\>" · "size this story" · "extend \<task-url\> with the onboarding changes" |
 | `story-skill-generator` | A project needs its own baked story skill | "generate the story skill for project X" |
 | `story-readiness` | Checking a story before dev handoff | "is this story ready? \<url\>" |
@@ -57,4 +60,4 @@ Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls →
 
 Board: Asana project `raftkit` (gid `1216551447756315`) · Format authority: the live Feature Template (gid in raftkit-core workflow-constants) · Shared rules: `raftkit-core` (auto-installed). For dev skills see `/raftkit-dev:help`; for QA see `/raftkit-qa:help`.
 
-Close by asking what they're trying to do — new project → onboarding; new feature → user-story; handoff → story-readiness; a gap found by dev or QA in a story that already exists → user-story amend mode.
+Close by asking what they're trying to do — new project → onboarding; a feature idea with nothing written down yet → brainstorm; a feature that already has a source of truth → user-story; handoff → story-readiness; a gap found by dev or QA in a story that already exists → user-story amend mode.

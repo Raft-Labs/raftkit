@@ -1,8 +1,13 @@
 # Proactive Suggestion Catalog
 
-The skill must scan EVERY user answer against the triggers below. When a
-trigger fires, volunteer the suggestion before moving on. Frame as a
-question: "you mentioned X — should we cover Y?"
+Scan EVERY user answer against the triggers below. When a trigger fires,
+volunteer the suggestion before moving on. Frame as a question: "you mentioned
+X — should we cover Y?"
+
+These are product-level triggers — they hold whether the conversation is a PM
+speccing a feature or a developer designing a repo's docs. Stack-specific
+anti-patterns (ORM choice, hosting, SDK picks) are not here; the consuming
+skill owns those.
 
 ## Format
 
@@ -64,21 +69,3 @@ question: "you mentioned X — should we cover Y?"
 | "no tests" / "skip tests" | Push back: zero tests is a top recurring gap. At minimum: integration tests for critical paths. Offer Vitest + Playwright skeleton. |
 | "we'll add it later" | Push back: "later" often means "never". Capture as an open question with explicit defer-until trigger. |
 | "MVP" / "ship fast" | Volunteer scope-cut suggestions: skip i18n, skip mobile, skip integrations, ship single-region. But still capture full doc — flag MVP-skipped items. |
-
-## Anti-pattern triggers (steer user away)
-
-| If user proposes… | Skill pushes back with… |
-|---|---|
-| Storing raw passwords | "Better Auth handles hashing — never store raw" |
-| Storing raw API keys | "SHA-256 hashed at rest, shown once on creation" |
-| Using `db:push` for migrations | "Always generate migrations + drizzle-kit migrate" |
-| Single Vercel project switching via `.vercel/<app>.project.json` swap | "Use one Vercel project per app — swap pattern is fragile" |
-| Custom Upstash REST client | "@upstash/redis + @upstash/ratelimit handle this — avoid reinventing" |
-| Env var > 4 KB | "Lambda env limit — use SST Secret or Secrets Manager" |
-| Sentry only on backend | "Wire @sentry/nextjs and @sentry/expo from day 1 — backfill is painful" |
-| Permission table duplicated in router | "Import from packages/auth — duplicates drift" |
-| Drizzle in a Hasura+Amplify project | "Hasura is your ORM — Drizzle duplicates" |
-| Expo Push at scale | "Direct FCM + APNs via firebase-admin scales better past ~10k DAU receivers" |
-| Stripe for a single-region product where a local provider fits better (e.g. India-only) | "A local-market provider (e.g. Dodopayments for INR) can have a better regional experience + Better Auth plugin" |
-| NativeWind for new Expo project | "Uniwind 1.6 is the newer successor" |
-| Cognito for greenfield BTS project | "Better Auth more flexible and matches the rest of the stack" |

@@ -8,7 +8,9 @@ outside docs.** Every command is named to the developer before it runs.
 
 1. Offer the archetype-matched bootstrap (the exact CLI from
    `stack-and-domain-recipes.md`), or a hand-rolled setup document when no
-   recipe fits. Ask the scaffold questions one at a time.
+   recipe fits. Ask the scaffold questions under the normal interview contract
+   — no exception here, because the approval gate above is per command, not per
+   question.
 2. Run the approved bootstrap. Show what it created.
 3. Post-scaffold, propose (each its own approval):
    - environment setup via the project's env mechanism;

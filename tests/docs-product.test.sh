@@ -63,20 +63,46 @@ done
   && grep -qi 'both.*agree\|mutual' "$R/module-decomposition.md" 2>/dev/null
 check "DP5 module decomposition enumerates 20 numbered steps plus the always-on cross-cut with mutual agreement" ok $?
 
-cat_count=$(grep -cE '^[0-9]+\. \*\*' "$R/edge-cases.md" 2>/dev/null || echo 0)
-[[ "$cat_count" -ge 24 ]] && grep -qi 'never let a category go silent\|answered or.*N/A' "$R/edge-cases.md" 2>/dev/null
+# DP6-DP8: the interview machinery moved to raftkit-core/discovery-interview so
+# raftkit-pm can reach it too. The capability is unchanged and still required —
+# these check it at its new address, plus that docs actually routes to it rather
+# than having quietly dropped it.
+DI=plugins/raftkit-core/skills/discovery-interview
+DIR_=$DI/references
+
+cat_count=$(grep -cE '^[0-9]+\. \*\*' "$DIR_/edge-cases.md" 2>/dev/null || echo 0)
+[[ "$cat_count" -ge 24 ]] && grep -qi 'never let a category go silent\|answered or.*N/A' "$DIR_/edge-cases.md" 2>/dev/null
 check "DP6 edge-case guide walks at least 24 categories, none silent" ok $?
 
-grep -qi 'one question at a time' "$R/discovery-questions.md" 2>/dev/null \
-  && grep -q '(Recommended)' "$R/discovery-questions.md" 2>/dev/null \
-  && grep -qi "don't pick this if\|do not pick this if" "$R/discovery-questions.md" 2>/dev/null
-check "DP7 co-authoring contract: one adaptive question, recommend-first, don't-pick-this-if caveats" ok $?
+grep -qi 'a few related questions at a time' "$DI/SKILL.md" 2>/dev/null \
+  && grep -qi 'three at most' "$DI/SKILL.md" 2>/dev/null \
+  && grep -q '(Recommended)' "$DI/SKILL.md" 2>/dev/null \
+  && grep -qi "don't pick this if\|do not pick this if" "$DI/SKILL.md" 2>/dev/null \
+  && grep -q 'raftkit-core/discovery-interview' "$R/discovery-questions.md" 2>/dev/null
+check "DP7 co-authoring contract: small adaptive batches, recommend-first, don't-pick-this-if caveats" ok $?
 
-[[ -f "$R/push-back.md" && -f "$R/proactive-prompts.md" ]] \
-  && grep -qi 'vague' "$R/push-back.md" 2>/dev/null \
-  && grep -qi 'never interrogate.*complete\|complete answers' "$R/push-back.md" 2>/dev/null \
-  && grep -qi 'trigger' "$R/proactive-prompts.md" 2>/dev/null
-check "DP8 push-back and proactive-prompt catalogs shipped" ok $?
+# DP7b: the batch rule only takes effect if nothing downstream still demands the
+# old one-per-turn behaviour. The docs references and the greenfield grader that
+# scores them are the two places that can quietly revert it.
+# Scanned per file with newlines AND blockquote markers collapsed: the old rule
+# wraps across two lines, and inside the quoted greeting it wraps across a "> "
+# too. A line-based grep walks straight past both.
+flat() { cat "$1" 2>/dev/null | tr '\n>' '  ' | tr -s ' '; }
+stale=0
+while IFS= read -r f; do
+  flat "$f" | grep -qiE 'one [a-z]* ?question at a time|questions? one at a time|single adaptive question' \
+    && { echo "  still one-at-a-time: $f"; stale=1; }
+done < <(find "$R" "$DOCS/SKILL.md" plugins/raftkit-dev/evals/docs-product -name '*.md' 2>/dev/null)
+[[ "$stale" -eq 0 ]]
+check "DP7b nothing in docs or its graders still demands one question per turn" ok $?
+
+[[ -f "$DIR_/push-back.md" && -f "$DIR_/proactive-prompts.md" ]] \
+  && grep -qi 'vague' "$DIR_/push-back.md" 2>/dev/null \
+  && grep -qi 'never interrogate.*complete\|complete answers' "$DIR_/push-back.md" 2>/dev/null \
+  && grep -qi 'trigger' "$DIR_/proactive-prompts.md" 2>/dev/null \
+  && [[ -f "$R/stack-anti-patterns.md" ]] \
+  && grep -q 'raftkit-core/discovery-interview' "$DOCS/SKILL.md" 2>/dev/null
+check "DP8 push-back and proactive-prompt catalogs shipped, docs routes to them, stack half stays here" ok $?
 
 for ph in 'Classify' 'Business' 'Stack' 'tenancy' 'Module inventory' 'deep dive' 'Cross-cut' 'Confirmation' 'Generation' 'Verification' 'Refinement' 'Scaffolding'; do
   grep -qi "$ph" "$R/orchestration.md" 2>/dev/null || { echo "  missing phase: $ph"; false; break; }

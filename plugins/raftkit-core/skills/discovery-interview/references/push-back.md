@@ -2,7 +2,8 @@
 
 When the skill detects a vague or under-specified answer, it MUST NOT
 advance. It pushes back with a targeted follow-up. The point isn't to be
-annoying — it's to prevent ambiguous docs that Claude Code can't act on.
+annoying — it's to stop an ambiguous answer from becoming an ambiguous
+artifact, whether that artifact is a spec doc, a story, or a page of docs.
 
 ## Format
 

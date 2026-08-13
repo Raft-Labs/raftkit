@@ -119,9 +119,12 @@ Concrete phrases in answers → what the skill should do:
 | "Should work offline" | Probe scope: read-only → TanStack Query + MMKV; write-too → CRDT design |
 | "Notifications / reminders" | User-specific timing → EventBridge Scheduler per-row; global daily → SST Cron |
 
-## Decision tree the skill walks (one question at a time)
+## Decision tree the skill walks (in small, adaptive batches)
 
-Narrate each answer. Don't ask all at once — adapt based on prior answers.
+Narrate each answer. Ask up to three related questions per turn, never the
+whole tree at once, and adapt each set based on the prior answers
+(`raftkit-core/discovery-interview`). Where an answer decides which branch
+comes next, that question goes in its own turn.
 
 ```
 Q1: Internal tool with <20 fixed users?
@@ -579,7 +582,7 @@ server agents). Don't store raw transcripts without PII masking.
 
 ## Mobile-First Consumer App
 
-**Pick:** Expo SDK 55 + **Uniwind 1.6 + Tailwind v4** (newer; replaces
+**Pick:** Expo SDK 55 + **Uniwind + Tailwind v4** (house default over
 NativeWind) + Zustand + TanStack Query (persisted via MMKV) + Apollo or
 oRPC client + **direct FCM + APNs via `firebase-admin`** (skip Expo Push) +
 EAS Build + Changesets for releases.
@@ -588,8 +591,9 @@ EAS Build + Changesets for releases.
 story; MMKV-backed TanStack Query persistence gives offline reads for free;
 direct FCM avoids the Expo Push proxy when you outgrow the free tier.
 
-**Don't:** Don't use Expo Push at scale, don't pick NativeWind for new
-projects (Uniwind is the successor), don't use `Intl` for timezone math on
+**Don't:** Don't use Expo Push at scale, prefer Uniwind over NativeWind on a
+new project (house default, not a lifecycle claim — the two are separate
+projects and NativeWind is maintained), don't use `Intl` for timezone math on
 Android (broken in Hermes — use spacetime).
 
 ---
