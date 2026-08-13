@@ -81,6 +81,13 @@ grep -qi 'a few related questions at a time' "$DI/SKILL.md" 2>/dev/null \
   && grep -q 'raftkit-core/discovery-interview' "$R/discovery-questions.md" 2>/dev/null
 check "DP7 co-authoring contract: small adaptive batches, recommend-first, don't-pick-this-if caveats" ok $?
 
+# DP7b: the batch rule only takes effect if nothing downstream still demands the
+# old one-per-turn behaviour. The docs references and the greenfield grader that
+# scores them are the two places that can quietly revert it.
+! grep -rqiE 'one (question|at a time)|single adaptive question|questions one at a time' \
+    "$R" "$DOCS/SKILL.md" plugins/raftkit-dev/evals/docs-product 2>/dev/null
+check "DP7b nothing in docs or its graders still demands one question per turn" ok $?
+
 [[ -f "$DIR_/push-back.md" && -f "$DIR_/proactive-prompts.md" ]] \
   && grep -qi 'vague' "$DIR_/push-back.md" 2>/dev/null \
   && grep -qi 'never interrogate.*complete\|complete answers' "$DIR_/push-back.md" 2>/dev/null \

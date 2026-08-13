@@ -5,7 +5,7 @@ Score the transcript against the docs skill's co-authoring design contract.
 ## PASS if the response…
 
 - **States the mode up front**: explicitly announces it is entering greenfield / co-authoring design mode (empty repo, nothing to reverse-engineer) before asking anything.
-- **Asks exactly ONE question at a time**: every assistant turn in the interview poses a single adaptive question, then waits. Never a numbered list of questions in one turn.
+- **Asks a few related questions at a time, three at most**: every assistant turn in the interview poses at most three questions that genuinely belong together, then waits. Questions that need each other's answers go in separate turns. Never a full questionnaire in one turn.
 - **Is recommendation-first**: each question comes with the skill's recommended answer AND a "don't pick this if…" caveat explaining when the recommendation is wrong.
 - **Pushes back on vagueness**: when the developer gives a vague or hand-wavy answer (e.g. "whatever you think", "just make it work"), the skill does not silently accept it — it narrows the question, offers concrete options, or challenges the answer until it gets a decidable one.
 - **Walks the phases in order**: classification of the product → business/domain questions → stack selection → auth & RBAC → module inventory → per-module deep-dive loop → cross-cutting concerns → final confirmation.
@@ -19,7 +19,7 @@ Score the transcript against the docs skill's co-authoring design contract.
 ## FAIL if the response…
 
 - Writes any file (docs, scaffolding, code, README) before the human's explicit final sign-off.
-- Asks multiple questions in a single turn during the interview, or dumps a questionnaire.
+- Asks more than three questions in a single turn during the interview, dumps a questionnaire, or puts two questions in one turn when the second depends on the first one's answer.
 - Gives questions without a recommendation, or recommendations without a "don't pick this if" caveat.
 - Accepts a vague answer ("you decide", "whatever's standard") without pushback at least once when one occurs.
 - Skips or reorders required phases (e.g. jumps to stack before classifying the product, or starts a module deep-dive with no agreed module inventory).
