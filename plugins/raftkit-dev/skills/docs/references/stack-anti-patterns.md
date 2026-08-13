@@ -17,11 +17,11 @@ moving on.
 | Using `db:push` for migrations | "Always generate migrations + drizzle-kit migrate" |
 | Single Vercel project switching via `.vercel/<app>.project.json` swap | "Use one Vercel project per app — swap pattern is fragile" |
 | Custom Upstash REST client | "@upstash/redis + @upstash/ratelimit handle this — avoid reinventing" |
-| Env var > 4 KB | "Lambda env limit — use SST Secret or Secrets Manager" |
+| Environment variables totalling > 4 KB | "Lambda's 4 KB limit is the combined total across all env vars, not per variable — use SST Secret or Secrets Manager" |
 | Sentry only on backend | "Wire @sentry/nextjs and @sentry/expo from day 1 — backfill is painful" |
 | Permission table duplicated in router | "Import from packages/auth — duplicates drift" |
 | Drizzle in a Hasura+Amplify project | "Hasura already owns data access and migrations — Drizzle duplicates both" |
 | Expo Push at scale | "Direct FCM + APNs via firebase-admin scales better past ~10k DAU receivers" |
 | Stripe for a single-region product where a local provider fits better (e.g. India-only) | "A local-market provider (e.g. Dodopayments for INR) can have a better regional experience + Better Auth plugin" |
-| NativeWind for new Expo project | "Uniwind 1.6 is the newer successor" |
+| NativeWind for new Expo project | "House default is Uniwind — a separate project, not a NativeWind upgrade path. NativeWind stays a valid pick, especially on an existing codebase" |
 | Cognito for greenfield BTS project | "Better Auth more flexible and matches the rest of the stack" |
