@@ -35,7 +35,7 @@ Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls →
 | Skill | Use it when | Say |
 | --- | --- | --- |
 | `project-onboarding` | New project, or new sources arrived | "onboard project X with this PRD and these emails" |
-| `user-story` | Writing one story into an Asana task | "write the story for password reset into \<task-url\>" |
+| `user-story` | Writing one story into an Asana task, or sizing one story | "write the story for password reset into \<task-url\>" · "size this story" |
 | `story-skill-generator` | A project needs its own baked story skill | "generate the story skill for project X" |
 | `story-readiness` | Checking a story before dev handoff | "is this story ready? \<url\>" |
 | `status-update` | Weekly client update from the board | "draft the client update for project X" |
@@ -47,7 +47,7 @@ Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls →
 - **Nothing is written without your approval** — every outward write (Asana, Drive docs, files) and client-facing draft is draft → approve → push.
 - **No invented facts** — every claim cites a source; gaps stay ❓ and get asked, not guessed.
 - **Scope changes are flagged, never absorbed** — out-of-scope client asks are labelled SCOPE CHANGE.
-- **Estimates are never client commitments** — every estimation output opens with the founder-review watermark.
+- **Estimates are never client commitments** — every output carrying an effort number, `estimation` breakdowns and `user-story` sizing alike, opens with the founder-review watermark.
 - **Asana free tier only** — relationships are task links, not dependency features.
 
 ## Where things live
