@@ -5,7 +5,7 @@
 # Asana story 1216976430591539. FB1-FB6 map 1:1 onto the story's [AC] subtasks;
 # DI1-DI4 cover the core skill the refactor extracted out of raftkit-dev:docs.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 2
 
 failures=0
 check() { # <name> <expected: ok|fail> <actual exit code>
@@ -53,8 +53,12 @@ check "DI4 the short pass maps onto the same 24 categories, not a second list" o
 
 # --- FB1 [AC] happy path: idea + destination + depth -> a doc at that destination ---
 
+# A bare 'live' grep passes on any incidental use of the word, so pin the two
+# halves of the rule instead: the template is fetched live, and there is no
+# remembered-format fallback when that fetch fails.
 grep -q 'workflow-constants' "$FB/SKILL.md" 2>/dev/null \
-  && grep -qi 'live' "$FB/SKILL.md" 2>/dev/null \
+  && joined "$FB/SKILL.md" | grep -qi 'live through the Asana connector' \
+  && joined "$FB/SKILL.md" | grep -qi 'no remembered-format fallback' \
   && grep -q 'write-protocol' "$FB/SKILL.md" 2>/dev/null \
   && grep -q 'asana-formatting' "$FB/SKILL.md" 2>/dev/null
 check "FB1 happy path fetches the live template and pushes only through the gate" ok $?
