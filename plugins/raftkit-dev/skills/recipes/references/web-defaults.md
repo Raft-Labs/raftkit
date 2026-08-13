@@ -57,8 +57,7 @@ libraries alone:
   descriptions of specific reference projects, not permission to change the three
   House law rows — a departure from House law needs a Project Profile entry, same
   as any other override.
-- **The resolution order is unchanged.** This layer sits at the bottom of it: a
-  Project Profile entry wins, and the story's explicit requirement beats both.
+- **The resolution order is unchanged.** This layer sits at the bottom of it;
   `recipes`' own [SKILL.md](../SKILL.md) owns that order.
 
 If a decision is covered in neither place and no source states it, decide it for
