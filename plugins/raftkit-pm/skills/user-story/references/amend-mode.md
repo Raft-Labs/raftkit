@@ -15,6 +15,18 @@ Mode A (the run flow in SKILL.md) authors a story into a task that has none.
 This mode never authors and never rewrites. **Never a full rewrite** — additive
 edits only, per the rules below.
 
+## Before the gate — an empty description never reaches it
+
+Mode selection happens **first**, in SKILL.md, from the target task's state. An
+**empty description** is Mode A: say it is authoring, not amending, and run Mode
+A. Never treat a stub as a story to extend.
+
+That routing is deliberately **ahead of** the readiness gate, because
+`story-readiness` scores an empty description as `NOT READY` — and the branch
+below refuses every `NOT READY`. Gate an empty task and it gets refused instead
+of authored. So Mode B is only ever entered with a **non-empty** story body, and
+the gate below never sees one.
+
 ## The entry gate — story-readiness decides
 
 Run `raftkit-pm/story-readiness` on the target story and branch on its verdict.
@@ -37,8 +49,6 @@ invent a second conformance test.
   The gaps are the PM's to fix by hand. A story that is both incomplete and in
   need of extending gets no shortcut here — a half-ready story amended into a
   bigger half-ready story is worse than a refusal.
-- **Empty description** → this is authoring, not amending. Say so and route to
-  **Mode A**; never treat a stub as a story to extend.
 - **Bad link or invalid GID**, and **no access** → surface `story-readiness`'s
   own two messages unchanged. The fix differs for each, which is why that gate
   keeps them separate.
@@ -103,11 +113,28 @@ One approval round through `raftkit-core/write-protocol`, then push in order:
 the merged description, the `[AC]` creates and rewordings, then the tag comment.
 
 Asana replaces a description **wholesale** — there is **no partial edit** — so
-the approved diff is the only thing that makes this write safe. The PM's amend
-instruction is the **explicit** description-overwrite authorization that
-`raftkit-core/asana-formatting` requires; an inferred instruction is not enough.
-Read the task first, and after the push read the result back and verify the
-render per `asana-formatting/references/verification.md`.
+the approved diff is the only thing that makes this write safe.
+`raftkit-core/asana-formatting` overwrites a description **only** on an explicit
+instruction to change it, and an amend request is not one: "add an `[AC]` for the
+SSO timeout" never names the description. The authorization is the PM approving
+**part 2 of the diff** — each changed section, current text beside its
+replacement. **No changed sections in the approved diff means no description
+write**; the `[AC]`s and the comment still go. Read the task first, and after the
+push read the result back and verify the render per
+`raftkit-core/asana-formatting`.
+
+Those writes are **not one transaction.** Any of them can fail after an earlier
+one has already landed, which leaves the task half-amended. So on an error,
+**stop** — do not run the remaining writes. Read the task back and check each
+approved change by name: the description, each new `[AC]`, each reworded `[AC]`,
+the comment. Then **report what landed and what did not**, and never emit the
+confirmation below after a failed write. Confirming an amend that only half
+happened is the one outcome worse than the write failing.
+
+Repeat only what is safe to repeat. The description write is a wholesale
+replace, so re-sending the approved body is safe. An `[AC]` create is **not** —
+a blind retry duplicates the criterion. Match the read-back against the approved
+list by criterion text and create only the ones genuinely missing.
 
 ## Tag everyone following the task
 
@@ -122,16 +149,22 @@ The `CC:` line is the last line of the comment, always. Mentions never appear
 inside the summary above it — the summary states what changed, the `CC:` line
 states who is being told. One line, one prefix, no per-name role labels.
 
-Mechanics come from `asana-formatting/references/mentions.md` and are not
-re-authored here: send the `<a data-asana-gid="GID"/>` form when the object is
-accessible, and fall back to plain text names when it may not be, because a
-rejected mention fails the whole write.
+Mechanics come from `raftkit-core/asana-formatting` and are not re-authored
+here: send the `<a data-asana-gid="GID"/>` form for every follower.
+There is **no plain-text fallback on this line.** A plain-text name is **not a
+mention** — it notifies nobody — so a `CC:` line of bare names would report
+people as tagged who were never told.
 
-Two states to handle rather than guess at:
+Three states to handle rather than guess at:
 
 - **The list is empty** — say so and ask the PM who should be following the
   story. Never pick names to fill the gap, and never push a bare `CC:` prefix
   with nothing after it.
+- **A mention cannot be formed** for someone on the list — **stop before the
+  write.** Name that person, say the amend has not been posted, and ask the PM
+  how to reach them. Never downgrade them to plain text and never post a
+  partial `CC:` line: a comment that looks like it tagged the team is worse
+  than no comment.
 - **A name on the list looks wrong** to the PM — they correct it from the draft
   in step 5 above, before the push. That is why the draft shows the list.
 
@@ -154,7 +187,9 @@ or the new gap list. A description edit is exactly what that gate can see, so
 the re-audit is meaningful here and worth doing every time.
 
 Then confirm back in one block: the task link, what changed, who was tagged, and
-the verdict.
+the verdict. This shape is for a **fully landed** amend only — every line in it
+is a claim the read-back above has already confirmed. A push that failed part
+way reports what landed instead, per `The push`.
 
 ```output
 Amended: <task link>

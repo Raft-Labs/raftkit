@@ -18,19 +18,29 @@ reading the format live and grounding content in each project's own sources.
 
 ## Two modes
 
-Pick the mode **deterministically on entry** — from the target task's state, never
-from how the request was phrased:
+When the ask is to put story content into a task, pick the mode
+**deterministically on entry** — from the target task's state, never from how the
+request was phrased:
 
 | Mode | Entry condition | What it writes |
 |---|---|---|
 | **Mode A · author** | The target task has **no story body** (an empty description) | The full body, the `[AC]` subtasks, and `Development` / `Testing` / `Bugs` |
-| **Mode B · amend** | The task already holds a story and the PM asks to extend, update, or change it | A merged description, added or reworded `[AC]`s, and one comment tagging every follower of the task |
+| **Mode B · amend** | The target task **already holds a story body** | A merged description, added or reworded `[AC]`s, and one comment tagging every follower of the task |
+
+The body decides, and nothing else does. A request to extend, update, change,
+correct, or add criteria to a story that exists is the **same** Mode B, however
+it was worded — and a task whose description is empty is authoring, so say so and
+run Mode A. When the wording leaves it unclear what the PM wants changed, ask
+**inside** Mode B; never fall back to Mode A and never rewrite the story to
+resolve the doubt.
 
 Mode A is the run flow below. **Mode B runs
-[`references/amend-mode.md`](references/amend-mode.md) instead** — it starts by
-running the readiness gate as its entry test and refuses a story that is not
-ready. A PM asking to amend a task whose description is empty is authoring, not
-amending: say so and run Mode A.
+[`references/amend-mode.md`](references/amend-mode.md) instead** — mode selection
+happens here, before that file's readiness gate runs, and Mode B refuses a story
+the gate calls not ready.
+
+Sizing is **not** a mode: it answers how long a story will take and writes
+nothing. See `Sizing one story` below.
 
 ## The one rule that governs everything
 
@@ -120,12 +130,8 @@ it names one story — as is a feature list or a backlog. Say so and stop.
   something only the product knows — ask instead.
 - **No cached template text.** The format comes from the live fetch, so a template
   change in Asana is reflected the same day with no plugin release.
-- **An existing story is amended, never rewritten.** Mode B is additive: no
-  section deleted or renumbered, no `[AC]` dropped, an existing `[AC]` reworded
-  only where the PM's instruction names it, and no subtask ever ticked. It
-  refuses outright on a story the readiness gate calls not ready, and it warns
-  and waits for a separate go when the story is already being built
-  (`references/amend-mode.md`).
+- **An existing story is amended, never rewritten.** Mode B is additive and
+  gated. Its rules live in `references/amend-mode.md` and are not restated here.
 - **Sources are confirmed before drafting, every run** — this checkpoint precedes
   the existing draft → approve → push gate for the story body and does not
   replace or duplicate it.
