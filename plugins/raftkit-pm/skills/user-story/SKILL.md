@@ -86,15 +86,17 @@ If any of these is missing, **ask before doing anything else** (the Empty state)
 A PM may ask how long a story will take — right after this skill writes it, or
 later against an existing story.
 
-**One story is this skill's job.** Return an hour range with named assumptions,
-opened by the watermark `Requires founder review — not a client commitment.` as
-its first line. Hours only, never days. Sizing does **not** run the readiness
-gate; an unresolved story area becomes a named assumption and widens the range
-instead of blocking the answer. Mechanics and the capped output shape are in
-`references/sizing.md`.
+**One hour range for a whole story is this skill's job.** Return it with named
+assumptions, opened by the exact watermark as its first line —
+`Requires founder review — not a client commitment.` — and carry the estimation
+approval chain beneath it. Hours only, never days. Sizing does **not** run the
+readiness gate; an unresolved story area becomes a named assumption and widens
+the range instead of blocking the answer. Mechanics and the capped output shape
+are in `references/sizing.md`.
 
-A feature list or a backlog is not one story. That is
-[estimation](../estimation/SKILL.md)'s lane — say so and stop.
+The boundary is the kind of answer, not the story count. A task-level breakdown,
+an estimate, or a quote is [estimation](../estimation/SKILL.md)'s lane even when
+it names one story — as is a feature list or a backlog. Say so and stop.
 
 ## Guardrails
 

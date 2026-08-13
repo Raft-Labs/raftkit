@@ -11,8 +11,10 @@ acceptance criterion, the thing a fixed-scope quote is built from — belongs to
 a breakdown, or a quote is estimation's even when it names one story.
 
 The conventions are estimation's own — a range, named assumptions, wider where
-knowledge is thin, and the founder-review watermark. They travel with the number
-so that leaving the estimation skill never leaves the guardrails behind.
+knowledge is thin, and the founder-review watermark. Any output carrying numbers
+also carries estimation's approval chain (`raftkit-core/house-rules`). They travel
+with the number so that leaving the estimation skill never leaves the guardrails
+behind.
 
 ## When this path runs
 
@@ -47,8 +49,8 @@ state or a missing rule widens the range; it never blocks the answer.
 Widen the range, and name the driver on its own assumption line, when any of
 these is true:
 
-- The Project Profile marks a story area **`⚠️ Partial`**.
-- No Project Profile was supplied at all.
+- The Project Profile marks a story area **`⚠️ Partial`**, or is silent on it.
+- No Project Profile was supplied, or the one supplied could not be read.
 - The story leaves a rule, an error state, or a permission boundary unwritten.
 
 Never manufacture a `⚠️ Partial` marker where no profile exists. Say that no
@@ -72,10 +74,13 @@ line — reconciling a document set is not this answer's job.
 
 ## Hard cap on the output
 
-The question is small and the answer stays small: the watermark, the range, two
-to four assumptions, and the closing founder line. Nothing more. No task-level
-table, no per-`[AC]` breakdown, no programme totals, no document-hygiene advice.
-A long answer to a short question buries the number that was asked for.
+The question is small and the answer stays small. The whole reply is the
+watermark, the approval chain line, a one-line subject, the range, an
+`Assumptions:` label with two to four bullets, and the closing founder line.
+Nothing more. A bullet naming excluded work counts against those four. No
+task-level table, no per-`[AC]` breakdown, no programme totals, no
+document-hygiene advice. A long answer to a short question buries the number
+that was asked for.
 
 **Nothing precedes the watermark.** No preamble, no note on which sources were
 read, no remark about the task's name or the route the question took. The
@@ -94,6 +99,7 @@ asked right after this skill wrote one.
 
 ```output
 Requires founder review — not a client commitment.
+AI estimate → vetted by the developer who will build it → approved by Nirav or Ashit → only then shared with the client.
 
 Sizing — calendar sync (one-way, Microsoft)
 
@@ -103,7 +109,6 @@ Assumptions:
 - The low end holds only if the 13 open story questions land as written.
 - Taken from the refined 3 August estimate. An older client-facing draft says 38 h and is unreconciled.
 - Microsoft app registration settings are unconfirmed. That risk sits inside the range.
-- No real vendors onboard before this ships.
 - Excluded: save-and-retry on a provider outage, which is still unconfirmed.
 
 Pricing, dates and programme totals are founder calls.
