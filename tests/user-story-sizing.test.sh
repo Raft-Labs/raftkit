@@ -57,18 +57,18 @@ check "S5 sizing.md carries the watermark verbatim" ok $?
 # Every ```output block in sizing.md must open with the watermark. This is
 # the rule the live run broke — it paraphrased the warning and put it last.
 awk -v wm="$WATERMARK" '
-  /^```output$/ { inblock = 1; first = 1; next }
+  /^```output$/ { blocks++; inblock = 1; first = 1; next }
   /^```$/       { inblock = 0; next }
   inblock && first {
     first = 0
     if ($0 != wm) { bad++ }
   }
-  END { exit (bad > 0 || !NR) ? 1 : 0 }
+  END { exit (bad > 0 || blocks == 0) ? 1 : 0 }
 ' "$SIZING"
 check "S6 every output block opens with the watermark" ok $?
 
-grep -qiE 'watermark|first line' "$SKILL"
-check "S7 SKILL.md guardrails name the watermark obligation" ok $?
+grep -qF "$WATERMARK" "$SKILL"
+check "S7 SKILL.md states the watermark obligation verbatim" ok $?
 
 # --- THE NUMBER: hour range, never a point, never converted to days ---
 
@@ -80,7 +80,7 @@ check "S9 sizing.md forbids a single-number answer" ok $?
 
 # The live run said "roughly 4.5-6 days at 8 hours a day". A day figure
 # reads as a schedule, and schedules are founder territory.
-grep -qiE '(never|not|no|don.t).{0,40}(convert|day-equivalent|into days|to days|days)' "$SIZING"
+grep -qiE 'never convert hours into days' "$SIZING"
 check "S10 sizing.md forbids converting hours into days" ok $?
 
 grep -qiE 'assumption' "$SIZING"
@@ -164,7 +164,7 @@ check "S25 sizing.md requires the range to absorb every named driver" ok $?
 awk '
   /^```output$/ { inblock = 1; next }
   /^```$/       { inblock = 0; next }
-  inblock && /(adds|\+)[[:space:]]*[0-9]+([–-][0-9]+)?[[:space:]]*h/ { bad++ }
+  inblock && /(adds|plus|extra|\+)[[:space:]]*[0-9]+([–-][0-9]+)?[[:space:]]*h/ { bad++ }
   END { exit (bad > 0) ? 1 : 0 }
 ' "$SIZING"
 check "S26 no output block hangs an hour add-on under the range" ok $?
@@ -185,9 +185,35 @@ check "S28 sizing.md forbids any line below the closing founder line" ok $?
 node scripts/check-plain-language.mjs "$SIZING" >/dev/null 2>&1
 check "S29 sizing.md output blocks pass the plain-language checker" ok $?
 
-# CI fails a changed plugin without a version bump (scripts/validate.sh).
-[[ "$(node -e 'process.stdout.write(require("./'"$MANIFEST"'").version)')" != "0.15.0" ]]
-check "S30 raftkit-pm version bumped past 0.15.0" ok $?
+# A floor, not a pin: this path shipped in raftkit-pm 0.16.0, so the manifest must
+# sit at or above it. The merge-base-anchored bump gate is scripts/validate.sh's
+# job — restating it here would turn this suite red on the next legitimate release.
+node -e '
+  const fs = require("fs");
+  const v = JSON.parse(fs.readFileSync("'"$MANIFEST"'", "utf8")).version.split(".").map(Number);
+  const min = [0, 16, 0];
+  process.exit((v[0]-min[0] || v[1]-min[1] || v[2]-min[2]) >= 0 ? 0 : 1);
+'
+check "S30 raftkit-pm version is at least 0.16.0" ok $?
+
+# --- THE APPROVAL CHAIN AND THE ASSUMPTION CEILING ---
+#
+# raftkit-core/house-rules routes any AI effort number through the approval
+# chain, and estimation carries it on every output that has numbers. Sizing
+# emits an hour range outside the estimation skill, so the chain travels too.
+
+grep -qF 'approved by Nirav or Ashit' "$SIZING"
+check "S31 sizing output carries the estimation approval chain" ok $?
+
+# The hard cap allows two to four assumption bullets. An example that breaks its
+# own cap teaches the cap is soft — the first draft of this file shipped five.
+awk '
+  /^```output$/ { inblock = 1; n = 0; next }
+  /^```$/       { if (inblock && n > 4) bad++; inblock = 0; next }
+  inblock && /^- / { n++ }
+  END { exit (bad > 0) ? 1 : 0 }
+' "$SIZING"
+check "S32 no output block exceeds four assumption bullets" ok $?
 
 echo
 if [[ "$failures" -gt 0 ]]; then
