@@ -57,7 +57,15 @@ list, not an inference from this one.
 
 Some decisions are above any skill's or PM's authority. When work touches **budget, contracts, relationship risk, or a client commitment**, surface it to the founders — never absorb it, never decide it inside the skill, never imply a commitment on RaftLabs' behalf.
 
-Estimation output is the recurring case: it always carries the watermark **"Requires founder review — not a client commitment."** so an estimate is never mistaken for a promise.
+### The estimation approval chain
+
+No skill sends an estimate to a client. An estimate reaches one only along this chain, and every review link on it is a person:
+
+**AI estimate → vetted by the developer who will build it → approved by Nirav or Ashit → only then shared with the client.**
+
+Each link exists for a reason. The developer who will build the thing is the person best placed to say whether the number is real, and no amount of PM seniority substitutes for that vetting. A senior PM may catch a bad number by instinct; a junior PM has no reason to doubt it, and a wrong number in front of a client can cost the deal. Founder approval is the last gate before the client, because sharing a number *is* a client commitment, and that authority sits with founders per the rule above.
+
+Estimation output is the recurring case: it always carries the watermark **"Requires founder review — not a client commitment."** so an estimate is never mistaken for a promise. The watermark says the number is not a commitment; the chain says who is allowed to make it one.
 
 The point is that these decisions carry consequences a skill cannot weigh — a number that reads as a quote, or a scope note that reads as a contract change, can bind the company. Routing them to founders keeps that authority where it belongs.
 
