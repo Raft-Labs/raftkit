@@ -59,11 +59,11 @@ Some decisions are above any skill's or PM's authority. When work touches **budg
 
 ### The estimation approval chain
 
-An estimate never travels from a skill to a client. It travels this chain, and every link is a person:
+No skill sends an estimate to a client. An estimate reaches one only along this chain, and every review link on it is a person:
 
 **AI estimate → vetted by the developer who will build it → approved by Nirav or Ashit → only then shared with the client.**
 
-Each link exists for a reason. The developer who will build the thing is the only person who can say whether the number is real, so that vetting is not skippable by seniority — a senior PM may catch a bad number by instinct, a junior PM has no reason to doubt it, and a wrong number in front of a client can cost the deal. Founder approval is the last link because sharing a number *is* a client commitment, and that authority sits with founders per the rule above.
+Each link exists for a reason. The developer who will build the thing is the person best placed to say whether the number is real, and no amount of PM seniority substitutes for that vetting. A senior PM may catch a bad number by instinct; a junior PM has no reason to doubt it, and a wrong number in front of a client can cost the deal. Founder approval is the last gate before the client, because sharing a number *is* a client commitment, and that authority sits with founders per the rule above.
 
 Estimation output is the recurring case: it always carries the watermark **"Requires founder review — not a client commitment."** so an estimate is never mistaken for a promise. The watermark says the number is not a commitment; the chain says who is allowed to make it one.
 
