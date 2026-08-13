@@ -72,8 +72,9 @@ close its own loop).
    Decompose whenever a phase would touch more than `decomposition_threshold`
    files (read the value live from `governance-protocols`). Model per phase from
    the table — **Sonnet is the default workhorse**; reserve a stronger model for
-   phases that genuinely need it and say why in the row. Drop a mechanical phase
-   (a rename, a find-and-replace, generated fixtures) to Haiku. The column is the
+   phases that genuinely need it and say why in the row. Drop a mechanical phase to
+   the lowest tier `protocols.md` covers for that kind of work — read the tiers and
+   their examples live from `governance-protocols`, never from a copy. The column is the
    **recommended** tier per phase, not a switch this skill throws — the human does
    the switching (`raftkit-core/house-rules`). Say here which rows are cheaper than
    the dev's current session model, so the approved plan already shows where
