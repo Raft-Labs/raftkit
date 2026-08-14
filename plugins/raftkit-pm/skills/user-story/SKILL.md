@@ -1,6 +1,6 @@
 ---
 name: user-story
-description: This skill should be used when a RaftLabs PM wants to write, generate, or draft a user story for a project into an Asana task — e.g. "write a user story", "draft the story for password reset", "turn this scope into a RaftLabs story", "generate the user-story for this feature". It is also the skill for amending a story that already exists — "amend this story", "extend this story with the onboarding changes", "update an existing story", "add these acceptance criteria to <task>", "the dev found a gap in this story, fix it" — which runs as amend mode, a diff-first additive edit that never rewrites the story, tags everyone following the task, and re-runs the readiness gate. Reads the live Feature Template from Asana as the format authority, grounds every claim in the PM-supplied source of truth, and writes only after approval. Also sizes one story on request — "how long will this take to build?", "how long will this story take", "size this story", "is this a day or a week?", "how big is this change request?" — returning one hour range with named assumptions under the founder-review watermark. This answers how big a story is, not what it costs to quote. A task-level breakdown with hours per acceptance criterion belongs to raftkit-pm:estimation, for one story as much as for a whole list.
+description: This skill should be used when a RaftLabs PM wants to write, generate, or draft a user story for a project into an Asana task — e.g. "write a user story", "draft the story for password reset", "turn this scope into a RaftLabs story", "generate the user-story for this feature". It is also the skill for amending a story that already exists — "amend this story", "extend this story with the onboarding changes", "update an existing story", "add these acceptance criteria to <task>", "the dev found a gap in this story, fix it" — which runs as amend mode, a diff-first additive edit that never rewrites the story, tags everyone following the task, and re-runs the readiness gate. Reads the live Feature Template from Asana as the format authority, grounds every claim in the PM-supplied source of truth, and writes only after approval. Also sizes one story on request — "how long will this take to build?", "how long will this story take", "size this story", "is this a day or a week?", "how big is this change request?" — returning one hour range with named assumptions under the founder-review watermark. This answers how big a story is, not what it costs to quote. A whole feature list or backlog belongs to raftkit-pm:estimation — the task-level breakdown a fixed-scope proposal is built from; one story is answered here.
 user-invocable: true
 ---
 
@@ -126,9 +126,10 @@ numbers: it fills the vetting link of the approval chain. There is no lookup sou
 and no default — the PM names them. If none is given, stop and ask before emitting
 a range; never guess a name, and never emit numbers with that slot unfilled.
 
-The boundary is the kind of answer, not the story count. A task-level breakdown,
-an estimate, or a quote is [estimation](../estimation/SKILL.md)'s lane even when
-it names one story — as is a feature list or a backlog. Say so and stop.
+The boundary is the size of the ask, not the word used. One story is answered
+here, however the ask is phrased. A whole feature list or a backlog is
+[estimation](../estimation/SKILL.md)'s lane — hand it over and stop. A quote or
+a price is neither skill's: those are founder calls.
 
 ## Guardrails
 
