@@ -132,6 +132,10 @@ Task 2, titled "<meeting name> — <meeting date> action items":
 
   If the call produced no action items, say exactly that. Do not invent any.
 
+Write descriptions and comments in what Asana renders — headings, paragraphs, lists.
+Do not paste raw markdown. After each write, read the task back and confirm it rendered
+as intended; if it did not, say so rather than leaving it wrong.
+
 Then post one comment on the notes task linking the action-items task, and one on the
 action-items task linking the notes task.
 
@@ -145,11 +149,19 @@ assignees. The two tasks are linked by comment, not by an Asana dependency
 
 ## Before rolling this out
 
+**Do not switch a routine on until the decision below is recorded.** Handing a PM this
+prompt is not a write; activating the routine is, every week, unapproved.
+
 A scheduled routine writes to Asana with nobody approving the draft. That runs against
 `raftkit-core/write-protocol`'s draft → approve → push rule, whose exception list is
-closed and names only `pr-auto-review`. Handing a PM this prompt is not itself a write,
-but rolling the routine out across the team means RaftLabs is running unattended
-Asana writes.
+closed and names only `pr-auto-review`. Rolling the routine out across the team means
+RaftLabs is running unattended Asana writes.
+
+The same gap applies to formatting: `raftkit-core/asana-formatting` governs every Asana
+write, and a routine runs in a blank environment where that skill does not exist. The
+prompt asks for rendered formatting and a read-back in plain words instead, which is
+weaker than the core contract. Whichever way the decision below lands, record this as a
+known limitation of the scheduled path.
 
 Two ways to resolve it, and the choice belongs to the founders, not to this skill or
 the PM:
