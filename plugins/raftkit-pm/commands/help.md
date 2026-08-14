@@ -33,7 +33,7 @@ gap found downstream → user-story amend mode: extend the story in place,
                        tag its followers, re-run readiness
 ```
 
-Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls → decisions + tasks; scheduled version available, pending sign-off), `estimation` (founder-gated breakdowns).
+Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls → decisions + tasks; scheduled version available, pending sign-off), `estimation` (a whole feature list → FE/BE/QA hours in a Sheet, founder-gated).
 
 ## Skills
 
@@ -46,7 +46,7 @@ Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls →
 | `story-readiness` | Checking a story before dev handoff | "is this story ready? \<url\>" |
 | `status-update` | Weekly client update from the board | "draft the client update for project X" |
 | `meeting-decisions` | Turning a call into decisions + tasks, or setting up the scheduled version [^routine] | "extract decisions from \<recording\>" · "set up the meeting notes routine for project X" |
-| `estimation` | Task-level effort for a ready story | "estimate this story: \<url\>" |
+| `estimation` | A whole feature list priced into FE/BE/QA hours for a proposal | "estimate this feature list" · "we need hours for the proposal" |
 
 [^routine]: The scheduled routine writes to Asana unapproved — not to be switched on until the founders sign off the unattended-write decision.
 
