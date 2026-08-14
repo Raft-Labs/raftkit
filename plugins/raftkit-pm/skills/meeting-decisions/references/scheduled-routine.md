@@ -26,7 +26,9 @@ Three questions, then fill the blanks yourself. Do not make the PM guess.
    matches; the calendar shows what the PM meant. Pick a stable fragment of that name
    for the prompt — see rule 3.
 3. **Who chases action items owned by people outside the Asana workspace?** Usually
-   the PM running the routine. This is the fallback assignee in the prompt.
+   the PM running the routine. This is the fallback assignee in the prompt. Resolve
+   that person to exactly one Asana workspace member before filling the blank — a name
+   matching nobody leaves the no-match path with nowhere to route.
 
 If the project already names its meeting notes a particular way — many use
 `MOM- DD/MM/YYYY` — match that convention instead of introducing a new one. A PM
@@ -70,14 +72,22 @@ notes for reference, and action items whose subtasks reach their owners.
 ```text
 Find the most recent Fathom recording whose title contains "<STABLE NAME FRAGMENT>".
 
+If nothing matches, or you cannot reach Fathom, or the transcript will not load,
+create nothing at all, say exactly which of those failed, and stop. Never guess which
+meeting was meant.
+
 Go through the full transcript, not the AI summary. The summary is a few lines and
 misses the short remarks where decisions actually get made.
 
-Output only the two tasks. No preamble, no commentary, no notes to the reader.
-Send no push notifications.
+Task descriptions carry only the content set out below — no preamble, no commentary,
+no notes to the reader. The cross-link comments and the closing report are required,
+and belong outside the descriptions. Send no push notifications.
 
 Create two new tasks in the Asana project "<EXACT ASANA PROJECT NAME>". Never edit or
 replace a task from an earlier run — always create new ones.
+
+First check the project for a task whose title already carries this meeting's date. If
+one is there, this call has been written up already: create nothing, say so, and stop.
 
 Task 1, titled "<meeting name> — <meeting date> notes":
 
@@ -90,12 +100,21 @@ Task 1, titled "<meeting name> — <meeting date> notes":
   someone took on an action. Keep the specifics people mentioned — the account names,
   the amounts, the deadlines. Do not flatten them into generalities.
 
+  Cite every decision and every action as "<meeting name> @ <timestamp>", linking to
+  that moment in the recording. Anything you cannot cite, leave out.
+
+  Where someone asked for something beyond what the project has already agreed, label
+  it SCOPE CHANGE in capitals against its citation. Never write it up as agreed work.
+
   Then an "Open decisions" section: anything raised but not settled, and why it is
   still open.
 
 Task 2, titled "<meeting name> — <meeting date> action items":
 
-  Add one subtask per action item, titled with the action.
+  Recording: <link to the recording>
+
+  Add one subtask per action item, titled with the action, and cite each one as
+  "<meeting name> @ <timestamp>" in the subtask.
 
   An open decision is also an action item whenever someone owns the next step towards
   settling it. Include it here as well as in the notes task's open decisions section —
