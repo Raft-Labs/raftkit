@@ -73,7 +73,11 @@ that (see Guardrails).
 5. **Gate A — Project Profile delta.** Draft the delta the decisions imply (changed /
    new / now-confirmed facts, e.g. ⚠️ → ✅ with the call as citation), name the exact
    profile subtasks it rewrites, and write it **only after PM approval**, via
-   `write-protocol`. See `references/gates-and-writes.md`.
+   `write-protocol`. Once the writes land, post the delta record as one comment on
+   the profile's parent task — the shape is in `project-onboarding`'s
+   `references/profile-format.md`, and it is the only trace the change happened,
+   since Asana keeps no history of an overwritten description. See
+   `references/gates-and-writes.md`.
 6. **Gate B — Asana task batch.** Propose the action items as a task batch with a
    suggested assignee each; ask one focused question for any unclear assignee. Create
    the tasks **only after the PM confirms the batch**, respecting the Asana free tier,

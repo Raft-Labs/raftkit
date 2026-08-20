@@ -73,6 +73,43 @@ lands in Asana, so it carries no table either, even in chat where a table would
 read more neatly. Approving a shape Asana cannot render means approving something
 that will not exist.
 
+## Recording a delta
+
+Asana keeps no history of a description edit — an overwritten subtask leaves no
+trace of what it said before, and its story feed stays silent. So a delta that is
+not recorded is a change nobody can audit afterwards.
+
+Every delta run therefore posts **one comment on the parent task** once the writes
+land. One comment per run, never one per subtask: a delta is a single event and
+reads as one. It records **what changed, not the new content** — the facts
+themselves already live in the subtasks, so repeating them there would only grow
+with the profile rather than with the change:
+
+```output
+Delta — <date>
+Source added: <source, with its link or GID>
+Subtasks rewritten: <names>
+
+Changed
+- <fact> <old tag> → <new tag> — <why, with the citation>
+
+New
+- <fact> (<citation>)
+
+Conflicts added
+- <fact> — <value A source> vs <value B source>
+
+Now-confirmed
+- <fact> lifted to ✅ by <citation>
+```
+
+List only the groups that have entries. Comments are the most restricted Asana
+surface — no headings and no `<hr/>` — so render the group labels as `<strong>`
+lines with lists under them (`raftkit-core/asana-formatting`).
+
+This is an audit trail, not a backup: it says a fact moved and why, not what it
+said before. Restoring an earlier value means going back to its source.
+
 ## Reporting back (success summary)
 
 On a completed run, summarize the profile and give the count in this shape:

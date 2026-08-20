@@ -70,6 +70,8 @@ prior resolutions and the profile's history; a delta preserves them.
 
 A delta touches **only the subtasks whose sections changed** — an untouched section
 is not rewritten, and a section the sources newly support is added as a new subtask.
+Record the run afterwards as one comment on the parent task (`profile-format.md`),
+since an overwritten description leaves no trace in Asana.
 Writing a subtask replaces its description, which `raftkit-core/asana-formatting`
 permits only on an explicit human instruction, so name the subtasks about to be
 overwritten when asking for approval.

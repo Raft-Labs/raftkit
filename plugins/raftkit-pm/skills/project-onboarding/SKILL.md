@@ -130,6 +130,11 @@ Which Asana project is this profile for? I won't pick one from what the sources 
    ambiguous for every skill that reads it, and the duplicate looks exactly as
    authoritative as the original.
 
+   Once a delta's writes land, post the delta record as one comment on the parent
+   task — the shape is in `references/profile-format.md`. Asana keeps no history of
+   an overwritten description, so this comment is the only trace the change ever
+   happened.
+
 7. **Report and offer the next step.** Summarize with the exact success-count shape
    defined in `references/profile-format.md`, then **offer to run
    story-skill-generator** for the project. Offer only; generating the skill is that
