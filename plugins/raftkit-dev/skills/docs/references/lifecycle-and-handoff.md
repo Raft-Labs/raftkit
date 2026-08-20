@@ -14,8 +14,9 @@ and completion verification.
 
 1. **The approved Asana story** — fetched live, scope authority. Its `[AC]`s
    and Out-of-scope list bound every docs change.
-2. **The Project Profile** — project facts. Its home is a parameter supplied by
-   the project/PM setup; never hardcode a path or connector.
+2. **The Project Profile** — project facts. It is the
+   `Project Profile - <project name>` task in the project
+   (`raftkit-core/workflow-constants`); never hardcode a path or connector.
 3. **The `spec_path` implementation spec** — the governance pack's spec file is
    THE spec gate. This skill checks it; it never authors a competing format.
 4. **Discovered docs roots and conventions** — from `scripts/audit-docs.mjs`.

@@ -1,6 +1,6 @@
 ---
 name: workflow-constants
-description: This skill should be used whenever a RaftKit skill needs a workflow constant — the Asana workspace GID, the Feature or Bugs template task GID, or the subtask naming conventions — or must fetch a live template from Asana. Consult it before reading, creating, or formatting any Asana task, even when the constant is not named explicitly. It is the single source of these identifiers; never guess them or reuse remembered template content.
+description: This skill should be used whenever a RaftKit skill needs a workflow constant — the Asana workspace GID, the Feature or Bugs template task GID, the subtask naming conventions, or the Project Profile task convention that tells every skill how to find a project's profile — or must fetch a live template from Asana. Consult it before reading, creating, or formatting any Asana task, and before reading a Project Profile, even when the constant is not named explicitly. It is the single source of these identifiers; never guess them or reuse remembered template content.
 user-invocable: false
 ---
 
@@ -16,12 +16,29 @@ This is the one place RaftKit stores the identifiers every role plugin (pm / dev
 | Feature Template (format authority) | `1216778429401199` |
 | Bugs Template (format authority) | `1215260732424760` |
 | Subtask conventions | `[AC] …` acceptance criteria, plus `Development` / `Testing` / `Bugs` |
+| Project Profile task | Task named `Project Profile - <project name>`, in the project it describes, carrying one subtask per profile section |
 
 Read template GIDs from this table — never hardcode them into a skill's own instructions.
 
 ## Resolving a constant
 
 To use a constant, read its value from the table above. That is the whole resolution step — the values are static identifiers, not content.
+
+## Finding a project's Project Profile
+
+A profile is not a document at a path. It is one Asana task in the project it
+describes, carrying one subtask per section, written by
+`raftkit-pm project-onboarding`. Every skill that reads a profile finds it the
+same way — no skill asks a human where it lives:
+
+1. Find the task named `Project Profile - <project name>` in that project.
+2. Read **all** of its subtasks. A profile carries only the sections its sources
+   support, so the set varies by project — never look up a section by name and
+   never assume a particular one exists.
+
+**No such task** — that project has no profile. Do not invent one, and do not
+carry on with house defaults as though none was expected: say so, and route to
+`raftkit-pm project-onboarding` to build it first.
 
 ## Fetching a template (happy path)
 

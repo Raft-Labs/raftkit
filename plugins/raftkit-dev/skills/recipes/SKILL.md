@@ -55,8 +55,9 @@ surfaced. Read the list with that ceiling in mind.
 1. **Project Profile override.** A project may override a default or a recipe
    **choice only** through an explicit entry in its Project Profile. Silent
    per-repo divergence is not allowed. When an override applies, it wins and the
-   **deviation is noted in the plan**. (Where the Project Profile lives is owned
-   by onboarding/core — reference it abstractly; never hardcode a path.) A Project
+   **deviation is noted in the plan**. (The profile is the
+   `Project Profile - <project name>` task in the project — see
+   `raftkit-core/workflow-constants`; never hardcode a path.) A Project
    Profile overrides recipe/default *choices* only — it **never** overrides an
    explicit story requirement or `[AC]`. If a Profile entry contradicts the story,
    the **story wins** and the clash is surfaced exactly like a story-vs-recipe

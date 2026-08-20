@@ -57,11 +57,12 @@ something the PM provided.
    target. If none is named → stop and ask which task to write into.
 2. **The feature scope** — what this story is about.
 3. **The source(s) of truth** — the Project Profile and/or the project's own
-   sources (spec, PRD, designs, prior stories). The profile's decided home is the
-   pinned Asana resource task linking its Drive doc; the PM points at it, or at
-   whatever sources exist. There is no default source. Sources arrive by any
-   access path the session provides — connector, uploaded file, pasted link, or
-   synced local file (`raftkit-core/house-rules`).
+   sources (spec, PRD, designs, prior stories). The profile is the
+   `Project Profile - <project name>` task in the project
+   (`raftkit-core/workflow-constants`), found rather than asked for; the PM points at
+   any other sources.
+   Sources arrive by any access path the session provides — connector, uploaded
+   file, pasted link, or synced local file (`raftkit-core/house-rules`).
 
 If any of these is missing, **ask before doing anything else** (the Empty state).
 

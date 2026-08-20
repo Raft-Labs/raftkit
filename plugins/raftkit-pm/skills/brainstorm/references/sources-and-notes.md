@@ -75,11 +75,10 @@ dropped silently.
 Sessions end. The next one should not start from zero.
 
 **Where they live is a parameter.** Ask the person the first time, then reuse
-it. It may be the Project Profile's home, a document store folder, or a synced
-file — the rule is only that the skill never picks it silently and never
-hardcodes it. The Project Profile itself has a decided home — the pinned Asana
-resource task linking its Drive doc — so notes that belong with the profile can
-simply live alongside it; treat overrides the same way `project-onboarding` does.
+it. It may be a document store folder or a synced file — the rule is only that the
+skill never picks it silently and never hardcodes it. The Project Profile is the
+exception: it is not a parameter, it is the `Project Profile - <project name>` task
+in the project (`raftkit-core/workflow-constants`), found rather than asked for.
 
 **Offer, never save silently.** Saving notes is an outward write, so it goes
 through `raftkit-core/write-protocol` like everything else: show what would be

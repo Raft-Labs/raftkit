@@ -41,12 +41,10 @@ that (see Guardrails).
    directly; an upload is used as-is and cited as "uploaded transcript, as-of
    \<date\>". If none is given → ask which meeting.
    Resolution failures are handled under Edge cases (Error).
-2. **The Project Profile** — reach it through its decided home: the pinned Asana
-   resource task linking the profile's Drive doc (the same home `project-onboarding`
-   writes to and prints on completion), or wherever the PM points for a project that
-   keeps it elsewhere; never hardcode a path or connector. **No profile exists →
-   route to `project-onboarding` first** (see Edge cases · Error) — this skill
-   updates a profile, it does not create one.
+2. **The Project Profile** — the `Project Profile - <project name>` task in the
+   project (`raftkit-core/workflow-constants`), found by that convention rather than
+   asked for. **No profile exists → route to `project-onboarding` first** (see Edge
+   cases · Error) — this skill updates a profile, it does not create one.
 
 `raftkit-core` is required for `workflow-constants`, `house-rules`, and
 `write-protocol`; if it is missing, stop with the exact **missing-core** message from
@@ -74,7 +72,7 @@ that (see Guardrails).
    changes visibly flagged. This is the shared basis for both gates that follow.
 5. **Gate A — Project Profile delta.** Draft the delta the decisions imply (changed /
    new / now-confirmed facts, e.g. ⚠️ → ✅ with the call as citation), name the exact
-   profile home it lands on, and write it **only after PM approval**, via
+   profile subtasks it rewrites, and write it **only after PM approval**, via
    `write-protocol`. See `references/gates-and-writes.md`.
 6. **Gate B — Asana task batch.** Propose the action items as a task batch with a
    suggested assignee each; ask one focused question for any unclear assignee. Create
