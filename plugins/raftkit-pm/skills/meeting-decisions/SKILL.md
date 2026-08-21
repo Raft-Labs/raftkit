@@ -1,6 +1,6 @@
 ---
 name: meeting-decisions
-description: This skill should be used when a RaftLabs PM wants to turn a client call into cited decisions, a Project Profile update, and Asana tasks — e.g. "extract the decisions from this Fathom call", "run meeting-decisions on <recording>", "turn this call into action items and tasks", "what did we decide and who owns what on that call", or an uploaded transcript file to process. It reads one transcript (Fathom recording or uploaded file), extracts decisions / scope changes / action items each cited to a transcript timestamp, flags out-of-scope requests as SCOPE CHANGE, and proposes a Project Profile delta and an Asana task batch as two separately PM-approved gates. Requires an existing Project Profile (routes to project-onboarding if missing); writes and creates nothing without approval.
+description: This skill should be used when a RaftLabs PM wants to turn a client call into cited decisions, a Project Profile update, and Asana tasks — e.g. "extract the decisions from this Fathom call", "turn this call into action items and tasks", "what did we decide and who owns what on that call", or an uploaded transcript. It reads one transcript, extracts timestamp-cited decisions / scope changes / action items, flags out-of-scope asks as SCOPE CHANGE, and proposes a Project Profile delta and an Asana task batch as two separate PM-approved gates. Requires an existing Project Profile (else routes to project-onboarding); writes nothing without approval. It also sets up the scheduled version on request — "set up the meeting notes routine", "automate the MOM for this project", "schedule the meeting notes for my weekly call" — handing over a filled-in routine prompt the PM pastes into Routines, stating it must not be switched on until founders sign off the unattended-write decision; it never creates or runs a routine.
 user-invocable: true
 ---
 
@@ -83,6 +83,24 @@ that (see Guardrails).
    approved), and which tasks were created with links (if confirmed) — naming any gate
    the PM declined so nothing looks done that was not.
 
+## Setting up the scheduled version
+
+A PM who wants this to happen after every call without running it by hand is asking for
+a **routine** — a prompt Claude runs on a schedule. Follow
+`references/scheduled-routine.md`: ask its three questions, fill the blanks yourself
+(read the Asana project name back from Asana, read the recording name from Fathom, and
+resolve the fallback assignee to exactly one workspace member — never accept a guess),
+and hand over the completed prompt plus the setup steps.
+
+The routine covers the notes task and the action-items task only. The Project Profile
+delta stays with Gate A of an interactive run, because that write needs approval.
+
+Hand it over and stop. This skill never creates a routine, never schedules one, and has
+no visibility into one after handover — a routine runs in a blank environment with no
+plugins loaded. Say that when handing over, so the PM knows where to come back if the
+output drifts. Say this too: **the routine must not be switched on until the founders
+record the unattended-write decision** set out in `references/scheduled-routine.md`.
+
 ## Edge cases — WEESLD
 
 - **Waiting** — a long transcript announces chunked processing and reports progress
@@ -107,8 +125,10 @@ that (see Guardrails).
 
 - **Read-only on the transcript.** The transcript and the meeting are read, never
   modified. The only writes are the approved profile delta and the confirmed tasks.
-- **No meeting summaries for their own sake** — Fathom already produces those; this
-  skill extracts decisions / scope changes / actions, not a recap.
+- **No meeting summaries for their own sake** on an interactive run — Fathom already
+  produces those; this skill extracts decisions / scope changes / actions, not a recap.
+  The scheduled routine is the one exception: its notes task deliberately writes
+  per-topic notes, because no PM is in the loop to read a chat extraction.
 - **Asana free tier only** on anything created — no structured Asana feature the free
   tier lacks. The canonical exclusion list is `raftkit-core/house-rules`' free-tier
   rule; `references/gates-and-writes.md` applies it to the task batch.
@@ -125,6 +145,12 @@ that (see Guardrails).
   single citation form (`<meeting> @ <timestamp>` deep link) and the no-citation-no-
   claim rule, the fixed always-caps **SCOPE CHANGE** flag wording and its routing, and
   chunked processing of long transcripts.
+- **`references/scheduled-routine.md`** — how to set a PM up with the scheduled version:
+  the three questions to ask, the five rules that keep a routine working (cloud not
+  local, full transcript, fragment-matched recording name, don't hand-write the prompt,
+  create-only on every run), the filled-in routine prompt producing a notes task and an
+  action-items task, the unattended-write decision that gates switching one on, and a
+  failure-to-cause checklist for when a routine stops working.
 - **`references/gates-and-writes.md`** — the two independent approval gates: the
   Project Profile delta (changed / new / now-confirmed, aligned with
   `project-onboarding`'s profile format) and the task batch (assignee resolution,
