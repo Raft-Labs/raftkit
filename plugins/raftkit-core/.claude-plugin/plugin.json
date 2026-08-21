@@ -1,6 +1,6 @@
 {
   "name": "raftkit-core",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "RaftKit house rules, workflow constants, governance protocols pack, the Module Design Standard, the Asana write-protocol gate, the asana-formatting rendering capability, the shared discovery-interview contract, and usage telemetry, including blocker events surfaced in the admin dashboard.",
   "author": {
     "name": "RaftLabs"

@@ -42,14 +42,6 @@
       "example": "evidence stale — inspected a1b2c3d, current e4f5g6h"
     },
     {
-      "id": "cannot-estimate",
-      "skill": "estimation",
-      "severity": "blocker",
-      "pattern": "^Cannot estimate — (?<detail>.+)$",
-      "source": "raftkit-pm/skills/estimation/references/breakdown-method.md",
-      "example": "Cannot estimate — the story is not ready."
-    },
-    {
       "id": "pr-nothing-to-raise",
       "skill": "pr",
       "severity": "info",
