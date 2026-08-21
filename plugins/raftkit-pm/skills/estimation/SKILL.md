@@ -23,13 +23,10 @@ a promise.
 story is sized by [user-story](../user-story/SKILL.md), which answers with one hour
 range under the same watermark and the same approval chain. When the ask names one
 story — however it is phrased, and whether or not it says "estimate" — hand it over
-and stop:
-
-> One story is user-story's job — run raftkit-pm user-story and ask it to size the
-> story. This skill estimates a whole feature list.
-
-The exact wording is in `references/sheet-output.md`. This is a redirect, not a
-refusal: the PM gets their answer, from the skill built for it.
+and stop, in the exact words of the `Redirect — the ask names one story` shape in
+`references/sheet-output.md`. That file holds the wording; it is not restated here.
+This is a redirect, not a refusal: the PM gets their answer, from the skill built
+for it.
 
 The boundary is the **size of the ask, not the word used**. Breaking one story into
 per-criterion hours is not offered by either skill, and that is deliberate — it is
@@ -94,7 +91,8 @@ the mechanism that turned a small UI change into 85 hours.
    can see the list was read as they meant it. If the PM supplied a Project Profile,
    read it too (read-only). If a feature names a written Asana story, fetch it live
    and let its gaps feed the assumptions — never as a reason to refuse. If a source
-   cannot be reached, name the exact access fix and stop, per
+   cannot be reached, name the exact access fix and stop, in the
+   `Source unreachable — nothing estimated yet` shape in
    `references/sheet-output.md`.
 
 3. **Estimate each feature.** Give every feature an FE, a BE and a QA range with at
@@ -110,19 +108,20 @@ the mechanism that turned a small UI change into 85 hours.
    one list.
 
 6. **Draft, then write after approval.** Show the estimate in chat first. On the PM's
-   approval, write one Google Sheet with the fixed columns and report the link
-   (`raftkit-core/write-protocol` — silence is not approval). The columns, the write
+   approval, write one Google Sheet in the fixed layout and report the link
+   (`raftkit-core/write-protocol` — silence is not approval). The layout, the write
    rules, the connector-absent state, and the exact output shapes are in
    `references/sheet-output.md`.
 
 ## Guardrails
 
 - **Watermark, always, undisableable.** The exact string
-  `Requires founder review — not a client commitment.` is the first line of **every**
-  output — estimate, redirect, empty, error. No flag, option, or phrasing suppresses
-  it. The approval chain line follows the watermark on any output carrying numbers,
-  and is equally undisableable there. Outputs with no numbers omit the chain line and
-  keep their own explanatory text under the watermark.
+  `Requires founder review — not a client commitment.` opens **every** output, chat
+  and Sheet alike — estimate, redirect, empty, error, and row 1 of the Sheet itself.
+  No flag, option, or phrasing suppresses it. The approval chain line follows the
+  watermark on any output carrying numbers, and is equally undisableable there: line
+  2 in chat, row 2 in the Sheet. Outputs with no numbers omit the chain line and keep
+  their own explanatory text under the watermark.
 - **Ranges, never points.** Every number is a low–high range. Confidence is a tight
   range; uncertainty is a wide one; a bare single number is never emitted.
 - **Every range carries an assumption.** A range with no stated assumption is
@@ -145,7 +144,8 @@ the mechanism that turned a small UI change into 85 hours.
 - **`references/breakdown-method.md`** — how a feature list becomes FE/BE/QA hour
   ranges: the feature as the unit, the range-and-assumption rules, what widens a
   range and how the range absorbs its drivers, and how the list totals.
-- **`references/sheet-output.md`** — the Sheet contract: the fixed columns, who owns
-  structure and who owns content, the draft-then-write gate, the connector-absent
-  state, and the exact chat shapes for an estimate, the single-story redirect, and an
-  empty list.
+- **`references/sheet-output.md`** — the Sheet contract: the fixed layout, with the
+  watermark and approval-chain rows above the header row and the six columns under
+  it, who owns structure and who owns content, the draft-then-write gate, the
+  connector-absent state, and the exact chat shapes — an estimate, the single-story
+  redirect, an empty list, an unreachable source, and an unreachable Sheet.

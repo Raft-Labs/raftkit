@@ -1,12 +1,28 @@
 # Sheet output — the canonical layout and the chat shapes
 
 The Sheet is what the proposal is built from, so its layout is fixed and its strings
-live here. This file is the single source of the columns, the write rules, and every
-shape the PM sees in chat. Nothing here is paraphrased elsewhere.
+live here. This file is the single source of the layout, the write rules, and every
+shape the PM sees — in chat and in the Sheet itself. Nothing here is paraphrased
+elsewhere.
 
-## Fixed columns (exact order, verbatim)
+## Fixed layout (exact order, verbatim)
 
-One estimate, one Sheet, one header row, these six columns in this order:
+One estimate, one Sheet. From the top, in this order:
+
+| Row | Holds |
+|---|---|
+| 1 | the watermark, spanning the sheet: `Requires founder review — not a client commitment.` |
+| 2 | the approval chain, spanning the sheet: `AI estimate → vetted by <implementing developer> → approved by Nirav or Ashit → only then shared with the client.` |
+| 3 | the header row — the six columns below, in their order |
+| 4 onward | one row per feature |
+| last | the list total |
+
+Rows 1 and 2 are part of the layout, not chat decoration. The Sheet is the file that
+gets exported, pasted into a proposal and forwarded, so it carries the watermark and
+the chain itself. A tab that has left the chat still says what it is and who has to
+sign it off.
+
+The six columns, in this order:
 
 | Column | Holds |
 |---|---|
@@ -20,12 +36,13 @@ One estimate, one Sheet, one header row, these six columns in this order:
 The last row is the list total: the four ranges summed across every feature, with the
 list-level assumptions in the final column.
 
-The skill **owns the structure** — the column set and their order.
+The skill **owns the structure** — the row order above and the column set.
 The PM **owns the content** — the features, the numbers once vetted, and the wording
 of the assumptions.
 A re-run may propose new rows and changed numbers, but it never reorders, renames, or
-drops these columns, and it never overwrites a number the PM or the developer has
-edited. A changed number on an edited row is shown for the PM to resolve.
+drops these columns, it never drops rows 1 and 2, and it never overwrites a number the
+PM or the developer has edited. A changed number on an edited row is shown for the PM
+to resolve.
 
 ## A source Sheet is not the estimate Sheet
 
@@ -58,8 +75,8 @@ folder — and stop so the PM can grant it and re-run.
 ## Chat shapes
 
 The watermark is always the first line, and the approval chain is the second line
-whenever the shape carries hours. Use literal `—`, `·` and `⚠️` so it reads cleanly in
-chat.
+whenever the shape carries hours — the same two lines the Sheet carries in rows 1 and
+2. Use literal `—`, `·` and `⚠️` so it reads cleanly in chat.
 
 ### Estimate
 
@@ -69,11 +86,13 @@ AI estimate → vetted by <implementing developer> → approved by Nirav or Ashi
 
 Estimate — <project>, <N> features
 
+Source: <sheet or document>, column "<feature column>" — <N> features, <M> rows skipped (blank or out of scope).
+
 - Rate-card tagging — FE 6–10 h · BE 4–7 h · QA 3–5 h — assumes tags are additive.
 - Loyalty tier rules — FE 8–12 h · BE 12–20 h · QA 5–8 h — assumes one tier model. ⚠️ widened: tier rules unwritten.
 - Guest check-in — FE 10–16 h · BE 0 h · QA 4–6 h — assumes the check-in API exists.
 
-Total: 45–74 h — FE 24–38 h · BE 16–27 h · QA 12–19 h
+Total: 52–84 h — FE 24–38 h · BE 16–27 h · QA 12–19 h
 
 Assumptions:
 - No migration of the rate cards already live.
@@ -96,6 +115,18 @@ One story is user-story's job — run raftkit-pm user-story and ask it to size t
 Requires founder review — not a client commitment.
 
 No feature list to estimate. Paste the list, or point at the scope document that holds it.
+```
+
+### Source unreachable — nothing estimated yet
+
+The feature list itself could not be read, so there are no numbers and no chain line.
+
+```output
+Requires founder review — not a client commitment.
+
+The feature list could not be read, so nothing was estimated.
+
+Fix: grant <account> view access to <sheet or document>, then re-run.
 ```
 
 ### Sheet unreachable — the estimate still stands
