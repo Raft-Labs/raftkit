@@ -5,14 +5,21 @@ at a recurring client call and every call turns into notes and assigned follow-u
 without a PM remembering to do anything.
 
 This file exists because every PM who built one from scratch hit the same four
-failures, and a fifth nobody diagnosed. The prompt below is the version that works.
-Hand it over filled in; do not ask a PM to write their own.
+failures, and a fifth nobody diagnosed — the field notes are on Asana task
+`1217124109784176`. The prompt below is the version that works. Hand it over filled
+in; do not ask a PM to write their own.
 
 Setting the routine up is the PM's own click-through — RaftKit supplies the prompt
-and the values, nothing more. Once handed over, this skill has no further part in it:
-the routine runs in a blank cloud environment with no plugins installed, so nothing
-here can observe or correct it afterwards. Say so when handing it over, so the PM
-knows where to come back if the output drifts.
+and the values, nothing more. Once handed over, this skill has no further part in it.
+As configured today a routine runs with no RaftKit plugins available, so nothing here
+can observe or correct it afterwards. The org-wide install path is an open decision
+(Asana task `1216551001583573`); revisit this section if that lands.
+
+The routine covers the notes task and the action-items task only. The Project Profile
+delta stays with Gate A of an interactive run, because that write needs approval.
+
+Say all of that when handing the prompt over, so the PM knows what the routine does
+not do, and where to come back if the output drifts.
 
 ## What to ask before handing anything over
 
@@ -36,10 +43,13 @@ scanning their board should not be able to tell which tasks a routine made.
 
 ## The five rules
 
-**1 · Cloud, not local.** `Code → Routines → Cloud`, and add a blank environment —
-this touches Fathom and Asana, not a repository. A local schedule only runs while
-that machine is on, so a routine set up locally silently does nothing whenever the
-laptop is shut.
+**1 · Cloud, not local.** In Claude Code: `Code → Routines → Cloud`, and add a blank
+environment — this touches Fathom and Asana, not a repository. A local schedule only
+runs while that machine is on, so a routine set up locally silently does nothing
+whenever the laptop is shut. These paths change, and this plugin also runs in Cowork:
+if the PM is in Cowork, confirm the routines surface there before handover. Confirm as
+well that Fathom and Asana are both connected for the account the routine runs under —
+an authorisation given interactively does not always carry over to a scheduled run.
 
 **2 · Read the full transcript, never the summary.** Ask for "the summary" and Claude
 takes Fathom's AI summary, which is a few lines for a two-hour call. Decisions live in
@@ -55,19 +65,32 @@ added date, or a tidy-up. A real rename still breaks it, but that is a rename so
 knows about.
 
 **4 · Don't hand-write the prompt.** Start from the prompt below, or describe the
-routine in words to `Create with Claude` and let it write the instruction. A
-hand-written prompt drifts, and every PM's drifts differently — which is how the
-same routine ends up working for one person and failing for four.
+routine in words to Claude Code's `Create with Claude` and let it write the
+instruction. A hand-written prompt drifts, and every PM's drifts differently — which is
+how the same routine ends up working for one person and failing for four.
 
 **5 · Every run creates new tasks and never edits an earlier run's.** This is the
-failure that took a working routine down after two good runs: run three rewrote what
-runs one and two had recorded. Dated titles and create-only behaviour make repeat runs
-safe. Nothing in the prompt may update, replace, or append to a previous task.
+failure that took a working routine down after two good runs (field notes, Asana task
+`1217124109784176`): run three rewrote what runs one and two had recorded. Dated titles
+and create-only behaviour make repeat runs safe. Nothing in the prompt may update,
+replace, or append to a previous task.
 
 ## The prompt
 
-Fill both blanks before handing it over. The routine creates **two** tasks per call —
-notes for reference, and action items whose subtasks reach their owners.
+Fill all five blanks before handing it over. The routine creates **two** tasks per
+call — notes for reference, and action items whose subtasks reach their owners.
+
+ALL-CAPS placeholders are the five you fill in before handover. Every lowercase one —
+`<meeting name>`, `<meeting date>`, `<names from the call>`, `<link to the recording>`,
+`<owner name>` and the rest — is resolved by the routine on each run. Leave them alone.
+
+Two of the five are title patterns. The defaults are `<meeting name> — <meeting date>
+notes` and `<meeting name> — <meeting date> action items`. Replace them with the
+project's own convention where it has one. Whatever you use, both patterns must carry
+the meeting name and the meeting date — the duplicate guard keys on those two.
+
+Before handing over, read the prompt through and confirm no ALL-CAPS `<...>` placeholder
+is left in it.
 
 ```text
 Find the most recent Fathom recording whose title contains "<STABLE NAME FRAGMENT>".
@@ -80,16 +103,21 @@ Go through the full transcript, not the AI summary. The summary is a few lines a
 misses the short remarks where decisions actually get made.
 
 Task descriptions carry only the content set out below — no preamble, no commentary,
-no notes to the reader. The cross-link comments and the closing report are required,
-and belong outside the descriptions. Send no push notifications.
+no notes to the reader. The closing report is required, and belongs outside the
+descriptions.
 
-Create two new tasks in the Asana project "<EXACT ASANA PROJECT NAME>". Never edit or
-replace a task from an earlier run — always create new ones.
+Do not send me a completion notification. Asana's own notifications to the people you
+assign subtasks to are expected and are not this.
 
-First check the project for a task whose title already carries this meeting's date. If
-one is there, this call has been written up already: create nothing, say so, and stop.
+Work in the Asana project "<EXACT ASANA PROJECT NAME>". Never edit or replace a task
+from an earlier run — always create new ones.
 
-Task 1, titled "<meeting name> — <meeting date> notes":
+Before creating anything, check the project for tasks already carrying this meeting's
+name and this meeting's date. Check for each of the two tasks below separately. Create
+only the ones that are missing. If one was already there and the other was not, say
+which in the report. If both were there, create nothing and say so.
+
+Task 1, titled "<NOTES TASK TITLE PATTERN>":
 
   Date: <meeting date>
   Attendees: <names from the call>
@@ -104,12 +132,18 @@ Task 1, titled "<meeting name> — <meeting date> notes":
   that moment in the recording. Anything you cannot cite, leave out.
 
   Where someone asked for something beyond what the project has already agreed, label
-  it SCOPE CHANGE in capitals against its citation. Never write it up as agreed work.
+  it SCOPE CHANGE in capitals against its citation, and put a "Routing:" line under it
+  reading either "PM handles" or "escalate to founders if commercial". Never write it
+  up as agreed work.
+
+  Where anything touches budget, pricing, contracts, relationship risk, or a commitment
+  to the client, label it FOUNDER REVIEW in capitals against its citation. Never write
+  it up as settled.
 
   Then an "Open decisions" section: anything raised but not settled, and why it is
   still open.
 
-Task 2, titled "<meeting name> — <meeting date> action items":
+Task 2, titled "<ACTION ITEMS TASK TITLE PATTERN>":
 
   Recording: <link to the recording>
 
@@ -126,26 +160,32 @@ Task 2, titled "<meeting name> — <meeting date> action items":
     - more than one match          -> leave it unassigned and say which accounts matched
     - no match                     -> title it "<owner name> — <action>" and assign it
                                       to <FALLBACK ASSIGNEE>, who chases it
-    - owner unclear in the call     -> leave it unassigned. Never guess a name.
+    - owner unclear in the call    -> leave it unassigned. Never guess a name.
 
   If you cannot look owners up at all, say so and assign nothing rather than guessing.
 
   If the call produced no action items, say exactly that. Do not invent any.
 
-Write descriptions and comments in what Asana renders — headings, paragraphs, lists.
-Do not paste raw markdown. After each write, read the task back and confirm it rendered
-as intended; if it did not, say so rather than leaving it wrong.
+Write in what Asana renders, never raw markdown. A description may use Asana's own
+headings, bold, and lists. A comment may use bold lines and lists only — no headings.
+After each write, read the task back and confirm it rendered as intended; if it did not,
+say so rather than leaving it wrong.
 
-Then post one comment on the notes task linking the action-items task, and one on the
-action-items task linking the notes task.
+Each task's description carries a link to the other task. Write that link in as you
+create the task. The first task you create has no link to write yet, so add it to that
+description as soon as the second task exists.
 
-Finally report both task links, how many subtasks you created, and every subtask left
-unassigned with the reason.
+Finally report both task links, which of the two tasks you created and which were
+already there, how many subtasks you created, every subtask left unassigned with the
+reason, and everything you labelled FOUNDER REVIEW.
 ```
 
 Both tasks use only free-tier Asana features — a name, a description, subtasks, and
-assignees. The two tasks are linked by comment, not by an Asana dependency
-(`raftkit-core/house-rules`).
+assignees. The two tasks are linked by a link in each description, not by an Asana
+dependency (`raftkit-core/house-rules`).
+
+Once a routine covers a call, do not also run Gate B interactively on that call — you
+would get a second set of tasks.
 
 ## Before rolling this out
 
@@ -167,8 +207,11 @@ Two ways to resolve it, and the choice belongs to the founders, not to this skil
 the PM:
 
 - **Amend `house-rules` and `write-protocol`** with a second named exception, scoped as
-  tightly as the first: internal projects only, never a client-visible surface, tasks
-  stamped as machine-generated and pending review, always deletable.
+  tightly as the first: tasks stamped as machine-generated and pending review, always
+  deletable, and never on a board a client account can reach. The test is client
+  access, not whose project it is — a RaftLabs-only board for a client project counts
+  as internal and is allowed. Before asking for sign-off on a board, the PM checks its
+  project membership and confirms no client account is on it.
 - **Have the routine draft and stop**, leaving the PM to approve on their next
   interactive run. Keeps the rule intact; costs the hands-off quality that makes a
   routine worth having.

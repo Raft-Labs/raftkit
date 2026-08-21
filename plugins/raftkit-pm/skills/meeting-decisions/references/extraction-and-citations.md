@@ -21,6 +21,10 @@ already produces one):
 
 An item that is none of these (small talk, a rehash, an aside) is not extracted.
 
+One sanctioned exception to the no-recap rule: the scheduled routine's notes task,
+which writes per-topic notes because no PM is in the loop to read a chat extraction
+(`references/scheduled-routine.md`).
+
 ## The citation form — one form, used everywhere
 
 Every extracted item — in all three categories, and every profile-delta fact derived
