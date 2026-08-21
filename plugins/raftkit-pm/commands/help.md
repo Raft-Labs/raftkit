@@ -47,6 +47,7 @@ Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls →
 | `status-update` | Weekly client update from the board | "draft the client update for project X" | Meeting capture — that's `meeting-decisions` |
 | `meeting-decisions` | Turning a call into decisions + tasks, or setting up the scheduled version [^routine] | "extract decisions from \<recording\>" · "set up the meeting notes routine for project X" | Client-facing updates — that's `status-update` |
 | `estimation` | A whole feature list priced into FE/BE/QA hours for a proposal | "estimate this feature list" · "we need hours for the proposal" | Sizing one story — that's `user-story` |
+| `deprecation-sweep` | Setting up the scheduled watch for third-party service notices (deprecations, end-of-support, price changes) | "set up the deprecation sweep" | Acting on a flag — the routine only reads and reports; fixes and client forwards are yours |
 
 [^routine]: The scheduled routine writes to Asana unapproved — not to be switched on until the founders sign off the unattended-write decision.
 
