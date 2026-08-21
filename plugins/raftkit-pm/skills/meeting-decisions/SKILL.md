@@ -41,11 +41,12 @@ that (see Guardrails).
    directly; an upload is used as-is and cited as "uploaded transcript, as-of
    \<date\>". If none is given → ask which meeting.
    Resolution failures are handled under Edge cases (Error).
-2. **The Project Profile** — its home is **an open decision on the raftkit board**,
-   so the PM points at where the profile lives (the same parameterized home
-   `project-onboarding` writes to); never hardcode a path or connector. **No profile
-   exists → route to `project-onboarding` first** (see Edge cases · Error) — this
-   skill updates a profile, it does not create one.
+2. **The Project Profile** — reach it through its decided home: the pinned Asana
+   resource task linking the profile's Drive doc (the same home `project-onboarding`
+   writes to and prints on completion), or wherever the PM points for a project that
+   keeps it elsewhere; never hardcode a path or connector. **No profile exists →
+   route to `project-onboarding` first** (see Edge cases · Error) — this skill
+   updates a profile, it does not create one.
 
 `raftkit-core` is required for `workflow-constants`, `house-rules`, and
 `write-protocol`; if it is missing, stop with the exact **missing-core** message from
