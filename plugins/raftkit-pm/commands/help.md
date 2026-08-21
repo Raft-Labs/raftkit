@@ -37,16 +37,16 @@ Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls →
 
 ## Skills
 
-| Skill | Use it when | Say |
-| --- | --- | --- |
-| `project-onboarding` | New project, or new sources arrived | "onboard project X with this PRD and these emails" |
-| `brainstorm` | A feature idea with no spec behind it yet | "brainstorm this feature into a spec doc" |
-| `user-story` | Writing one story into an Asana task, sizing one story, or amending a story that already exists | "write the story for password reset into \<task-url\>" · "size this story" · "extend \<task-url\> with the onboarding changes" |
-| `story-skill-generator` | A project needs its own baked story skill | "generate the story skill for project X" |
-| `story-readiness` | Checking a story before dev handoff | "is this story ready? \<url\>" |
-| `status-update` | Weekly client update from the board | "draft the client update for project X" |
-| `meeting-decisions` | Turning a call into decisions + tasks, or setting up the scheduled version [^routine] | "extract decisions from \<recording\>" · "set up the meeting notes routine for project X" |
-| `estimation` | A whole feature list priced into FE/BE/QA hours for a proposal | "estimate this feature list" · "we need hours for the proposal" |
+| Skill | Use it when | Say | Not for |
+| --- | --- | --- | --- |
+| `project-onboarding` | New project, or new sources arrived | "onboard project X with this PRD and these emails" | Writing stories or updates — it only builds the profile they read |
+| `brainstorm` | A feature idea with no spec behind it yet | "brainstorm this feature into a spec doc" | A feature that already has a spec — go straight to `user-story` |
+| `user-story` | Writing one story into an Asana task, sizing one story, or amending a story that already exists | "write the story for password reset into \<task-url\>" · "size this story" · "extend \<task-url\> with the onboarding changes" | A whole feature list for a proposal — that's `estimation` |
+| `story-skill-generator` | A project needs its own baked story skill | "generate the story skill for project X" | A one-off story — that's `user-story` |
+| `story-readiness` | Checking a story before dev handoff | "is this story ready? \<url\>" | Fixing the story — it audits only; amends are `user-story`'s |
+| `status-update` | Weekly client update from the board | "draft the client update for project X" | Meeting capture — that's `meeting-decisions` |
+| `meeting-decisions` | Turning a call into decisions + tasks, or setting up the scheduled version [^routine] | "extract decisions from \<recording\>" · "set up the meeting notes routine for project X" | Client-facing updates — that's `status-update` |
+| `estimation` | A whole feature list priced into FE/BE/QA hours for a proposal | "estimate this feature list" · "we need hours for the proposal" | Sizing one story — that's `user-story` |
 
 [^routine]: The scheduled routine writes to Asana unapproved — not to be switched on until the founders sign off the unattended-write decision.
 
@@ -57,9 +57,13 @@ Alongside: `status-update` (weekly client draft), `meeting-decisions` (calls →
 - **Scope changes are flagged, never absorbed** — out-of-scope client asks are labelled SCOPE CHANGE.
 - **Estimates are never client commitments** — every output carrying an effort number, `estimation` feature-list hours and `user-story` sizing alike, opens with the founder-review watermark.
 - **Asana free tier only** — relationships are task links, not dependency features.
+- **Stories carry the WEESLD frame, not a test-case list** — `user-story` answers one row per edge state (Waiting, Empty, Error, Success, Limits, Defaults — Error mandatory) and maps each to an `[AC]`. Case-level test enumeration is `raftkit-qa`'s job, built from the profile and docs. So a story with every WEESLD row answered is complete even without an exhaustive scenario list — but a blank WEESLD row is a readiness defect, and a state QA finds uncovered comes back through `user-story` amend mode.
+- **Output quality tracks input context** — hand a skill everything you have, unordered, all of it; a strong source doc is the difference between 20+ cited ACs from one command and a skill that asks. Where sources are thin the skills ask (❓), never guess — so time spent gathering sources beats time spent correcting output.
 
 ## Where things live
 
 Board: Asana project `raftkit` (gid `1216551447756315`) · Format authority: the live Feature Template (gid in raftkit-core workflow-constants) · Shared rules: `raftkit-core` (auto-installed). For dev skills see `/raftkit-dev:help`; for QA see `/raftkit-qa:help`.
+
+**Project context lives in the Project Profile** — the one tagged (✅/⚠️/❓) source-of-truth doc `project-onboarding` produces; every other skill reads from it and cites it. On completion, `project-onboarding` names exactly where it wrote the profile — that location is what you point later skills at. And context survives to tomorrow only if the next chat starts **in the same Cowork project**: the project's memory and instructions are what carry the profile and your working context forward; a chat started elsewhere begins blind and will re-ask.
 
 Close by asking what they're trying to do — new project → onboarding; a feature idea with nothing written down yet → brainstorm; a feature that already has a source of truth → user-story; handoff → story-readiness; a gap found by dev or QA in a story that already exists → user-story amend mode.

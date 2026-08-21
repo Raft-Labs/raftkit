@@ -29,15 +29,16 @@ retest            (full "Done when" + adjacent regressions → close, or Retest 
 
 ## Skills
 
-| Skill | Use it when | Say |
-| --- | --- | --- |
-| `test-suite` | Building or refreshing the project-level suite | "generate the test suite for project X" / "sync the QA Sheet" |
-| `test-run-sheet` | A story's Development is done and needs testing | "make a run sheet for \<story-url\>" |
-| `file-bug` | A run-sheet step failed | "file a bug on \<story-url\> — here's the Jam: \<link\>" |
-| `retest` | A dev handed a fix back | "retest \<bug-url\> on build X" |
+| Skill | Use it when | Say | Not for |
+| --- | --- | --- | --- |
+| `test-suite` | Building or refreshing the project-level suite | "generate the test suite for project X" / "sync the QA Sheet" | Steps for one story — that's `test-run-sheet` |
+| `test-run-sheet` | A story's Development is done and needs testing | "make a run sheet for \<story-url\>" | Project-wide coverage — that's `test-suite` |
+| `file-bug` | A run-sheet step failed | "file a bug on \<story-url\> — here's the Jam: \<link\>" | Verifying a returned fix — that's `retest` |
+| `retest` | A dev handed a fix back | "retest \<bug-url\> on build X" | A new defect found mid-retest — that's `file-bug` |
 
 ## Rules that always apply
 
+- **Stories arrive carrying the WEESLD frame, not a case list** — one answered row per edge state (Waiting, Empty, Error, Success, Limits, Defaults), by design; case-level depth is created here: `test-suite` enumerates from the profile and docs, `test-run-sheet` expands the story's own states into steps and flags any state the story leaves uncovered. A flagged gap routes back to the PM through `user-story` amend mode — never absorbed silently.
 - **One bug per ticket** — unrelated defects in one recording become separate tickets.
 - **Severity and priority are different axes** — you'll be asked for each separately.
 - **Evidence before everything** — errors quoted verbatim; the Retest Failed tag is never applied without fresh evidence.
