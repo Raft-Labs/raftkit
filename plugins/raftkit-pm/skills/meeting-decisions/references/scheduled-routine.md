@@ -167,7 +167,7 @@ Task 2, titled "<ACTION ITEMS TASK TITLE PATTERN>":
   If the call produced no action items, say exactly that. Do not invent any.
 
 Write in what Asana renders, never raw markdown. A description may use Asana's own
-headings, bold, and lists. A comment may use bold lines and lists only — no headings.
+headings, bold, and lists.
 After each write, read the task back and confirm it rendered as intended; if it did not,
 say so rather than leaving it wrong.
 
