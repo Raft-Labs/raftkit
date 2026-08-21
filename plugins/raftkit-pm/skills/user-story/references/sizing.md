@@ -4,11 +4,12 @@ How user-story answers "if I hand this one story to a developer, is it a day or
 a week?". It arises mid-project on a client change request, or post-v1 on a new
 ask.
 
-The boundary is the **kind of answer**, not the number of stories. One hour range
-for the whole story is answered here. A task-level breakdown — hours per
-acceptance criterion, the thing a fixed-scope quote is built from — belongs to
-`estimation`, for a single story as much as for a list. An ask for an estimate,
-a breakdown, or a quote is estimation's even when it names one story.
+The boundary is the **size of the ask**, not the word used. One hour range for the
+whole story is answered here, whether the PM said "size", "estimate" or "how
+long". A whole feature list or a backlog — the thing a fixed-scope proposal is
+built from — belongs to `estimation`, which prices it per feature into FE, BE and
+QA hours. Breaking one story into hours per acceptance criterion is offered by
+neither skill: it reads as precision the story cannot support.
 
 The conventions are estimation's own — a range, named assumptions, wider where
 knowledge is thin, and the founder-review watermark. Any output carrying numbers
@@ -116,7 +117,8 @@ Pricing, dates and programme totals are founder calls.
 
 ## Out of scope
 
-- **Bulk feature-list estimation** — stays in `estimation`.
+- **A whole feature list or backlog** — that estimate is `estimation`'s job, which
+  prices each feature into FE, BE and QA hours.
 - **Pricing, quoting, or any timeline commitment** — founders only
   (`raftkit-core/house-rules`).
 - **Capacity planning and delivery dates** — never inferred from a range here.
