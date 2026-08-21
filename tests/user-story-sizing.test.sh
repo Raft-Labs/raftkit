@@ -117,7 +117,14 @@ check "S15 sizing.md caps the output length" ok $?
 
 # --- OUT OF SCOPE: bulk, pricing, timelines ---
 
-grep -qF 'estimation' "$SIZING"
+# The bare word 'estimation' matches this file throughout — including the
+# sentences that say what estimation does NOT cover — so it stayed green with
+# the out-of-scope bullet deleted. Pinned to the bullet, whitespace-normalised
+# because it wraps, and including the job it names: a route that does not say
+# what the other skill returns sends the PM off to guess.
+sizing_flat="$(tr -s '[:space:]' ' ' < "$SIZING")"
+BULK_BULLET=$'**A whole feature list or backlog** — that estimate is `estimation`\'s job, which prices each feature into FE, BE and QA hours.'
+printf '%s' "$sizing_flat" | grep -qF -- "$BULK_BULLET"
 check "S16 sizing.md routes bulk feature-list work to estimation" ok $?
 
 # The closing line itself, not the word 'founder' — which matches the
@@ -146,17 +153,23 @@ check "S20 user-story description claims the 'size this story' phrasing" ok $?
 grep -qiE '^description:.*(day or a week|change request)' "$SKILL"
 check "S21 user-story description claims the plain-English phrasings" ok $?
 
-# A live run showed the opposite failure: "estimate this story" — a phrase
-# estimation claims verbatim — returned a sizing range instead. The cause was
-# a blanket claim in this description, "anything about one story belongs here",
-# which overrode estimation on its own phrasing. The boundary is the KIND of
-# answer, not the story count.
+# This description once claimed "anything about one story belongs here", which
+# overrode estimation on its own phrasings. Both skills now state the boundary
+# as the size of the ask, not the word used: one story is sized here whichever
+# verb the PM reached for — "estimate this story" included — and a whole
+# feature list goes to estimation. A blanket claim restates that as a story
+# count, and a count lets this description creep back over whole lists.
 
 ! grep -qiE '^description:.*anything about one story' "$SKILL"
 check "S22 user-story description makes no blanket claim over one story" ok $?
 
-grep -qiE '^description:.*breakdown' "$SKILL"
-check "S23 user-story description sends breakdowns to estimation" ok $?
+# The other half of the same boundary, stated positively. It used to be pinned
+# by the bare word "breakdown", from a sentence calling estimation "the
+# task-level breakdown a fixed-scope proposal is built from" — which is no
+# longer what estimation does: it prices features, and per-criterion hours are
+# offered by neither skill.
+grep -qiE '^description:.*(feature list|backlog).*estimation.*FE, BE and QA hours' "$SKILL"
+check "S23 user-story description routes a feature list to estimation's FE/BE/QA hours" ok $?
 
 grep -qiE '(estimate|breakdown|quote).{0,60}estimation' "$SIZING"
 check "S24 sizing.md sends an estimate or breakdown ask to estimation" ok $?
