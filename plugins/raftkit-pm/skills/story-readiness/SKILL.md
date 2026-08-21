@@ -104,7 +104,9 @@ both sides. Building that dev-side enforcement is out of scope here.
   NOT READY in step 2 never reaches it — an empty task is authored, not amended.
   None of this changes anything here: the gate stays **read-only** and its
   verdict stays binary. It never amends anything itself, and it does not soften
-  a verdict because an amend is waiting on it.
+  a verdict because an amend is waiting on it. The rule behind that integration —
+  who owns the fix and why the channel is amend mode — is `raftkit-core/house-rules`'
+  **story-gap loop** section.
 - **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Reference file
