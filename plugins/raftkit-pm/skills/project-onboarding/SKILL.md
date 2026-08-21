@@ -47,8 +47,10 @@ the success-summary format are in `references/profile-format.md`.
    meeting recording, reachable by any access path the session provides
    (`raftkit-core/house-rules`): a connector (Google Drive, Gmail, Fathom, Asana),
    an uploaded file, a pasted Drive link, or a file in a synced Drive folder.
-2. **Where the profile lives** — its home is an open decision, so the PM points at
-   it; see the parameterized home in `references/profile-format.md`. Never hardcode
+2. **Where the profile lives** — the canonical home is a Google Drive doc plus a
+   pinned Asana resource task linking it (decided on the raftkit board; see
+   `references/profile-format.md`). Offer that as the default; a project that
+   already keeps its profile elsewhere names that home instead. Never hardcode
    a location.
 
 **Empty state — no sources named.** Stop with this exact message, and create
@@ -112,9 +114,9 @@ I need at least one source — a PRD, SOW, master doc, email thread, or meeting 
 ## Reference files
 
 - **`references/profile-format.md`** — the Project Profile structure (fact · tag ·
-  citation · date), the ✅/⚠️/❓ tag legend and the default-to-⚠️ rule, the
-  parameterized profile home (open decision + recommended default), and the
-  success-summary format.
+  citation · date), the ✅/⚠️/❓ tag legend and the default-to-⚠️ rule, the decided
+  profile home (Drive doc + pinned Asana resource task, with project overrides),
+  and the success-summary format including the `Profile lives at:` line.
 - **`references/ingestion-and-deltas.md`** — reading sources across the access paths,
   per-source progress and the per-run context bound, the unreadable-source error
   behaviour, conflict surfacing with both citations, and the delta re-run rules

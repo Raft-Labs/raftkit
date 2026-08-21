@@ -42,21 +42,21 @@ never assumed to lift a fact to ✅.
 records the conflict with both citations and leaves it for the PM to resolve — see
 `ingestion-and-deltas.md`. It is never silently collapsed to one value.
 
-## Where the profile lives (parameterized — do not hardcode)
+## Where the profile lives (decided)
 
-The canonical home of the profile is an **open decision** on the raftkit board.
-Until it lands, treat the home as a parameter the PM supplies:
-the PM points onboarding at where the profile lives (and where downstream skills
-read it from), and the skill records that location. Never hardcode a path or a
-single connector.
+The canonical home of the profile is **a Google Drive doc plus a pinned Asana
+resource task on the project's board that links it** — decided on the raftkit
+board (task `1216550765662503`). The resource task is the stable address every
+skill and teammate reaches the profile through; the Drive doc is the content.
+The Drive doc may be created and updated via the Drive connector **or** as a
+file in the PM's synced Drive folder — same doc, either path, both through the
+write-protocol gate.
 
-**Recommended default**, if the PM has no preference: a Google Drive doc for the
-profile plus a pinned Asana resource task that links it, so every skill can reach
-it by link. The Drive doc may be created and updated via the Drive connector **or**
-as a file in the PM's synced Drive folder — same doc, either path, both through the
-write-protocol gate. Offer this default, note it is provisional pending the
-decision, and record wherever the profile actually lands so re-runs find the same
-home.
+State this home at the point of asking, as the default. A project that already
+keeps its profile elsewhere names that home instead and the skill follows it —
+sources and destinations stay access-path-agnostic (`raftkit-core/house-rules`).
+Either way, record where the profile actually lives so re-runs and downstream
+skills find the same home. Never hardcode a path or a single connector.
 
 ## Reporting back (success summary)
 
@@ -64,7 +64,10 @@ On a completed run, summarize the profile and give the count in this shape:
 
 ```output
 X facts — ✅ a / ⚠️ b / ❓ c. Top gaps: …
+Profile lives at: <the pinned resource task's link, or the home the PM named>
 ```
 
 where the top gaps are the most delivery-critical ❓ Missing (and thin ⚠️ Partial)
-facts. Then offer to run `story-skill-generator` for the project.
+facts. The `Profile lives at:` line is how the PM points every later skill — and
+tomorrow's session — at the profile; never omit it. Then offer to run
+`story-skill-generator` for the project.
