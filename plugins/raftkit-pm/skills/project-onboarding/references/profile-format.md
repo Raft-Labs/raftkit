@@ -44,19 +44,71 @@ records the conflict with both citations and leaves it for the PM to resolve —
 
 ## Where the profile lives (decided)
 
-The canonical home of the profile is **a Google Drive doc plus a pinned Asana
-resource task on the project's board that links it** — decided on the raftkit
-board (task `1216550765662503`). The resource task is the stable address every
-skill and teammate reaches the profile through; the Drive doc is the content.
-The Drive doc may be created and updated via the Drive connector **or** as a
-file in the PM's synced Drive folder — same doc, either path, both through the
-write-protocol gate.
+The profile lives **in Asana**, in the project it describes: one task named
+`Project Profile - <project name>`, carrying **one subtask per section** — decided
+on the raftkit board (task `1216550765662503`). The convention is fixed in
+`raftkit-core/workflow-constants`, so no skill asks a human where a profile lives
+and no run has to remember where the last one landed. There is no per-project
+override: a home that varies is a home nobody can be sure of.
 
-State this home at the point of asking, as the default. A project that already
-keeps its profile elsewhere names that home instead and the skill follows it —
-sources and destinations stay access-path-agnostic (`raftkit-core/house-rules`).
-Either way, record where the profile actually lives so re-runs and downstream
-skills find the same home. Never hardcode a path or a single connector.
+The parent task's description carries only what identifies the profile — the
+project, the as-of date, and the source index's headline. Every section's facts
+live in its own subtask, which is what keeps any single description readable.
+
+Onboarding **takes the Asana project as an input** and stops if it is not given
+one; it does not create projects. Sources are unaffected by any of this: a PRD,
+SOW, or transcript still arrives on whatever path the session provides — Drive
+connector, upload, synced folder, pasted link — per `raftkit-core/house-rules`.
+Drive remains a place sources are read from, never where the profile is written.
+
+**Render facts as lists, never as a table.** Asana renders no table in a task
+description (`raftkit-core/asana-formatting`), and a fact's four parts read
+naturally as a `<strong>` label followed by its citation and date. Only two
+heading levels exist, so keep each subtask's structure shallow. A conflict is a
+nested list too — the fact, then each competing value with its own citation
+underneath — never two columns.
+
+**Draft it in the shape it will be written.** The draft shown for approval is what
+lands in Asana, so it carries no table either, even in chat where a table would
+read more neatly. Approving a shape Asana cannot render means approving something
+that will not exist.
+
+## Recording a delta
+
+Asana keeps no history of a description edit — an overwritten subtask leaves no
+trace of what it said before, and its story feed stays silent. So a delta that is
+not recorded is a change nobody can audit afterwards.
+
+Every delta run therefore posts **one comment on the parent task** once the writes
+land. One comment per run, never one per subtask: a delta is a single event and
+reads as one. It records **what changed, not the new content** — the facts
+themselves already live in the subtasks, so repeating them there would only grow
+with the profile rather than with the change:
+
+```output
+Delta — <date>
+Source added: <source, with its link or GID>
+Subtasks rewritten: <names>
+
+Changed
+- <fact> <old tag> → <new tag> — <why, with the citation>
+
+New
+- <fact> (<citation>)
+
+Conflicts added
+- <fact> — <value A source> vs <value B source>
+
+Now-confirmed
+- <fact> lifted to ✅ by <citation>
+```
+
+List only the groups that have entries. Comments are the most restricted Asana
+surface — no headings and no `<hr/>` — so render the group labels as `<strong>`
+lines with lists under them (`raftkit-core/asana-formatting`).
+
+This is an audit trail, not a backup: it says a fact moved and why, not what it
+said before. Restoring an earlier value means going back to its source.
 
 ## Reporting back (success summary)
 
@@ -64,10 +116,10 @@ On a completed run, summarize the profile and give the count in this shape:
 
 ```output
 X facts — ✅ a / ⚠️ b / ❓ c. Top gaps: …
-Profile lives at: <the pinned resource task's link, or the home the PM named>
+Profile lives at: <link to the Project Profile task>
 ```
 
 where the top gaps are the most delivery-critical ❓ Missing (and thin ⚠️ Partial)
-facts. The `Profile lives at:` line is how the PM points every later skill — and
-tomorrow's session — at the profile; never omit it. Then offer to run
+facts. The `Profile lives at:` line is how the PM leaves with the address rather
+than having to find it again; never omit it. Then offer to run
 `story-skill-generator` for the project.

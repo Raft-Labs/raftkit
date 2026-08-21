@@ -89,8 +89,8 @@ Do not restate the recipes' content; apply this order over it.
    and the **deviation is noted in the plan**. A Profile **never** overrides an
    explicit story requirement or `[AC]`; if a Profile entry contradicts the
    story, the **story wins** and the clash is surfaced like a story-vs-recipe
-   conflict. (The Project Profile home is owned by onboarding/core — reference it
-   abstractly; never hardcode a path.)
+   conflict. (The profile is the `Project Profile - <project name>` task in the
+   project — see `raftkit-core/workflow-constants`; never hardcode a path.)
 2. **The story's explicit requirements** — on a **direct conflict between the
    story and a recipe/default, the STORY wins**. Surface the conflict to the PM
    as a possible recipe update (correctable by PR), never silently.

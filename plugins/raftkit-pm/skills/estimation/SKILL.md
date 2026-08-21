@@ -77,9 +77,9 @@ the mechanism that turned a small UI change into 85 hours.
    Sheet of its own: the estimate is never written into the source list, even when
    the source was itself a Sheet.
 4. **The Project Profile (optional, read-only)** — consulted for `⚠️ Partial` markers
-   that widen ranges. Reach it through its decided home — the pinned Asana resource
-   task linking the profile's Drive doc — or wherever the PM points for a project
-   that keeps it elsewhere. With no profile, say so and widen on that basis — never
+   that widen ranges. Find it yourself: the project holds it as a
+   `Project Profile - <project name>` task (`raftkit-core/workflow-constants`); never
+   ask the PM where it lives. With no profile, say so and widen on that basis — never
    invent a profile or a `⚠️ Partial` marker.
 
 ## Run flow

@@ -27,9 +27,9 @@ Profile, do not proceed and do not improvise one from raw sources.
 ## Preconditions — confirm before generating anything
 
 1. **An APPROVED Project Profile.** The profile is the sole source of the baked context.
-   Reach it through its decided home — the pinned Asana resource task linking the
-   profile's Drive doc — or wherever the PM points for a project that keeps it
-   elsewhere. A raw spec/PRD/notes bundle is **not** a profile and must be refused.
+   Find it in the project as the `Project Profile - <project name>` task
+   (`raftkit-core/workflow-constants`); never ask the PM for its location. A raw
+   spec/PRD/notes bundle is **not** a profile and must be refused.
 2. **The target project's name** — used to name the emitted skill `<project>-user-story`.
 
 **Empty state — no approved profile.** Stop with this exact message, and do nothing else:
