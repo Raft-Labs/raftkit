@@ -56,11 +56,14 @@ something the PM provided.
 1. **An explicit target Asana task**, named by the PM. Never invent or guess a
    target. If none is named → stop and ask which task to write into.
 2. **The feature scope** — what this story is about.
-3. **The source(s) of truth** — the Project Profile and/or the project's own
+3. **The source(s) of truth** — the Project Profile and the project's own
    sources (spec, PRD, designs, prior stories). The profile is the
    `Project Profile - <project name>` task in the project
    (`raftkit-core/workflow-constants`), found rather than asked for; the PM points at
-   any other sources.
+   any other sources. **When the project has a profile, use it and say so in the
+   source list. Choosing not to use it is a decision to state, with the reason,
+   never a silent omission** — it is the project's source of truth, and a story
+   grounded elsewhere without saying so reads as though it were grounded in it.
    Sources arrive by any access path the session provides — connector, uploaded
    file, pasted link, or synced local file (`raftkit-core/house-rules`).
 
