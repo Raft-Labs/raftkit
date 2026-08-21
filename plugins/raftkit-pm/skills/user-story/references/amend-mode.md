@@ -10,6 +10,9 @@ finds that a story is missing a requirement; the developer cannot answer it,
 because it is the PM's to answer; the gap list comes back to the PM — and until
 now no skill could act on it. The gap then got settled verbally and the story
 stayed wrong, which defeats the story being the contract for QA and scope-guard.
+The rule this mode implements is named in `raftkit-core/house-rules` — **the
+story-gap loop**: the PM owns the update, this mode is the channel, and the CC
+line is the notification.
 
 Mode A (the run flow in SKILL.md) authors a story into a task that has none.
 This mode never authors and never rewrites. **Never a full rewrite** — additive

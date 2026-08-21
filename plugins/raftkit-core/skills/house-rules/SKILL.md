@@ -1,6 +1,6 @@
 ---
 name: house-rules
-description: This skill should be used whenever a RaftKit skill needs the shared, non-negotiable rules of how RaftLabs works — where project facts live, the Asana free-tier constraints, where human approval gates sit, how work is matched to the cheapest capable model and who does the switching, when to escalate to founders (budget, contracts, relationship risk, client commitments), the find-skills governance for adopting new skills, and how to handle a source or destination on any access path (connector, uploaded file, synced local folder, pasted link). Consult it before storing anything project-specific, before starting expensive work, using any Asana feature beyond the free tier, producing an estimate or anything that could read as a client commitment, adopting a new skill, or deciding how to read an upload, a synced file, or a pasted link.
+description: This skill should be used whenever a RaftKit skill needs the shared, non-negotiable rules of how RaftLabs works — where project facts live, the Asana free-tier constraints, where human approval gates sit, how work is matched to the cheapest capable model and who does the switching, when to escalate to founders (budget, contracts, relationship risk, client commitments), the story-gap loop for when dev or QA finds a story missing a requirement, the find-skills governance for adopting new skills, and how to handle a source or destination on any access path (connector, uploaded file, synced local folder, pasted link). Consult it before storing anything project-specific, before settling a story gap found downstream, before starting expensive work, using any Asana feature beyond the free tier, producing an estimate or anything that could read as a client commitment, adopting a new skill, or deciding how to read an upload, a synced file, or a pasted link.
 user-invocable: false
 ---
 
@@ -71,6 +71,18 @@ Each link exists for a reason. The developer who will build the thing is the per
 Estimation output is the recurring case: it always carries the watermark **"Requires founder review — not a client commitment."** so an estimate is never mistaken for a promise. The watermark says the number is not a commitment; the chain says who is allowed to make it one.
 
 The point is that these decisions carry consequences a skill cannot weigh — a number that reads as a quote, or a scope note that reads as a contract change, can bind the company. Routing them to founders keeps that authority where it belongs.
+
+## The story-gap loop
+
+When dev or QA finds a story missing a requirement, the story gets fixed — never just the conversation. The loop is:
+
+**Gap found downstream → the PM updates the story through `user-story` amend mode → `story-readiness` gates the amend on entry and re-runs after it → every follower of the story task is notified by the amend comment's CC line.**
+
+Each link exists for a reason. The PM owns the update because the gap is the PM's to answer — requirements authority never moves downstream. The channel is amend mode, never a verbal agreement or an ad-hoc edit, because a gap settled out-of-band leaves the story wrong while work proceeds on the correction — and the story is the contract QA tests against and scope-guard measures against. The readiness re-run keeps a READY story from silently degrading as it grows. The CC line is the notification, and it reaches exactly who follows the story — so the loop's reach **is** the follower list. The dev and QA on a story follow it for precisely this reason; amend mode never adds anyone to that list itself, and when the list is empty it stops and asks the PM who should be following rather than notifying nobody silently.
+
+One boundary: a **dev-answerable** gap — one the developer can settle without the PM — is `raftkit-dev:implement`'s Gate 0 lane, cleared with the developer and logged on the story without a PM round-trip. This loop is for the gaps only the PM can answer.
+
+The mechanics live in `raftkit-pm:user-story` (Mode B, its amend mode) and `raftkit-pm:story-readiness`; this section is the rule they implement.
 
 ## Telemetry and blocker capture
 
