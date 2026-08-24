@@ -18,6 +18,13 @@ Every entry in the profile is one **fact** carrying exactly four things:
 - **Date** — when the fact was last confirmed against a source (as-of date), so a
   re-run can tell fresh facts from stale ones.
 
+**Keep a fact to one sentence.** The house plain-language rules apply to a profile
+like any other thing a human reads (`raftkit-core/house-rules`): no sentence over
+25 words. A fact that needs three clauses is usually three facts — split it, and
+let each carry its own tag, because a 60-word bullet hides which part is confirmed
+and which is not. Detail that only matters to someone chasing the source belongs
+in the citation, not the statement.
+
 Group the facts into the sections a delivery team actually reads — a **glossary**,
 **roles and permissions**, **business rules and limits**, and a **source index**
 (every source with its link and as-of date). The glossary, roles, and source index
@@ -25,6 +32,18 @@ map directly onto elements `story-skill-generator` later bakes; its fourth baked
 element — the conflict hierarchy — is the PM's to supply at bake time, since
 onboarding surfaces conflicts and never resolves them.
 Keep the structure to what the sources support — do not invent sections to fill.
+
+**One subject per section, and split before it gets long.** These four are a
+starting point, not a ceiling: a project whose sources carry more gets more
+sections. Two rules decide when to split:
+
+- **Past about 15 facts**, a section becomes hard to read — split it by subject.
+- **If a section needs headings inside it**, those headings are the sections. A
+  "business rules" section holding guardrails, protocols, enforcement gates and
+  success metrics is four sections wearing one name.
+
+Splitting costs nothing — a reader opens the one subtask they need instead of
+scrolling past four they don't.
 
 ## The confidence tags
 
@@ -52,8 +71,27 @@ and no run has to remember where the last one landed. There is no per-project
 override: a home that varies is a home nobody can be sure of.
 
 The parent task's description carries only what identifies the profile — the
-project, the as-of date, and the source index's headline. Every section's facts
-live in its own subtask, which is what keeps any single description readable.
+project, the as-of date, the source index's headline, and the tag legend **once**.
+Every section's facts live in its own subtask, which is what keeps any single
+description readable. Never repeat the legend in each subtask; five copies of the
+same three lines is the first thing a reader has to skip past.
+
+**Name a subtask so someone who has never seen a profile knows what is in it.**
+The section name alone does not do that — `Roles and permissions` and `Source
+index` mean something once you know the format and nothing before then. Give each
+one a short plain-English gloss after a dash:
+
+```output
+Glossary — what the project's terms mean
+Roles and permissions — who is allowed to do what
+Business rules and limits — the rules the product must follow
+Source index — every source, with its link and as-of date
+```
+
+**Open each subtask with one line** saying what it holds and how many facts, so a
+reader can decide whether to open it: *"18 facts on who approves what and who owns
+which area."* That line replaces the legend, and it is the only preamble a subtask
+gets.
 
 Onboarding **takes the Asana project as an input** and stops if it is not given
 one; it does not create projects. Sources are unaffected by any of this: a PRD,

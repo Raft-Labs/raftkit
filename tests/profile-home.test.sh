@@ -15,6 +15,8 @@
 #   R-6  core/pm/qa versions bumped .............................. C6
 #   R-7  core carries the convention and the read-all rule ........ C7
 #   R-8  a delta is recorded where Asana keeps no history ......... C8
+#   R-9  the profile reads well: short facts, split sections, ....... C9
+#        self-explanatory subtask names, no repeated preamble
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 
@@ -103,8 +105,8 @@ EOF
 }
 ver_at_least "$COREMANIFEST" 0 17 0
 check "C6a raftkit-core version >= 0.17.0" ok $?
-ver_at_least "$PMMANIFEST" 0 25 0
-check "C6b raftkit-pm version >= 0.25.0" ok $?
+ver_at_least "$PMMANIFEST" 0 26 0
+check "C6b raftkit-pm version >= 0.26.0" ok $?
 ver_at_least "$QAMANIFEST" 0 11 0
 check "C6c raftkit-qa version >= 0.11.0" ok $?
 
@@ -125,6 +127,24 @@ grep -qiE 'one comment on the parent task' <<<"$deltaflat"
 check "C8a a delta run posts one comment on the parent task" ok $?
 grep -qiE 'audit trail, not a backup' <<<"$deltaflat"
 check "C8b the record is stated as an audit trail, not a backup" ok $?
+
+# C9 · the profile has to be readable, not just correct: short facts, one subject
+# per section, self-explanatory subtask names, and no repeated preamble.
+factflat=$(flat "$(sec "$FORMAT" '^## A fact = ' '^## ')")
+grep -qiE 'one sentence' <<<"$factflat" && grep -q '25 words' <<<"$factflat"
+check "C9a a fact is one sentence, within the plain-language limit" ok $?
+grep -qiE 'split it' <<<"$factflat"
+check "C9b a multi-clause fact is split, so each part carries its own tag" ok $?
+grep -qiE 'One subject per section' <<<"$factflat" && grep -qiE 'about 15 facts' <<<"$factflat"
+check "C9c sections split by subject, and before they get long" ok $?
+grep -qiE 'those headings are the sections' <<<"$factflat"
+check "C9d headings inside a section mean it should have been split" ok $?
+grep -qiE 'plain-English gloss' <<<"$homeflat" && grep -q "what the project's terms mean" <<<"$homeflat"
+check "C9e subtask names carry a plain-English gloss" ok $?
+grep -qiE 'Open each subtask with one line' <<<"$homeflat"
+check "C9f each subtask opens with a one-line summary and count" ok $?
+grep -qiE 'Never repeat the legend in each subtask' <<<"$homeflat"
+check "C9g the tag legend sits on the parent once, not in every subtask" ok $?
 
 echo
 if [[ $failures -gt 0 ]]; then
