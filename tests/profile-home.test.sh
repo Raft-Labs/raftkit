@@ -17,6 +17,7 @@
 #   R-8  a delta is recorded where Asana keeps no history ......... C8
 #   R-9  the profile reads well: short facts, split sections, ....... C9
 #        self-explanatory subtask names, no repeated preamble
+#   R-10 a task name is plain text, never HTML-escaped ........... C10
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 
@@ -103,8 +104,8 @@ v=[int(x) for x in json.load(open(sys.argv[1]))["version"].split(".")]
 sys.exit(0 if v>=[int(sys.argv[2]),int(sys.argv[3]),int(sys.argv[4])] else 1)
 EOF
 }
-ver_at_least "$COREMANIFEST" 0 17 0
-check "C6a raftkit-core version >= 0.17.0" ok $?
+ver_at_least "$COREMANIFEST" 0 18 0
+check "C6a raftkit-core version >= 0.18.0" ok $?
 ver_at_least "$PMMANIFEST" 0 26 0
 check "C6b raftkit-pm version >= 0.26.0" ok $?
 ver_at_least "$QAMANIFEST" 0 11 0
@@ -145,6 +146,12 @@ grep -qiE 'Open each subtask with one line' <<<"$homeflat"
 check "C9f each subtask opens with a one-line summary and count" ok $?
 grep -qiE 'Never repeat the legend in each subtask' <<<"$homeflat"
 check "C9g the tag legend sits on the parent once, not in every subtask" ok $?
+
+# C10 · a task name is plain text, so escaping belongs to the HTML body only —
+# an escaped name shows the reader a literal &amp;.
+fmtflat=$(flat "$(cat plugins/raftkit-core/skills/asana-formatting/SKILL.md)")
+grep -qiE 'name\*\* is plain text, never HTML|name is plain text' <<<"$fmtflat"
+check "C10 a task name is plain text and is never escaped" ok $?
 
 echo
 if [[ $failures -gt 0 ]]; then
