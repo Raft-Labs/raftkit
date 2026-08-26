@@ -26,7 +26,8 @@ Methodology of everything RaftKit produces (and of building RaftKit itself): **S
 .claude-plugin/marketplace.json     # single source of what is installable
 plugins/
   raftkit-core/   # house rules, workflow constants, governance protocols pack,
-                  # discovery-interview (the shared interview contract)
+                  # discovery-interview (the shared interview contract),
+                  # cowork-telemetry (the Cowork usage contract)
   raftkit-pm/     # onboarding, brainstorm, user-story, story-skill-generator,
                   # story-readiness, status-update, meeting-decisions,
                   # estimation                                          (Cowork)

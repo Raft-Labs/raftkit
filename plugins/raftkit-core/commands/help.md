@@ -26,6 +26,7 @@ raftkit-core carries no day-to-day workflow of its own — it is the rulebook th
 | `design-standard` | The RaftLabs Module Design Standard (MDS-1…MDS-10) — the SOLID/design-pattern bar for React/Next.js, Node, and AWS Serverless, installed into a client's `CLAUDE.md` by `raftkit-dev:setup-project` and enforced by `raftkit-dev:implement`'s design-review layer | "What's MDS-7?" / "Why did the reviewer flag this abstraction?" |
 | `asana-formatting` | How RaftKit renders content for Asana — per-surface tag matrix, markdown-to-Asana-HTML rules, object-reference syntax, read-before-write and read-back verification | Not user-invocable — consulted automatically by write-protocol and every skill that writes to Asana |
 | `discovery-interview` | The house interview contract — a few related questions at a time, recommendation first, push back on vague answers, never guess — plus the shared push-back, proactive-suggestion, and edge-case catalogs | Not user-invocable — consulted by any skill that interviews a human, e.g. `raftkit-pm:brainstorm` and `raftkit-dev:docs` |
+| `cowork-telemetry` | How RaftKit measures usage in Cowork, where there are no hooks — the one line every skill says to name itself, what reaches the dashboard, and why `RAFTKIT_TELEMETRY=off` does nothing there | Not user-invocable — read it before adding a pm or qa skill, or when asked why a skill announces itself |
 
 ## The three rules everyone hits eventually
 

@@ -86,7 +86,9 @@ The mechanics live in `raftkit-pm:user-story` (Mode B, its amend mode) and `raft
 
 ## Telemetry and blocker capture
 
-RaftKit measures its own use, so the team can see who has adopted it and where people get stuck. This runs in Claude Code as plugin hooks under `raftkit-core/hooks/`, never as skill behaviour — no skill needs to do anything to participate.
+RaftKit measures its own use, so the team can see who has adopted it and where people get stuck. In Claude Code this runs entirely as plugin hooks under `raftkit-core/hooks/`, never as skill behaviour — no skill needs to do anything to participate.
+
+**Cowork is the one surface where that is not true, and only by one line.** Cowork sessions have no hooks, and Cowork emits no event of its own when a skill runs, so the only trace a skill leaves is what it says. Every skill that can run there opens by naming itself — `Using <plugin>:<skill>` — and that line is the whole of the difference. It is not an outward write and not an exception to the write gate: the skill says a line in a conversation, and an admin-configured OpenTelemetry export is what leaves the machine. No skill calls an endpoint, spools a file, or reports anything itself, on any surface. See [cowork-telemetry](../cowork-telemetry/SKILL.md) for the contract, what reaches the dashboard, and why `RAFTKIT_TELEMETRY=off` is a Claude Code mechanism that does nothing in Cowork.
 
 Events go to RaftLabs' own admin API — never a third-party analytics processor.
 
@@ -99,7 +101,7 @@ Events go to RaftLabs' own admin API — never a third-party analytics processor
 
 The consequence is the operative rule: **the telemetry store holds client-identifying content and must be treated as such** — access-controlled, never re-exported, and never copied into a public surface. That last point is why nothing derived from a captured prompt is ever published to a public surface at all, full stop: the tooling repo is public, and "credentials scrubbed" was never the same claim as "safe to publish".
 
-**Opt out** with `RAFTKIT_TELEMETRY=off` (or `DO_NOT_TRACK=1`) in the environment. A one-time notice discloses collection on first run.
+**Opt out** with `RAFTKIT_TELEMETRY=off` (or `DO_NOT_TRACK=1`) in the environment. A one-time notice discloses collection on first run. Both are Claude Code mechanisms — in Cowork the switch is the admin's OTLP endpoint, and there is no per-session equivalent ([cowork-telemetry](../cowork-telemetry/SKILL.md)).
 
 **Blockers go to the dashboard, not to a tracker.** When a skill hard-stops,
 the refusal is reported as a `raftkit_blocked` telemetry event and appears in

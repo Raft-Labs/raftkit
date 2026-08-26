@@ -92,6 +92,27 @@ Events spool to a local file and upload in batches to RaftLabs' own admin dashbo
 export RAFTKIT_TELEMETRY=off     # or DO_NOT_TRACK=1
 ```
 
+### In Cowork
+
+Cowork sessions have no hooks, so none of the above runs there. Usage is
+reported instead by Cowork's own OpenTelemetry export, which an admin turns on
+once at **Admin settings > Cowork** and which is off until they do.
+
+Cowork emits no event of its own when a skill runs, so every pm and qa skill
+opens by naming itself — `Using raftkit-pm:brainstorm` — and that line is the
+only record the skill ran. It is a line in the conversation, not a write: the
+skill sends nothing, and the admin-configured exporter is what leaves the
+machine.
+
+What reaches the dashboard: your signed-in email, session identifiers, prompt
+text, tool failures, which skill ran, and which refusal a hard-stop emitted.
+Assistant responses are read for that announcement and for refusals, then
+dropped — they are never stored.
+
+`RAFTKIT_TELEMETRY=off` is a Claude Code mechanism and does nothing in Cowork.
+The switch there is the admin's OTLP endpoint, and there is no per-session
+equivalent.
+
 When a skill hard-stops, the refusal is reported as telemetry and appears in the admin dashboard with a triage status, so blockers reach the team instead of dying in your terminal. Nothing is filed on any issue tracker: a captured refusal line can carry client project detail, and this repository is public, so that data belongs only behind the dashboard's authentication.
 
 ## For project repos

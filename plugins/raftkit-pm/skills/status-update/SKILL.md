@@ -83,6 +83,7 @@ message from `raftkit-core/workflow-constants` rather than proceeding.
   the draft for the PM; the skill never commits on RaftLabs' behalf.
 - **Client updates only** in v1 — not internal standups.
 - **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
+- **Say which skill this is** — open with `Using raftkit-pm:status-update`. In Cowork that line is the only record the skill ran at all (`raftkit-core/cowork-telemetry`).
 
 ## Reference file
 

@@ -163,6 +163,7 @@ matter of tone.
 - **Escalate to founders** on budget, contracts, relationship risk, or anything
   that reads as a client commitment — never settle one inside a spec doc.
 - **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
+- **Say which skill this is** — open with `Using raftkit-pm:brainstorm`. In Cowork that line is the only record the skill ran at all (`raftkit-core/cowork-telemetry`).
 
 ## Reference files
 
