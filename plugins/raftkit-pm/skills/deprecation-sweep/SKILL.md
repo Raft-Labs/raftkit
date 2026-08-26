@@ -110,7 +110,7 @@ you never invent a flag to have something to show.
 - **Plain English out** — every line a human reads follows
   `raftkit-core/house-rules`' plain-language rules; a house term gets its
   one-line gloss on first use.
-- **Say which skill this is** — open with `Using raftkit-pm:deprecation-sweep`.
+- **Say which skill this is** — name it in your first reply with `Using raftkit-pm:deprecation-sweep`.
   In Cowork that line is the only record the skill ran at all
   (`raftkit-core/cowork-telemetry`).
 

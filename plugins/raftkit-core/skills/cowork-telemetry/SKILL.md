@@ -35,11 +35,29 @@ The only trace a skill leaves in Cowork is what it says. So that is the signal.
 Using raftkit-pm:brainstorm to turn this idea into a spec doc.
 ```
 
-The shape that matters is `Using <plugin>:<skill>` — plugin, colon, skill name,
-in the first line of the first reply after the skill takes over. Everything
-after it is ordinary prose and can say whatever the skill needs.
+The shape that matters is `Using <plugin>:<skill>` — plugin, colon, skill name
+— somewhere in the skill's **first reply** after it takes over. Everything
+around it is ordinary prose and can say whatever the skill needs.
 
 Say it once per run, not once per reply.
+
+## When something else has to come first
+
+Some skills lead with output that is load-bearing on its own: `estimation`
+opens with the founder-review watermark, and several skills answer an empty
+state with a message that has to be reproduced word for word. Those win.
+
+- **A required opening line stays the opening line.** The announcement goes
+  immediately after it, in the same reply.
+- **An exact message stays exact.** "This exact message" constrains the message,
+  not the whole reply — the announcement may precede or follow it, and must not
+  be edited into it.
+- **A hard stop still announces.** A skill that refuses is a skill that ran, and
+  a refusal nobody can attribute is the single most useful row the dashboard
+  can be missing.
+
+The rule is that the announcement appears, not that it wins a fight over
+position. Nothing here loosens a skill's own output contract.
 
 ## Why this is a good line regardless
 

@@ -139,7 +139,7 @@ the mechanism that turned a small UI change into 85 hours.
 - **No cached template.** Any Asana story consulted is read live
   (`raftkit-core/workflow-constants`); no template text is stored here.
 - **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
-- **Say which skill this is** — open with `Using raftkit-pm:estimation`. In Cowork that line is the only record the skill ran at all (`raftkit-core/cowork-telemetry`).
+- **Say which skill this is** — name it in your first reply with `Using raftkit-pm:estimation`. In Cowork that line is the only record the skill ran at all (`raftkit-core/cowork-telemetry`).
 
 ## Reference files
 

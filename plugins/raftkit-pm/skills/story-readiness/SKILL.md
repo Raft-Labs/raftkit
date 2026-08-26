@@ -108,7 +108,7 @@ both sides. Building that dev-side enforcement is out of scope here.
   who owns the fix and why the channel is amend mode — is `raftkit-core/house-rules`'
   **story-gap loop** section.
 - **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
-- **Say which skill this is** — open with `Using raftkit-pm:story-readiness`. In Cowork that line is the only record the skill ran at all (`raftkit-core/cowork-telemetry`).
+- **Say which skill this is** — name it in your first reply with `Using raftkit-pm:story-readiness`. In Cowork that line is the only record the skill ran at all (`raftkit-core/cowork-telemetry`).
 
 ## Reference file
 

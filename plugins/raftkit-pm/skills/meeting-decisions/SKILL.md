@@ -139,7 +139,7 @@ record the unattended-write decision** set out in `references/scheduled-routine.
   decision touches budget, contracts, relationship risk, or a client commitment — the
   skill surfaces it; it never commits on RaftLabs' behalf.
 - **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
-- **Say which skill this is** — open with `Using raftkit-pm:meeting-decisions`. In Cowork that line is the only record the skill ran at all (`raftkit-core/cowork-telemetry`).
+- **Say which skill this is** — name it in your first reply with `Using raftkit-pm:meeting-decisions`. In Cowork that line is the only record the skill ran at all (`raftkit-core/cowork-telemetry`).
 
 ## Reference files
 

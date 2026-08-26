@@ -29,8 +29,17 @@ check "CW1 cowork-telemetry ships as machinery, not a user-invocable skill" ok $
 # moves, ingest stops recording skills and nothing else fails loudly.
 joined "$CT" | grep -q 'Using <plugin>:<skill>' \
   && grep -q 'Using raftkit-pm:brainstorm' "$CT" 2>/dev/null \
-  && joined "$CT" | grep -qi 'first line of the first reply'
+  && joined "$CT" | grep -qi "skill's \*\*first reply\*\*"
 check "CW2 the announcement shape is pinned, with an example" ok $?
+
+# Several skills lead with output that is load-bearing on its own — the
+# estimation watermark, the word-for-word empty-state messages. The
+# announcement must not be read as overriding any of them.
+joined "$CT" | grep -qi 'A required opening line stays the opening line' \
+  && joined "$CT" | grep -qi 'An exact message stays exact' \
+  && joined "$CT" | grep -qi 'A hard stop still announces' \
+  && joined "$CT" | grep -qi 'Nothing here loosens a skill'
+check "CW2b the announcement yields to a skill's own first-output contract" ok $?
 
 joined "$CT" | grep -qi 'Say it once per run, not once per reply'
 check "CW3 the line is once per run, not per reply" ok $?
@@ -80,7 +89,8 @@ check "CW8 the opt-out is described accurately for Cowork, not implied" ok $?
 # Responses are read and dropped. The admin app enforces it; this is the
 # promise the two repos have to keep saying the same way.
 joined "$CT" | grep -qi 'then dropped' \
-  && joined "$CT" | grep -qi 'never stored'
+  && joined "$CT" | grep -qi 'never stored' \
+  && joined "$CT" | grep -qi 'refusal'
 check "CW9 assistant responses are read for the match and never stored" ok $?
 
 grep -q '| `cowork-telemetry` |' plugins/raftkit-core/commands/help.md 2>/dev/null

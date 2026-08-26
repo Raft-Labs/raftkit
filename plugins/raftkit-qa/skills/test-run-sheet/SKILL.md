@@ -115,7 +115,7 @@ creates the bug under the story's `Bugs` subtask). See
 - **Asana free tier** and **escalate-to-founders** rules per
   `raftkit-core/house-rules` apply to anything this skill touches.
 - **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
-- **Say which skill this is** — open with `Using raftkit-qa:test-run-sheet`. In Cowork that line is the only record the skill ran at all (`raftkit-core/cowork-telemetry`).
+- **Say which skill this is** — name it in your first reply with `Using raftkit-qa:test-run-sheet`. In Cowork that line is the only record the skill ran at all (`raftkit-core/cowork-telemetry`).
 
 ## Out of scope
 
