@@ -86,6 +86,32 @@ check "CW9 assistant responses are read for the match and never stored" ok $?
 grep -q '| `cowork-telemetry` |' plugins/raftkit-core/commands/help.md 2>/dev/null
 check "CW10 cowork-telemetry appears in the core help table" ok $?
 
+# Not Cowork-specific, but this suite is where it surfaced: an unquoted YAML
+# scalar containing ": " parses on a lenient CLI and fails on the pinned CI one,
+# and the skill then loads with EMPTY metadata — no name, no description, so it
+# never triggers. b1d4816 shipped one that sat on development undetected.
+hazards=$(python3 - <<'PY_EOF'
+import glob, re
+bad = []
+for f in sorted(glob.glob("plugins/*/skills/**/SKILL.md", recursive=True)):
+    s = open(f).read()
+    if not s.startswith("---"):
+        continue
+    for line in s.split("---")[1].strip().split("\n"):
+        m = re.match(r'^(name|description|user-invocable):\s*(.*)$', line)
+        if not m or m.group(2)[:1] in ('"', "'"):
+            continue
+        if re.search(r':(\s|$)', m.group(2)):
+            bad.append(f)
+for f in bad:
+    print(f)
+PY_EOF
+)
+[[ -z "$hazards" ]]
+check "CW11 no skill frontmatter hides a colon-space in an unquoted scalar" ok $?
+[[ -n "$hazards" ]] && echo "  hazards: $hazards"
+
+
 echo
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures test(s) failed"
