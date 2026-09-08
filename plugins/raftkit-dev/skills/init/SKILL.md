@@ -79,8 +79,10 @@ diff and changes only what the developer explicitly approves. See
 
 ## Out of scope
 
-- **Asana project / Project Profile binding** — its canonical home is still an
-  open decision (Asana `1216550765662503`); init does not guess at it.
+- **Asana project / Project Profile binding** — a profile lives in its own Asana
+  project as the `Project Profile - <project name>` task
+  (`raftkit-core/workflow-constants`); binding a repo to that project is not
+  init's job.
 - **A "next steps" summary block** — deliberately left out of this story.
 - **The governance pack itself** — owned by `setup-project`; delegated to, never
   duplicated.

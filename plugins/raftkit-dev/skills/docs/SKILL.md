@@ -82,8 +82,9 @@ gates (`assets/companion/`).
 
 ## The handoff (read, never re-asked)
 
-The approved Asana story (live), the Project Profile (home is a parameter —
-never hardcoded), the `spec_path` implementation spec (the spec gate — this
+The approved Asana story (live), the Project Profile (the
+`Project Profile - <project name>` task in the project — see
+`raftkit-core/workflow-constants`), the `spec_path` implementation spec (the spec gate — this
 skill never authors a competing one), discovered docs roots and conventions,
 the ownership/change map, open unknowns, and the repository's own verification
 commands. Questions go to the developer **only** for what repository evidence

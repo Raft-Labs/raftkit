@@ -55,9 +55,9 @@ a client email says another), record it as a **conflict**, not a fact:
 
 ## Re-runs propose a delta, not a rewrite
 
-When a profile already exists at the home and the PM adds a new source, compute the
-change against the current profile and present it as a **delta** — never regenerate
-the whole profile from scratch:
+When the project already has its `Project Profile - <project name>` task and the PM
+adds a new source, compute the change against the current profile and present it as
+a **delta** — never regenerate the whole profile from scratch:
 
 - **Changed** — an existing fact whose value or tag the new source updates.
 - **New** — a fact not previously in the profile.
@@ -67,3 +67,11 @@ the whole profile from scratch:
 Leave every untouched fact exactly as it was, and show the delta for approval
 before writing (`raftkit-core/write-protocol`). A rewrite would discard the PM's
 prior resolutions and the profile's history; a delta preserves them.
+
+A delta touches **only the subtasks whose sections changed** — an untouched section
+is not rewritten, and a section the sources newly support is added as a new subtask.
+Record the run afterwards as one comment on the parent task (`profile-format.md`),
+since an overwritten description leaves no trace in Asana.
+Writing a subtask replaces its description, which `raftkit-core/asana-formatting`
+permits only on an explicit human instruction, so name the subtasks about to be
+overwritten when asking for approval.

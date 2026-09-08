@@ -41,7 +41,10 @@ minimum, refined by the references above:
 - **No `<p>` tags** — separate blocks with block-level elements, never `<p>`.
 - **Attributes only on links** — the only element that carries attributes is
   `<a>` (its `href` and `data-asana-*`).
-- **Escape entities** — escape `&`, `<`, `>` in text content.
+- **Escape entities** — escape `&`, `<`, `>` in text content. **Only inside an
+  HTML body.** A task or subtask **name** is plain text, never HTML: escaping one
+  puts a literal `&amp;` in front of the reader, since nothing decodes it on the
+  way in.
 
 ## Boundaries
 

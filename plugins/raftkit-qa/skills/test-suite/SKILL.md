@@ -42,11 +42,10 @@ the full rules are in `references/sync-and-conflicts.md`.
    read through the Cowork connectors. The profile is the source of truth; project
    facts live there, never in this skill (`raftkit-core/house-rules`). This skill
    only ever **reads** the profile.
-2. **Where the Sheet lives / the profile home.** The profile's decided home is the
-   pinned Asana resource task linking its Drive doc — the pattern owned by
-   `raftkit-pm project-onboarding`; a project that keeps its profile elsewhere is
-   pointed at by QA/PM. Never hardcode a path, GID, or single connector. One
-   project → one Sheet.
+2. **Where the Sheet lives.** A parameter QA/PM supplies; never hardcode a path,
+   GID, or single connector. One project → one Sheet. The profile itself is not a
+   parameter — it is the `Project Profile - <project name>` task in the project
+   (`raftkit-core/workflow-constants`), found by that convention.
 
 **Empty state — no Project Profile.** Do not fabricate a suite from nothing. Route
 to `raftkit-pm project-onboarding` to build the profile first, then re-run:
@@ -57,7 +56,7 @@ No Project Profile found — run raftkit-pm project-onboarding to build it, then
 
 ## Run flow
 
-1. **Locate the profile and the Sheet.** No profile at the named home → the Empty
+1. **Locate the profile and the Sheet.** No profile task in the project → the Empty
    state above. Detect whether a Sheet already exists for the project: none →
    first-run generate (step 3); one exists → a sync re-run (step 4).
 

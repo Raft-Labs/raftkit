@@ -1,6 +1,6 @@
 ---
 name: user-story
-description: This skill should be used when a RaftLabs PM wants to write, generate, or draft a user story into an Asana task — e.g. "write a user story", "draft the story for password reset", "turn this scope into a RaftLabs story". It also amends a story that already exists — "amend this story", "extend this story with the onboarding changes", "update an existing story", "add these acceptance criteria to <task>", "the dev found a gap in this story, fix it" — which runs as amend mode: a diff-first additive edit that never rewrites the story, tags its followers, and re-runs the readiness gate. Reads the live Feature Template as the format authority, grounds every claim in the PM's sources, and writes only after approval. Also sizes one story on request — "how long will this take to build?", "size this story", "is this a day or a week?", "how big is this change request?" — returning one hour range with named assumptions under the founder-review watermark. This answers how big a story is, not what it costs to quote. A whole feature list or backlog belongs to raftkit-pm:estimation, which prices each feature into FE, BE and QA hours; one story is answered here.
+description: This skill should be used when a RaftLabs PM wants to write, generate, or draft a user story into an Asana task — e.g. "write a user story", "draft the story for password reset", "turn this scope into a RaftLabs story". It also amends a story that already exists — "amend this story", "extend this story with the onboarding changes", "update an existing story", "add these acceptance criteria to <task>", "the dev found a gap in this story, fix it" — which runs as amend mode — a diff-first additive edit that never rewrites the story, tags its followers, and re-runs the readiness gate. Reads the live Feature Template as the format authority, grounds every claim in the PM's sources, and writes only after approval. Also sizes one story on request — "how long will this take to build?", "size this story", "is this a day or a week?", "how big is this change request?" — returning one hour range with named assumptions under the founder-review watermark. This answers how big a story is, not what it costs to quote. A whole feature list or backlog belongs to raftkit-pm:estimation, which prices each feature into FE, BE and QA hours; one story is answered here.
 user-invocable: true
 ---
 
@@ -56,12 +56,16 @@ something the PM provided.
 1. **An explicit target Asana task**, named by the PM. Never invent or guess a
    target. If none is named → stop and ask which task to write into.
 2. **The feature scope** — what this story is about.
-3. **The source(s) of truth** — the Project Profile and/or the project's own
-   sources (spec, PRD, designs, prior stories). The profile's decided home is the
-   pinned Asana resource task linking its Drive doc; the PM points at it, or at
-   whatever sources exist. There is no default source. Sources arrive by any
-   access path the session provides — connector, uploaded file, pasted link, or
-   synced local file (`raftkit-core/house-rules`).
+3. **The source(s) of truth** — the Project Profile and the project's own
+   sources (spec, PRD, designs, prior stories). The profile is the
+   `Project Profile - <project name>` task in the project
+   (`raftkit-core/workflow-constants`), found rather than asked for; the PM points at
+   any other sources. **When the project has a profile, use it and say so in the
+   source list. Choosing not to use it is a decision to state, with the reason,
+   never a silent omission** — it is the project's source of truth, and a story
+   grounded elsewhere without saying so reads as though it were grounded in it.
+   Sources arrive by any access path the session provides — connector, uploaded
+   file, pasted link, or synced local file (`raftkit-core/house-rules`).
 
 If any of these is missing, **ask before doing anything else** (the Empty state).
 

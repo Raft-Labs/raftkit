@@ -19,6 +19,7 @@ Methodology of everything RaftKit produces (and of building RaftKit itself): **S
 - raftkit board: project `1216551447756315`
 - Release train / git model: task `1216207700369490`
 - Subtask conventions: `[AC] …` acceptance criteria + `Development` / `Testing` / `Bugs`
+- Project Profile: task `Project Profile - <project name>` in the project it describes, one subtask per section
 
 ## Target repo layout
 
@@ -63,7 +64,6 @@ Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Veri
 |---|---|
 | Org-wide install path P0 (`1216551001583573`) | Distribution assumptions for pm/qa (Cowork installs) |
 | Marketplace repo home (`1216551001744293`) | This repo may move orgs — avoid hardcoded repo URLs |
-| Project Profile home (`1216550765662503`) | Where onboarding writes / skills read profiles |
 | Spec path + decomposition threshold (`1216550892331152`) | Governance pack ships these as parameters with defaults |
 
 ## Build order
