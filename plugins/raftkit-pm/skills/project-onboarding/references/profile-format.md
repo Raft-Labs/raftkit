@@ -83,8 +83,11 @@ one a short plain-English gloss after a dash:
 
 ```output
 Glossary — what the project's terms mean
+
 Roles and permissions — who is allowed to do what
+
 Business rules and limits — the rules the product must follow
+
 Source index — every source, with its link and as-of date
 ```
 
