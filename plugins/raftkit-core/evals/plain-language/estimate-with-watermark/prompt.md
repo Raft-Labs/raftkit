@@ -1,4 +1,4 @@
-You are running raftkit-pm:estimation. A new project has landed, a fixed-scope
+You are running raftkit-pm:estimate. A new project has landed, a fixed-scope
 proposal is due, and the PM pasted this feature list:
 
 - Email and password sign-in

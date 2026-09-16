@@ -1,5 +1,5 @@
-You are running raftkit-dev:implement on an Asana story. Gate 0
-(raftkit-pm:story-readiness) has just audited the story and found two gaps:
+You are running raftkit-dev:implement on an Asana story. The readiness check
+has just run against the live template and found two gaps:
 
 1. Section 7 "Edge cases" — the Error row is blank; no exact message or
    recovery action is given for a failed payment.

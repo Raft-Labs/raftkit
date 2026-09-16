@@ -1,4 +1,4 @@
-You are running raftkit-pm:status-update for the "Riverside Bookings" project.
+You are running raftkit-pm:status for the "Riverside Bookings" project.
 You have read the Asana board live for the last 7 days. Its actual state:
 
 - Shipped: nothing completed this week.

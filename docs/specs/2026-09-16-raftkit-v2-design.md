@@ -199,6 +199,39 @@ Steps 1-5 squash-merge to `development`; one release to `main` at the end so ins
 - Telemetry: `gate_shown`/`go`/`edit`/`abandon` events appear in the spool for each walk.
 - Working agreement reviewed by Ashit before the release to `main`.
 
+## What shipped (16 Sep 2026)
+
+All seven steps are done on `feature/raftkit-v2`, eight commits, every suite green.
+
+| | v1 | v2 |
+|---|---|---|
+| Skills installed by default | 35 | 18 |
+| Instruction words installed by default | 187,000 | 24,158 |
+| Plugins | 4 | 4 + 1 opt-in (`raftkit-docs`) |
+| Test suites | 31 (70% prose pins) | 15 (behavioural + one structural) |
+| Suites failing at rest | 3 | 0 |
+
+Per plugin: core 3,713 words in 2 skills; pm 5,602 in 6; dev 11,893 in 7; qa 2,950 in 3; the opt-in docs product 22,196 in 2.
+
+Commits, oldest first:
+
+1. `docs:` the design and the CI CLI pin at 2.1.273.
+2. `test:` grader frontmatter on all 127 eval cases, so `claude plugin eval` can load them.
+3. `feat(core)!:` `rules` + `working-agreement` replace seven skills; telemetry records the stop as `raftkit_gate_shown`, flags the reply with `after_gate`, and carries `legacy_name` across the rename; `tests/structure.test.sh` + `tests/budgets.json` replace the core prose pins.
+4. `feat(qa)!:` `suite`, `run-sheet`, `bug`.
+5. `fix(qa):` the three-lens review findings (retest never closes a bug, `Done when` blocks the go until confirmed, one bug per retest run, refusals fenced so the checker and `refusals.json` see them).
+6. `feat(pm)!:` `profile`, `story`, `estimate`, `status`, `meeting`, `routine`; `story-skill-generator` retired.
+7. `feat(dev)!:` part 1 — `setup` absorbs init, setup-project, capability-preflight and the pr-auto-review installer; `docs` becomes parity-only; the design product and `discovery-interview` move to `raftkit-docs`.
+8. `feat(dev)!:` part 2 — `implement` absorbs pr, simplify and ultrathink's plan step; `fix` absorbs both bug skills; `ui` absorbs recipes; hasura's preamble moves to a reference. Also fixes a real flake in the CI gate's own suite: past ~1000 loose objects git packs in the background after a commit and the fixture clone raced that repack.
+9. `chore:` core pointers deleted, evals realigned, strict budgets, CLAUDE.md, README with a rename table, and the repo-local `story-driver` skill moved onto the one-stop model.
+
+Two things behave differently from the plan as written, both deliberate:
+
+- **The pre-push hook lost its spec gate** along with the spec-file gate, so `render-assets.mjs` dropped its two spec tokens. The hook still runs the repo's own quality scripts.
+- **`raftkit-docs` depends on `raftkit-dev`** rather than duplicating the two docs scripts, which stay in `raftkit-dev:docs` where the parity check needs them.
+
+Still to do, and they are yours: push the branch, open the PR, get Ashit's sign-off on the working agreement before the release to `main`, and decide whether the eval runs move into CI.
+
 ## Decisions taken (16 Sep 2026)
 
 1. **docs product (37k words):** moves to an opt-in `raftkit-docs` plugin as-is. Not installed by default.

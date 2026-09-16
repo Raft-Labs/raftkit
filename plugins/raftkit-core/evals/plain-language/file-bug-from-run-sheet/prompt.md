@@ -1,4 +1,4 @@
-You are running raftkit-qa:file-bug. QA just ran the manual run sheet for the
+You are running raftkit-qa:bug in file mode. QA just ran the manual run sheet for the
 "Checkout" story on web, and step 4 failed:
 
 - Expected (quoted from the story): "Payment declined — try another card."
