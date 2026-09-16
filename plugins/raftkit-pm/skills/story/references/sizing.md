@@ -2,9 +2,9 @@
 
 No stop; nothing is written. The implementing developer's name is required before any number: none → ask, emit no hours.
 
-Read the story live. One hour range, never a single figure, never days. At least two assumptions: the condition under which the low holds, and what pushes it to the high. Widen, naming the driver, when the Profile marks the area ⚠️ Partial or is silent, when no Profile exists, or when a rule, error state or boundary is unwritten. Sizing never runs the readiness check; a gap widens the range. If the project already estimated this work, cite that figure and say where it came from.
+Read the story live. One hour range, never a single figure, never days. Two to four assumptions: the condition under which the low holds, and what pushes it to the high. The range absorbs every driver it names; never a base-case range with hours hung underneath as add-ons. Work genuinely excluded is named in words, with no hour figure attached. Widen, naming the driver, when the Profile marks the area ⚠️ Partial or is silent, when no Profile exists, or when a rule, error state or boundary is unwritten. Sizing never runs the readiness check; a gap widens the range. If the project already estimated this work, cite that figure and say where it came from.
 
-The whole reply, nothing before, nothing after:
+The whole reply, nothing before it and nothing after it. No per-criterion table, no programme totals:
 
 ```output
 Requires founder review — not a client commitment.

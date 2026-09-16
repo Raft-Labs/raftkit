@@ -1,3 +1,8 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
 You are running raftkit-pm:status for the "Riverside Bookings" project.
 You have read the Asana board live for the last 7 days. Its actual state:
 

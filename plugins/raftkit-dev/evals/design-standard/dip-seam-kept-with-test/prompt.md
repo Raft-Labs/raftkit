@@ -1,3 +1,8 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
 The diff adds this domain function, plus a unit test in the same diff that
 calls `resolveTier` directly with an in-memory fake, asserting tier math with
 no database involved:

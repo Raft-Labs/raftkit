@@ -107,10 +107,10 @@ grep -q 'REAL_DBML' "$H/scripts/tests/test_dbml_grep.sh" 2>/dev/null \
 check "HR11 the source's off-by-one REAL_DBML smoke-test path is corrected" ok $?
 
 
-# HR13 · integrations named: envx, docs sync, capability-preflight, setup.
+# HR13 · integrations named: envx, docs parity, setup.
 grep -qiE 'envx' <<<"$sk" \
   && grep -qiE 'docs.*(sync|schema|architecture)|schema.*doc' <<<"$sk" \
-  && grep -qiE 'capability-preflight|setup-project|preflight' <<<"$sk"
+  && grep -qiE 'raftkit-dev:setup' <<<"$sk"
 check "HR13 integrations wired (envx, docs schema sync, preflight/setup)" ok $?
 
 eval_count=$(find plugins/raftkit-dev/evals/hasura -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')

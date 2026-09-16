@@ -314,7 +314,7 @@ export function repoSlug(remote) {
  * group; `repo_name` and `branch` carry the readable detail the dashboard needs
  * to tell one project's blockers from another's. Sending the name is a
  * deliberate reversal of the original design — see the Telemetry section of
- * house-rules for what that means and how to opt out.
+ * the repo README for what that means and how to opt out.
  */
 export function repoContext(cwd) {
   const remote = safeExec("git", ["remote", "get-url", "origin"], { cwd, timeout: LOCAL_EXEC_TIMEOUT });

@@ -30,9 +30,13 @@ Fetch the story, its `[AC]`s, the template and the profile once at the start and
 
 ## One stop per run
 
-A run fetches, plans, builds and checks without waiting, then stops exactly once, before anything leaves the session: an Asana write, a PR, a Sheet write, a message. The stop shows the complete content, names every target, and ends with a line starting `**STOP**`, for example `**STOP** — approve to push, edit to change, or decline.`
+A run fetches, plans, builds and checks without waiting, then stops exactly once, before anything leaves the session: an Asana write, a PR, a Sheet write, a message. The stop shows the complete content, names every target, and ends on this line:
 
-- An explicit go pushes exactly what was shown. An edit is not a go: re-present the changed draft. Silence pushes nothing.
+```output
+**STOP** — approve to push, edit to change, or decline.
+```
+
+- An explicit go pushes exactly what was shown. An edit is not a go: re-present the changed draft. A reply that only chooses among options the draft itself listed is a go, and pushes with those choices. Silence pushes nothing.
 - A run that writes nothing has no stop.
 - Merging a PR, ticking `[AC]` or `Testing`, and closing a bug stay human.
 - Comments by default; overwrite a description only on explicit instruction. Read the result back once and fold it into the success line. On partial failure, report what landed; retry only idempotent writes.

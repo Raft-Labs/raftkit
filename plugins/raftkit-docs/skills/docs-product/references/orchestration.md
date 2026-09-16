@@ -21,7 +21,7 @@ current phase needs (progressive disclosure).
    where evidence allows, confirmed with the developer.
 2. **Business context** — persona, geography, regulatory constraints, realistic
    scale, pricing (`discovery-questions.md`; push-back on vague answers per
-   `raftkit-core/discovery-interview`).
+   `raftkit-docs:discovery-interview`).
 3. **Stack archetype** — decision tree, recommendation-first with reasoning
    and caveats (`stack-and-domain-recipes.md`).
 4. **Auth, tenancy, roles, RBAC** — the auth phase cannot exit without a
@@ -47,7 +47,7 @@ seven-step lifecycle (`change-tracking.md`).
 
 ## Gates that never move
 
-- The whole interview runs under `raftkit-core/discovery-interview`. That
+- The whole interview runs under `raftkit-docs:discovery-interview`. That
   contract is in force here in full — how many questions per turn, recommend
   first, push back on vague answers, never interrogate a complete one, scan
   every answer against its catalogs. It is not restated here, because a

@@ -1,6 +1,6 @@
 # raftkit-governance-pack managed file (pr-auto-review component) — rendered
 # by pr-auto-review's scripts/render-pr-auto-review.mjs. Never hand-edit;
-# re-run setup-project (or pr-auto-review directly) to update.
+# re-run /raftkit-dev:setup to update.
 #
 # SECURITY: this deliberately uses `pull_request`, never `pull_request_target`.
 # `pull_request` never grants a fork PR write-scoped secrets or tokens — that

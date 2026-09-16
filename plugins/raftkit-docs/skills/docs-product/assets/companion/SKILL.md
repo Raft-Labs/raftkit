@@ -6,8 +6,7 @@ description: Project-local documentation companion. Keeps this repository's docs
 # docs-companion
 
 This project-local skill enforces the documentation lifecycle inside the
-repository it is installed in. It is built by the raftkit-dev docs skill and
-delivered by setup-project; it depends on nothing outside this repository.
+repository it is installed in. It is built and installed by the raftkit-docs plugin; it depends on nothing outside this repository.
 
 ## Gate 1 — pre-flight (session start)
 

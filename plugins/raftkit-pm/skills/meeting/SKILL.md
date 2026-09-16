@@ -12,7 +12,11 @@ One transcript → decisions, scope changes and action items, each cited; then a
 
 ## Inputs
 
-One meeting: a Fathom link or name, or an uploaded transcript. The project's Profile, found by convention; none → `No Project Profile found — run raftkit-pm:profile first, then re-run meeting.`
+One meeting: a Fathom link or name, or an uploaded transcript. The Asana project the call belongs to, named by the PM and never inferred from what the transcript mentions. Its Project Profile is found by convention; no profile means there is nothing to update:
+
+```output
+Can't extract — no Project Profile for this project. Run raftkit-pm:profile first, then re-run.
+```
 
 ## Run
 

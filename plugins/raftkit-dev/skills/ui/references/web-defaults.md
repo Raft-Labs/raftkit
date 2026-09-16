@@ -40,7 +40,7 @@ The tables above deliberately name no libraries — a form-validation package, a
 data-fetching client, a styling kit. Those choices do exist in writing: the
 `docs` skill's archetype recipes record the stacks RaftLabs' reference
 implementations actually run on, named library by library, in
-[stack-and-domain-recipes.md](../../docs/references/stack-and-domain-recipes.md).
+the archetype recipes in the opt-in `raftkit-docs` plugin.
 Archetype A additionally pins exact versions in a catalog; the others still name
 major versions. Every version there goes stale — check it before adopting.
 
@@ -59,7 +59,7 @@ libraries alone:
   House law rows — a departure from House law needs a Project Profile entry, same
   as any other override.
 - **The resolution order is unchanged.** This layer sits at the bottom of it;
-  `recipes`' own [SKILL.md](../SKILL.md) owns that order.
+  `ui`'s own SKILL.md owns that order.
 
 If a decision is covered in neither place and no source states it, decide it for
 the story at hand and, if it looks reusable, **propose it as a default by PR** —

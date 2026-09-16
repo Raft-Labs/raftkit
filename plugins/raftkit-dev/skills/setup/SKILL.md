@@ -39,7 +39,15 @@ Setup plan for <repo>: 6 files (2 new, 4 updated), one commit on <branch>.
 RaftKit setup v<X>: working agreement, design standard, repo settings, hook, CI guardrail, review config — verified
 ```
 
-   Accepting the PR auto-review workflow appends it to that line and prints the one manual step this skill cannot do:
+   Then the one-time wiring this installer never does itself:
+
+```output
+In your eslint.config.js:
+import mds from "./.raftkit/mds-eslint.config.mjs";
+export default [...yourExistingConfig, ...mds];
+```
+
+   Accepting the PR auto-review workflow appends it to the success line and prints the one manual step this skill cannot do:
 
 ```output
 Required next step: add ANTHROPIC_API_KEY to this repo's Actions secrets — Settings, Secrets and variables, Actions, New repository secret.
@@ -47,7 +55,7 @@ Required next step: add ANTHROPIC_API_KEY to this repo's Actions secrets — Set
 
 ## Never
 
-- Clobber. An existing `CLAUDE.md` keeps its own content; a foreign hook or review config is shown side by side and the developer decides. Only files this pack's marker owns are replaced.
+- Clobber. An existing `CLAUDE.md` keeps its own content; a foreign hook or review config is shown side by side, secret-looking values redacted and filenames, line numbers and command structure intact, and the developer decides. Only files this pack's marker owns are replaced.
 - Touch `.claude/settings.local.json`, or global or system git config.
 - Edit GitHub org settings. A protected branch gets the identical change set as a PR.
 - Paraphrase the working agreement or the design standard; both install byte-for-byte from core.

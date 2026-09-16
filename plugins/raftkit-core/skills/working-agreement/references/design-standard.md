@@ -120,7 +120,7 @@ constant, threshold, or permission string appearing in two or more files.
 **Fix:** one named function or constant in the owning module.
 
 ### Precedence — when the minimalism pass and this standard disagree
-The minimalism pass (`raftkit-dev/simplify`) removes abstractions that serve
+The minimalism pass (`raftkit-dev:implement`'s simplify pass) removes abstractions that serve
 exactly one concrete case. It is the default winner. This standard is written so
 the two almost never meet:
 

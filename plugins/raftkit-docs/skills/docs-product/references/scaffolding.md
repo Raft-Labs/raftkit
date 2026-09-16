@@ -16,9 +16,9 @@ outside docs.** Every command is named to the developer before it runs.
    - environment setup via the project's env mechanism;
    - the project-local docs companion (`assets/companion/`) — its
      installation and activation across agent runtimes is owned by
-     setup-project's delivery seam, never performed here ad hoc;
+     `raftkit-dev:setup`'s delivery seam, never performed here ad hoc;
    - supporting capabilities — every install routes through
-     capability-preflight readiness and setup-project's approved
+     `raftkit-dev:setup`'s engine check and its approved
      transactional install; this skill proposes, it never installs;
    - copying `assets/templates/` into the project's docs tree as its local
      template set;
@@ -36,7 +36,7 @@ These are never executed without a fresh, explicit, per-action approval:
 
 ## Boundaries
 
-Scaffolding never bypasses setup-project's governance-pack install, never
+Scaffolding never bypasses `raftkit-dev:setup`'s governance-pack install, never
 modifies global or system configuration, and never proceeds past a failed
 step — a partial scaffold is reported exactly as far as it got, with the
 recovery options.

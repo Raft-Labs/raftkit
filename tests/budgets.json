@@ -12,7 +12,7 @@
   },
   "skills": {
     "raftkit-core/rules": {
-      "skill_md": 620,
+      "skill_md": 640,
       "total": 2000,
       "writes": false,
       "v2": true
@@ -36,7 +36,7 @@
       "v2": true
     },
     "raftkit-pm/estimate": {
-      "skill_md": 500,
+      "skill_md": 570,
       "total": 1200,
       "writes": true,
       "v2": true
@@ -66,8 +66,8 @@
       "v2": true
     },
     "raftkit-dev/fix": {
-      "skill_md": 650,
-      "total": 1050,
+      "skill_md": 850,
+      "total": 1250,
       "writes": true,
       "v2": true
     },

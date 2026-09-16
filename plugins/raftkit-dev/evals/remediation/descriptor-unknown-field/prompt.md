@@ -1,3 +1,8 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
 We keep our documentation convention in a small descriptor file so new checkouts pick it up automatically. I've drafted one for this repo — can you set it up? Here's what I want in it:
 
 ```json

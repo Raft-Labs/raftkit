@@ -22,6 +22,7 @@ Workflows for each change type, and the permission defaults the scaffolder appli
 ## Safety rules
 
 - **Never edit an applied migration.** One that has run anywhere is immutable: write a new one.
+- **Apply only through the project's own migrate target**, never `hasura migrate apply` directly.
 - **Every migration is reversible**: an `up.sql` and a `down.sql` that actually reverses it, in one atomic commit per schema change, so a revert is one commit.
 - **Confirm every destructive change** before acting: dropping or renaming a column or table, deleting a migration, or reapplying one.
 - **Local-first: migrate only `stage=local`.** Development and production migrate through the pipeline, never from a session.

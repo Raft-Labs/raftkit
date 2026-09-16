@@ -1,3 +1,8 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
 The diff adds this new function:
 
 ```ts

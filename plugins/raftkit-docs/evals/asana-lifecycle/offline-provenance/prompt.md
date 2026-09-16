@@ -1,1 +1,6 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
 I'm on a train with flaky wifi and the Asana connector keeps timing out. I just got off a call with the client and I have a story fully formed in my head — I don't want to lose it. Can you still write it up for me in the house story format so I can push it to the board later when I'm back online? Do whatever you can right now.

@@ -67,13 +67,13 @@ exhaustive pass share one catalog instead of forking into two.
 ## Where this sits
 
 This skill asks; it never writes. Anything the interview produces goes out
-through `write-protocol` (draft → approve → push), and anything project-specific
+through `raftkit-core:rules`' one stop, and anything project-specific
 it learns belongs in a Project Profile, never in a plugin
-([house-rules](../house-rules/SKILL.md)).
+(`raftkit-core:rules`).
 
 ## Guardrails
 
-- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
+- **Plain English out** — every line a human reads follows `raftkit-core:rules`' plain-language rules; a house term gets its one-line gloss on first use.
 - **No writes from here.** This skill defines question behaviour only.
 - **Escalate to founders** on budget, contracts, relationship risk, or anything
   that reads as a client commitment — an interview never settles one of those.

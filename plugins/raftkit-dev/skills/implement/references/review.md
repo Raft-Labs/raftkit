@@ -4,7 +4,7 @@ One pass, on the final diff, mostly in parallel. It runs after the phases are gr
 
 ## Order
 
-1. **Simplify first**, alone: dispatch `code-simplifier:code-simplifier` across the branch diff only. Its findings are triaged by `references/simplify.md`. This runs before the fan-out so the reviewers judge the diff that will actually ship.
+1. **Simplify first**, alone: dispatch `code-simplifier:code-simplifier` across the branch diff only. Its findings are triaged by `references/simplify.md`. Re-run the suite after the pass; a red test reverts the change that caused it before the fan-out starts. This runs first so the reviewers judge the diff that will actually ship.
 2. **Then the fan-out**, all at once on the merge-base diff:
    - `pr-review-toolkit`'s `code-reviewer` (scored against the repo's `CLAUDE.md`, which carries the design standard), `type-design-analyzer`, `silent-failure-hunter`, `pr-test-analyzer` — dispatched by their scoped names, in parallel. Do not route through `review-pr`, which runs them one after another by default.
    - `raftkit-dev:scope-guard`, given the story, the `[AC]`s, the plan record and the diff.

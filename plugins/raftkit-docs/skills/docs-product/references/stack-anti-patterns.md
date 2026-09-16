@@ -1,7 +1,7 @@
 # Stack Anti-Patterns (steer the developer away)
 
 The implementation-stack half of the proactive scan. The product-level trigger
-catalogue lives in `raftkit-core/discovery-interview` →
+catalogue lives in `raftkit-docs:discovery-interview` →
 `references/proactive-prompts.md`; this table is the part that only makes sense
 once an archetype is on the table, so it stays here with the rest of the stack
 opinion (`stack-and-domain-recipes.md`).

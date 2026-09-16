@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Fail-closed renderer for pr-auto-review's workflow asset. Sibling to
-// setup-project's render-assets.mjs — same validation discipline, kept
+// setup's render-assets.mjs — same validation discipline, kept
 // separate so this component's rendering never destabilizes that script's
 // existing guarantees for its own two components.
 //

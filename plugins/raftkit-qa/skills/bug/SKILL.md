@@ -27,7 +27,7 @@ Filed under <story> · Bugs — <bug link>, tier <tier>, checklist complete.
 1. **One bug per run**; none named → ask, never guess. Read the bug once (no template needed; it carries its own labels). Before any other fetch, check its two gates; either failing ends the run:
 
 ```output
-Can't retest — "Fixed in build ___" is empty. Fill the build and hand it back.
+Can't retest — no build to test against. Fill "Fixed in build ___" or name it in the hand-back, then hand it back.
 Can't retest — this bug has no "Done when" checklist. Add it in file mode, then retest.
 ```
 

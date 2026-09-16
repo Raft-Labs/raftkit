@@ -81,12 +81,10 @@ This skill activates only on a detected Hasura project
 (`scripts/detect-hasura.mjs`; a non-Hasura repository gets nothing) and wires
 into the rest of raftkit-dev:
 
-- **capability-preflight / setup-project** — Hasura is a conditional capability
-  in the provider registry; preflight reports its readiness and setup-project
-  proposes activation only for a detected Hasura project, behind human
-  approval. Discovery of the project's conventions (roots, stages, Make
-  targets, secret env var names, tenancy relationship) runs through the same
-  convention-discovery seam — nothing is assumed.
+- **`raftkit-dev:setup`** — its engine check confirms what this skill calls, and
+  it proposes activation only for a detected Hasura project, behind the one stop.
+  Discovery of the project's conventions (roots, stages, Make targets, secret env
+  var names, tenancy relationship) runs through the same seam — nothing is assumed.
 - **envx** — when the project keeps encrypted environments, the admin secret
   and endpoint are sourced through envx (the secret is never echoed; env files
   are never logged).

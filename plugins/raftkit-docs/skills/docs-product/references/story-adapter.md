@@ -3,8 +3,8 @@
 Generates one Asana user story per feature from the generated docs, using the
 organization's **live** Feature Template fetched at run time. No template
 body is ever cached in this plugin; the template is read live by GID (via the
-core workflow-constants) and its section structure drives the render. All
-writes go through core `asana-formatting` and the `write-protocol` gate —
+`raftkit-core:rules`) and its section structure drives the render. All
+writes go through `raftkit-core:rules` —
 draft → approve → push. This skill never calls Asana directly outside that gate.
 
 ## What it produces
@@ -47,5 +47,5 @@ is never used.
 
 When a validation category passes, the matching `[AC]` subtasks are **offered**
 for completion — drafted, shown, and pushed only after explicit approval through
-the write-protocol gate. Ticking is never automatic, and the parent story is
+`raftkit-core:rules`' one stop. Ticking is never automatic, and the parent story is
 never completed on the skill's own initiative.

@@ -1,6 +1,6 @@
 # Discovery Questions (asked in small, adaptive batches)
 
-The interview rules are `raftkit-core/discovery-interview` — in force throughout
+The interview rules are `raftkit-docs:discovery-interview` — in force throughout
 this file, and not restated here. Read them there; a second copy is a copy that
 drifts.
 

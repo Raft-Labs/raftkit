@@ -29,7 +29,7 @@ git fetch origin <base-branch>
 git diff "$(git merge-base FETCH_HEAD HEAD)" HEAD
 ```
 
-Walk it file group by file group. Each changed item is in scope when it maps to an `[AC]`, to a clarification logged on the story, or to a documentation file the plan record lists. An item matching the story's out-of-scope list is an automatic BEYOND flag, not a judgment. Anything else is BEYOND. Then walk the other way: an `[AC]` with no corresponding change or test is MISSING. An empty diff is not a pass — every `[AC]` is MISSING.
+Walk it file group by file group. Each changed item is in scope when it maps to an `[AC]`, to a clarification recorded in the plan record, or to a documentation file that record lists. An item matching the story's out-of-scope list is an automatic BEYOND flag, not a judgment. Anything else is BEYOND. Then walk the other way: an `[AC]` with no corresponding change or test is MISSING. An empty diff is not a pass — every `[AC]` is MISSING.
 
 ## Output
 
@@ -44,6 +44,6 @@ BEYOND names each item with its files. MISSING quotes each uncovered acceptance 
 Scope-guard: clean — 0 beyond, 0 missing
 ```
 
-Otherwise the PR is blocked with the item counts. A BEYOND item clears by removal or by a logged sign-off naming the item, the reason and the developer; the item stays listed as signed off, never dropped. A MISSING item clears by being built or explained.
+Otherwise the PR is blocked with the item counts. A BEYOND item clears by removal or by a logged sign-off naming the item, the reason and the developer; the item stays listed as signed off, never dropped. A MISSING item clears by being built or explained; when the story itself is wrong, the PM settles it through `raftkit-pm:story` amend.
 
 This skill never judges code quality: that is the review fan-out. It never edits the diff.

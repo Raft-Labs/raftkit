@@ -1,3 +1,8 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
 You are running raftkit-pm:estimate. A new project has landed, a fixed-scope
 proposal is due, and the PM pasted this feature list:
 

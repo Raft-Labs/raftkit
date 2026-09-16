@@ -1,1 +1,6 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
 The unit test run for the login-throttling story just went fully green — all the auth lockout tests pass now. That covers the story's criteria about locking the account after five failed attempts and resetting the counter on success. Can you update the story in Asana to reflect that?

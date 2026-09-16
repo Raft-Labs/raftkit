@@ -24,8 +24,14 @@ One project (link, GID or name; none → ask). A date range: since the last upda
 Review, edit, send — I don't send.
 ```
 
+Asked to send it, decline and repeat that line.
+
 ## Thin and empty weeks
 
-A thin week is reported as thin. No activity → open with `Quiet period — no shipped items this week`, then the standing ask (the most recent open decision). No open decision either → ask the PM what the client owes before drafting. Never pad.
+A thin week is reported as thin. No activity → open with this line, then the standing ask (the most recent open decision). No open decision either → ask the PM what the client owes before drafting. Never pad.
+
+```output
+Quiet period — no shipped items this week.
+```
 
 Anything touching budget, contract or a client commitment is surfaced for the PM, never committed in the draft.

@@ -11,9 +11,9 @@ reference implementations across B2B SaaS, AI content, voice agents, ERP,
 geospatial delivery, and consumer mobile.
 
 The archetypes below are also the **named-library layer** that
-`recipes`' [web-defaults.md](../../recipes/references/web-defaults.md) points to
+`recipes`' [web-defaults.md](../../../../raftkit-dev/skills/ui/references/web-defaults.md) points to
 for library choices it leaves open. `recipes`' own
-[SKILL.md](../../recipes/SKILL.md) owns the resolution order, and this layer sits
+[SKILL.md](../../../../raftkit-dev/skills/ui/SKILL.md) owns the resolution order, and this layer sits
 last in it. **When `web-defaults.md` reads this file as its named-library layer**,
 the House law rows there still win — an archetype is not permission to depart
 from them. Archetype selection during `docs` stack design is a separate question
@@ -123,7 +123,7 @@ Concrete phrases in answers → what the skill should do:
 
 Narrate each answer. Ask up to three related questions per turn, never the
 whole tree at once, and adapt each set based on the prior answers
-(`raftkit-core/discovery-interview`). Where an answer decides which branch
+(`raftkit-docs:discovery-interview`). Where an answer decides which branch
 comes next, that question goes in its own turn.
 
 ```

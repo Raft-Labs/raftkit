@@ -1,7 +1,7 @@
 {
   "name": "raftkit-dev",
   "version": "1.0.0",
-  "description": "Developer skills: repo setup, story implementation, bug and incident fixes, scope audit, UI, Hasura migrations, and docs parity — one stop per run.",
+  "description": "Developer skills: repo setup, story implementation, bug and incident fixes, scope audit, UI, Hasura migrations, and docs parity \u2014 one stop per run.",
   "author": {
     "name": "RaftLabs"
   },
@@ -25,6 +25,10 @@
     },
     {
       "name": "pr-review-toolkit",
+      "marketplace": "claude-plugins-official"
+    },
+    {
+      "name": "frontend-design",
       "marketplace": "claude-plugins-official"
     }
   ]

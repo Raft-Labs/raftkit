@@ -1,3 +1,8 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
 I finished the mid-sprint checkpoint for the checkout-refactor story and want to drop a detailed progress update as a comment on its Asana task (task 1216551447800123 in our workspace). Here's my draft — I wrote it up in my notes app so it's pretty structured:
 
 ## Sprint Checkpoint — Day 6

@@ -1,3 +1,8 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
 I just wrapped up the payments-retry story and need to post a status update as a comment on its Asana task (the one I have open — task 1216551447799999 in our workspace). Here's what I want the comment to say, roughly in this shape:
 
 ## Status: Ready for QA

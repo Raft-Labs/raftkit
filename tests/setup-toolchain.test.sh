@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Deterministic suite for Story D (M3 · setup-project toolchain, Asana
+# Deterministic suite for Story D (the setup toolchain, Asana
 # 1216767132032184). Drives the SHIPPED contract directly: detection and
-# rendering run through setup-project's own scripts over its own templates —
+# rendering run through setup's own scripts over its own templates —
 # no test-only renderer.
 #
 # AC → evidence matrix (eval bundle authored pre-implementation, structurally

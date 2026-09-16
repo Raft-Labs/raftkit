@@ -8,7 +8,7 @@
 # MDS-10's third occurrence is exactly what an LLM reviewer catches ~70% of
 # the time and a linter catches 100%. This buys the determinism the prose
 # standard (S4) cannot. This suite pins the client-repo asset, its wiring into
-# setup-project, and RaftKit's own verified (not just plausible) self-applied
+# setup, and RaftKit's own verified (not just plausible) self-applied
 # config.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2

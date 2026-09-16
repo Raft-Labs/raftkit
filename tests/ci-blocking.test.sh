@@ -35,21 +35,12 @@ job=$(sed -n '/^jobs:/,$p' "$WF")
 grep -qF 'tests/*.test.sh' <<<"$job"
 check "CI-1 workflow globs tests/*.test.sh (no hardcoded list)" ok $?
 
-# CI-2 · the opt-in network suite is excluded by name, with its reason stated
-# alongside it — not silently dropped.
-grep -qF 'capability-preflight-network.test.sh' <<<"$job"
-check "CI-2 network suite named" ok $?
-net=$(sed -n '/capability-preflight-network\.test\.sh/,$p' "$WF")
-grep -qiE 'network|opt-in' <<<"$net"
-check "CI-2b network exclusion states its reason" ok $?
-
 # CI-3 · no OTHER suite is named literally — proves the glob is real and this
 # isn't a re-enumerated allowlist wearing a glob as decoration. Also a
 # regression guard: catches a future edit that quietly reverts to a list.
 other_named=0
 for t in tests/*.test.sh; do
   b="$(basename "$t")"
-  [[ "$b" == "capability-preflight-network.test.sh" ]] && continue
   grep -qF "$b" <<<"$job" && other_named=$((other_named + 1))
 done
 [[ "$other_named" -eq 0 ]]

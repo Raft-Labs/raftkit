@@ -1,3 +1,8 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
 The diff adds this, with exactly one implementation and one call site anywhere
 in the codebase or the plan, and no test exercises it without the real SDK:
 

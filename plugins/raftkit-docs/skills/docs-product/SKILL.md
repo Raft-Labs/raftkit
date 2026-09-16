@@ -20,7 +20,7 @@ mutation is preceded by a confirmed impact list; every structural opinion is a
 proposal; existing conventions are preserved by default; no doc file is ever
 generated before the human signs off on the full plan. This skill never
 writes to Asana itself — story and bug drafting route through the core
-write-protocol gate; hand-offs to humans happen in chat.
+`raftkit-core:rules`' one stop; hand-offs to humans happen in chat.
 
 ## Ownership — one product, two surfaces
 
@@ -60,8 +60,7 @@ a seventh command.
   and the two deterministic scripts. This plugin never re-implements it.
 - **scaffold** — optional project bootstrap after design
   (`references/scaffolding.md`): archetype-matched CLI, always asks before
-  touching anything outside docs, installs route through capability-preflight
-  and setup-project — never improvised here.
+  touching anything outside docs, installs route through `raftkit-dev:setup` — never improvised here.
 
 ## Preflight — three branches
 
@@ -83,7 +82,7 @@ gates (`assets/companion/`).
 
 The approved Asana story (live), the Project Profile (the
 `Project Profile - <project name>` task in the project — see
-`raftkit-core/workflow-constants`), the `spec_path` implementation spec (the spec gate — this
+`raftkit-core:rules`), the `spec_path` implementation spec (the spec gate — this
 skill never authors a competing one), discovered docs roots and conventions,
 the ownership/change map, open unknowns, and the repository's own verification
 commands. Questions go to the developer **only** for what repository evidence
@@ -128,12 +127,11 @@ never printed (envx presence is metadata only — nothing decrypted, nothing
 read); scripts write only to an explicit output path inside the root; temporary
 files are cleaned after verification. Change sets are explicit — a selected
 base/ref/diff or the user-confirmed working diff — never a silently chosen Git
-range. Capability needs route through the sibling `capability-preflight`
-contract; this skill never improvises an install.
+range. Capability needs route through `raftkit-dev:setup`; this skill never improvises an install.
 
 ## Guardrails
 
-- **Plain English out** — every line a human reads follows `raftkit-core/house-rules`' plain-language rules; a house term gets its one-line gloss on first use.
+- **Plain English out** — every line a human reads follows `raftkit-core:rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
 ## Out of scope
 
@@ -141,7 +139,7 @@ contract; this skill never improvises an install.
   (Story/bug drafting is the Asana-lifecycle story's live-template adapter
   seam, always behind draft → approve → push.)
 - Package-manager and hook-manager work, and executing installs
-  (setup-project and capability-preflight own those).
+  (`raftkit-dev:setup` owns those).
 - Editing read-only source projects; merging PRs; deploying.
 
 ## Reference files
@@ -179,7 +177,7 @@ contract; this skill never improvises an install.
 - `references/reverse-engineer.md` — the full code-first restoration flow.
 - `references/story-adapter.md` · `references/bug-adapter.md` — the
   live-template Asana story and bug adapters (render through core
-  asana-formatting behind draft → approve → push; never cached template text).
+  `raftkit-core:rules` behind the one stop; never cached template text).
 - `assets/companion/` — the project-local companion capability, rendered by
   `scripts/render-companion.mjs` and installed by this plugin, never by
   `raftkit-dev:setup`.

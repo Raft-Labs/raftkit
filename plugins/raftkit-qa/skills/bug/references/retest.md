@@ -11,7 +11,7 @@ Each item records pass or fail and, on fail, its evidence. `N` = `Done when` ite
 
 ## Build and environment
 
-The stated build (`Fixed in build ___`) in the stated environment (the bug's original unless QA names another). Never a different build.
+The stated build in the stated environment (the bug's original unless QA names another). The build comes from `Fixed in build ___` on the task, or from the most recent hand-back comment when the field is empty but a comment names it. Never a different build.
 
 ## Pass (all green)
 

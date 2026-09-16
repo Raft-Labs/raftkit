@@ -2,7 +2,7 @@
 
 Files a bug in the organization's **live** Bug Report Template, fetched by GID
 at run time — no template body is cached in this plugin. All writes route
-through core `asana-formatting` and the `write-protocol` gate.
+through `raftkit-core:rules`.
 
 ## What the skill fills, what the human supplies
 

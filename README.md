@@ -21,7 +21,7 @@ Marketplace added — now install your role plugin: raftkit-pm, raftkit-dev, or 
 claude plugin install raftkit-dev@raftkit   # or raftkit-pm / raftkit-qa
 ```
 
-Installing any role plugin automatically installs `raftkit-core` alongside it. `raftkit-dev` additionally auto-installs five declared dependencies from the official Claude marketplace — `superpowers`, `code-simplifier`, `claude-md-management`, `security-guidance`, `pr-review-toolkit` — the engines its skills call by name. Inside a Claude Code session, the same commands work as `/plugin marketplace add` and `/plugin install`. Verify with `claude plugin list` — you should see your role plugin, `raftkit-core`, and (for `raftkit-dev`) the five auto-installed engines.
+Installing any role plugin automatically installs `raftkit-core` alongside it. `raftkit-dev` additionally auto-installs six declared dependencies from the official Claude marketplace — `superpowers`, `code-simplifier`, `claude-md-management`, `security-guidance`, `pr-review-toolkit`, `frontend-design` — the engines its skills call by name. Inside a Claude Code session, the same commands work as `/plugin marketplace add` and `/plugin install`. Verify with `claude plugin list` — you should see your role plugin, `raftkit-core`, and (for `raftkit-dev`) the six auto-installed engines.
 
 `raftkit-docs` is optional and installed only where a team wants the full documentation product; day-to-day delivery does not need it.
 
@@ -29,13 +29,13 @@ Installing any role plugin automatically installs `raftkit-core` alongside it. `
 
 | Plugin | Who | What |
 | --- | --- | --- |
-| `raftkit-core` | everyone (auto-installed) | House rules, workflow constants, governance protocols |
+| `raftkit-core` | everyone (auto-installed) | The rules every skill inherits, the working agreement, telemetry hooks |
 | `raftkit-pm` | PMs | Project profile, stories (write, amend, check, size), estimation, client updates, meeting decisions, routines |
 | `raftkit-dev` | Developers | Repo setup, implement, fix, scope guard, UI, Hasura, docs parity |
 | `raftkit-qa` | QA | Test-case suite, per-story run sheets, bugs (file and retest) |
 | `raftkit-docs` | optional | The documentation design product: co-authoring flow, templates, diagrams, reverse-engineering |
 
-v1 ships exactly these four plugins. PM and QA plugins target the Claude apps/Cowork runtime; the install path there is pending the org-wide install decision (Asana task 1216551001583573) — until it lands, use Claude Code with the commands above.
+v2 ships these five plugins; `raftkit-docs` is opt-in. PM and QA plugins target the Claude apps/Cowork runtime; the install path there is pending the org-wide install decision (Asana task 1216551001583573) — until it lands, use Claude Code with the commands above.
 
 ## Getting help
 
@@ -46,14 +46,14 @@ Every plugin ships a help command — run it inside a Claude Code session:
 /raftkit-dev:help       # Dev workflow: setup, implement, fix, scope-guard, ui, hasura, docs
 /raftkit-qa:help        # QA workflow: suite, run-sheet, bug
 /raftkit-docs:help      # The optional documentation product
-/raftkit-core:help      # Shared rules, constants, governance protocols
+/raftkit-core:help      # The shared rules and the working agreement
 ```
 
 Pass a skill name or question for a focused answer, e.g. `/raftkit-dev:help scope-guard` or `/raftkit-pm:help how do I onboard a project`.
 
 ## Renamed in v2
 
-v2 consolidates 35 skills into 20. The old names are gone; every new skill's description carries the old trigger phrases, so asking in your own words still works.
+v2 consolidates 35 skills into 18 installed by default, plus 2 in the opt-in docs plugin. The old names are gone; every new skill's description carries the old trigger phrases, so asking in your own words still works.
 
 | v1 | v2 |
 | --- | --- |
@@ -80,7 +80,7 @@ New versions arrive automatically via Claude Code's plugin refresh, or on demand
 claude plugin marketplace update raftkit
 ```
 
-No need to re-add the marketplace. Installs resolve to the latest stable version; there is no pre-release channel in v1.
+No need to re-add the marketplace. Installs resolve to the latest stable version; there is no pre-release channel.
 
 ## Troubleshooting
 
@@ -91,7 +91,7 @@ You need access to the RaftLabs GitHub org — ask in #raftkit.
 
 **Claude Code too old:** dependency auto-install needs v2.1.143+. Run `claude update`, then retry.
 
-**`/raftkit-dev:help` (or any `raftkit-*` command) not found:** your marketplace cache may predate the four-plugin split — an old install can be pinned to a single `raftkit` plugin with no `help` command at all. `claude plugin marketplace update` cannot recover a cache pinned to a rewritten history; remove and re-add instead:
+**`/raftkit-dev:help` (or any `raftkit-*` command) not found:** your marketplace cache may predate the plugin split — an old install can be pinned to a single `raftkit` plugin with no `help` command at all. `claude plugin marketplace update` cannot recover a cache pinned to a rewritten history; remove and re-add instead:
 
 ```bash
 claude plugin marketplace remove raftkit

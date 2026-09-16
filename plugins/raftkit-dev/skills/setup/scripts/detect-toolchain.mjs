@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Deterministic toolchain/ownership detector for setup-project. Pure reader:
+// Deterministic toolchain/ownership detector for setup. Pure reader:
 // collects every signal (no precedence), applies the documented decision table,
 // and reports hook/CI ownership with scope and origin. It never writes, never
 // touches git configuration, and redacts secret-looking values in any content

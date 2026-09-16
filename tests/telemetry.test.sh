@@ -341,6 +341,31 @@ printf '{"session_id":"s1","last_assistant_message":"NOT READY — 2 gap(s):\\n-
 expect_eq "hard stop is classified as blocked" "raftkit_blocked" "$(last_event_field "$d/spool/events.jsonl" 'event')"
 expect_eq "correct refusal id" "not-ready" "$(last_event_field "$d/spool/events.jsonl" 'props.refusal_id')"
 
+# The one human stop per run is not a blocker: it is the moment the human
+# decides. It gets its own event, and the reply that follows is flagged so the
+# dashboard can tell a go from an edit from an abandoned run.
+d="$(new_sandbox)"
+printf '{"session_id":"s1","last_assistant_message":"Story draft ready.\\n**STOP** — approve to write, edit to change, or decline."}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
+expect_eq "the one stop is recorded as a gate, not a blocker" "raftkit_gate_shown" "$(last_event_field "$d/spool/events.jsonl" 'event')"
+expect_eq "the gate rule is the one that matched" "stop-shown" "$(last_event_field "$d/spool/events.jsonl" 'props.refusal_id')"
+printf '{"session_id":"s1","user_prompt":"go"}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1
+expect_eq "the reply after a gate is flagged" "true" "$(last_event_field "$d/spool/events.jsonl" 'props.after_gate')"
+
+# A prompt with no gate before it is not flagged.
+d="$(new_sandbox)"
+printf '{"session_id":"s1","user_prompt":"implement this story"}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1
+expect_eq "an ordinary prompt is not flagged as answering a gate" "false" "$(last_event_field "$d/spool/events.jsonl" 'props.after_gate')"
+
+# Renamed skills keep their v1 name alongside, so a dashboard series survives v2.
+d="$(new_sandbox)"
+printf '{"session_id":"s1","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-pm:story"}}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" skill >/dev/null 2>&1
+expect_eq "a renamed skill records its v2 name" "story" "$(last_event_field "$d/spool/events.jsonl" 'props.skill_name')"
+expect_eq "a renamed skill carries the v1 name it replaced" "user-story" "$(last_event_field "$d/spool/events.jsonl" 'props.legacy_name')"
+
 # The capability-unavailable pattern keeps its leading `^` anchor — record.mjs
 # scans trimmed lines, and the owned refusal format always starts one, so an
 # unanchored pattern would misclassify any line that merely mentions the
@@ -397,9 +422,9 @@ expect_eq "  with the skill name" "raftkit-dev:implement" "$(last_event_field "$
 expect_eq "  and marked as typed" "typed" "$(last_event_field "$d/spool/events.jsonl" 'props.invocation')"
 
 d="$(new_sandbox)"
-printf '{"session_id":"s1","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-core:write-protocol"}}' \
+printf '{"session_id":"s1","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-core:rules"}}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" skill >/dev/null 2>&1
-expect_eq "a model-invoked skill is recorded" "raftkit-core:write-protocol" "$(last_event_field "$d/spool/events.jsonl" 'props.skill')"
+expect_eq "a model-invoked skill is recorded" "raftkit-core:rules" "$(last_event_field "$d/spool/events.jsonl" 'props.skill')"
 expect_eq "  and marked as model-invoked" "model" "$(last_event_field "$d/spool/events.jsonl" 'props.invocation')"
 
 # A payload with neither field must not spool a nameless skill row.

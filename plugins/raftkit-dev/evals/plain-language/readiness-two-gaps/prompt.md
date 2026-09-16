@@ -1,3 +1,8 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
 You are running raftkit-dev:implement on an Asana story. The readiness check
 has just run against the live template and found two gaps:
 

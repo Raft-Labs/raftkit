@@ -1,3 +1,8 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
 You are running raftkit-dev:scope-guard on a story branch. The diff includes
 an edit to `config/logging.ts` that adds a new log level. No `[AC]` on the
 story covers this change, and the story's "Do NOT build" section does not

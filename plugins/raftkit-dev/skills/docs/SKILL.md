@@ -10,8 +10,12 @@ One question, answered with evidence: does this change set leave the docs accura
 
 ## Run
 
-1. **Discover** the repository's own documentation system with `scripts/audit-docs.mjs`: roots, convention, indexes, ownership mapping, history convention. The result holds for the whole run; never derive it twice. Conflicting signals are reported, and the run asks which convention is authoritative rather than picking one.
-2. **Take the change set explicitly** — a base ref, or the confirmed working diff. Never choose a git range silently. No change set → report `not evaluated — no change set provided`.
+1. **Discover** the repository's own documentation system with `scripts/audit-docs.mjs`: roots, convention, indexes, ownership mapping, history convention. The result holds for the whole run; never derive it twice. Conflicting signals are reported as a question in the run's own output, never resolved by picking one.
+2. **Take the change set explicitly** — a base ref, or the confirmed working diff. Never choose a git range silently. No change set → report this and stop:
+
+```output
+Docs: not evaluated — no change set provided.
+```
 3. **Map** each changed file to the docs that own it, through the discovered mapping, expanding by change type: a schema change reaches its schema doc, the screens and APIs that use it, and any diagram that depicts it.
 4. **Report one of three outcomes**, each with its evidence:
 
@@ -30,10 +34,10 @@ Docs: updated and verified — <n> file(s), history recorded
 Docs: no recognized documentation convention in this repo — nothing to check.
 ```
 
-The third is `validate-docs.mjs` exit 2 for an unmapped repo. It is a real outcome, not a failure: a repo with no docs system never blocks a story.
+The third is `validate-docs.mjs` exit 2 whose stderr names no recognized documentation convention: a real outcome, not a failure, and a repo with no docs system never blocks a story. Any other exit 2 — bad input, or a convention conflict — is a failure: report its stderr verbatim and claim no parity.
 
-5. **Sync, when docs are impacted**: update only the owned docs, match each one's existing style and depth, record the change in the repo's own history convention, regenerate any diagram whose subject changed, and re-verify with `scripts/validate-docs.mjs` scoped to the change set. An architectural change adds a decision record in the repo's own seam; routine edits add no ceremony. If the update reveals docs beyond the mapped set, say so and include them in the stop.
-6. **Stop once** before any doc is written, showing the file list and the diff summary. A run that only reports parity writes nothing and has no stop.
+5. **Sync, when docs are impacted**: update only the owned docs, match each one's existing style and depth, record the change in the repo's own history convention, regenerate any diagram whose subject changed, and re-verify with `scripts/validate-docs.mjs` scoped to the change set. An architectural change adds a decision record in the repo's own seam; routine edits add no ceremony. If the update reveals docs beyond the mapped set, say so and include them. Called inside a run this skill reports only; a sync is a standalone run.
+6. **No stop of its own.** Doc edits are local files, part of the calling run's diff, and they reach the human in that run's single stop with the file list and the diff summary. A standalone run reports parity and writes nothing.
 
 ## Boundaries
 

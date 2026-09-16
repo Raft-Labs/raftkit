@@ -1,7 +1,7 @@
 // raftkit-governance-pack
 //
 // The deterministic subset of the RaftLabs Module Design Standard
-// (raftkit-core/design-standard) — the rules an LLM reviewer catches ~70% of
+// (raftkit-core:working-agreement → references/design-standard.md) — the rules an LLM reviewer catches ~70% of
 // the time and a linter catches 100%: MDS-1 (size/complexity), MDS-2
 // (handler thinness), and MDS-8 (import cycles). The other seven rules
 // (MDS-3..7, 9, 10) stay with /implement's design-review layer — they turn on

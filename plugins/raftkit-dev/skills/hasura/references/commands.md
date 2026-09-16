@@ -5,14 +5,14 @@ the discovered equivalents.
 
 | Action | Command (example naming) |
 |---|---|
-| Create a table | `.claude/skills/hasura/scripts/new-migration.sh create-table <name> --col "<spec>" ...` |
-| Create an enum | `.claude/skills/hasura/scripts/new-migration.sh create-enum-table <name> --values "a,b,c"` |
-| Add a column | `.claude/skills/hasura/scripts/new-migration.sh add-column <table> <col> <type> [...]` |
-| Drop a column | `.claude/skills/hasura/scripts/new-migration.sh drop-column <table> <col>` |
-| Add an index | `.claude/skills/hasura/scripts/new-migration.sh add-index <table> <cols> [--unique] [--partial "<where>"]` |
-| Rename | `.claude/skills/hasura/scripts/new-migration.sh rename column\|table <from> <to> [--table <t>]` |
-| Function/trigger scaffold | `.claude/skills/hasura/scripts/new-migration.sh function-trigger <slug>` |
-| Permission-only change | `.claude/skills/hasura/scripts/new-migration.sh permission-only <slug>` |
+| Create a table | `${CLAUDE_PLUGIN_ROOT}/skills/hasura/scripts/new-migration.sh create-table <name> --col "<spec>" ...` |
+| Create an enum | `${CLAUDE_PLUGIN_ROOT}/skills/hasura/scripts/new-migration.sh create-enum-table <name> --values "a,b,c"` |
+| Add a column | `${CLAUDE_PLUGIN_ROOT}/skills/hasura/scripts/new-migration.sh add-column <table> <col> <type> [...]` |
+| Drop a column | `${CLAUDE_PLUGIN_ROOT}/skills/hasura/scripts/new-migration.sh drop-column <table> <col>` |
+| Add an index | `${CLAUDE_PLUGIN_ROOT}/skills/hasura/scripts/new-migration.sh add-index <table> <cols> [--unique] [--partial "<where>"]` |
+| Rename | `${CLAUDE_PLUGIN_ROOT}/skills/hasura/scripts/new-migration.sh rename column\|table <from> <to> [--table <t>]` |
+| Function/trigger scaffold | `${CLAUDE_PLUGIN_ROOT}/skills/hasura/scripts/new-migration.sh function-trigger <slug>` |
+| Permission-only change | `${CLAUDE_PLUGIN_ROOT}/skills/hasura/scripts/new-migration.sh permission-only <slug>` |
 | Empty migration shell (hand-rolled SQL) | `make hasura-migrate-create stage=local name=<slug>` |
 | Refresh schema snapshot | `make create-dbml` (or the project's snapshot script) |
 | Apply migrations | `make hasura-migrate stage=local` |
@@ -20,7 +20,7 @@ the discovered equivalents.
 | Roll back one | `make hasura-migrate-delete stage=local version=<13-digit-ts>` |
 | Reapply one | `make hasura-migrate-reapply stage=local version=<13-digit-ts>` |
 | Export metadata after console edits | `make hasura-export stage=local` |
-| Query a stage | `.claude/skills/hasura/scripts/hasura-query.sh --stage=<s> [--role=user --user-id=<uuid>] <file>` |
+| Query a stage | `${CLAUDE_PLUGIN_ROOT}/skills/hasura/scripts/hasura-query.sh --stage=<s> [--role=user --user-id=<uuid>] <file>` |
 
 **Choosing a creation path:**
 - **Typed scaffolders** (`new-migration.sh create-table`, `add-column`,
@@ -51,12 +51,12 @@ Examples:
 
 ## Tooling reference
 
-- **Scripts** live under `.claude/skills/hasura/scripts/`. Run from
+- **Scripts** live under `${CLAUDE_PLUGIN_ROOT}/skills/hasura/scripts/`. Run from
   anywhere — they auto-locate the repo root.
 - **Templates** under `.claude/skills/hasura/templates/` use `{{VAR}}`
   placeholders.
 - **References** under `.claude/skills/hasura/references/` cover permission
   patterns, relationship naming, and enum tables — read these when defaults
   aren't enough.
-- **Tests**: `.claude/skills/hasura/scripts/tests/run.sh` runs unit +
+- **Tests**: `${CLAUDE_PLUGIN_ROOT}/skills/hasura/scripts/tests/run.sh` runs unit +
   integration tests. Run after editing libs or templates.

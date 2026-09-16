@@ -69,7 +69,12 @@ for key in $listed; do
   check "S5 $key directory within budget ($n <= $cap words)" ok $?
 
   stops="$(grep -rhc '^\*\*STOP\*\*' "$dir" --include='*.md' 2>/dev/null | awk '{s+=$1} END{print s+0}')"
-  if [[ "$(jsonq ".skills[\"$key\"].writes")" == true ]]; then
+  if [[ "$key" == "raftkit-core/rules" ]]; then
+    # rules owns the contract, so it carries the line itself as the canonical
+    # example. It is not a run and cannot stop one.
+    [[ "$stops" -eq 1 ]]
+    check "S6 $key carries the one canonical STOP line ($stops)" ok $?
+  elif [[ "$(jsonq ".skills[\"$key\"].writes")" == true ]]; then
     [[ "$stops" -le 1 ]]; check "S6 $key shows at most one STOP line ($stops)" ok $?
   else
     [[ "$stops" -eq 0 ]]; check "S6 $key writes nothing, so shows no STOP line ($stops)" ok $?
@@ -112,11 +117,13 @@ node -e '
     if (!new RegExp(r.pattern,"m").test(r.example)) { console.error("example does not match pattern:", r.id); bad++; }
     if (r.id==="generic-cant") continue;
     const p="plugins/"+r.source;
-    if (!fs.existsSync(p) && (strict || r.source.startsWith("raftkit-core/"))) { console.error("source missing:", r.id, p); bad++; }
+    if (!fs.existsSync(p)) { console.error("source missing:", r.id, p); bad++; continue; }
+    // the pin is only worth having if the string it pins is still emitted
+    if (!new RegExp(r.pattern,"m").test(fs.readFileSync(p,"utf8"))) { console.error("pattern matches nothing in its source:", r.id, p); bad++; }
   }
   process.exit(bad?1:0);
 '
-check "S14 every refusals.json rule has a matching example and an existing source" ok $?
+check "S14 every refusals.json rule matches its example and is still emitted by its source" ok $?
 
 if [[ "$strict" == true ]]; then
   unlisted=""
@@ -126,13 +133,13 @@ if [[ "$strict" == true ]]; then
   done
   [[ -z "$unlisted" ]]; check "S15 strict: every skill on disk has a budget entry${unlisted:+ (missing:$unlisted)}" ok $?
 
-  for plugin in raftkit-core raftkit-pm raftkit-dev raftkit-qa; do
+  for plugin in raftkit-core raftkit-pm raftkit-dev raftkit-qa raftkit-docs; do
     cap="$(node -e "process.stdout.write(String(Math.floor($(jsonq ".plugins[\"$plugin\"]")*$headroom)))")"
     n="$(find "plugins/$plugin/skills" -name '*.md' -type f -print0 | xargs -0 cat | wc -w | tr -d ' ')"
     [[ "$n" -le "$cap" ]]; check "S16 strict: $plugin skills total within budget ($n <= $cap words)" ok $?
   done
 
-  ! grep -rlE '1194107417268910|1216778429401199|1215260732424760' plugins --include='*.md' | grep -vE 'raftkit-core/skills/rules/|raftkit-docs/' | grep -q .
+  ! grep -rlE '1194107417268910|1216778429401199|1215260732424760' plugins --include='*.md' | grep -v 'raftkit-core/skills/rules/' | grep -q .
   check "S17 strict: GIDs appear only in raftkit-core/skills/rules" ok $?
 fi
 

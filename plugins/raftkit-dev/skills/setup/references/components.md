@@ -61,6 +61,10 @@ Rendered assets carry the literal marker `raftkit-governance-pack` in their head
 
 Object keys merge additively and `permissions.allow` is a union, so nothing existing is removed. A managed key whose existing value differs is a conflict: every conflict is reported together and nothing is written (exit 2). Unparseable JSON aborts with its reason and writes nothing (exit 1). Identical inputs produce byte-identical output (exit 0, `no changes`). That same conflict detection is the re-run drift check.
 
+## Conditional capabilities
+
+Hasura is detected, not installed: when the repository has a Hasura config with sibling `migrations/` and `metadata/` directories, the plan offers to record the discovered conventions in `.raftkit/hasura.json` so `raftkit-dev:hasura` reads them instead of re-deriving them. Declining changes nothing else.
+
 ## The marker
 
 `.raftkit/governance-pack.json`, tracked:
