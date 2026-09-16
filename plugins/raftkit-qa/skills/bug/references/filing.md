@@ -21,16 +21,16 @@ The template names the tiers and their order. A Jam link is ⭐, the default. Be
 | Severity | how bad, on the template's scale, from the evidence |
 | Priority | how urgent, on the template's scale; may diverge from severity (a typo in the hero copy is low severity, high priority) |
 | Reproducibility | `Always` only when the recording shows it; otherwise `⚠️ assumed until confirmed` |
-| Expected result | from the story's copy or `[AC]` when it exists; otherwise assumed |
-| `Done when` | one checkable line per acceptance item; the retest contract |
+| Expected result | quoted from the story's copy or `[AC]` when it exists; otherwise `⚠️ assumed until confirmed`, which blocks the write |
+| `Done when` | one checkable line per acceptance item, drawn from the story's `[AC]`s and the failing step; always `⚠️ assumed until confirmed` because it is the retest contract; the go is refused until QA confirms it |
 
 ## Title
 
 `[Platform][Severity] short what + where`. A title missing a bracket or the where fails the checklist.
 
-## Pre-submit checklist (every item, before the stop is offered)
+## Pre-submit checklist (every item, before a go is accepted)
 
-Type, Severity and Priority set · Environment complete per the template's block · role and test account named · steps reproduce from a clean start · Expected and Actual both stated · at least one piece of evidence · `Done when` defined. An unchecked item stays in the draft as a named question, never hidden.
+Type, Severity and Priority set · Environment complete per the template's block · role and test account named · steps reproduce from a clean start · Expected and Actual both stated · at least one piece of evidence · `Done when` confirmed. An unchecked item rides in the draft as a named question; the go is refused until it is answered, so nothing incomplete is filed.
 
 ## Placement
 

@@ -18,7 +18,7 @@
     {
       "name": "raftkit-pm",
       "source": "./plugins/raftkit-pm",
-      "description": "PM skills: onboarding, brainstorming an idea into a spec doc, user stories, story skill generator, story readiness, status updates, meeting decisions, estimation, deprecation sweep.",
+      "description": "PM skills: the Project Profile, one story skill (author, amend, check, size), feature-list estimation, the weekly client update, meeting decisions, and routine handover — each with one stop before any write.",
       "category": "role"
     },
     {
@@ -30,7 +30,8 @@
     {
       "name": "raftkit-qa",
       "source": "./plugins/raftkit-qa",
-      "category": "role"
+      "category": "role",
+      "description": "QA skills: the project test-case suite in a QA-owned Sheet, per-story run sheets, and one bug skill that files from Jam evidence and retests fixes — each with one stop before any write."
     }
   ]
 }

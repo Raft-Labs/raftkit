@@ -13,16 +13,20 @@ Each item records pass or fail and, on fail, its evidence. `N` = `Done when` ite
 
 The stated build (`Fixed in build ___`) in the stated environment (the bug's original unless QA names another). Never a different build.
 
-## Close (all green)
+## Pass (all green)
 
-Comment, then close; only QA closes. Emit only after the write lands:
+On go, post the comment below. Closing the task is QA's, by hand; the skill never changes completion state. Emit only after the write lands:
 
 ```output
-Closed — all N done-when items + M regression checks green on build X
+Retest passed — all N done-when items + M regression checks green on build X. Close the bug.
 ```
 
 ## Fail (any item red)
 
 Order is fixed: fresh evidence from this run (a new Jam link, or console and network errors quoted verbatim; never the original evidence reused) → failures itemised, each tied to its evidence → then the `Retest Failed` tag and the comment. The bug returns to the dev reopened; the refix is `raftkit-dev:fix`. Retest never decides the refix's priority.
 
-The tag's name belongs to the project: resolve it at run time; if the project has none, create `Retest Failed` or ask QA which tag to use. A reopen that is not tagged is not counted.
+The tag's name belongs to the project: resolve it at run time; if the project has none, propose creating `Retest Failed` in the stop message, or ask there which tag to use. A reopen that is not tagged is not counted. After the writes land:
+
+```output
+Retest Failed — K of N+M items red on build X; tagged, returned to dev.
+```

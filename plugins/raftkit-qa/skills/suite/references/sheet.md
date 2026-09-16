@@ -37,7 +37,7 @@ Every generated case cites the profile or doc fact it came from, in the steps or
    - **delta** — sources changed a row QA has not touched → propose.
    - **conflict** — sources changed a row QA touched → show both versions; QA picks; nothing else changes the row.
 
-QA-touched means owner is not `generated`, the ID was never generated, or the row differs from generation while still owner `generated` (an unclaimed edit is still an edit).
+QA-touched means owner is not `generated`, the ID was never generated, or the row differs from generation while still owner `generated` (an unclaimed edit is still an edit). Tiebreak: a `generated`-owned row that differs from the new generation is a delta only when it still matches what the last run wrote and that run is in this chat; otherwise it is a conflict.
 
 ## Writes
 
@@ -57,4 +57,4 @@ When the suite can no longer be generated and verified in one run, or one Sheet 
 
 ## Edge and error states
 
-Sheet exists but is empty on a re-run → offer a full re-export, never assume it was emptied on purpose. Sheet unreachable → stop before writing and name which account needs which permission on which Sheet or folder.
+Sheet exists but is empty on a re-run → the draft is a full re-export, flagged as such at the stop; never assume it was emptied on purpose. Sheet unreachable → stop before writing and name which account needs which permission on which Sheet or folder. No Sheets connector → stop and name it.
