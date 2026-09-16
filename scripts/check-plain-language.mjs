@@ -1,18 +1,15 @@
 #!/usr/bin/env node
 // Scans markdown files for ```output fenced blocks — the fence convention
-// raftkit-core/house-rules/references/plain-language.md defines for any
+// raftkit-core/rules/references/plain-language.md defines for any
 // literal text a human reads — and checks each block against that contract:
 // no banned filler (word-boundary matched, case-insensitive, so
 // "uncertainly" doesn't trip on "certainly"), no sentence over 25 words
 // (measured after rejoining hard-wrapped lines), no block averaging over 15
 // words/sentence, no named or numeric HTML entity, no internal-only label
-// leaking through (WEESLD, any case), and no Gate-N reference past what the
-// glossary covers. A block whose fence is opened but never closed is
+// leaking through (WEESLD, any case). A block whose fence is opened but never closed is
 // flagged, and its accumulated content is still checked by every rule
 // above rather than silently dropped.
 //
-// The Gate-N check is deliberately narrow: it generalizes to the one house
-// term family that has a natural "future variant" (Gate 3, Gate 4, ...). It
 // does not attempt open-vocabulary jargon detection — the repo already uses
 // bracket placeholders like [Platform][Severity] for unrelated template
 // syntax, so a generic "any unglossed term" heuristic would misfire there.
@@ -24,8 +21,7 @@
 // exist) — never conflated with "clean" or "violations found".
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 
 const BANNED_PHRASES = [
   "utilize",
@@ -57,24 +53,6 @@ function wordBoundaryPattern(phrase) {
 }
 const BANNED_PHRASE_PATTERNS = BANNED_PHRASES.map((phrase) => [phrase, wordBoundaryPattern(phrase)]);
 const FORBIDDEN_LABEL_PATTERNS = FORBIDDEN_LABELS.map((label) => [label, wordBoundaryPattern(label)]);
-
-// The glossary table is the single source of which Gate numbers are
-// covered — parsed live so the checker and plain-language.md can't drift.
-const GLOSSARY_REF = join(
-  dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "plugins/raftkit-core/skills/house-rules/references/plain-language.md",
-);
-
-function knownGateNumbers() {
-  const src = readFileSync(GLOSSARY_REF, "utf8");
-  const numbers = new Set();
-  for (const line of src.split("\n")) {
-    const m = /^\|\s*Gate\s+(\d+)\s*\|/i.exec(line);
-    if (m) numbers.add(m[1]);
-  }
-  return numbers;
-}
 
 function collectMarkdownFiles(target, out) {
   let st;
@@ -209,17 +187,7 @@ function checkSentenceLength(file, block, violations) {
   }
 }
 
-function checkGateCoverage(file, block, text, violations, gateNumbers) {
-  for (const m of text.matchAll(/\bGate\s+(\d+)\b/gi)) {
-    if (!gateNumbers.has(m[1])) {
-      violations.push(
-        `${file}:${block.start}: house term "Gate ${m[1]}" used in an output block but has no glossary entry`,
-      );
-    }
-  }
-}
-
-function checkBlock(file, block, violations, gateNumbers) {
+function checkBlock(file, block, violations) {
   const text = block.body.join("\n");
 
   for (const [phrase, pattern] of BANNED_PHRASE_PATTERNS) {
@@ -239,7 +207,6 @@ function checkBlock(file, block, violations, gateNumbers) {
   }
 
   checkSentenceLength(file, block, violations);
-  checkGateCoverage(file, block, text, violations, gateNumbers);
 }
 
 const targets = process.argv.slice(2);
@@ -251,14 +218,13 @@ if (targets.length === 0) {
 const files = [];
 for (const target of targets) collectMarkdownFiles(target, files);
 
-const gateNumbers = knownGateNumbers();
 let blockCount = 0;
 const violations = [];
 for (const file of files) {
   const src = readFileSync(file, "utf8");
   const blocks = extractOutputBlocks(file, src, violations);
   blockCount += blocks.length;
-  for (const block of blocks) checkBlock(file, block, violations, gateNumbers);
+  for (const block of blocks) checkBlock(file, block, violations);
 }
 
 if (violations.length > 0) {

@@ -80,7 +80,7 @@ Confirm with `claude plugin list` — you should see `raftkit-core` plus your ro
 
 RaftKit measures its own use so we can see who has adopted it and where people get stuck. It runs as plugin hooks in `raftkit-core` — active automatically in Claude Code once any raftkit plugin is installed, with nothing to configure.
 
-**Collected:** your git name and email, GitHub login, OS user; which skills you run; when a skill hard-stops and which refusal it emitted; plugin and platform versions; and the prompt that preceded a stop.
+**Collected:** your git name and email, GitHub login, OS user; which skills you run; when a skill stops for your approval or hard-stops, and which line it emitted; every prompt you submit, in full; every failed tool call (the tool's name and its error output); plugin and platform versions.
 
 **Also collected:** the repository (`owner/repo`) and branch you are working in, so a blocker can be traced to the project it happened in. **Not collected:** file contents, or anything from a repo you didn't run RaftKit in. Prompts pass through a credential scrubber that strips API keys, tokens, and private-key blocks before anything is sent.
 

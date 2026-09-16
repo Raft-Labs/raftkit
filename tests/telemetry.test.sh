@@ -338,7 +338,7 @@ d="$(new_sandbox)"
 printf '{"session_id":"s1","last_assistant_message":"NOT READY — 2 gap(s):\\n- Section 3 missing"}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "hard stop is classified as blocked" "raftkit_blocked" "$(last_event_field "$d/spool/events.jsonl" 'event')"
-expect_eq "correct refusal id" "gate0-not-ready" "$(last_event_field "$d/spool/events.jsonl" 'props.refusal_id')"
+expect_eq "correct refusal id" "not-ready" "$(last_event_field "$d/spool/events.jsonl" 'props.refusal_id')"
 
 # The capability-unavailable pattern keeps its leading `^` anchor — record.mjs
 # scans trimmed lines, and the owned refusal format always starts one, so an
@@ -548,8 +548,8 @@ fi
 # Full-prompt capture is deliberate, so the governance docs are the only thing
 # standing between it and a surprised developer. These assert the docs describe
 # what the code above actually does — no more, no less.
-HOUSE_RULES="plugins/raftkit-core/skills/house-rules/SKILL.md"
-WRITE_PROTOCOL="plugins/raftkit-core/skills/write-protocol/SKILL.md"
+RULES="plugins/raftkit-core/skills/rules/SKILL.md"
+README="README.md"
 
 # Blockers must not be filed anywhere outward. These guard the removal: if
 # someone reintroduces issue filing, the docs and the code disagree and this
@@ -560,17 +560,10 @@ check "no blocker-filing hook remains" ok $?
 ! grep -rqE 'gh["'"'"' ]+issue|issue create|issue comment' plugins/raftkit-core/hooks/ 2>/dev/null
 check "hooks never invoke gh issue" ok $?
 
-# CR-B: the guard above only knows the `gh issue ...` subcommand form. A hook
-# can file the exact same issue two other ways — a raw REST POST to the issues
-# route via `gh api`, or a `createIssue` GraphQL mutation via `gh api graphql`
-# — and the narrower pattern above lets both through unnoticed.
 GH_ISSUE_GUARD='gh["'"'"' ]+issue|issue create|issue comment|-X[[:space:]]*POST[[:space:]]+repos/[^[:space:]]+/issues|createIssue'
 ! grep -rqE "$GH_ISSUE_GUARD" plugins/raftkit-core/hooks/ 2>/dev/null
 check "hooks never invoke gh issue (extended: REST POST or GraphQL createIssue)" ok $?
 
-# Prove the extended pattern actually catches what it claims to, rather than
-# merely failing to match nothing. Fixtures are not present in hooks/ — this
-# is a direct test of the guard's own regex.
 gh_issues_post_fixture='gh api -X POST repos/foo/bar/issues -f title=x'
 grep -qE "$GH_ISSUE_GUARD" <<<"$gh_issues_post_fixture"
 check "the extended guard catches a REST POST to repos/OWNER/REPO/issues via gh api" ok $?
@@ -579,44 +572,28 @@ gh_graphql_fixture='gh api graphql -f query=mutation{createIssue(input:{reposito
 grep -qE "$GH_ISSUE_GUARD" <<<"$gh_graphql_fixture"
 check "the extended guard catches a createIssue GraphQL mutation via gh api graphql" ok $?
 
-grep -qi 'dashboard' <<<"$(awk '/^\*\*Blockers go to the dashboard/,/^## find-skills/' "$HOUSE_RULES")"
-check "house-rules states blockers go to the dashboard" ok $?
+# v2: the disclosure lives in the README (what developers read) and the rules
+# skill states the one-stop rule the hook's gate event detects. Full-prompt
+# capture is deliberate, so the README must say so plainly.
+grep -qi 'dashboard' "$README"
+check "README states blockers go to the dashboard" ok $?
 
-grep -qi 'one automatic-write exception' "$HOUSE_RULES"
-check "house-rules lists exactly one automatic-write exception" ok $?
+grep -qi 'every prompt' "$README" && grep -qi 'failed tool call' "$README"
+check "README states every prompt and every failed tool call is captured" ok $?
 
-grep -qi 'one documented exception' "$WRITE_PROTOCOL"
-check "write-protocol lists exactly one documented exception" ok $?
+grep -q 'RAFTKIT_TELEMETRY=off' "$README"
+check "opt-out is stated in the README" ok $?
 
-# CR-C: the two checks above are claim-based — they pass as soon as the phrase
-# "one automatic-write exception" / "one documented exception" appears
-# anywhere in the file, even if older "two exceptions" language survives
-# alongside it (blocker-issue-filing was removed as a second exception, but
-# the prose that used to count it may not have been). Assert directly that no
-# stale two-exception phrasing remains anywhere docs describe this gate.
-! grep -qiE 'two exceptions?|these two|two named|two documented|two automatic' \
-  "$HOUSE_RULES" "$WRITE_PROTOCOL" CLAUDE.md
-check "no stale two-exception phrasing remains in house-rules, write-protocol, or CLAUDE.md" ok $?
+grep -q '^## One stop per run' "$RULES" && grep -qF '**STOP**' "$RULES"
+check "rules states the one stop per run and its STOP marker" ok $?
 
-# Count-based: the claim is "exactly one", so assert exactly one entry is
-# listed in each section, and that the one entry is pr-auto-review.
-hr_exception_section="$(awk '/^## The one automatic-write exception/,/^## Escalate to founders/' "$HOUSE_RULES")"
-hr_exception_entries="$(grep -cE '^[0-9]+\.' <<<"$hr_exception_section")"
-expect_eq "house-rules' automatic-write exception section lists exactly 1 entry" "1" "$hr_exception_entries"
-grep -qi 'pr-auto-review' <<<"$hr_exception_section"
-check "house-rules' one exception entry names pr-auto-review" ok $?
-
-wp_exception_section="$(awk '/^## The one documented exception/,/^## Asana HTML rules/' "$WRITE_PROTOCOL")"
-wp_exception_entries="$(grep -cE '^(### |[0-9]+\.)' <<<"$wp_exception_section")"
-expect_eq "write-protocol's documented exception section lists exactly 1 entry" "1" "$wp_exception_entries"
-grep -qi 'pr-auto-review' <<<"$wp_exception_section"
-check "write-protocol's one exception entry names pr-auto-review" ok $?
-
-grep -qi 'every prompt' "$HOUSE_RULES" && grep -qi 'failed tool call' "$HOUSE_RULES"
-check "house-rules states every prompt and every failed tool call is captured" ok $?
-
-grep -q 'RAFTKIT_TELEMETRY=off' "$HOUSE_RULES" && grep -q 'RAFTKIT_TELEMETRY=off' "$WRITE_PROTOCOL"
-check "opt-out is stated in house-rules AND write-protocol, not just the README" ok $?
+node -e '
+  const j = JSON.parse(require("fs").readFileSync("plugins/raftkit-core/hooks/lib/refusals.json", "utf8"));
+  const gate = j.refusals.find(r => r.severity === "gate");
+  if (!gate) process.exit(1);
+  if (!new RegExp(gate.pattern, "m").test(gate.example)) process.exit(2);
+'
+check "refusals.json carries exactly one gate rule whose example matches its pattern" ok $?
 
 gates="$(grep -m1 'No skill ever auto-sends' CLAUDE.md)"
 grep -qi 'exactly one exception' <<<"$gates" && grep -qi 'pr-auto-review' <<<"$gates"

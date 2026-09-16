@@ -5,36 +5,34 @@ argument-hint: [skill name or question]
 
 # raftkit-core help
 
-The user ran `/raftkit-core:help $ARGUMENTS`. You are the guide to **raftkit-core** — the shared foundation every RaftKit role plugin depends on.
+The user ran `/raftkit-core:help $ARGUMENTS`.
 
-**If `$ARGUMENTS` names a skill or asks a question:** answer that specifically. Read `${CLAUDE_PLUGIN_ROOT}/skills/<skill>/SKILL.md` (and its `references/`) as the authority — never answer about a skill from memory alone.
-
-**Otherwise, present the overview below.** First list the directories in `${CLAUDE_PLUGIN_ROOT}/skills/` and reconcile: if a skill exists that isn't in this table (or one listed here is gone), say so and describe it from its SKILL.md — the installed skills are the source of truth, not this page.
+**If `$ARGUMENTS` names a skill or asks a question**, answer it from `${CLAUDE_PLUGIN_ROOT}/skills/<skill>/SKILL.md` and its `references/`. **Otherwise present the overview below.**
 
 ## What this plugin is
 
-raftkit-core carries no day-to-day workflow of its own — it is the rulebook the other plugins consult. It installs automatically with any role plugin. You'd invoke its content directly when you need to check a rule, fetch a workflow constant, or quote a governance string exactly.
+raftkit-core is the rulebook the role plugins inherit. It installs automatically with any role plugin and carries no day-to-day workflow of its own.
 
 ## Skills
 
-| Skill | What it holds | A human uses it when |
+| Skill | What it holds | Ask it when |
 | --- | --- | --- |
-| `house-rules` | Where project facts live (Project Profiles, never plugins), Asana free-tier constraints, human approval gates, founder-escalation triggers, the dev/QA → PM story-gap loop, find-skills governance | "What's the rule on estimates?" / "Can I use Asana dependencies?" / "Dev found a gap in my story — now what?" |
-| `workflow-constants` | The Asana workspace GID, Feature + Bugs Template GIDs, subtask naming conventions — the single source; templates are always fetched LIVE | "What's the story template GID?" / "How do I fetch the live template?" |
-| `write-protocol` | The draft → approve → push gate for every outward write (Asana, Drive docs, files, client-facing), plus Asana's rich-text HTML rules | "Why won't my html_notes push?" / before any skill writes anywhere |
-| `governance-protocols` | Ashit's protocols 1–5 (model triage, decomposition, pre-flight gates, cost hygiene, production alerts), the spec template, the team cheat sheet — the pack `raftkit-dev:setup-project` installs per repo | "What's the exact efficiency warning string?" / "What's the decomposition threshold default?" |
-| `design-standard` | The RaftLabs Module Design Standard (MDS-1…MDS-10) — the SOLID/design-pattern bar for React/Next.js, Node, and AWS Serverless, installed into a client's `CLAUDE.md` by `raftkit-dev:setup-project` and enforced by `raftkit-dev:implement`'s design-review layer | "What's MDS-7?" / "Why did the reviewer flag this abstraction?" |
-| `asana-formatting` | How RaftKit renders content for Asana — per-surface tag matrix, markdown-to-Asana-HTML rules, object-reference syntax, read-before-write and read-back verification | Not user-invocable — consulted automatically by write-protocol and every skill that writes to Asana |
-| `discovery-interview` | The house interview contract — a few related questions at a time, recommendation first, push back on vague answers, never guess — plus the shared push-back, proactive-suggestion, and edge-case catalogs | Not user-invocable — consulted by any skill that interviews a human, e.g. `raftkit-pm:brainstorm` and `raftkit-dev:docs` |
+| `rules` | Asana GIDs and the Project Profile convention, the one human stop per run, fetch-once for live reads, the Asana HTML floor, free-tier limits, the scope line, founder escalation and the estimation watermark, story readiness, plain output | "What's the template GID?" / "Can I use Asana dependencies?" / "What's the rule on estimates?" |
+| `working-agreement` | The ten-rule RaftLabs working agreement and the Module Design Standard (MDS-1…10), the text `raftkit-dev:setup` installs into a client `CLAUDE.md` | "What's rule 2?" / "What's MDS-7?" |
+| `discovery-interview` | The interview contract used by the documentation design product (moving to `raftkit-docs`) | Not user-invocable |
+| `house-rules` | Pointer to `rules` while the role plugins migrate to v2; deleted at release | Never — read `rules` |
+| `write-protocol` | Pointer to `rules` while the role plugins migrate to v2; deleted at release | Never — read `rules` |
+| `asana-formatting` | Pointer to `rules` while the role plugins migrate to v2; deleted at release | Never — read `rules` |
+| `workflow-constants` | Pointer to `rules` while the role plugins migrate to v2; deleted at release | Never — read `rules` |
+| `governance-protocols` | Pointer to `working-agreement` while the role plugins migrate to v2; deleted at release | Never — read `working-agreement` |
+| `design-standard` | Pointer to `working-agreement` while the role plugins migrate to v2; deleted at release | Never — read `working-agreement` |
 
-## The three rules everyone hits eventually
+## Three rules everyone hits
 
-1. **Draft → approve → push.** No skill makes an outward write — Asana, a Drive doc, a file, anything client-facing — without explicit human approval of the exact content.
-2. **Live templates, never cached.** Story and bug formats come from the live Asana template tasks at run time; editing the template updates every project instantly.
-3. **Free-tier Asana only.** No dependencies, custom fields, milestones, or start dates — relationships are task links in descriptions.
+1. **One stop per run.** A skill drafts everything, then stops once before anything leaves the session. Approve to push; an edit re-presents the draft; silence pushes nothing.
+2. **Live templates, never cached.** Story and bug formats come from the Asana template tasks at run time, fetched once per run.
+3. **Free-tier Asana only.** No dependencies, custom fields, milestones or start dates; relationships are task links.
 
 ## Your role plugin
 
-Day-to-day work lives in the role plugins: `/raftkit-pm:help` (stories, profiles, updates, estimates) · `/raftkit-dev:help` (implement → PR, bugs, setup) · `/raftkit-qa:help` (suites, run sheets, bugs, retest).
-
-Close by pointing them at their role plugin's help unless their question was about a core rule.
+`/raftkit-pm:help` (profiles, stories, estimates, updates) · `/raftkit-dev:help` (implement → PR, fixes, setup) · `/raftkit-qa:help` (suites, run sheets, bugs).

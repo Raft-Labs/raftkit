@@ -1,0 +1,20 @@
+{
+  "//": "v2 skill name → the v1 name it replaced. record.mjs attaches the v1 name as legacy_name on skill events so dashboard series stay continuous across the rename.",
+  "aliases": {
+    "rules": "house-rules",
+    "working-agreement": "governance-protocols",
+    "story": "user-story",
+    "profile": "project-onboarding",
+    "estimate": "estimation",
+    "status": "status-update",
+    "meeting": "meeting-decisions",
+    "routine": "deprecation-sweep",
+    "implement": "implement",
+    "fix": "fix-bug",
+    "setup": "setup-project",
+    "ui": "ui-creation",
+    "suite": "test-suite",
+    "run-sheet": "test-run-sheet",
+    "bug": "file-bug"
+  }
+}

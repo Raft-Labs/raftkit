@@ -1,7 +1,7 @@
 {
   "name": "raftkit-core",
-  "version": "0.18.0",
-  "description": "RaftKit house rules, workflow constants, governance protocols pack, the Module Design Standard, the Asana write-protocol gate, the asana-formatting rendering capability, the shared discovery-interview contract, and usage telemetry, including blocker events surfaced in the admin dashboard.",
+  "version": "1.0.0",
+  "description": "RaftKit rules (Asana constants, the one human stop per run, fetch-once live reads, Asana HTML, free tier, scope line, escalation, readiness, plain output), the RaftLabs working agreement and Module Design Standard, and usage telemetry hooks.",
   "author": {
     "name": "RaftLabs"
   }

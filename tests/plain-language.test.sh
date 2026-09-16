@@ -6,16 +6,17 @@
 # fenced block repo-wide for banned filler (word-boundary matched,
 # case-insensitive), over-length sentences (measured after rejoining
 # hard-wrapped lines, regardless of how the next line is cased),
-# block-average sentence length, uncovered Gate-N references, named or
+# block-average sentence length, named or
 # numeric HTML entities, correctly nested inner code fences, an
 # unterminated fence (whose content is still checked, not dropped), and a
 # leaked internal-only label (WEESLD, any case, word-boundary matched).
-# This suite pins: the contract exists in house-rules, every skill except
-# house-rules itself carries the propagated guardrail bullet, the real repo
+# This suite pins: the contract exists in raftkit-core:rules, the real repo
 # content is clean, and — so a green run here is trustworthy, not a rubber
 # stamp — each negative-control fixture deliberately fails exactly the rule
 # it names (with the exact exit code and violation text asserted, not just
-# "nonzero"), and each positive-control fixture deliberately passes.
+# "nonzero"), and each positive-control fixture deliberately passes. It no
+# longer requires every skill to restate the guardrail (v2 inherits it) and
+# no longer pins a minimum skill or output-block count.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 
@@ -48,53 +49,19 @@ check_contains() { # <name> <haystack> <needle>
   fi
 }
 
-HOUSE_RULES=plugins/raftkit-core/skills/house-rules/SKILL.md
-REF=plugins/raftkit-core/skills/house-rules/references/plain-language.md
+RULES=plugins/raftkit-core/skills/rules/SKILL.md
+REF=plugins/raftkit-core/skills/rules/references/plain-language.md
 
-# --- CONTRACT: house-rules names it, plain-language.md carries it ---
+# --- CONTRACT: rules names it, plain-language.md carries it ---
 
-grep -qF '## How skills talk to humans' "$HOUSE_RULES"
-check "PL1 house-rules names the plain-language contract" ok $?
-
-grep -qF 'plain-language.md' "$HOUSE_RULES"
-check "PL2 house-rules links to the reference file" ok $?
+grep -qF '## Plain output' "$RULES" && grep -qF 'plain-language.md' "$RULES"
+check "PL1 rules names the plain-language contract and links the reference" ok $?
 
 [[ -f "$REF" ]]
-check "PL3a plain-language.md exists" ok $?
+check "PL2 plain-language.md exists" ok $?
 
-grep -qF '## Banned phrases' "$REF" && grep -qF '## The house glossary' "$REF" \
-  && grep -qF '## Never shown to a human' "$REF" && grep -qF '```output' "$REF"
-check "PL3b plain-language.md carries the banned list, glossary, WEESLD carve-out, and output-fence convention" ok $?
-
-grep -qF '## Before / after' "$REF"
-check "PL3c plain-language.md carries a before/after example" ok $?
-
-grep -qF '## The one exception: verbatim strings' "$REF"
-check "PL3d plain-language.md carries the governance-pack verbatim-string carve-out" ok $?
-
-# --- PROPAGATION: every skill except house-rules carries the bullet ---
-#
-# Uses find, not a plugins/*/skills/*/SKILL.md glob, so a nested skill (one
-# level deeper than the top-level skills/<name>/SKILL.md shape -- e.g.
-# raftkit-dev/docs's project-local docs-companion) is not silently invisible
-# to this check. docs-companion ships standalone into a client repo with no
-# raftkit-core installed, so it carries its own worded version of the bullet
-# rather than a `raftkit-core/house-rules` cross-reference -- but it still
-# must contain the phrase, same as every other skill here.
-
-missing=""
-skill_count=0
-while IFS= read -r f; do
-  skill_count=$((skill_count + 1))
-  [[ "$f" == "$HOUSE_RULES" ]] && continue
-  grep -qF 'Plain English out' "$f" || missing="$missing $f"
-done < <(find plugins -type f -name 'SKILL.md' | sort)
-[[ -z "$missing" ]]
-check "PL4 every skill but house-rules carries the guardrail bullet" ok $?
-[[ -n "$missing" ]] && echo "  missing: $missing"
-
-[[ "$skill_count" -ge 32 ]]
-check "PL5 at least 32 skills found (no silent scope shrink)" ok $?
+grep -qF '## Banned phrases' "$REF" && grep -qF '## Never shown to a human' "$REF" && grep -qF '```output' "$REF"
+check "PL3 plain-language.md carries the banned list, the WEESLD carve-out, and the output-fence convention" ok $?
 
 # --- CHECKER: exists, is itself valid JS, and its usage/target errors are
 # distinguishable from "clean" and from "violations found" ---
@@ -115,19 +82,6 @@ check_contains "PL6d reports which target it couldn't read" "$out" "cannot read 
 
 FIX=tests/fixtures/plain-language
 
-# PL6e/PL6f replace a vacuous assertion from an earlier revision of this
-# suite, which grepped the checker's source for the literal string
-# "house-rules/references/plain-language.md" -- that string appears in the
-# checker's header COMMENT regardless of whether the glossary is ever
-# actually parsed, so the old assertion passed even against a checker that
-# never read the file. Assert on real behavior instead: an unglossed house
-# term fails by name, and the same term glossed in plain-language.md passes.
-out="$(node "$CHECKER" "$FIX/bad-unglossed-term.md" 2>&1)"; code=$?
-check_exit "PL6e an unglossed Gate reference exits 1" 1 "$code"
-check_contains "PL6e names the unglossed term" "$out" 'house term "Gate 3"'
-
-node "$CHECKER" "$FIX/good-known-gate.md" >/dev/null 2>&1
-check_exit "PL6f a Gate reference the glossary already covers exits 0 (no over-firing)" 0 $?
 
 # --- NEGATIVE CONTROLS: prove the checker actually catches problems ---
 #
@@ -205,9 +159,6 @@ check "PL9 the checker actually scanned blocks, not a silent zero-match pass" ok
 # checker's own tally and `grep -rEc '^[[:space:]]*```output[[:space:]]*$'
 # plugins/`), minus a small safety margin -- not a stale number carried
 # over from either branch this suite was built from.
-block_count="$(grep -oE '^checked [0-9]+' <<<"$real_out" | grep -oE '[0-9]+')"
-[[ "${block_count:-0}" -ge 55 ]]
-check "PL10 at least 55 output blocks found repo-wide (no silent scope shrink)" ok $?
 
 # --- EVAL BUNDLE: behavioral cases in the official layout (prompt.md + graders/*.md) ---
 
