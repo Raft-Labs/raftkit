@@ -160,15 +160,29 @@ check "PL9 the checker actually scanned blocks, not a silent zero-match pass" ok
 # plugins/`), minus a small safety margin -- not a stale number carried
 # over from either branch this suite was built from.
 
-# --- EVAL BUNDLE: behavioral cases in the official layout (prompt.md + graders/*.md) ---
+# --- EVAL BUNDLE: cases live with the plugin whose skill they exercise ---
+#
+# A case is run by `claude plugin eval <plugin>`, which loads only that plugin.
+# A prompt that says "you are running raftkit-pm:estimate" therefore has to sit
+# under raftkit-pm, or the skill under test is not loaded and the model
+# improvises. This check pins the count and that placement.
 
-EVALS=plugins/raftkit-core/evals/plain-language
-n=$(find "$EVALS" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-[[ "${n:-0}" -ge 6 ]] && ! find "$EVALS" -mindepth 1 -maxdepth 1 -type d \
-  '!' -exec test -f '{}/prompt.md' ';' -print | grep -q . \
-  && ! find "$EVALS" -mindepth 1 -maxdepth 1 -type d \
-  '!' -exec sh -c 'ls "$1"/graders/*.md >/dev/null 2>&1' _ '{}' ';' -print | grep -q .
-check "PL11 >=6 eval cases each with prompt.md + graders" ok $?
+total=0
+misplaced=""
+while IFS= read -r d; do
+  total=$((total + 1))
+  [[ -f "$d/prompt.md" ]] || misplaced="$misplaced $d(no-prompt)"
+  ls "$d"/graders/*.md >/dev/null 2>&1 || misplaced="$misplaced $d(no-grader)"
+  owner="$(sed -n 's/.*\(raftkit-[a-z]*\):[a-z-]*.*/\1/p' "$d/prompt.md" 2>/dev/null | head -1)"
+  plugin="$(printf '%s' "$d" | sed -E 's|plugins/([^/]+)/evals/.*|\1|')"
+  [[ -z "$owner" || "$owner" == "$plugin" ]] || misplaced="$misplaced $d(names-$owner)"
+done < <(find plugins -path '*/evals/plain-language/*' -mindepth 4 -maxdepth 4 -type d | sort)
+
+[[ "$total" -ge 6 ]]
+check "PL11 >=6 plain-language eval cases across the plugins" ok $?
+[[ -z "$misplaced" ]]
+check "PL12 every case has a prompt and grader and sits with the plugin it names" ok $?
+[[ -n "$misplaced" ]] && echo "  misplaced:$misplaced"
 
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures check(s) failed"
