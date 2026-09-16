@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CLAUDE_CLI_VERSION: 2.1.209
+  CLAUDE_CLI_VERSION: 2.1.273
 
 jobs:
   validate:
