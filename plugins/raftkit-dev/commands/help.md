@@ -11,23 +11,22 @@ The user ran `/raftkit-dev:help $ARGUMENTS`.
 
 ## The dev workflow
 
-`setup` once per repo, then per story: `implement` takes the story URL, plans in the open, builds test-first, runs one parallel review pass, and stops once with the PR and the Asana close-out drafted. `fix` does the same for a defect or a production trace. `scope-guard` and `docs` run inside that pass and stand alone on request. Merging stays human.
+`setup` once per repo. Then per story: `implement` takes the story URL, plans in the open, builds test-first, runs one parallel review pass, and stops once with the PR and the Asana close-out drafted. `fix` does the same for a defect or a production trace. `scope-guard`, `docs` and the simplify pass run inside that review pass and stand alone on request. Merging stays human, and no skill ticks `[AC]`, `Testing`, or closes a story.
 
 ## Skills
 
-| Skill | What it does | Say |
-| --- | --- | --- |
-| `docs` | Checks whether a change set leaves the documentation accurate and syncs what it touches | "do the docs still match the code?", "sync the docs for this story" |
-| `fix-bug` | Fixes a defect with a failing test first (being merged into `fix`) | "fix this bug <url>", "I found a bug" |
-| `fix-production-error` | Works a production trace with incident discipline (being merged into `fix`) | "fix this production error", "here is a Sentry trace" |
-| `hasura` | Scaffolds race-safe Hasura migrations, permissions and schema snapshots | "create a new migration", "add a hasura table" |
-| `implement` | Takes one story to a review-ready PR (being rewritten for one stop) | "implement this story", "run /implement <story-url>" |
-| `pr` | Raises the PR (being merged into `implement`) | "raise the PR" |
-| `recipes` | The baked-in feature recipes and web defaults (being merged into `ui`) | not user-invocable |
-| `scope-guard` | Audits a branch diff against its story into BEYOND and MISSING lists | "check my diff against the story", "audit scope before the PR" |
-| `setup` | Wires a repo in one transaction: working agreement, design standard, settings, hook, CI, review config | "set up this repo", "install the governance pack" |
-| `simplify` | The minimalism pass (being merged into `implement`) | "simplify this" |
-| `ui-creation` | Builds a story's UI from its designs and exact copy (being renamed `ui`) | "build the UI for this story" |
-| `ultrathink` | Proportionate planning (being merged into `implement`) | "ultrathink", "make a plan" |
+| Skill | What it does | Say | Not for |
+| --- | --- | --- | --- |
+| `docs` | Checks whether a change set leaves the documentation accurate, and syncs what it touches | "do the docs still match the code?", "sync the docs for this story" | designing docs from scratch (the opt-in `raftkit-docs` plugin) |
+| `fix` | Fixes a defect or a production incident: red repro test first, smallest fix to green, one review pass, one stop with the PR and the hand-back | "fix this bug <url>", "I found a bug", or a pasted Sentry trace | a feature or refactor wish (`implement`, through a story) |
+| `hasura` | Scaffolds race-safe migrations with permissions YAML, applies them through the project's own targets, and queries any stage | "create a new migration", "add a hasura table", "check migration status" | editing an applied migration, or migrating a non-local stage |
+| `implement` | Takes one story to a review-ready PR: plan in the open, test-first phases, one parallel review pass, one stop with the PR and the Asana close-out | "implement this story", "raise the PR", "check scope", "simplify this" | merging, ticking `[AC]` or `Testing`, or closing the story |
+| `scope-guard` | Audits a branch diff against its story into BEYOND and MISSING lists, fail-closed | "check my diff against the story", "audit scope before the PR" | judging code quality, or removing code |
+| `setup` | Wires a repo in one transaction: working agreement, design standard, settings, hook, CI guardrail, review config, optional PR auto-review | "set up this repo", "install the governance pack", "update the governance pack" | editing GitHub org settings, or clobbering an existing CLAUDE.md |
+| `ui` | Builds a story's screens from its own designs and exact copy, every state it defines, through frontend-design and the project's stack | "build the UI for this story", "create the screens" | inventing copy, designs or tokens; backend work |
 
-Skills marked "being merged" still work; they are consolidated in the next v2 step. Rules every skill inherits (one stop per run, live templates, the scope line): `/raftkit-core:help`. Designing project documentation from scratch is the opt-in `raftkit-docs` plugin.
+## Renamed in v2
+
+`init` + `setup-project` + `capability-preflight` + `pr-auto-review` → `setup` · `fix-bug` + `fix-production-error` → `fix` · `pr` + `simplify` + `ultrathink` → folded into `implement` · `ui-creation` + `recipes` → `ui` · the docs design product → the opt-in `raftkit-docs` plugin.
+
+Rules every skill inherits (one stop per run, live templates fetched once, the scope line): `/raftkit-core:help`.

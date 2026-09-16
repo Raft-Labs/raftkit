@@ -24,3 +24,5 @@ Machine output goes to stdout or an explicit `--out` path inside the repository 
 ## Persisting discovery
 
 If persisting the discovery result would help, propose a project-owned descriptor with its exact path and content at the stop. Existing conventions stay authoritative over any descriptor; a descriptor that contradicts discovery is reported, and the human decides which holds.
+
+The descriptor schema is minimal and closed: the only documented fields are `convention` and `note`, and any unknown field is rejected rather than ignored, so a descriptor asserts only what it names. It must resolve inside the repository root, symlinks followed, or it is bad input.

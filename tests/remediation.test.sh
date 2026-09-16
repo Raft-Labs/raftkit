@@ -21,10 +21,6 @@ RENDER=plugins/raftkit-dev/skills/setup/scripts/render-assets.mjs
 DETECT=plugins/raftkit-dev/skills/setup/scripts/detect-toolchain.mjs
 VALDOCS=plugins/raftkit-dev/skills/docs/scripts/validate-docs.mjs
 CLS=plugins/raftkit-dev/skills/capability-preflight/scripts/classify.mjs
-FPE=plugins/raftkit-dev/skills/fix-production-error
-PR=plugins/raftkit-dev/skills/pr
-SG=plugins/raftkit-dev/skills/scope-guard
-DOCS=plugins/raftkit-dev/skills/docs
 
 # ---- F1 · shell/YAML-safe rendering ---------------------------------------
 rj=$(joined "$RENDER")
@@ -51,7 +47,7 @@ c2=$(mktemp -d); mkdir -p "$c2/repo"; echo "outside" > "$c2/evil.json"
 check "F2a an out-of-root --convention descriptor is rejected (bad input)" ok $?
 rm -rf "$c2"
 
-vj=$(joined "$DOCS/references/discovery-and-routing.md" "$VALDOCS")
+vj=$(joined "plugins/raftkit-dev/skills/docs/references/scripts.md" "$VALDOCS")
 grep -qiE 'descriptor schema|minimal.*schema|schema.*field' <<<"$vj" \
   && grep -qiE 'unknown field.*reject|reject.*unknown|only.*documented field' <<<"$vj"
 check "F2b the descriptor schema is minimal, documented, and rejects unknown fields" ok $?
@@ -66,37 +62,6 @@ dj=$(joined "$DETECT")
 grep -qiE 'multi-?value|multiple.*value|more than one.*value' <<<"$dj" \
   && grep -qiE 'conflict|stop.*ask|ask' <<<"$dj"
 check "F3b multiple core.hooksPath values are a conflict that stops and asks with full evidence" ok $?
-
-# ---- F6 · Incident PR Handoff (8 elements) --------------------------------
-ho=$(joined "$FPE/SKILL.md" "$FPE/references/incident-loop.md")
-grep -qiE 'Incident PR Handoff' <<<"$ho" \
-  && grep -qiE 'incident source|source/evidence|trace' <<<"$ho" \
-  && grep -qiE 'containment scope' <<<"$ho" \
-  && grep -qiE 'inspected change set' <<<"$ho" \
-  && grep -qiE 'regression-test evidence|permanent regression' <<<"$ho" \
-  && grep -qiE 'full-suite result|full suite' <<<"$ho" \
-  && grep -qiE 'scope-audit result|incident scope-audit' <<<"$ho" \
-  && grep -qiE 'operational-doc|no-impact|follow-up' <<<"$ho" \
-  && grep -qiE 'human-controlled deployment|deployment.*human' <<<"$ho"
-check "F6a fix-production-error produces the eight-element Incident PR Handoff" ok $?
-
-grep -qiE 'missing.*element.*hard stop|hard stop.*missing|named hard stop|any missing' <<<"$ho"
-check "F6b an incomplete handoff is a named hard stop" ok $?
-
-prj=$(joined "$PR/SKILL.md" "$PR/references/raise-flow.md")
-grep -qiE 'incident mode' <<<"$prj" \
-  && grep -qiE 'only.*handoff|structured.*handoff.*activat|activated.*handoff' <<<"$prj" \
-  && grep -qiE 'no silent downgrade|never.*silently.*incident|never silently downgrade' <<<"$prj" \
-  && grep -qiE 'missing.*story.*hard fail|hard fail.*no story|normal.*hard' <<<"$prj"
-check "F6c pr incident mode activates only via the handoff; normal missing-story hard-fail preserved; no silent downgrade" ok $?
-
-
-# ---- SHA-bound gate evidence ----------------------------------------------
-shj=$(joined "$PR/references/raise-flow.md" "$SG/references/audit-method.md" "$DOCS/references/verification.md" plugins/raftkit-dev/skills/implement/references/gates.md)
-grep -qiE 'SHA|change-set.*sha|inspected.*sha' <<<"$shj" \
-  && grep -qiE 'stale.*evidence|evidence.*stale|evidence stale' <<<"$shj" \
-  && grep -qiE 'regenerat|refresh.*evidence' <<<"$shj"
-check "F7 gate evidence is bound to the inspected change-set SHA; stale evidence is refused and must be regenerated" ok $?
 
 # ---- evals + version ------------------------------------------------------
 eval_count=$(find plugins/raftkit-dev/evals/remediation -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')

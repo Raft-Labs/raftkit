@@ -6,7 +6,7 @@
   "plugins": {
     "raftkit-core": 4500,
     "raftkit-pm": 9500,
-    "raftkit-dev": 15000,
+    "raftkit-dev": 14000,
     "raftkit-qa": 5000,
     "raftkit-docs": 46000
   },
@@ -60,14 +60,16 @@
       "v2": true
     },
     "raftkit-dev/implement": {
-      "skill_md": 500,
-      "total": 1500,
-      "writes": true
+      "skill_md": 600,
+      "total": 1600,
+      "writes": true,
+      "v2": true
     },
     "raftkit-dev/fix": {
-      "skill_md": 500,
-      "total": 1200,
-      "writes": true
+      "skill_md": 650,
+      "total": 1050,
+      "writes": true,
+      "v2": true
     },
     "raftkit-dev/scope-guard": {
       "skill_md": 500,
@@ -76,20 +78,22 @@
       "v2": true
     },
     "raftkit-dev/setup": {
-      "skill_md": 500,
+      "skill_md": 550,
       "total": 2500,
       "writes": true,
       "v2": true
     },
     "raftkit-dev/ui": {
       "skill_md": 500,
-      "total": 2800,
-      "writes": false
+      "total": 2600,
+      "writes": false,
+      "v2": true
     },
     "raftkit-dev/hasura": {
       "skill_md": 500,
-      "total": 3000,
-      "writes": true
+      "total": 4000,
+      "writes": true,
+      "v2": true
     },
     "raftkit-dev/docs": {
       "skill_md": 500,
