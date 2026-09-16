@@ -55,7 +55,7 @@ check "D1 fixture set matches the approved neutral names" ok $?
 # D2 · project-independence (generic invariants, no name denylist):
 #      no absolute user paths, no file:// links, fixture secrets are FAKE-only,
 #      and every relative reference in the skill resolves inside the plugin.
-! grep -rEl '/Users/|/home/[a-z]|file://' "$SKILL" "$FIX" plugins/raftkit-dev/evals/docs 2>/dev/null | grep -q .
+! grep -rEl '/Users/|/home/[a-z]|file://' "$SKILL" "$FIX" plugins/raftkit-docs/evals/docs 2>/dev/null | grep -q .
 check "D2a no absolute user paths or file:// links" ok $?
 ! grep -rL 'FAKE' "$FIX/excluded-secret-paths/.env" "$FIX/excluded-secret-paths/keys/service.key" 2>/dev/null | grep -q .
 check "D2b fixture secret files carry only FAKE sentinel values" ok $?
@@ -224,12 +224,12 @@ grep -qi 'discovered mapping' "$S" 2>/dev/null;                                 
 grep -qi 'raftkit-docs' "$S" 2>/dev/null;                                        check "D19g the design product is named as the other plugin" ok $?
 
 # D20 · eval bundle: authored, structurally valid, no answer leakage
-n=$(find plugins/raftkit-dev/evals/docs -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+n=$(find plugins/raftkit-docs/evals/docs -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
 [[ "${n:-0}" -ge 10 ]] \
-  && ! find plugins/raftkit-dev/evals/docs -mindepth 1 -maxdepth 1 -type d '!' -exec test -f '{}/prompt.md' ';' -print | grep -q . \
-  && ! find plugins/raftkit-dev/evals/docs -mindepth 1 -maxdepth 1 -type d '!' -exec sh -c 'ls "$1"/graders/*.md >/dev/null 2>&1' _ '{}' ';' -print | grep -q .
+  && ! find plugins/raftkit-docs/evals/docs -mindepth 1 -maxdepth 1 -type d '!' -exec test -f '{}/prompt.md' ';' -print | grep -q . \
+  && ! find plugins/raftkit-docs/evals/docs -mindepth 1 -maxdepth 1 -type d '!' -exec sh -c 'ls "$1"/graders/*.md >/dev/null 2>&1' _ '{}' ';' -print | grep -q .
 check "D20a >=10 eval cases each with prompt.md + graders" ok $?
-! grep -l 'Docs: not impacted —' plugins/raftkit-dev/evals/docs/*/prompt.md 2>/dev/null | grep -q .
+! grep -l 'Docs: not impacted —' plugins/raftkit-docs/evals/docs/*/prompt.md 2>/dev/null | grep -q .
 check "D20b prompts do not leak the expected no-impact copy" ok $?
 
 # D21 · scripts leave no temporary files behind

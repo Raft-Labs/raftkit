@@ -19,12 +19,6 @@ raftkit-core is the rulebook the role plugins inherit. It installs automatically
 | --- | --- | --- |
 | `rules` | Asana GIDs and the Project Profile convention, the one human stop per run, fetch-once for live reads, the Asana HTML floor, free-tier limits, the scope line, founder escalation and the estimation watermark, story readiness, plain output | "What's the template GID?" / "Can I use Asana dependencies?" / "What's the rule on estimates?" |
 | `working-agreement` | The ten-rule RaftLabs working agreement and the Module Design Standard (MDS-1…10), the text `raftkit-dev:setup` installs into a client `CLAUDE.md` | "What's rule 2?" / "What's MDS-7?" |
-| `house-rules` | Pointer to `rules` while the role plugins migrate to v2; deleted at release | Never — read `rules` |
-| `write-protocol` | Pointer to `rules` while the role plugins migrate to v2; deleted at release | Never — read `rules` |
-| `asana-formatting` | Pointer to `rules` while the role plugins migrate to v2; deleted at release | Never — read `rules` |
-| `workflow-constants` | Pointer to `rules` while the role plugins migrate to v2; deleted at release | Never — read `rules` |
-| `governance-protocols` | Pointer to `working-agreement` while the role plugins migrate to v2; deleted at release | Never — read `working-agreement` |
-| `design-standard` | Pointer to `working-agreement` while the role plugins migrate to v2; deleted at release | Never — read `working-agreement` |
 
 ## Three rules everyone hits
 
