@@ -10,23 +10,100 @@
     "raftkit-qa": 5000
   },
   "skills": {
-    "raftkit-core/rules": { "skill_md": 620, "total": 2000, "writes": false, "v2": true },
-    "raftkit-core/working-agreement": { "skill_md": 250, "total": 1900, "writes": false, "v2": true },
-    "raftkit-pm/profile": { "skill_md": 500, "total": 900, "writes": true },
-    "raftkit-pm/story": { "skill_md": 500, "total": 1400, "writes": true },
-    "raftkit-pm/estimate": { "skill_md": 500, "total": 1200, "writes": true },
-    "raftkit-pm/status": { "skill_md": 500, "total": 600, "writes": false },
-    "raftkit-pm/meeting": { "skill_md": 500, "total": 900, "writes": true },
-    "raftkit-pm/routine": { "skill_md": 500, "total": 1400, "writes": false },
-    "raftkit-dev/implement": { "skill_md": 500, "total": 1500, "writes": true },
-    "raftkit-dev/fix": { "skill_md": 500, "total": 1200, "writes": true },
-    "raftkit-dev/scope-guard": { "skill_md": 500, "total": 500, "writes": false },
-    "raftkit-dev/setup": { "skill_md": 500, "total": 2500, "writes": true },
-    "raftkit-dev/ui": { "skill_md": 500, "total": 2800, "writes": false },
-    "raftkit-dev/hasura": { "skill_md": 500, "total": 3000, "writes": true },
-    "raftkit-dev/docs": { "skill_md": 500, "total": 800, "writes": false },
-    "raftkit-qa/suite": { "skill_md": 500, "total": 1200, "writes": true },
-    "raftkit-qa/run-sheet": { "skill_md": 500, "total": 900, "writes": false },
-    "raftkit-qa/bug": { "skill_md": 500, "total": 1300, "writes": true }
+    "raftkit-core/rules": {
+      "skill_md": 620,
+      "total": 2000,
+      "writes": false,
+      "v2": true
+    },
+    "raftkit-core/working-agreement": {
+      "skill_md": 250,
+      "total": 1900,
+      "writes": false,
+      "v2": true
+    },
+    "raftkit-pm/profile": {
+      "skill_md": 500,
+      "total": 900,
+      "writes": true
+    },
+    "raftkit-pm/story": {
+      "skill_md": 500,
+      "total": 1400,
+      "writes": true
+    },
+    "raftkit-pm/estimate": {
+      "skill_md": 500,
+      "total": 1200,
+      "writes": true
+    },
+    "raftkit-pm/status": {
+      "skill_md": 500,
+      "total": 600,
+      "writes": false
+    },
+    "raftkit-pm/meeting": {
+      "skill_md": 500,
+      "total": 900,
+      "writes": true
+    },
+    "raftkit-pm/routine": {
+      "skill_md": 500,
+      "total": 1400,
+      "writes": false
+    },
+    "raftkit-dev/implement": {
+      "skill_md": 500,
+      "total": 1500,
+      "writes": true
+    },
+    "raftkit-dev/fix": {
+      "skill_md": 500,
+      "total": 1200,
+      "writes": true
+    },
+    "raftkit-dev/scope-guard": {
+      "skill_md": 500,
+      "total": 500,
+      "writes": false
+    },
+    "raftkit-dev/setup": {
+      "skill_md": 500,
+      "total": 2500,
+      "writes": true
+    },
+    "raftkit-dev/ui": {
+      "skill_md": 500,
+      "total": 2800,
+      "writes": false
+    },
+    "raftkit-dev/hasura": {
+      "skill_md": 500,
+      "total": 3000,
+      "writes": true
+    },
+    "raftkit-dev/docs": {
+      "skill_md": 500,
+      "total": 800,
+      "writes": false
+    },
+    "raftkit-qa/suite": {
+      "skill_md": 500,
+      "total": 1200,
+      "writes": true,
+      "v2": true
+    },
+    "raftkit-qa/run-sheet": {
+      "skill_md": 500,
+      "total": 900,
+      "writes": false,
+      "v2": true
+    },
+    "raftkit-qa/bug": {
+      "skill_md": 500,
+      "total": 1300,
+      "writes": true,
+      "v2": true
+    }
   }
 }
