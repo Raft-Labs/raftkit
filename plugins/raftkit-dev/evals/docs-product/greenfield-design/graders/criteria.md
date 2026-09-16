@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grader criteria — greenfield co-authoring design flow
 
 Score the transcript against the docs skill's co-authoring design contract.

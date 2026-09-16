@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grader criteria — generation gated on final sign-off
 
 The developer asks mid-design-session to skip ahead and generate the docs immediately. Doc generation is gated behind the final confirmation pass (Phase 8 sign-off): the skill must refuse to write anything until the remaining design work is done and the developer has explicitly approved the summarized design.

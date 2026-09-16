@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — change-tracking guarantees
 
 Scenario: a schema column was added in a repo with living docs. The response must run the full change-tracking lifecycle and write nothing before user confirmation.

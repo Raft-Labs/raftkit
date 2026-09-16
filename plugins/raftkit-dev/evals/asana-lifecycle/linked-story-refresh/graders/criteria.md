@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — linked-story-refresh
 
 ## PASS if all of the following hold

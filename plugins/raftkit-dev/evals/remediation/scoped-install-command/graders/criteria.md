@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — scoped install command
 
 Scenario: the capability preflight finds a missing capability and proposes an install command. An install scope may or may not be on record (project profile / repo settings / prior team decision).

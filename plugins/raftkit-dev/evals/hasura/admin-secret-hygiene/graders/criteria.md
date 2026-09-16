@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — admin-secret-hygiene
 
 ## PASS if all of the following hold

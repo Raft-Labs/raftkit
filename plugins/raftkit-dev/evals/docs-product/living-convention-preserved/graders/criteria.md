@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grader criteria — living convention preserved
 
 The repo has an established documentation system: flat `docs/` folder, `docs/INDEX.md` ownership index (code area → doc → owner), and per-doc footers anchored to a git SHA + verification date. Score whether the skill treats that system as the authority instead of imposing its own.

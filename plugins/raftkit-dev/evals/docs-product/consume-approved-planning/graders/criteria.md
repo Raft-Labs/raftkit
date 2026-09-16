@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grader criteria — consume approved planning inputs
 
 Score the transcript on whether the docs skill treats the approved story, Project Profile, and spec as pre-answered inputs and interviews only on genuine gaps.

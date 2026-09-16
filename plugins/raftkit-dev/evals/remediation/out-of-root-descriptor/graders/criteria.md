@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — out-of-root-descriptor
 
 ## PASS if all of:

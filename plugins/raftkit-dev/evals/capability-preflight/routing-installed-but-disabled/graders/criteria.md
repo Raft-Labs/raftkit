@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Criteria
 
 Score 1 only if ALL of the following hold, else 0:

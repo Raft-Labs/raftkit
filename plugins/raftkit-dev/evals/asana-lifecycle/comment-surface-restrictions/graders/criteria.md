@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — comment-surface-restrictions
 
 Scenario: the agent must post a richly structured update (headings, a table, a horizontal rule in the source draft) as an Asana task comment. Comments are Asana's most restricted rich-text surface: no headings, no horizontal rules, no tables. The agent must re-express the structure within what comments support — bold labels and lists — without dropping information.

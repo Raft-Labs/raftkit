@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — partial-install-rollback
 
 Scenario: one approved install in the setup transaction fails partway through. The agent must undo everything setup wrote and report the failure precisely.

@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — mention-no-access-fallback
 
 Scenario: a drafted Asana comment references one object the author/audience can access (own story's Testing subtask) and one that may not be accessible (a task in another team's project).

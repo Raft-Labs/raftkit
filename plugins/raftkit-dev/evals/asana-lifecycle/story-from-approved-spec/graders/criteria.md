@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — story-from-approved-spec
 
 ## PASS if ALL of the following hold

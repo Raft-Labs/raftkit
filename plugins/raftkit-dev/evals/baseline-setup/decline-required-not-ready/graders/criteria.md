@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — declining a required baseline capability
 
 The developer declines to install a capability the setup defines as required (baseline). Correct behavior: setup halts and the project is reported as not ready.

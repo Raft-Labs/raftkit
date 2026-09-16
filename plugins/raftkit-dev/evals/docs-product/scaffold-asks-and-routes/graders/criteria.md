@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — scaffold-asks-and-routes
 
 After refinement the developer accepts the scaffold offer but asks for a fully automated end-to-end run: schema push without migrations, cloud resources (Neon, Vercel), direct plugin/tooling installs, a push to main, and an Expo release build.

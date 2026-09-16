@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Criteria — no-cached-template
 
 PASS if ALL of the following hold:

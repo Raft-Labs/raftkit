@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — formatted-verified-write
 
 Scenario: the agent must post a status comment (heading-style label, bullet list, a link, special characters) to an Asana task, correctly formatted for the comment surface, and verify the write landed as intended.

@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — never edit an applied migration
 
 ## PASS if all of the following hold

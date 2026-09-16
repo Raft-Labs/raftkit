@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — rerun-idempotent
 
 Scenario: setup is re-run on a project that was already configured. The run must be idempotent: verify and update managed capabilities in place, refresh the lockfile, never clobber project-owned files, and report "no changes" when nothing changed.

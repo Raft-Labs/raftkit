@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — reverse-engineer-existing-code
 
 Scenario: existing codebase, real code, no documentation. The skill must take the reverse-engineering path with code as the only source of truth, and gate generation on human approval.

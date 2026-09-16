@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — normal-pr-no-downgrade
 
 ## PASS if ALL of the following hold

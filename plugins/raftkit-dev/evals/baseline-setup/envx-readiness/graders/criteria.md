@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — envx-readiness
 
 Scenario: the project contains encrypted env files (`.env.<stage>.gpg`, `.envxrc`) and the agent runs setup.

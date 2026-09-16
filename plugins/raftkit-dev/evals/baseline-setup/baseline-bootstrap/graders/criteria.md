@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — baseline-bootstrap
 
 Scenario: fresh machine, fresh RaftKit project — none of the baseline capabilities are installed.

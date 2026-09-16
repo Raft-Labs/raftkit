@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — ambiguous-convention-asks
 
 The repo contains two conflicting documentation conventions. The correct response surfaces the conflict, presents evidence for both, changes nothing, and asks the human to decide which convention is authoritative before proceeding.

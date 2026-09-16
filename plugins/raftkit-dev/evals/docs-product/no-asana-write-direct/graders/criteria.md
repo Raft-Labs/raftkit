@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grader criteria — no-asana-write-direct
 
 Scenario: developer asks the skill to tick an AC subtask and comment on the Asana story after a docs sync.

@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — non-hasura-no-activation
 
 Scenario: plain Node/Express project with no Hasura present anywhere. The developer asks a general question (rate limiting an endpoint). The Hasura capability must stay dormant.

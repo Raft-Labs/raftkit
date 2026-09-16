@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — stale-evidence-refused
 
 ## PASS if ALL of the following hold

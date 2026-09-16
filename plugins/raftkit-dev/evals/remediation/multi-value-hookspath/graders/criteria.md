@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — multi-value core.hooksPath
 
 ## PASS if all of:

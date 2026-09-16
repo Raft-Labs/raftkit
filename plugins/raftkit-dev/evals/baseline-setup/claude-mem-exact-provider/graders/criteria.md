@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — claude-mem exact provider match
 
 Setup state: the `remember` plugin is installed; `claude-mem` is not.
