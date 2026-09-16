@@ -1,7 +1,7 @@
 {
   "name": "raftkit-pm",
-  "version": "0.26.0",
-  "description": "PM skills: onboarding, brainstorming an idea into a spec doc, user stories, story skill generator, story readiness, status updates, meeting decisions, estimation, deprecation sweep.",
+  "version": "1.0.0",
+  "description": "PM skills: the Project Profile, one story skill (author, amend, check, size), feature-list estimation, the weekly client update, meeting decisions, and routine handover — each with one stop before any write.",
   "author": {
     "name": "RaftLabs"
   },

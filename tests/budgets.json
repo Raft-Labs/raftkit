@@ -25,32 +25,38 @@
     "raftkit-pm/profile": {
       "skill_md": 500,
       "total": 900,
-      "writes": true
+      "writes": true,
+      "v2": true
     },
     "raftkit-pm/story": {
       "skill_md": 500,
       "total": 1400,
-      "writes": true
+      "writes": true,
+      "v2": true
     },
     "raftkit-pm/estimate": {
       "skill_md": 500,
       "total": 1200,
-      "writes": true
+      "writes": true,
+      "v2": true
     },
     "raftkit-pm/status": {
       "skill_md": 500,
       "total": 600,
-      "writes": false
+      "writes": false,
+      "v2": true
     },
     "raftkit-pm/meeting": {
       "skill_md": 500,
       "total": 900,
-      "writes": true
+      "writes": true,
+      "v2": true
     },
     "raftkit-pm/routine": {
       "skill_md": 500,
-      "total": 1400,
-      "writes": false
+      "total": 1700,
+      "writes": false,
+      "v2": true
     },
     "raftkit-dev/implement": {
       "skill_md": 500,
