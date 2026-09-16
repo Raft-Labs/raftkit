@@ -24,7 +24,7 @@
     {
       "name": "raftkit-dev",
       "source": "./plugins/raftkit-dev",
-      "description": "Developer skills: repo init, ultrathink planning, implementation, scope guard, simplification, PRs, bug and incident fixes, UI creation, project setup, recipes, capability preflight, the full docs product, generalized Hasura migrations, and an opt-in CI auto-fix workflow for Critical PR findings.",
+      "description": "Developer skills: repo setup, story implementation, bug and incident fixes, scope audit, UI, Hasura migrations, and docs parity — one stop per run.",
       "category": "role"
     },
     {
@@ -32,6 +32,12 @@
       "source": "./plugins/raftkit-qa",
       "category": "role",
       "description": "QA skills: the project test-case suite in a QA-owned Sheet, per-story run sheets, and one bug skill that files from Jam evidence and retests fixes — each with one stop before any write."
+    },
+    {
+      "name": "raftkit-docs",
+      "source": "./plugins/raftkit-docs",
+      "description": "Opt-in documentation product: the co-authoring design flow, 29 adaptable templates, diagrams, reverse-engineering, scaffolding, and the project-local docs companion. Parity checks on a story stay in raftkit-dev.",
+      "category": "role"
     }
   ]
 }

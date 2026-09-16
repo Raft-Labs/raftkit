@@ -7,6 +7,7 @@
 #   5. a help.md with a bare $CLAUDE_PLUGIN_ROOT fails
 #   6. a skill dir missing from its help.md table fails
 set -uo pipefail
+export NODE_DISABLE_COLORS=1 FORCE_COLOR=0 NO_COLOR=1
 cd "$(dirname "$0")/.."
 unset BASE_REF # checks 1-2 must not exercise the bump gate; later checks set it explicitly
 

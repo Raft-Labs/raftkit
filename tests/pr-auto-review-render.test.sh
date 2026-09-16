@@ -20,9 +20,9 @@ check() { # <name> <expected: ok|fail> <actual exit code>
   fi
 }
 
-SKILL=plugins/raftkit-dev/skills/pr-auto-review
+SKILL=plugins/raftkit-dev/skills/setup
 RENDER=$SKILL/scripts/render-pr-auto-review.mjs
-TEMPLATE_DIR=$SKILL/references/assets
+TEMPLATE_DIR=$SKILL/assets
 
 ok()   { echo "PASS: $1"; }
 bad()  { echo "FAIL: $1"; failures=$((failures + 1)); }
@@ -310,9 +310,8 @@ fi
 # limitation must be documented where an installer will meet it.
 if [[ -f "$YML" ]]; then
   if grep -qF 'pushes made with GITHUB_TOKEN' "$PROMPT_OUT" \
-     && grep -qF 'GITHUB_TOKEN' "$SKILL/SKILL.md" \
-     && grep -qF 'GITHUB_TOKEN' "$SKILL/references/workflow-mechanics.md" \
-     && grep -qF 'GitHub App' "$SKILL/references/install.md"; then
+     && grep -qF 'GITHUB_TOKEN' "$SKILL/references/pr-auto-review.md" \
+     && grep -qF 'GitHub App' "$SKILL/references/pr-auto-review.md"; then
     ok "S17 (H1) the not-exercised-by-CI limitation is disclosed in the comment and documented"
   else
     bad "S17 (H1) the GITHUB_TOKEN push limitation is undisclosed or undocumented"
@@ -394,7 +393,7 @@ node "$RENDER" \
 if [[ -f "$tmp22/pr-auto-review.yml" ]] \
    && diff -q "$tmp22/pr-auto-review.yml" "$tmp22b/pr-auto-review.yml" >/dev/null 2>&1 \
    && grep -qF 'pr-auto-review@raftlabs.com' "$tmp22/pr-auto-review.yml" \
-   && grep -qF 'pr-auto-review@raftlabs.com' "$SKILL/references/install.md"; then
+   && grep -qF 'pr-auto-review@raftlabs.com' "$SKILL/references/pr-auto-review.md"; then
   ok "S22 (H6) all renderer args default to the canonical, documented values"
 else
   bad "S22 (H6) renderer still demands an invented bot identity, or defaults are not canonical"

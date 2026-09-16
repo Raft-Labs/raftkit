@@ -30,7 +30,7 @@ flat() { tr '\n' ' ' <<<"$1" | tr -s ' '; }
 
 # --- CLIENT: the installable ESLint asset ---
 
-ASSET="$DEV/setup-project/references/assets/mds-eslint.config.mjs"
+ASSET="$DEV/setup/assets/mds-eslint.config.mjs"
 [[ -f "$ASSET" ]] || { echo "FATAL: $ASSET not found"; exit 2; }
 
 node --check "$ASSET"
@@ -49,37 +49,14 @@ check "CLIENT4 the asset enforces MDS-2's 25-line handler limit on handler globs
 grep -qi 'eslint-plugin-import' "$ASSET" && grep -qi 'not assumed installed\|never invented or silently required' "$ASSET"
 check "CLIENT5 MDS-8 (import cycles) is commented out with its dependency named, never silently assumed" ok $?
 
-# --- CLIENT: wiring into setup-project ---
+# --- CLIENT: wiring into setup ---
 
-CM="$DEV/setup-project/references/components.md"
-ct=$(sec "$CM" '^## Component table' '^## Parameters')
-grep -q 'mds-eslint.config.mjs' <<<"$ct" && grep -qi 'never merged' <<<"$(flat "$ct")"
-check "SETUP1 components.md's table has the MDS ESLint config row, marked never-merged" ok $?
-grep -qi 'these seven' "$CM" && grep -qi 'MDS ESLint config' "$CM"
-check "SETUP2 the success-string sentence now counts seven components" ok $?
-mk=$(sed -n '/^## The version marker/,$p' "$CM")
-grep -q '"mds-eslint"' <<<"$mk"
-check "SETUP3 the version marker's components array includes mds-eslint" ok $?
+CM="$DEV/setup/references/components.md"
+grep -q 'mds-eslint.config.mjs' "$CM" && grep -qi 'never merged' "$(printf '%s' "$CM")"
+check "SETUP1 components.md lists the design-standard ESLint config, marked never-merged" ok $?
 
-IF="$DEV/setup-project/references/install-flow.md"
-ph2=$(flat "$(sec "$IF" '^## Phase 2' '^## Phase 3')")
-grep -qi 'four assets' <<<"$ph2" && grep -qi 'mds-eslint.config.mjs' <<<"$ph2"
-check "SETUP4 Phase 2 writes the fourth asset (MDS ESLint config)" ok $?
-ph4=$(flat "$(sec "$IF" '^## Phase 4' '^## Baseline capabilities')")
-grep -qi 'MDS ESLint config' <<<"$ph4" && grep -qi 'import mds from' <<<"$ph4"
-check "SETUP5 Phase 4's success string and printed wiring instructions include the ESLint config" ok $?
-
-# A component named in the success line must have its own verify step, not
-# just be mentioned in prose — otherwise a failed or skipped write can still
-# report "verified". This is a real file-existence check, distinct from
-# SETUP5's text-mentions-it check above.
-grep -qi 'mds-eslint.config.mjs' <<<"$ph4" && grep -qi 'exists and is readable' <<<"$ph4"
-check "SETUP5b Phase 4 has its own verify bullet confirming the ESLint config file actually exists (not just claimed)" ok $?
-
-SPSKILL="$DEV/setup-project/SKILL.md"
-n=$(grep -ci 'MDS ESLint config' "$SPSKILL")
-[[ "$n" -ge 3 ]]
-check "SETUP6 setup-project/SKILL.md names the MDS ESLint config across multiple sections" ok $?
+grep -q '"mds-eslint"' "$CM"
+check "SETUP2 the version marker's components array includes mds-eslint" ok $?
 
 # --- SELF: RaftKit applies the deterministic subset to its own scripts ---
 

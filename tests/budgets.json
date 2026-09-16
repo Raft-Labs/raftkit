@@ -1,5 +1,5 @@
 {
-  "//": "Word budgets for RaftKit v2 skills, enforced by tests/structure.test.sh with `headroom` (1.1 = 10%). `skill_md` is SKILL.md alone; `total` is every .md in the skill directory (scripts and templates excluded). `writes: false` means the skill never writes outward and must show no STOP line. `v2: true` marks a skill as rewritten; while `strict` is false only those are checked. Step 6 flips `strict` to true, after which every listed skill is checked and every skill directory on disk must be listed here.",
+  "//": "Word budgets for RaftKit v2 skills, enforced by tests/structure.test.sh with `headroom` (1.1 = 10%). `skill_md` is SKILL.md alone; `total` is every .md in the skill directory (scripts and templates excluded). `writes: false` means the skill never writes outward and must show no STOP line. `v2: true` marks a skill as rewritten; `as_is: true` marks one moved verbatim from v1 (shape and boilerplate checks do not apply, budgets still do); while `strict` is false only those are checked. Step 6 flips `strict` to true, after which every listed skill is checked and every skill directory on disk must be listed here.",
   "strict": false,
   "headroom": 1.1,
   "working_agreement_sha256": "d82c802056f76aff686f545ea07018e60f0e5007e8d1b57f26f277681874fbe6",
@@ -7,7 +7,8 @@
     "raftkit-core": 4500,
     "raftkit-pm": 9500,
     "raftkit-dev": 15000,
-    "raftkit-qa": 5000
+    "raftkit-qa": 5000,
+    "raftkit-docs": 46000
   },
   "skills": {
     "raftkit-core/rules": {
@@ -71,12 +72,14 @@
     "raftkit-dev/scope-guard": {
       "skill_md": 500,
       "total": 500,
-      "writes": false
+      "writes": false,
+      "v2": true
     },
     "raftkit-dev/setup": {
       "skill_md": 500,
       "total": 2500,
-      "writes": true
+      "writes": true,
+      "v2": true
     },
     "raftkit-dev/ui": {
       "skill_md": 500,
@@ -91,7 +94,8 @@
     "raftkit-dev/docs": {
       "skill_md": 500,
       "total": 800,
-      "writes": false
+      "writes": false,
+      "v2": true
     },
     "raftkit-qa/suite": {
       "skill_md": 500,
@@ -110,6 +114,20 @@
       "total": 1300,
       "writes": true,
       "v2": true
+    },
+    "raftkit-docs/docs-product": {
+      "skill_md": 1500,
+      "total": 40000,
+      "writes": true,
+      "v2": true,
+      "as_is": true
+    },
+    "raftkit-docs/discovery-interview": {
+      "skill_md": 900,
+      "total": 6000,
+      "writes": false,
+      "v2": true,
+      "as_is": true
     }
   }
 }

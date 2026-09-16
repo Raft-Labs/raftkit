@@ -13,6 +13,7 @@
 #   9. the governance docs match the shipped behaviour, the one-time disclosure
 #      actually renders, and the manifests stay in version/description lockstep
 set -uo pipefail
+export NODE_DISABLE_COLORS=1 FORCE_COLOR=0 NO_COLOR=1
 cd "$(dirname "$0")/.."
 
 HOOKS="plugins/raftkit-core/hooks"

@@ -19,7 +19,6 @@ raftkit-core is the rulebook the role plugins inherit. It installs automatically
 | --- | --- | --- |
 | `rules` | Asana GIDs and the Project Profile convention, the one human stop per run, fetch-once for live reads, the Asana HTML floor, free-tier limits, the scope line, founder escalation and the estimation watermark, story readiness, plain output | "What's the template GID?" / "Can I use Asana dependencies?" / "What's the rule on estimates?" |
 | `working-agreement` | The ten-rule RaftLabs working agreement and the Module Design Standard (MDS-1…10), the text `raftkit-dev:setup` installs into a client `CLAUDE.md` | "What's rule 2?" / "What's MDS-7?" |
-| `discovery-interview` | The interview contract used by the documentation design product (moving to `raftkit-docs`) | Not user-invocable |
 | `house-rules` | Pointer to `rules` while the role plugins migrate to v2; deleted at release | Never — read `rules` |
 | `write-protocol` | Pointer to `rules` while the role plugins migrate to v2; deleted at release | Never — read `rules` |
 | `asana-formatting` | Pointer to `rules` while the role plugins migrate to v2; deleted at release | Never — read `rules` |
@@ -35,4 +34,4 @@ raftkit-core is the rulebook the role plugins inherit. It installs automatically
 
 ## Your role plugin
 
-`/raftkit-pm:help` (profiles, stories, estimates, updates) · `/raftkit-dev:help` (implement → PR, fixes, setup) · `/raftkit-qa:help` (suites, run sheets, bugs).
+`/raftkit-pm:help` (profiles, stories, estimates, updates) · `/raftkit-dev:help` (implement, fixes, setup) · `/raftkit-qa:help` (suites, run sheets, bugs) · `/raftkit-docs:help` (the opt-in documentation product).

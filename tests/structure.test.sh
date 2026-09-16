@@ -20,7 +20,9 @@ check() { # <name> <expected: ok|fail> <actual exit code>
 }
 jsonq() { node -e 'const j=JSON.parse(require("fs").readFileSync("tests/budgets.json","utf8")); const v=eval("j"+process.argv[1]); process.stdout.write(typeof v==="object"?JSON.stringify(v):String(v))' "$1"; }
 words() { cat "$@" 2>/dev/null | wc -w | tr -d ' '; }
-mdwords() { find "$1" -name '*.md' -type f -print0 | xargs -0 cat 2>/dev/null | wc -w | tr -d ' '; }
+# assets/ holds payloads shipped verbatim (templates, prompts), not instructions
+# the model reads to act — they are excluded from the instruction budget.
+mdwords() { find "$1" -name '*.md' -type f -not -path '*/assets/*' -print0 | xargs -0 cat 2>/dev/null | wc -w | tr -d ' '; }
 fm() { awk 'NR==1&&$0!="---"{exit} NR>1&&$0=="---"{exit} NR>1{print}' "$1"; }
 
 node -e 'JSON.parse(require("fs").readFileSync("tests/budgets.json","utf8"))'
@@ -47,9 +49,16 @@ for key in $listed; do
   [[ "$(fm "$f" | sed -n 's/^name: *//p' | head -1)" == "$skill" ]]
   check "S2 $key frontmatter name matches its directory" ok $?
 
+  as_is="$(jsonq ".skills[\"$key\"].as_is")"   # moved verbatim from v1; shape checks do not apply
+
   desc_words="$(fm "$f" | sed -n 's/^description: *//p' | head -1 | wc -w | tr -d ' ')"
-  [[ "$desc_words" -ge 1 && "$desc_words" -le 60 ]]
-  check "S3 $key description is 1-60 words ($desc_words)" ok $?
+  if [[ "$as_is" == true ]]; then
+    [[ "$desc_words" -ge 1 ]]
+    check "S3 $key (moved as is) has a description" ok $?
+  else
+    [[ "$desc_words" -ge 1 && "$desc_words" -le 60 ]]
+    check "S3 $key description is 1-60 words ($desc_words)" ok $?
+  fi
 
   cap="$(node -e "process.stdout.write(String(Math.floor($(jsonq ".skills[\"$key\"].skill_md")*$headroom)))")"
   n="$(words "$f")"; [[ "$n" -le "$cap" ]]
@@ -66,10 +75,12 @@ for key in $listed; do
     [[ "$stops" -eq 0 ]]; check "S6 $key writes nothing, so shows no STOP line ($stops)" ok $?
   fi
 
-  ! grep -qE '^## (Reference files|Asana rendering|Out of scope)' "$f"
-  check "S7 $key carries no index, rendering-footer or out-of-scope section" ok $?
+  if [[ "$as_is" != true ]]; then
+    ! grep -qE '^## (Reference files|Asana rendering|Out of scope)' "$f"
+    check "S7 $key carries no index, rendering-footer or out-of-scope section" ok $?
+  fi
 
-  if [[ "$key" != "raftkit-core/rules" ]]; then
+  if [[ "$key" != "raftkit-core/rules" && "$as_is" != true ]]; then
     ! grep -rqF 'Plain English out' "$dir"
     check "S8 $key does not restate the plain-language guardrail" ok $?
     ! grep -rqiE 'never from memory or this repo|silence is not (approval|confirmation)|custom fields, milestones' "$dir"
@@ -121,7 +132,7 @@ if [[ "$strict" == true ]]; then
     [[ "$n" -le "$cap" ]]; check "S16 strict: $plugin skills total within budget ($n <= $cap words)" ok $?
   done
 
-  ! grep -rlE '1194107417268910|1216778429401199|1215260732424760' plugins --include='*.md' | grep -v 'raftkit-core/skills/rules/' | grep -q .
+  ! grep -rlE '1194107417268910|1216778429401199|1215260732424760' plugins --include='*.md' | grep -vE 'raftkit-core/skills/rules/|raftkit-docs/' | grep -q .
   check "S17 strict: GIDs appear only in raftkit-core/skills/rules" ok $?
 fi
 

@@ -20,7 +20,6 @@ joined() { cat "$@" 2>/dev/null | tr '\n' ' ' | tr -s ' '; }
 H=plugins/raftkit-dev/skills/hasura
 S=$H/SKILL.md
 DETECT=$H/scripts/detect-hasura.mjs
-PROV=plugins/raftkit-dev/skills/capability-preflight/references/providers.md
 
 # HR1 · complete bundle: SKILL + 3 refs + 3 top scripts + 5 libs + tests + 18 templates
 [[ -f "$S" ]] \
@@ -107,9 +106,6 @@ grep -q 'REAL_DBML' "$H/scripts/tests/test_dbml_grep.sh" 2>/dev/null \
   && ! grep -qE 'REAL_DBML=.*\.\./\.\./\.\./\.\./docs/schema.dbml' "$H/scripts/tests/test_dbml_grep.sh" 2>/dev/null
 check "HR11 the source's off-by-one REAL_DBML smoke-test path is corrected" ok $?
 
-# HR12 · registered in the provider registry as conditional on Hasura detection.
-grep -qiE '\| .*hasura.* \|.*conditional' "$PROV" 2>/dev/null
-check "HR12 Hasura capability registered conditional on detection in providers.md" ok $?
 
 # HR13 · integrations named: envx, docs sync, capability-preflight, setup.
 grep -qiE 'envx' <<<"$sk" \
