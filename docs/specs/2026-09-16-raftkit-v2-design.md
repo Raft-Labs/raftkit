@@ -230,6 +230,8 @@ Two things behave differently from the plan as written, both deliberate:
 - **The pre-push hook lost its spec gate** along with the spec-file gate, so `render-assets.mjs` dropped its two spec tokens. The hook still runs the repo's own quality scripts.
 - **`raftkit-docs` depends on `raftkit-dev`** rather than duplicating the two docs scripts, which stay in `raftkit-dev:docs` where the parity check needs them.
 
+**Known limitation: the eval harness does not yet load the skill under test.** All 83 prompts lacked frontmatter, so the runner granted zero tools and removed the Skill tool; every case scored zero no matter how good the skill was. Prompts now declare `allowed_tools`, each case sits with the plugin that owns its skill (enforced by PL12), and a `tool_used` grader asserts the skill fired. That grader passes for the estimate case, so the mechanism works — but a path target still does not resolve the skill for every case, and the documented `plugins:` hint changed nothing when tested. The 69 graders also still describe v1 wording. Until both are settled, an eval score is not a quality signal.
+
 Still to do, and they are yours: push the branch, open the PR, get Ashit's sign-off on the working agreement before the release to `main`, and decide whether the eval runs move into CI.
 
 ## Decisions taken (16 Sep 2026)
