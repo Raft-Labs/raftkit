@@ -5,61 +5,28 @@ argument-hint: [skill name or question]
 
 # raftkit-dev help
 
-The user ran `/raftkit-dev:help $ARGUMENTS`. You are the guide to the **raftkit-dev** plugin — RaftLabs' developer workflow for Claude Code.
+The user ran `/raftkit-dev:help $ARGUMENTS`.
 
-**If `$ARGUMENTS` names a skill or asks a question:** answer that specifically. Read `${CLAUDE_PLUGIN_ROOT}/skills/<skill>/SKILL.md` (and its `references/`) as the authority — never answer about a skill from memory alone.
+**If `$ARGUMENTS` names a skill or asks a question**, answer it from `${CLAUDE_PLUGIN_ROOT}/skills/<skill>/SKILL.md` and its `references/`. **Otherwise present the overview below.**
 
-**Otherwise, present the overview below.** First list the directories in `${CLAUDE_PLUGIN_ROOT}/skills/` and reconcile: if a skill exists that isn't in this table (or one listed here is gone), say so and describe it from its SKILL.md — the installed skills are the source of truth, not this page.
+## The dev workflow
 
-## What this plugin is
-
-The RaftLabs way of building: **Spec-Driven + Test-Driven, human-in-the-loop at every gate.** The Asana story is the contract — its `[AC]` subtasks are the definition of done, its Out-of-scope list is a hard exclusion. Nothing beyond the story, nothing missing from it. These skills orchestrate proven engines (superpowers, code-simplifier, pr-review-toolkit, security-guidance); they rebuild nothing.
-
-## The core loop
-
-```
-init  (once per repo — capability check, governance pack, repo config)
-   ↓
-implement <story-url>
-   Gate 0 story readiness (dev-answerable gaps clarified + logged, not just
-   refused) → plan + decomposition table → Gate 1 dev approves
-   → spec file written (no spec, no code) → TDD phases via scoped subagents
-   → simplify → security → lint + suite → Gate 2 scope-guard
-   ↓
-pr  (squash-target PR, commitlint title, automated review layers, then human)
-```
-
-Merging is always human. The skills never merge, never close stories.
+`setup` once per repo. Then per story: `implement` takes the story URL, plans in the open, builds test-first, runs one parallel review pass, and stops once with the PR and the Asana close-out drafted. `fix` does the same for a defect or a production trace. `scope-guard`, `docs` and the simplify pass run inside that review pass and stand alone on request. Merging stays human, and no skill ticks `[AC]`, `Testing`, or closes a story.
 
 ## Skills
 
-| Skill | Use it when | Say |
-| --- | --- | --- |
-| `init` | First time opening a repo with raftkit-dev — or checking one for drift | "init this repo" |
-| `ultrathink` | Thinking through a decision or planning work before implementation (invoke: `/raftkit-dev:ultrathink`) | "ultrathink this" / "make a plan" |
-| `implement` | Taking an Asana story (ready, or with dev-answerable gaps to clarify) to a review-ready PR | "implement this story: \<url\>" |
-| `scope-guard` | Auditing your diff against the story before a PR | "run scope-guard" |
-| `simplify` | Stripping over-engineering after phases complete | "run the simplify pass" |
-| `pr` | Raising the house-convention PR + automated review | "raise the PR" |
-| `fix-bug` | A bug needs fixing — an assigned Asana bug, or one you found yourself | "fix this bug: \<bug-url\>" · "I found a bug — \<what's broken\>" |
-| `fix-production-error` | You have a Sentry/CloudWatch/Crashlytics stack trace | paste the trace + "fix this production error" |
-| `ui-creation` | Building the UI phase of a story with UI scope | "build the UI for this story" |
-| `setup-project` | Re-running the governance pack on its own (init calls this too) | "set up this repo" |
-| `pr-auto-review` | Installing/updating the opt-in CI workflow that reviews and auto-fixes Critical PR findings | "add pr-auto-review to CI" / "install pr-auto-review" |
-| `recipes` | Consulted automatically for auto-update / review-prompt / native-UI patterns and web defaults | (rarely invoked directly) |
-| `capability-preflight` | Before a workflow invokes a third-party capability — inventories installed plugins/skills, classifies readiness, drafts install plans | Not user-invocable — consulted automatically before Gate 0 and before setup-project installs |
-| `docs` | Designing, documenting, or keeping a project's docs synced and verified against the code | "document this codebase" / "do the docs still match the code?" |
-| `hasura` | Working on a project's Hasura schema — migrations, permissions, ad-hoc queries | "add a hasura table" / "scaffold a hasura migration" |
+| Skill | What it does | Say | Not for |
+| --- | --- | --- | --- |
+| `docs` | Checks whether a change set leaves the documentation accurate, and syncs what it touches | "do the docs still match the code?", "sync the docs for this story" | designing docs from scratch (the opt-in `raftkit-docs` plugin) |
+| `fix` | Fixes a defect or a production incident: red repro test first, smallest fix to green, one review pass, one stop with the PR and the hand-back | "fix this bug <url>", "I found a bug", or a pasted Sentry trace | a feature or refactor wish (`implement`, through a story) |
+| `hasura` | Scaffolds race-safe migrations with permissions YAML, applies them through the project's own targets, and queries any stage | "create a new migration", "add a hasura table", "check migration status" | editing an applied migration, or migrating a non-local stage |
+| `implement` | Takes one story to a review-ready PR: plan in the open, test-first phases, one parallel review pass, one stop with the PR and the Asana close-out | "implement this story", "raise the PR", "check scope", "simplify this" | merging, ticking `[AC]` or `Testing`, or closing the story |
+| `scope-guard` | Audits a branch diff against its story into BEYOND and MISSING lists, fail-closed | "check my diff against the story", "audit scope before the PR" | judging code quality, or removing code |
+| `setup` | Wires a repo in one transaction: working agreement, design standard, settings, hook, CI guardrail, review config, optional PR auto-review | "set up this repo", "install the governance pack", "update the governance pack" | editing GitHub org settings, or clobbering an existing CLAUDE.md |
+| `ui` | Builds a story's screens from its own designs and exact copy, every state it defines, through frontend-design and the project's stack | "build the UI for this story", "create the screens" | inventing copy, designs or tokens; backend work |
 
-## Rules that always apply
+## Renamed in v2
 
-- **TDD everywhere, bugs included** — failing test first; no red test, no fix.
-- **Scope is a hard line** — improvements you spot become board proposals, not diff additions.
-- **Pre-flight gates** — broken baseline = no edits; failed lint/tests freeze everything else.
-- **Asana writes are draft → approve → push** (raftkit-core write-protocol), free-tier features only.
+`init` + `setup-project` + `capability-preflight` + `pr-auto-review` → `setup` · `fix-bug` + `fix-production-error` → `fix` · `pr` + `simplify` + `ultrathink` → folded into `implement` · `ui-creation` + `recipes` → `ui` · the docs design product → the opt-in `raftkit-docs` plugin.
 
-## Where things live
-
-Board: Asana project `raftkit` (gid `1216551447756315`) · PRD: linked from the board's project description · Shared rules and constants: the `raftkit-core` plugin (auto-installed). For PM skills see `/raftkit-pm:help`; for QA see `/raftkit-qa:help`.
-
-Close by asking which skill they want to start with, or point them at `implement` if they have a ready story.
+Rules every skill inherits (one stop per run, live templates fetched once, the scope line): `/raftkit-core:help`.

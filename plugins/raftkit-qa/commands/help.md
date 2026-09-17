@@ -5,48 +5,24 @@ argument-hint: [skill name or question]
 
 # raftkit-qa help
 
-The user ran `/raftkit-qa:help $ARGUMENTS`. You are the guide to the **raftkit-qa** plugin — RaftLabs' QA workflow.
+The user ran `/raftkit-qa:help $ARGUMENTS`.
 
-**If `$ARGUMENTS` names a skill or asks a question:** answer that specifically. Read `${CLAUDE_PLUGIN_ROOT}/skills/<skill>/SKILL.md` (and its `references/`) as the authority — never answer about a skill from memory alone.
+**If `$ARGUMENTS` names a skill or asks a question**, answer it from `${CLAUDE_PLUGIN_ROOT}/skills/<skill>/SKILL.md` and its `references/`. **Otherwise present the overview below.**
 
-**Otherwise, present the overview below.** First list the directories in `${CLAUDE_PLUGIN_ROOT}/skills/` and reconcile: if a skill exists that isn't in this table (or one listed here is gone), say so and describe it from its SKILL.md — the installed skills are the source of truth, not this page.
+## The QA workflow
 
-## What this plugin is
-
-QA without a local dev setup: comprehensive test cases generated from the product docs and kept in a Google Sheet you edit, per-story run sheets derived from the story itself, evidence-rich bug reports pre-filled from Jam recordings, and a retest discipline where closed means verified and reopened means tracked.
-
-## The core loop
-
-```
-test-suite        (per project — docs → cases → Google Sheet, two-way sync)
-   ↓
-test-run-sheet    (per story — Gherkin + [AC]s → numbered manual steps)
-   ↓  a step fails
-file-bug          (Jam link pre-fills the Bugs Template → bug under the story's Bugs subtask)
-   ↓  dev returns "Fixed in build X"
-retest            (full "Done when" + adjacent regressions → close, or Retest Failed tag)
-```
+Project Profile → `suite` (the living test-case Sheet) → per story `run-sheet` → a failing step → `bug` (file) → dev fixes → `bug` (retest) → close or `Retest Failed`. Every skill reads what it needs once, drafts everything, and stops exactly once before it writes to Asana or a Sheet; `run-sheet` writes nothing and never stops.
 
 ## Skills
 
-| Skill | Use it when | Say | Not for |
+| Skill | What it does | Say | Not for |
 | --- | --- | --- | --- |
-| `test-suite` | Building or refreshing the project-level suite | "generate the test suite for project X" / "sync the QA Sheet" | Steps for one story — that's `test-run-sheet` |
-| `test-run-sheet` | A story's Development is done and needs testing | "make a run sheet for \<story-url\>" | Project-wide coverage — that's `test-suite` |
-| `file-bug` | A run-sheet step failed | "file a bug on \<story-url\> — here's the Jam: \<link\>" | Verifying a returned fix — that's `retest` |
-| `retest` | A dev handed a fix back | "retest \<bug-url\> on build X" | A new defect found mid-retest — that's `file-bug` |
+| `suite` | Generates the project's manual test-case suite from the Project Profile into a QA-owned Google Sheet and re-syncs it on stable case IDs; QA edits win, conflicts are shown side by side, one approval covers them all | "generate the test suite", "sync the QA sheet", "regenerate the suite after the profile changed" | per-story steps (`run-sheet`); a project with no Profile (ask the PM to run `raftkit-pm:profile`) |
+| `run-sheet` | Turns one story into a numbered, deterministic run sheet with exact expected strings, every edge-case row and permission boundary, and a named gap list; reuses suite cases by ID when cheap | "make a run sheet for this story", "turn this story into test steps" | stories with no `[AC]`s (the PM runs `raftkit-pm:story check`); filing a failure (`bug`) |
+| `bug` | Files a bug from a Jam recording into the live Bugs Template shape with evidence verbatim and the judgment fields proposed, or retests a returned fix against the whole `Done when` list and recommends close (QA closes) or tags `Retest Failed` with fresh evidence | "file a bug", "log this Jam as a bug", "retest this bug", "did the fix hold" | fixing the bug (`raftkit-dev:fix`) |
 
-## Rules that always apply
+## Renamed in v2
 
-- **Stories arrive carrying the WEESLD frame, not a case list** — one answered row per edge state (Waiting, Empty, Error, Success, Limits, Defaults), by design; case-level depth is created here: `test-suite` enumerates from the profile and docs, `test-run-sheet` expands the story's own states into steps and flags any state the story leaves uncovered. A flagged gap routes back to the PM through `user-story` amend mode — never absorbed silently.
-- **One bug per ticket** — unrelated defects in one recording become separate tickets.
-- **Severity and priority are different axes** — you'll be asked for each separately.
-- **Evidence before everything** — errors quoted verbatim; the Retest Failed tag is never applied without fresh evidence.
-- **The template is the contract both ways** — bugs missing steps/environment bounce back; fixes missing "Fixed in build ___" bounce back too.
-- **Nothing is filed without your approval** — every bug and comment is draft → approve → push. Asana free tier only.
+`test-suite` → `suite` · `test-run-sheet` → `run-sheet` · `file-bug` + `retest` → `bug`.
 
-## Where things live
-
-Board: Asana project `raftkit` (gid `1216551447756315`) · Format authority: the live Bugs Template (gid in raftkit-core workflow-constants) · Shared rules: `raftkit-core` (auto-installed). For PM skills see `/raftkit-pm:help`; for dev see `/raftkit-dev:help`.
-
-Close by asking where they are in the loop — new project → test-suite; story to test → test-run-sheet; failure in hand → file-bug; fix returned → retest.
+Rules every skill inherits (one stop per run, live templates fetched once, Asana free tier, evidence verbatim): `/raftkit-core:help`.

@@ -9,7 +9,7 @@ and their formatting is inconsistent.
 - A task link or GID (the story) — or a board task **name** to resolve by search
   (SKILL.md Step 1: one match → confirm and proceed; zero/many → ask).
 - The live task **plus all its subtasks**, fetched through the Asana connector.
-- The live User Story Template (GID from `workflow-constants`) as the format
+- The live User Story Template (GID from `raftkit-core:rules`) as the format
   reference — read every run, never from memory.
 
 ## Subtasks
@@ -69,4 +69,4 @@ target.
 - The `[AC]` list, verbatim — this is the pass list.
 - The Out-of-scope list, verbatim — this is the exclusion list.
 - Any `❓`/unresolved facts or source conflicts the story flags — stop and ask,
-  never guess (house-rules: no invented facts).
+  never guess (`raftkit-core:rules`: no invented facts).

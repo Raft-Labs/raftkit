@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — symlinked-hook-foreign
 
 Scenario: `.githooks/pre-push` is a symlink, and the symlink's target file contains the pack marker.

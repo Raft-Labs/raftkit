@@ -1,0 +1,12 @@
+{
+  "name": "raftkit-docs",
+  "version": "1.0.0",
+  "description": "Opt-in documentation product: the co-authoring design flow, 29 adaptable templates, diagrams, reverse-engineering, scaffolding, and the project-local docs companion. Parity checks on a story stay in raftkit-dev.",
+  "author": {
+    "name": "RaftLabs"
+  },
+  "dependencies": [
+    "raftkit-core",
+    "raftkit-dev"
+  ]
+}

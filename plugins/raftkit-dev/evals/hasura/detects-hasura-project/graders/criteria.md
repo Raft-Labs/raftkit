@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — detects-hasura-project
 
 Scenario: the repository contains a Hasura `config.yaml`, a `metadata/` directory, and a `migrations/` directory. The developer asks to add a `notifications` table. The Hasura capability must recognize the project and work from what it finds.

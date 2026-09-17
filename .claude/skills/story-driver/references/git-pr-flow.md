@@ -46,9 +46,9 @@ Draft title + body in chat and show a diff summary. **Wait for explicit
 approval.** Then push and open the PR (GitHub MCP `create_pull_request`, or
 `gh pr create`). Report the PR URL.
 
-## Asana close-out (write-protocol applies)
+## Asana close-out (inside the one stop)
 
-After the PR is open, per `write-protocol` (draft → approve → push):
+After the PR is open, per `raftkit-core:rules` (one stop, then push):
 
 1. Tick the story's **`Development`** subtask complete.
 2. Add a comment on the story with the PR link and a one-line summary of what
@@ -59,7 +59,7 @@ Apply the Asana HTML rules on the comment: single `<body>` root, no `<p>`
 doubt, plain text with line breaks.
 
 **Do not** tick `[AC]` subtasks, tick `Testing`, close the story, or merge the
-PR — those are downstream human/QA gates (house-rules: PR merge and bug close are
+PR — those are downstream human/QA gates (`raftkit-core:rules`: PR merge and bug close are
 human gates).
 
 ## Dry-run mode

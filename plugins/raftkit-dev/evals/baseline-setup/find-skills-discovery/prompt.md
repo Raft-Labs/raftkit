@@ -1,1 +1,0 @@
-I need to generate PDF invoices from our order data in this project, and none of the skills I have installed seem to cover PDF generation. Is there an existing skill out there I could use for this? How do I find one?

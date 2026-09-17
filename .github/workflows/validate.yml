@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CLAUDE_CLI_VERSION: 2.1.209
+  CLAUDE_CLI_VERSION: 2.1.273
 
 jobs:
   validate:
@@ -60,12 +60,6 @@ jobs:
         run: |
           failures=0
           for t in tests/*.test.sh; do
-            # Opt-in network suite (RUN_NETWORK_TESTS=1) — makes real installs
-            # against the live registry; not run in CI.
-            if [[ "$(basename "$t")" == "capability-preflight-network.test.sh" ]]; then
-              echo "SKIP  $t (network, opt-in — see file header)"
-              continue
-            fi
             echo "::group::$t"
             if bash "$t"; then
               echo "PASS  $t"

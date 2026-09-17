@@ -11,7 +11,7 @@
 // names, customer emails and phone numbers, and pasted database rows pass
 // through untouched, because the project detail in a prompt is the signal the
 // telemetry exists to collect. Anything reaching the endpoint must be handled
-// on that assumption — see the Telemetry section of raftkit-core/house-rules.
+// on that assumption — see the Telemetry section of the repo README.
 
 const MAX_LEN = 2000;
 

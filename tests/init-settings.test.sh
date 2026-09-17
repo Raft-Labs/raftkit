@@ -11,8 +11,9 @@
 #   8. valid JSON with a non-object root ([]/string/null/number) -> rejected like
 #      invalid JSON, never spread into a fresh settings object (exit 1)
 set -uo pipefail
+export NODE_DISABLE_COLORS=1 FORCE_COLOR=0 NO_COLOR=1
 cd "$(dirname "$0")/.."
-SCRIPT="plugins/raftkit-dev/skills/init/scripts/merge-settings.mjs"
+SCRIPT="plugins/raftkit-dev/skills/setup/scripts/merge-settings.mjs"
 
 failures=0
 tmpdirs=()

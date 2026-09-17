@@ -1,0 +1,229 @@
+# raftkit-governance-pack managed file (pr-auto-review component) — rendered
+# by pr-auto-review's scripts/render-pr-auto-review.mjs. Never hand-edit;
+# re-run /raftkit-dev:setup to update.
+#
+# SECURITY: this deliberately uses `pull_request`, never `pull_request_target`.
+# `pull_request` never grants a fork PR write-scoped secrets or tokens — that
+# is what makes `secrets.ANTHROPIC_API_KEY` and `contents: write` safe to use
+# here. Switching to `pull_request_target` would hand a fork PR author's
+# unreviewed code a token that can push and access secrets — the exact
+# "pwn request" class of vulnerability. Do not change this trigger type. The
+# job-level head-repo condition below closes the remaining fork case: for a
+# fork PR no step of this job runs at all.
+#
+# RESIDUAL RISK — read this before enabling the workflow. For the same-repo
+# branches it DOES run on, this job is a trust boundary, not a sandbox:
+#   1. `actions/checkout` persists a `contents: write` token into
+#      `.git/config` for the whole job.
+#   2. The dependency-install step runs the branch's own npm lifecycle
+#      scripts, and the fix loop then runs the branch's own test / build /
+#      typecheck / lint script — arbitrary code from the PR — with
+#      unrestricted `Bash`, in a process that also holds ANTHROPIC_API_KEY.
+# Anyone who can push a branch to this repository can therefore read both the
+# push token and the API key by editing a package script. That is inherent to
+# running a PR's own checks, not a defect in this file — but it means this
+# workflow is only as trustworthy as the repo's push-access list. Do not
+# install it where push access is broader than secret access.
+name: PR auto-review (Critical findings)
+
+on:
+  pull_request:
+    # `ready_for_review` is required because the job refuses drafts: without
+    # it a PR that was opened as a draft would never be reviewed at all.
+    # `reopened` re-reviews a PR that was closed and reopened.
+    types: [opened, synchronize, reopened, ready_for_review]
+
+# CONCURRENCY: `cancel-in-progress` MUST stay `false`. This job pushes its
+# fix commits to the very branch that triggers it, so every fix it pushes
+# fires another `synchronize` event into this same concurrency group. With
+# `cancel-in-progress: true` the run therefore cancels *itself* the moment
+# it pushes its first fix — every remaining Critical finding is silently
+# dropped and the end-of-run PR summary comment is never posted. Recursion
+# is prevented by the "Check last commit is not our own fix" guard step
+# below, not by cancellation: the follow-up run starts, sees the bot's own
+# commit as HEAD, and exits as a cheap no-op. Keep the group key — it still
+# serializes runs per PR so two fix loops never race each other's commits.
+concurrency:
+  group: pr-auto-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: __TIMEOUT_MINUTES__
+    # Job-level guard so NO step can ever precede it. Two conditions, both
+    # load-bearing: a fork PR never runs (see the SECURITY header), and a
+    # draft PR never runs — pushing a fix onto a branch a developer is still
+    # force-pushing loses the fix and leaves the summary comment linking an
+    # orphaned commit.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.draft == false
+    env:
+      # Without GH_TOKEN every `gh` call in the fix-loop prompt fails, so the
+      # PR summary comment — the one mandatory safety artifact of this
+      # workflow — is never posted.
+      GH_TOKEN: ${{ github.token }}
+      # Handed to the prompt as facts. The prompt must never re-derive these
+      # with `gh pr view`: a branch carrying two open PRs (one into main, one
+      # into development) resolves ambiguously, and the unverified-code
+      # disclosure would then land on the wrong pull request.
+      OWNER_REPO: ${{ github.repository }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      HEAD_REF: ${{ github.event.pull_request.head.ref }}
+      # Passed through the environment, never interpolated into a `run:`
+      # block: branch names may contain backticks, `$`, `;` and `&`, which
+      # would execute in a job holding contents: write and an API key.
+      BASE_REF: ${{ github.event.pull_request.base.ref }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          # fetch-depth: 0 fetches every branch, so `origin/$BASE_REF` already
+          # resolves and merge-base anchoring needs no separate fetch step.
+          fetch-depth: 0
+
+      - name: Check last commit is not our own fix
+        id: guard
+        # Two independent signals, either of which identifies our own commit:
+        # the rendered author identity, and the commit-message trailer the fix
+        # loop writes. The trailer catches the case a rebase or a squash
+        # rewrites the author while preserving the message. A skip is always
+        # announced in the job summary — a silent skip is indistinguishable
+        # from a broken workflow.
+        run: |
+          AUTHOR_EMAIL="$(git log -1 --pretty=format:'%ae')"
+          TRAILER_HITS="$(git log -1 --pretty=format:'%B' | grep -c '^pr-auto-review-commit: true[[:space:]]*$' || true)"
+          if [ "$AUTHOR_EMAIL" = "__BOT_COMMIT_EMAIL__" ] || [ "$TRAILER_HITS" -gt 0 ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "### pr-auto-review skipped"
+              echo ""
+              echo "HEAD is one of this workflow's own fix commits, so this run exited as a"
+              echo "no-op rather than chasing its own push."
+              echo ""
+              echo "- HEAD author email: \`$AUTHOR_EMAIL\`"
+              echo "- pr-auto-review-commit trailer matches on HEAD: \`$TRAILER_HITS\`"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure bot git identity
+        if: steps.guard.outputs.skip != 'true'
+        # MANDATORY, and load-bearing twice over. A GitHub Actions runner has
+        # no default git identity, so without this every `git commit` in the
+        # fix loop dies with "Please tell me who you are" and not one fix can
+        # ever be committed — the workflow is inert. It is also what makes the
+        # first half of the guard step above real: that check compares HEAD's
+        # author email against __BOT_COMMIT_EMAIL__, which only ever matches
+        # because this step stamped it. Delete this step and the email signal
+        # silently degrades to never matching, leaving the commit trailer —
+        # explicitly defence-in-depth, not the primary — as the only signal.
+        run: |
+          git config user.name "__BOT_COMMIT_NAME__"
+          git config user.email "__BOT_COMMIT_EMAIL__"
+
+      - name: Set up Node toolchain
+        if: steps.guard.outputs.skip != 'true' && hashFiles('package.json') != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Install dependencies
+        id: deps
+        if: steps.guard.outputs.skip != 'true'
+        # Without this step the fix loop runs the repo's `test` script against
+        # a tree that has no node_modules, reads the resulting
+        # module-not-found failure as "this fix is red", and discards a
+        # correct fix — in every repo, on every finding. This step never fails
+        # the job: it records a status the prompt reads, so a broken toolchain
+        # is disclosed as "cannot verify" instead of being blamed on a fix.
+        run: |
+          set +e
+          if [ ! -f package.json ]; then
+            echo "status=none" >> "$GITHUB_OUTPUT"
+            echo "No package.json in this repository — no dependency install attempted."
+            exit 0
+          fi
+          if [ -f pnpm-lock.yaml ] || [ -f yarn.lock ] || [ -f bun.lockb ] || [ -f bun.lock ]; then
+            echo "status=unsupported" >> "$GITHUB_OUTPUT"
+            echo "A non-npm lockfile is present. This workflow installs npm projects only;"
+            echo "running npm against this tree would produce a misleading result, so the"
+            echo "fix loop will report that it cannot verify rather than guess."
+            exit 0
+          fi
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+          rc=$?
+          if [ "$rc" -eq 0 ]; then
+            echo "status=ok" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=failed" >> "$GITHUB_OUTPUT"
+            echo "Dependency install exited $rc — verification is impossible in this run." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit 0
+
+      - uses: anthropics/claude-code-action@v1
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          # How the prompt tells an infrastructure failure apart from a real
+          # test failure. Values: ok | none | unsupported | failed.
+          DEPS_STATUS: ${{ steps.deps.outputs.status }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugins: "__PR_REVIEW_TOOLKIT_PLUGIN_REF__"
+          # __FIX_LOOP_PROMPT__ is substituted with the full multi-line
+          # content of fix-loop-prompt.md — the renderer MUST emit it as a
+          # YAML block scalar (this "prompt: |" line followed by every
+          # substituted line re-indented to match), never a naive inline
+          # string replace, or the multi-line prompt (colons, dashes, code
+          # fences) will break YAML parsing or corrupt the workflow.
+          prompt: |
+            __FIX_LOOP_PROMPT__
+          # The tool allowlist must cover BOTH halves of this run. The fix
+          # half needs Bash, Read and Edit. The review half is a slash
+          # command, so it needs SlashCommand to be invocable at all, plus
+          # every tool pr-review-toolkit:review-pr's own frontmatter declares
+          # — including Task, since its entire method is dispatching review
+          # subagents. Narrow this list and the review is either denied or
+          # silently improvised, which destroys this workflow's one guarantee:
+          # that pr-review-toolkit is the sole severity classifier.
+          claude_args: |
+            --max-turns __MAX_TURNS__
+            --allowedTools "Bash,Read,Edit,Glob,Grep,Task,SlashCommand"
+
+      - name: Record fix-loop completion
+        id: complete
+        if: steps.guard.outputs.skip != 'true'
+        run: echo "done=true" >> "$GITHUB_OUTPUT"
+
+      - name: Disclose an incomplete run
+        if: always() && steps.guard.outputs.skip != 'true' && steps.complete.outputs.done != 'true'
+        # The fix loop pushes its commits incrementally but writes the full
+        # summary last, so exhausting --max-turns or the job timeout after a
+        # push would otherwise leave bot commits on the branch with no comment
+        # at all. This backstop guarantees the PR always carries a disclosure.
+        run: |
+          set -uo pipefail
+          MARKER='<!-- raftkit:pr-auto-review-summary v1 -->'
+          NOTE='**Run terminated early (timeout, turn limit, or job failure) — auto-fix commits may already be present on this branch without a complete summary below. Review this branch history before merging.**'
+          BODY_FILE="$RUNNER_TEMP/pr-auto-review-body.md"
+          CID="$(gh api --paginate "repos/$OWNER_REPO/issues/$PR_NUMBER/comments" \
+                   --jq "[.[] | select(.body | startswith(\"$MARKER\"))] | last | .id // empty" \
+                 | tail -n 1)"
+          if [ -n "$CID" ]; then
+            gh api "repos/$OWNER_REPO/issues/comments/$CID" --jq .body > "$BODY_FILE"
+            printf '\n\n%s\n' "$NOTE" >> "$BODY_FILE"
+            gh api -X PATCH "repos/$OWNER_REPO/issues/comments/$CID" -F body=@"$BODY_FILE"
+          else
+            printf '%s\n\n%s\n' "$MARKER" "$NOTE" > "$BODY_FILE"
+            gh api -X POST "repos/$OWNER_REPO/issues/$PR_NUMBER/comments" -F body=@"$BODY_FILE"
+          fi

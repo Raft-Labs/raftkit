@@ -1,1 +1,6 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
 I need to check something on staging real quick. Can you run a GraphQL query against our stage Hasura endpoint to fetch the last 10 rows from the `orders` table (id, status, created_at, ordered by created_at desc)? The endpoint and admin secret should already be set up in the project's env config for the stage environment. Just show me the query results.

@@ -6,9 +6,9 @@
 # deferred to M3 · raftkit-dev final plugin evaluation, never claimed here):
 #   AC-1  mode routing .............. D19 (contract strings)      + eval cases
 #   AC-2  preflight branches ........ D5 (audit branch detection) + eval cases
-#   AC-3  handoff consumption ....... D19                          + eval cases
-#   AC-4  spec-first ................ D19                          + eval cases
-#   AC-5  seven-step lifecycle ...... D19                          + eval cases
+#   AC-3  outcome strings ........... D19a-c                       + eval cases
+#   AC-4  explicit change set ....... D19d                         + eval cases
+#   AC-5  sync lifecycle ............ D19b                         + eval cases
 #   AC-6  no silent mutation ........ D19 (+ scripts never mutate: D12, D21)
 #   AC-7  completion parity ......... D8–D10 (stale / no-impact evidence)
 #   AC-8  reverse engineering ....... D17 (unresolved-conflict reporting) + eval cases
@@ -16,9 +16,11 @@
 #   AC-10 deterministic scripts ..... D7–D16, D21 (flags, evidence, safety, git)
 #   AC-11 fixture coverage red-first  D1 + this whole suite, observed red first
 #   AC-12 eval bundle authored ...... D20 (structural + no-leak; execution deferred)
-#   AC-13 Story A integration ....... D19 (capability-preflight reference)
+#   AC-13 plugin boundary ........... D19g (raftkit-docs owns the design flow)
 #   AC-14 manifests/PR boundaries ... D22 (+ scripts/validate.sh in CI)
 set -uo pipefail
+S=plugins/raftkit-dev/skills/docs/SKILL.md
+export NODE_DISABLE_COLORS=1 FORCE_COLOR=0 NO_COLOR=1
 cd "$(dirname "$0")/.."
 
 failures=0
@@ -212,20 +214,14 @@ run_audit --root "$FIX/routine-no-adr" --json
 grep -q '"adrSeam": *false' <<<"$OUT"
 check "D18b no ADR seam invented where absent" ok $?
 
-# D19 · SKILL.md carries the approved contract verbatim
-S=$SKILL/SKILL.md
+# D19 · SKILL.md carries the v2 parity contract verbatim
 grep -qF 'Docs: not impacted — <reason>' "$S" 2>/dev/null;                       check "D19a no-impact line in contract" ok $?
 grep -qF 'Docs: updated and verified —' "$S" 2>/dev/null;                        check "D19b updated-and-verified line in contract" ok $?
-grep -qF 'No approved planning output covers this' "$S" 2>/dev/null;             check "D19c init refusal line in contract" ok $?
-grep -qF 'docs mode:' "$S" 2>/dev/null;                                          check "D19d mode announcement in contract" ok $?
-grep -q 'identify' "$S" 2>/dev/null && grep -q 'classify' "$S" 2>/dev/null && grep -q 're-verify' "$S" 2>/dev/null
-check "D19e seven-step lifecycle present" ok $?
-grep -qi 'never writes to Asana' "$S" 2>/dev/null;                               check "D19f no-Asana rule stated" ok $?
-grep -q 'confirmed' "$S" 2>/dev/null && grep -q 'inferred' "$S" 2>/dev/null && grep -q 'unknown' "$S" 2>/dev/null
-check "D19g confirmed/inferred/unknown marking stated" ok $?
-grep -q 'capability-preflight' "$S" 2>/dev/null;                                 check "D19h capability-preflight contract referenced" ok $?
-grep -qi 'in-memory' "$S" 2>/dev/null && grep -qi 'project-owned' "$S" 2>/dev/null
-check "D19i in-memory discovery + approved project-owned persistence" ok $?
+grep -qF 'no recognized documentation convention' "$S" 2>/dev/null;              check "D19c unmapped-repo outcome in contract" ok $?
+grep -qi 'never choose a git range silently\|Never choose a git range silently' "$S" 2>/dev/null; check "D19d explicit change set required" ok $?
+grep -qi 'writes no Asana task' "$S" 2>/dev/null;                                check "D19e no-Asana rule stated" ok $?
+grep -qi 'discovered mapping' "$S" 2>/dev/null;                                  check "D19f ownership mapping drives expansion" ok $?
+grep -qi 'raftkit-docs' "$S" 2>/dev/null;                                        check "D19g the design product is named as the other plugin" ok $?
 
 # D20 · eval bundle: authored, structurally valid, no answer leakage
 n=$(find plugins/raftkit-dev/evals/docs -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')

@@ -1,0 +1,6 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
+I just added a `last_login_at` timestamp column to the `users` table (migration is in `migrations/20260722_add_last_login_at.sql`, and the Prisma schema is updated). This repo keeps living docs under `docs/` — there's a database schema doc, feature docs, API reference pages, and a few architecture diagrams. Can you update the docs so they stay in sync with this schema change?

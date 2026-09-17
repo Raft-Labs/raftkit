@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — tenancy-convention-driven
 
 ## PASS if all of the following hold

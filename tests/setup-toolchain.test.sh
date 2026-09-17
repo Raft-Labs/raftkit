@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Deterministic suite for Story D (M3 · setup-project toolchain, Asana
+# Deterministic suite for Story D (the setup toolchain, Asana
 # 1216767132032184). Drives the SHIPPED contract directly: detection and
-# rendering run through setup-project's own scripts over its own templates —
+# rendering run through setup's own scripts over its own templates —
 # no test-only renderer.
 #
 # AC → evidence matrix (eval bundle authored pre-implementation, structurally
@@ -46,7 +46,7 @@ else
   echo "  (note: python3+PyYAML not available — CI-YAML-parses checks skipped, not failed)" >&2
 fi
 
-SETUP=plugins/raftkit-dev/skills/setup-project
+SETUP=plugins/raftkit-dev/skills/setup
 DETECT=$SETUP/scripts/detect-toolchain.mjs
 RENDER=$SETUP/scripts/render-assets.mjs
 FIX=tests/fixtures/toolchain
@@ -150,10 +150,9 @@ check "S25 no retained artifact carries the raw secret value" ok $?
 # ---- S26–S34 · render matrix on the SHIPPED templates -----------------------
 rnd() { # <pm> <version> <setup-option> <scripts> <roles> <manifest> -> $ODIR
   ODIR="$(mktemp -d)"; tmpdirs+=("$ODIR")
-  ROUT=$(node "$RENDER" --templates "$SETUP/references/assets" --out-dir "$ODIR" \
+  ROUT=$(node "$RENDER" --templates "$SETUP/assets" --out-dir "$ODIR" \
     --pm "$1" --pm-version "$2" --setup "$3" --scripts "$4" --absent-roles "$5" \
-    --manifest "$6" --spec-path docs/specs/active-feature.md \
-    --spec-sentinel '[Feature Name or Jira Ticket ID]' 2>&1); RRC=$?
+    --manifest "$6" 2>&1); RRC=$?
 }
 for pm in npm pnpm yarn bun; do
   case $pm in
@@ -174,7 +173,7 @@ grep -q 'corepack enable' "$ODIR/quality-guardrail.yml" && ! grep -qE '(node-ver
 check "S27 approved corepack setup block rendered; latest never appears" ok $?
 rnd none "" none "" none "$FIX/non-node/README.md" 2>/dev/null || true
 [[ $RRC -eq 0 ]] && grep -qi 'non-Node' "$ODIR/quality-guardrail.yml" && sh -n "$ODIR/pre-push"
-check "S28 non-Node posture renders green-skip CI and spec-gate-only hook" ok $?
+check "S28 non-Node posture renders green-skip CI and a hook that runs nothing" ok $?
 rnd none "" none "lint test" none "$FIX/npm/package.json"
 [[ $RRC -ne 0 && -z "$(ls -A "$ODIR")" ]]
 check "S29 --pm none with non-empty --scripts rejects and renders nothing (would block every push)" ok $?
@@ -212,17 +211,17 @@ det "$cidir"; [[ $(field ci.owner) == foreign ]] && grep -qi 'symlink' <<<"$(fie
 check "S37 symlinked workflow path is a conflict, not overwritten" ok $?
 
 # ---- S38–S40 · shipped contract text ----------------------------------------
-grep -q 'No writes occur while detection is conflicting or undetermined' "$SETUP/references/install-flow.md" 2>/dev/null \
-  && grep -qi 'collect every lockfile' "$SETUP/references/install-flow.md" 2>/dev/null
-check "S38 install-flow documents the signal-collection decision contract" ok $?
+grep -q 'No writes occur while detection is conflicting or undetermined' "$SETUP/references/components.md" 2>/dev/null \
+  && grep -qi 'collect every lockfile' "$SETUP/references/components.md" 2>/dev/null
+check "S38 components.md documents the signal-collection decision contract" ok $?
 grep -q '__PM__' "$SETUP/references/components.md" 2>/dev/null \
   && grep -q 'raftkit-governance-pack' "$SETUP/references/components.md" 2>/dev/null \
   && grep -qi 'render nothing' "$SETUP/references/components.md" 2>/dev/null \
   && grep -q 'setup-node-cache-any\|corepack' "$SETUP/references/components.md" 2>/dev/null
 check "S39 components.md documents tokens, marker, fail-closed rendering, setup options" ok $?
-grep -q 'raftkit-dev:capability-preflight' "$SETUP/SKILL.md" 2>/dev/null \
-  && grep -q 'raftkit-dev:capability-preflight' "$SETUP/references/install-flow.md" 2>/dev/null
-check "S40 Story A preflight seam untouched (provider ownership preserved)" ok $?
+grep -q 'claude plugin list --json' "$SETUP/SKILL.md" 2>/dev/null \
+  && grep -qi 'Setup continues without it' "$SETUP/SKILL.md" 2>/dev/null
+check "S40 the engine check names a missing engine and continues" ok $?
 
 # ---- S41–S43 · allowlist + version ------------------------------------------
 # Persistent suite tests the allowlist ALGORITHM synthetically (no branch SHAs —
@@ -230,11 +229,11 @@ check "S40 Story A preflight seam untouched (provider ownership preserved)" ok $
 #   bash tests/setup-toolchain.test.sh --scope-check <base> <head>
 # tests/workflow-integration.test.sh is allowed solely for the separately
 # approved squash-safe scope-check refactor (cross-story test maintenance).
-allow='^(tests/setup-toolchain\.test\.sh|tests/workflow-integration\.test\.sh|tests/fixtures/toolchain/|plugins/raftkit-dev/evals/setup-toolchain/|plugins/raftkit-dev/\.claude-plugin/plugin\.json|\.claude-plugin/marketplace\.json|plugins/raftkit-dev/skills/setup-project/(SKILL\.md|references/(install-flow|components)\.md|references/assets/(pre-push|quality-guardrail\.yml)|scripts/(detect-toolchain|render-assets)\.mjs))'
-syn_ok=$'tests/setup-toolchain.test.sh\ntests/workflow-integration.test.sh\ntests/fixtures/toolchain/npm/package.json\nplugins/raftkit-dev/skills/setup-project/scripts/render-assets.mjs\nplugins/raftkit-dev/.claude-plugin/plugin.json'
+allow='^(tests/setup-toolchain\.test\.sh|tests/workflow-integration\.test\.sh|tests/fixtures/toolchain/|plugins/raftkit-dev/evals/setup-toolchain/|plugins/raftkit-dev/\.claude-plugin/plugin\.json|\.claude-plugin/marketplace\.json|plugins/raftkit-dev/skills/setup/(SKILL\.md|references/(components|pr-auto-review)\.md|assets/(pre-push|quality-guardrail\.yml)|scripts/(detect-toolchain|render-assets)\.mjs))'
+syn_ok=$'tests/setup-toolchain.test.sh\ntests/workflow-integration.test.sh\ntests/fixtures/toolchain/npm/package.json\nplugins/raftkit-dev/skills/setup/scripts/render-assets.mjs\nplugins/raftkit-dev/.claude-plugin/plugin.json'
 [[ -z "$(grep -Ev "$allow" <<<"$syn_ok" || true)" ]]
 check "S41a allowlist admits approved Story D paths (synthetic)" ok $?
-syn_bad=$'plugins/raftkit-dev/skills/implement/SKILL.md\nplugins/raftkit-dev/skills/docs/scripts/validate-docs.mjs\ntests/capability-preflight.test.sh'
+syn_bad=$'plugins/raftkit-dev/skills/implement/SKILL.md\nplugins/raftkit-dev/skills/docs/scripts/validate-docs.mjs\ntests/structure.test.sh'
 [[ "$(grep -Ev "$allow" <<<"$syn_bad" | wc -l | tr -d ' ')" == 3 ]]
 check "S41b allowlist flags every out-of-scope path (synthetic)" ok $?
 node -e '

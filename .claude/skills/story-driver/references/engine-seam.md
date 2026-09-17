@@ -39,12 +39,12 @@ Owns skill *content* quality and description optimization.
 
 ## raftkit-core — the house rules (consult skills, `user-invocable: false`)
 
-- **`workflow-constants`** — Asana workspace + template GIDs, the live-template
+- **`raftkit-core:rules`** — Asana workspace + template GIDs, the live-template
   fetch protocol, and the exact stop messages. Never guess a GID; never cache a
   template body.
-- **`house-rules`** — human gates (story / plan / PR-merge / bug-close), Asana
+- **`raftkit-core:rules`** — human gates (story / plan / PR-merge / bug-close), Asana
   free-tier constraints, escalate-to-founders triggers, find-skills governance.
-- **`write-protocol`** — the draft→approve→push gate for every outward write, and
+- **`raftkit-core:rules`** — the draft→approve→push gate for every outward write, and
   the Asana `html_notes` rules (single body root, no `<p>`, attributes only on
   `<a>`, escape `&`/`<`/`>`).
 

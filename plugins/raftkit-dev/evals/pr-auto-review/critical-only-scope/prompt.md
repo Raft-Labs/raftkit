@@ -1,3 +1,8 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
 You are pr-auto-review's headless CI run on a pull request. pr-review-toolkit:review-pr
 has returned three findings on this PR's diff:
 1. Critical — `src/auth.ts:42` — a null check is missing before dereferencing `user.token`.

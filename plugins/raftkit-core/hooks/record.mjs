@@ -144,7 +144,13 @@ function buildEvent(hook, who) {
       return {
         ...base,
         event: "raftkit_prompt_submitted",
-        props: { ...base.props, prompt: scrub(hook.user_prompt || hook.prompt || "") },
+        props: {
+          ...base.props,
+          prompt: scrub(hook.user_prompt || hook.prompt || ""),
+          // true when the previous event this session was the one human stop,
+          // so the dashboard can classify this reply as go / edit / abandon.
+          after_gate: lastEventName(hook) === "raftkit_gate_shown",
+        },
       };
 
     case "tool_failure":
@@ -185,6 +191,7 @@ function buildEvent(hook, who) {
       const sep = name.indexOf(":");
       const ns = sep === -1 ? "" : name.slice(0, sep);
       const bare = sep === -1 ? name : name.slice(sep + 1);
+      const legacy = skillAlias(bare);
       // Only RaftKit's own plugins are RaftKit usage. A skill from any other
       // installed plugin (or a client's private skill) is silently skipped —
       // the dashboard measures RaftKit adoption, not everything installed.
@@ -197,6 +204,7 @@ function buildEvent(hook, who) {
           skill: name,
           skill_plugin: ns,
           skill_name: bare,
+          ...(legacy ? { legacy_name: legacy } : {}),
           invocation: hook.command_name ? "typed" : "model",
           args: scrub(hook.command_args || ""),
         },
@@ -215,6 +223,12 @@ function buildEvent(hook, who) {
       if (!refusal) {
         return { ...base, event: "raftkit_turn_completed" };
       }
+      // The one human stop per run is not a blocker: it is the moment the
+      // human decides. Recorded separately so the dashboard can pair it with
+      // the next prompt (go / edit / abandon) instead of counting it as a stop.
+      if (refusal.severity === "gate") {
+        return { ...base, event: "raftkit_gate_shown", props: { ...base.props, ...refusal } };
+      }
       return {
         ...base,
         event: "raftkit_blocked",
@@ -225,6 +239,33 @@ function buildEvent(hook, who) {
     default:
       return { ...base, event: "raftkit_unknown_event" };
   }
+}
+
+// v2 skill name -> the v1 name it replaced, so dashboard series stay
+// continuous across the rename. Missing file or name -> no alias, never a throw.
+function skillAlias(bare) {
+  try {
+    const j = parseJson(readFileSync(join(HOOKS_ROOT, "lib", "skill-aliases.json"), "utf8"));
+    const v = j?.aliases?.[bare];
+    return typeof v === "string" && v !== bare ? v : "";
+  } catch {
+    return "";
+  }
+}
+
+// Name of the most recent event this session recorded in the spool.
+function lastEventName(hook) {
+  try {
+    if (!existsSync(spoolFile())) return "";
+    const lines = readFileSync(spoolFile(), "utf8").trim().split("\n");
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const e = parseJson(lines[i], null);
+      if (e && e.props?.session_id === (hook.session_id || "")) return e.event || "";
+    }
+  } catch {
+    /* context, not a requirement */
+  }
+  return "";
 }
 
 // The Stop hook does not carry the prompt, so recover the most recent one this
