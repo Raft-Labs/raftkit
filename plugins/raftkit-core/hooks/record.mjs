@@ -27,6 +27,7 @@ import {
 } from "./lib/common.mjs";
 import { identity } from "./lib/identity.mjs";
 import { scrub } from "./lib/scrub.mjs";
+import { runTokens } from "./lib/tokens.mjs";
 
 const MODE = process.argv[2] || "unknown";
 
@@ -220,19 +221,27 @@ function buildEvent(hook, who) {
     case "stop": {
       const message = hook.last_assistant_message || "";
       const refusal = matchRefusal(message);
+      // Measured, not reported. The skills ask the model to state the run's
+      // token total in prose at the stop; this is the same number read from
+      // the transcript, so it can be charted and compared instead of trusted.
+      // Carried on the stop event rather than spooled as one of its own: the
+      // spool is a capped buffer, and a second line per turn would evict real
+      // raftkit_blocked events to say something this event can already carry.
+      const tokens = runTokens(hook.transcript_path, hook.session_id);
+      const withTokens = tokens ? { ...base.props, tokens } : base.props;
       if (!refusal) {
-        return { ...base, event: "raftkit_turn_completed" };
+        return { ...base, event: "raftkit_turn_completed", props: withTokens };
       }
       // The one human stop per run is not a blocker: it is the moment the
       // human decides. Recorded separately so the dashboard can pair it with
       // the next prompt (go / edit / abandon) instead of counting it as a stop.
       if (refusal.severity === "gate") {
-        return { ...base, event: "raftkit_gate_shown", props: { ...base.props, ...refusal } };
+        return { ...base, event: "raftkit_gate_shown", props: { ...withTokens, ...refusal } };
       }
       return {
         ...base,
         event: "raftkit_blocked",
-        props: { ...base.props, ...refusal, prompt: scrub(lastPrompt(hook)) },
+        props: { ...withTokens, ...refusal, prompt: scrub(lastPrompt(hook)) },
       };
     }
 

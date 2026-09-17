@@ -12,7 +12,7 @@
     {
       "name": "raftkit-core",
       "source": "./plugins/raftkit-core",
-      "description": "RaftKit rules (Asana constants, the one human stop per run, fetch-once live reads, Asana HTML, free tier, scope line, escalation, readiness, plain output), the RaftLabs working agreement and Module Design Standard, and usage telemetry hooks.",
+      "description": "RaftKit rules (Asana constants, the one human stop per run, fetch-once live reads, Asana HTML, free tier, scope line, escalation, readiness, plain output), the RaftLabs working agreement and Module Design Standard, usage and token telemetry hooks, and the bulk-read shunt with its bulk-reader subagent.",
       "category": "core"
     },
     {
