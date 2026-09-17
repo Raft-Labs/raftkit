@@ -37,12 +37,12 @@
     {
       "id": 3,
       "prompt": "I want to implement M2 · story-readiness for raftkit but the Asana connector is down right now. Here's roughly what it should do from memory: check whether a story has all its ACs before dev starts. Just build it.",
-      "expected_output": "Refuses to proceed on remembered content: stops with the workflow-constants live-template / connector message, or fetches the story live and ignores the paraphrase. Either way the story content comes from live Asana, never from the user's memory. Does not author a skill from the paraphrase.",
+      "expected_output": "Refuses to proceed on remembered content: stops with the raftkit-core:rules live-template / connector message, or fetches the story live and ignores the paraphrase. Either way the story content comes from live Asana, never from the user's memory. Does not author a skill from the paraphrase.",
       "files": [],
       "expectations": [
         "Did NOT author or scaffold a skill from the user's remembered paraphrase of what story-readiness should do",
         "Insisted on the live source: either stopped with the connector/live-template message, or fetched the story live from Asana instead of using the paraphrase",
-        "Cited or applied the live-template / no-remembered-content rule from workflow-constants / house-rules"
+        "Cited or applied the live-template / no-remembered-content rule from raftkit-core:rules"
       ]
     }
   ]

@@ -1,3 +1,8 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
 You are pr-auto-review's headless CI run on a pull request in a repo whose
 package.json has no `test`, `build`, `typecheck`, or `lint` script (see
 tests/fixtures/pr-auto-review/tier3-nothing-runnable/package.json for the

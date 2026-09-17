@@ -1,0 +1,13 @@
+# raftkit-governance-pack managed file — rendered by setup's
+# scripts/render-assets.mjs from the detected, human-approved toolchain.
+# Never hand-edit; re-run setup to update.
+name: Quality guardrail
+on:
+  pull_request:
+jobs:
+  guardrail:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+__SETUP_BLOCK__
+__QUALITY_STEPS__

@@ -1,3 +1,8 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
 I just added two tables to our Hasura project and need permissions set up.
 
 Some context on how this codebase does multi-tenancy: every tenant-scoped table carries a `workspace_id` column (uuid, FK to `workspaces.id`), and the JWT session variable we get from our auth provider is `x-hasura-workspace-id`. That's the pattern across all our existing tracked tables — you can see it in the metadata for `projects` and `documents`.

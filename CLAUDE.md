@@ -1,61 +1,53 @@
 # RaftKit — Project Context
 
-RaftKit is RaftLabs' private Claude plugin **marketplace**: one repo shipping four plugins that package the RaftLabs way of delivering software. The plugins **orchestrate** proven third-party plugins (superpowers, code-simplifier, pr-review-toolkit, security-guidance, find-skills, asana, claude-md-management, remember, frontend-design, playwright/chrome-devtools, expo, neon) — **they rebuild nothing**. Asana is the workflow spine: work enters as a templated user story and exits as a squash-merged PR with QA-verified acceptance criteria.
+RaftKit is RaftLabs' private Claude plugin **marketplace**: one repo shipping five plugins that package the RaftLabs way of delivering software. The plugins **orchestrate** proven third-party plugins (superpowers, pr-review-toolkit, code-simplifier, claude-md-management, security-guidance, frontend-design, find-skills, asana, expo, neon) — **they rebuild nothing**. Asana is the workflow spine: work enters as a templated user story and exits as a squash-merged PR with QA-verified acceptance criteria.
 
-Methodology of everything RaftKit produces (and of building RaftKit itself): **Spec-Driven + Test-Driven Development, combined.** The spec derives from the approved story; ACs become failing tests; code exists only to turn them green. No spec → no code. No failing test → no implementation. Human-in-the-loop at every gate: story approval, plan approval, PR merge, bug close.
+Methodology, for what RaftKit produces and for RaftKit itself: **the story is the spec, its acceptance criteria become failing tests, and code exists to turn them green.** Plans are written down and shown, not gated. A run stops exactly once, before anything leaves the session.
 
 ## Sources of truth (ranked)
 
 1. **The Asana story you are implementing** — the scope contract. Its `[AC]` subtasks are the definition of done; its "Out of scope" section is a hard exclusion list.
-2. **PRD** — [claude-plugin-marketplace-prd.md](https://drive.google.com/file/d/1nJrBdvUIizJme9ysDAJPNnF0waKrra4R/view) (also in Google Drive → RaftLabs - General → Raftlabs Framework). Architecture, skill specs, guardrails, metrics.
-3. **Development board** — Asana project `raftkit` (gid `1216551447756315`): https://app.asana.com/1/1194107417268910/project/1216551447756315 — sections: Problem Statements, Decisions & gates, M1 · Core & marketplace, M2 · raftkit-pm, M3 · raftkit-dev, M4 · raftkit-qa, M5 · Pilot — TicketStop, M6 · Rollout & backlog.
-4. **Ashit's AI governance & efficiency protocol** — Asana task `1216375937893602` (protocols 1–5, packaged by the M1 governance-pack story).
+2. **The v2 design** — [docs/specs/2026-09-16-raftkit-v2-design.md](docs/specs/2026-09-16-raftkit-v2-design.md). The architecture, the per-skill budgets, and why each rule exists.
+3. **PRD** — [claude-plugin-marketplace-prd.md](https://drive.google.com/file/d/1nJrBdvUIizJme9ysDAJPNnF0waKrra4R/view) (also in Google Drive → RaftLabs - General → Raftlabs Framework). Product intent and metrics; the v2 design supersedes its process detail.
+4. **Development board** — Asana project `raftkit` (gid `1216551447756315`): https://app.asana.com/1/1194107417268910/project/1216551447756315
 
-## Workflow constants (never cache the content — read live by GID)
+## Workflow constants
 
-- Asana workspace: `1194107417268910`
-- Feature Template (format authority): task `1216778429401199`
-- Bugs Template (format authority): task `1215260732424760`
-- raftkit board: project `1216551447756315`
-- Release train / git model: task `1216207700369490`
-- Subtask conventions: `[AC] …` acceptance criteria + `Development` / `Testing` / `Bugs`
+GIDs live in exactly one place: `plugins/raftkit-core/skills/rules/SKILL.md`. Read them there; never copy one into another file. `tests/structure.test.sh` enforces it.
 
-## Target repo layout
+## Repo layout
 
 ```
 .claude-plugin/marketplace.json     # single source of what is installable
 plugins/
-  raftkit-core/   # house rules, workflow constants, governance protocols pack,
-                  # discovery-interview (the shared interview contract)
-  raftkit-pm/     # onboarding, brainstorm, user-story, story-skill-generator,
-                  # story-readiness, status-update, meeting-decisions,
-                  # estimation                                          (Cowork)
-  raftkit-dev/    # init, ultrathink, implement, scope-guard, simplify, pr,
-                  # fix-bug, ui-creation, setup-project, fix-production-error,
-                  # recipes, capability-preflight, docs, hasura   (Claude Code)
-  raftkit-qa/     # test-suite, test-run-sheet, file-bug, retest        (Cowork)
+  raftkit-core/   # rules, working-agreement, telemetry hooks
+  raftkit-pm/     # profile, story, estimate, status, meeting, routine     (Cowork)
+  raftkit-dev/    # setup, implement, fix, scope-guard, ui, hasura, docs   (Claude Code)
+  raftkit-qa/     # suite, run-sheet, bug                                  (Cowork)
+  raftkit-docs/   # docs-product, discovery-interview          (opt-in, not installed by default)
 ```
 
-Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Verify manifest/marketplace schema against the current Claude Code plugin docs before scaffolding — do not trust memory.
+Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Verify manifest and marketplace schema against the current Claude Code plugin docs before scaffolding — do not trust memory.
 
 ## How work happens in this repo
 
-1. **One story at a time.** Pick it from the board (M1 → M2 → M3 → M4 order). Read the story task + all `[AC]` subtasks via the Asana connector before touching anything.
-2. **Plan before code.** Restate the scope contract (in scope = the ACs; everything else = out), propose the approach, get approval.
-3. **TDD for anything executable** — CI checks, hooks, scripts, validation tooling: failing test first, then green. Skills are mostly markdown; their "tests" are the story's ACs — walk them one by one before calling a story done.
-4. **Scope is a hard line.** Nothing beyond the story, nothing missing from it. Improvements you spot go to the board as proposals, not into the diff.
-5. **Keep it lean** (the minimalism lens — see `raftkit-dev/simplify`): the best code is the code never written. No speculative abstractions, no over-commenting, skills as short as correctness allows.
-6. **Commits/PRs:** small logical commits; conventional-commit titles (`feat:`, `fix:`, `docs:`, `chore:`); one story = one branch = one squash-PR whose title reads as a changelog line.
-7. **Close the loop in Asana:** on completion tick the story's `Development` subtask and comment what shipped (PR link). Draft → approve → push applies to every Asana write.
+1. **One story at a time.** Read the story task and all its `[AC]` subtasks through the Asana connector before touching anything.
+2. **Plan in the open.** State the scope contract (in scope = the acceptance criteria; everything else = out) and the phases, write it to `docs/specs/<branch>.md`, and show it. It is a record, not a gate.
+3. **Test first for anything executable** — CI checks, hooks, scripts, validation tooling. Skills are markdown; their tests are the story's acceptance criteria and `tests/structure.test.sh`.
+4. **Scope is a hard line.** Nothing beyond the story, nothing missing from it. Improvements go to the board as proposals, not into the diff.
+5. **Keep it lean.** Every skill has a word budget in `tests/budgets.json`; raising one is a deliberate edit a reviewer sees. No speculative abstractions, no restated rules, no rationale prose in an instruction file.
+6. **Commits and PRs:** small logical commits, conventional-commit titles, one story = one branch = one squash PR whose title reads as a changelog line.
+7. **Close the loop in Asana:** tick the story's `Development` subtask and comment the PR link, in the same stop as the PR.
 
 ## Non-negotiables
 
-- **Templates are read LIVE** from Asana at run time by every skill — GIDs in constants, never copied content. This repo must contain zero cached template text.
-- **Project facts live in Project Profiles**, never in plugins. Plugins stay project-independent.
-- **Asana free tier only:** no dependencies, custom fields, milestones, start dates, or approval tasks in anything a skill creates. Express relationships as task links in descriptions.
-- **Human gates everywhere:** skills draft, humans approve — story approval, plan approval, PR merge, bug close. No skill ever auto-sends, auto-merges, or auto-files. Exactly one exception, enumerated in `raftkit-core/house-rules` and `write-protocol`: the opt-in `pr-auto-review` CI workflow auto-commits Critical-finding fixes to the PR branch it runs on, never merging. Blocker telemetry is **not** an exception — blockers surface in the admin dashboard, never on an issue tracker.
-- **Escalation to founders** on budget, contracts, relationship risk, or client commitments (estimation output is always watermarked "Requires founder review — not a client commitment.").
-- **find-skills governance:** suggest → human approves → install; provenance required before anything touches client code.
+- **One stop per run.** A skill drafts everything, then stops once before anything leaves the session: an Asana write, a PR, a Sheet write, a message. An explicit go pushes what was shown; an edit re-presents the draft; silence pushes nothing. A run that writes nothing has no stop.
+- **No skill ever auto-sends, auto-merges, auto-files or auto-completes.** Merging a PR, ticking `[AC]` or `Testing`, and closing a bug stay human. Exactly one exception: the opt-in `pr-auto-review` CI workflow commits Critical-finding fixes on the PR branch it runs on and never merges, with its boundary in `raftkit-dev/skills/setup/references/pr-auto-review.md`, not extensible by analogy. Blocker telemetry is not an exception — a hard stop is reported to the admin dashboard, never filed on an issue tracker.
+- **Templates are read live** from Asana by GID, once per run. This repo holds zero cached template text.
+- **Project facts live in Project Profiles**, never in plugins.
+- **Asana free tier only:** no dependencies, custom fields, milestones, start dates or approval tasks. Relationships are task links.
+- **Rules live in one place.** `raftkit-core:rules` is inherited, never restated. A role skill that repeats the gate, the free-tier list, the live-fetch rule or the plain-language guardrail fails the structure suite.
+- **Escalation to founders** on budget, contracts, relationship risk or client commitments. Estimation output always carries "Requires founder review — not a client commitment."
 
 ## Open decisions — parameterize, don't hardcode
 
@@ -63,9 +55,9 @@ Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Veri
 |---|---|
 | Org-wide install path P0 (`1216551001583573`) | Distribution assumptions for pm/qa (Cowork installs) |
 | Marketplace repo home (`1216551001744293`) | This repo may move orgs — avoid hardcoded repo URLs |
-| Project Profile home (`1216550765662503`) | Where onboarding writes / skills read profiles |
-| Spec path + decomposition threshold (`1216550892331152`) | Governance pack ships these as parameters with defaults |
+| Phase file limit (`1216550892331152`) | Rule 2 of the working agreement ships two files as its value |
 
-## Build order
+## Pending with the founders
 
-M1 (scaffold → core constants → governance pack) → M2 (pm) → M3 (dev) → M4 (qa) → M5 pilot on **TicketStop** (StrikeHoney is the reference implementation, not the pilot) → M6 rollout.
+- **The working agreement** (`raftkit-core/skills/working-agreement/references/working-agreement.md`) replaces protocols 1–5 and needs Ashit's sign-off before the release to `main`. Its sha256 is pinned in `tests/budgets.json`, so any edit is deliberate.
+- **Unattended Asana writes** by a scheduled routine (`raftkit-pm:routine`) are not switched on until the founders record that decision.

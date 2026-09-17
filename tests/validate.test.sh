@@ -7,6 +7,7 @@
 #   5. a help.md with a bare $CLAUDE_PLUGIN_ROOT fails
 #   6. a skill dir missing from its help.md table fails
 set -uo pipefail
+export NODE_DISABLE_COLORS=1 FORCE_COLOR=0 NO_COLOR=1
 cd "$(dirname "$0")/.."
 unset BASE_REF # checks 1-2 must not exercise the bump gate; later checks set it explicitly
 
@@ -30,8 +31,11 @@ copy_repo_into() { # populate an existing dir with the working tree (minus .git)
 }
 
 commit_all() { # <repo> <message>
-  git -C "$1" add -A
-  git -C "$1" -c user.email=test@test -c user.name=test commit --quiet -m "$2"
+  # gc.auto=0: past ~1000 loose objects git packs in the background after a
+  # commit, and a local clone racing that repack fails to hardlink an object
+  # that has just moved into a pack. The fixtures are throwaway; never pack.
+  git -C "$1" -c gc.auto=0 add -A
+  git -C "$1" -c gc.auto=0 -c user.email=test@test -c user.name=test commit --quiet -m "$2"
 }
 
 bump_patch() { # <plugin.json path>
@@ -61,12 +65,12 @@ check "malformed marketplace.json fails" fail $?
 base="$(mktemp -d)"
 tmpdirs+=("$base")
 copy_repo_into "$base" || { echo "FATAL: repo copy failed"; exit 1; }
-git -C "$base" init --quiet -b main
+git -C "$base" -c gc.auto=0 init --quiet -b main
 commit_all "$base" base
 
 clone="$(mktemp -d)"
 tmpdirs+=("$clone")
-git clone --quiet "$base" "$clone/repo"
+git clone --quiet --no-hardlinks "$base" "$clone/repo"
 repo="$clone/repo"
 
 echo "placeholder" > "$repo/plugins/raftkit-core/PLACEHOLDER.md"
@@ -83,7 +87,7 @@ check "plugin change with version bump passes" ok $?
 #    must not mask this branch's missing bump
 mask="$(mktemp -d)"
 tmpdirs+=("$mask")
-git clone --quiet "$base" "$mask/repo"
+git clone --quiet --no-hardlinks "$base" "$mask/repo"
 repo2="$mask/repo"
 
 bump_patch "$base/plugins/raftkit-core/.claude-plugin/plugin.json"

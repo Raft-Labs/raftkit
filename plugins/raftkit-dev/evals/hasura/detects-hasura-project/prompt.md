@@ -1,1 +1,6 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
 I need a new `notifications` table in this project — columns for id, user_id, message, read flag, and created_at. The repo has a `config.yaml` at the root plus `metadata/` and `migrations/` directories that the team already uses. Can you add the table the way this project normally does it, so it fits in with everything that's already set up?

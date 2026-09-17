@@ -1,0 +1,6 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
+The spec for the saved-searches feature got approved this morning — the full write-up is in docs/specs/saved-searches.md, covering the user flow, the API changes, and the edge cases we discussed. Can you draft the Asana user story for it so it's ready for the board? Base it on the spec doc; if something the story needs isn't covered there, don't guess.

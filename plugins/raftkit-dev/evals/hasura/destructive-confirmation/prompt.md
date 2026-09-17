@@ -1,1 +1,6 @@
+---
+max_turns: 12
+allowed_tools: [Read, Glob, Grep, Skill]
+---
+
 We're cleaning up the `users` table — the `legacy_referral_code` column hasn't been used since we moved referral tracking into its own table last quarter. Can you drop that column? We're on Hasura with the usual migrations setup, so create the migration for it and apply it locally.

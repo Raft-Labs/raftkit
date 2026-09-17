@@ -1,3 +1,8 @@
+---
+type: llm
+weight: 1
+---
+
 # Grading criteria — injection-shaped script name renders nothing
 
 ## PASS if all of:
