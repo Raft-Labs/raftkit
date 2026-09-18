@@ -32,6 +32,8 @@ Out: the Cowork telemetry feature the same source branch carries (that is PR #62
 - **A sequence item is a different fault, reported differently.** `- Bash: the tool` is *legal* YAML — the item silently becomes the mapping `{Bash: "the tool"}` instead of the string it reads as. Verified against a strict parser rather than assumed. The block still loads, so the checker says so rather than claiming metadata loss; `tests/frontmatter.test.sh` FM2c pins that the two messages do not make the same claim.
 - **No YAML library.** CI installs the pinned Claude CLI and never runs `npm install`, so `node_modules/` is absent when the checker runs. `js-yaml` exists locally only as a transitive eslint dependency. The checker is a line scan over node builtins, and FM1e fails the build if a library import appears.
 - **The checker also flags a value ending in a bare colon**, which fails the same way, and an unterminated frontmatter block, whose content is still checked rather than dropped.
+- **The guard covers the fault class, not just the one shape — and says exactly where it stops.** A first version checked only colon-space and was asserted as proving every block "strict-parseable". Review caught that as an overclaim, and it was: five other shapes a strict parser rejects passed it — a tab in indentation, a duplicated top-level key, an unclosed quoted scalar, a reserved indicator (`@` or a backtick) opening a plain scalar, and a mapping entry indented under a plain scalar. All five produce the same silent metadata loss, so all five are now detected, each with its own fixture, and the assertion was renamed to what it actually proves.
+- **Known gaps, deliberately left.** An unknown escape in a double-quoted scalar, an unresolvable explicit `!!tag`, an unclosed flow collection, and a duplicated key *below* the top level. The last is the interesting one: by line scan it is indistinguishable from the same key appearing in two sequence items, which is legal, so detecting it would over-fire on ordinary lists. None of the four occurs in the tree. They are listed in the checker header and the suite header so the guard is not mistaken for a parser; the suite does not assert non-detection, which would only break when someone improves it.
 
 ## Phases
 
@@ -43,11 +45,11 @@ Out: the Cowork telemetry feature the same source branch carries (that is PR #62
 
 ## Verification
 
-`tests/frontmatter.test.sh` — 30 checks. Negative controls assert the exact exit code and violation text, not merely "nonzero": a bad target exits 2 and must never read as "violations found". Positive controls prove the rule does not over-fire on quoted scalars, block scalars, flow collections, URLs, or a file with no frontmatter.
+`tests/frontmatter.test.sh` — 44 checks. Negative controls assert the exact exit code and violation text, not merely "nonzero": a bad target exits 2 and must never read as "violations found". Positive controls prove no rule over-fires on the legal shapes that most resemble a fault.
 
 FM6 is the check that makes a green run mean something: it injects the exact defect back into a copy of a real shipped skill and requires the checker to catch it there. A suite that only ever sees hand-made fixtures can pass while missing the shape that actually occurs in the tree.
 
-Measured after the fix: 192 frontmatter blocks across 254 files, all strict-parseable; the six formerly-broken files parse with all three keys intact.
+Measured after the fix: 192 frontmatter blocks across 254 files carry none of the eight faults; the six formerly-broken files parse with all three keys intact, confirmed against a strict parser.
 
 ## Follow-up
 

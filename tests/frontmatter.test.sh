@@ -10,13 +10,35 @@
 # caught it: scripts/validate.sh exited 0 with all six present, and
 # `claude plugin validate` passed them.
 #
+# The checker covers eight faults, each of which makes a block silently fail
+# to load: colon-space in a plain scalar, a plain scalar ending in a bare
+# colon, a tab in indentation, a duplicated top-level key, an unclosed quoted
+# scalar, a reserved indicator (@ or `) opening a plain scalar, a mapping
+# entry indented under a plain scalar, and an unterminated block.
+#
+# It is a targeted scan, NOT a YAML parser, and this suite is careful not to
+# claim otherwise. Faults knowingly outside its reach, none of which occur in
+# the tree: an unknown escape in a double-quoted scalar, an unresolvable
+# explicit !!tag, a duplicated key below the top level (indistinguishable by
+# line scan from the same key in two sequence items, which is legal), and an
+# unclosed flow collection. If you extend the checker to one of these, move
+# it into the negative controls below and off this list.
+#
 # This suite pins: the checker exists and distinguishes its exit codes; each
 # negative-control fixture fails exactly the rule it names, with the exact
 # exit code and violation text asserted rather than just "nonzero"; each
-# positive control passes, so the rule does not over-fire on quoted scalars,
-# block scalars, flow collections or URLs; the real repo content is clean;
-# and — so a green run here is trustworthy rather than a rubber stamp — the
-# defect injected back into a copy of a real skill is still caught.
+# positive control passes, so no rule over-fires on the legal shapes that
+# most resemble a fault — plain multi-line folding, a block scalar whose body
+# carries colons, nested mappings, a quoted scalar spanning two lines, quotes
+# and apostrophes inside a plain scalar, a tab after the key colon, flow
+# collections and URLs; the real repo content is clean; and — so a green run
+# here is trustworthy rather than a rubber stamp — the defect injected back
+# into a copy of a real skill is still caught.
+#
+# Every fixture's YAML validity was verified in both directions against a
+# strict parser (js-yaml) when it was written. The suite itself cannot do
+# that: node_modules/ is absent in CI, which is the whole reason the checker
+# is a line scan.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 
@@ -102,6 +124,26 @@ check_exit "FM2c rejects a colon-space in an unquoted sequence item (exit 1)" 1 
 check_contains "FM2c names it as a sequence item" "$out" "unquoted sequence item"
 check_lacks "FM2c does not claim a sequence item breaks the whole block" "$out" "loads with no metadata"
 
+out="$(node "$CHECKER" "$FIX/bad-tab-indent.md" 2>&1)"; code=$?
+check_exit "FM2e rejects a tab in indentation (exit 1)" 1 "$code"
+check_contains "FM2e names the fault" "$out" "tab character in indentation"
+
+out="$(node "$CHECKER" "$FIX/bad-dup-key.md" 2>&1)"; code=$?
+check_exit "FM2f rejects a duplicated top-level key (exit 1)" 1 "$code"
+check_contains "FM2f names the key and where it was first seen" "$out" 'duplicate top-level key `description` (first seen on line 3)'
+
+out="$(node "$CHECKER" "$FIX/bad-unclosed-quote.md" 2>&1)"; code=$?
+check_exit "FM2g rejects a quoted scalar that is never closed (exit 1)" 1 "$code"
+check_contains "FM2g names the fault" "$out" "is never closed"
+
+out="$(node "$CHECKER" "$FIX/bad-reserved-indicator.md" 2>&1)"; code=$?
+check_exit "FM2h rejects a reserved indicator opening a plain scalar (exit 1)" 1 "$code"
+check_contains "FM2h names the indicator" "$out" 'reserved indicator "@"'
+
+out="$(node "$CHECKER" "$FIX/bad-nested-under-scalar.md" 2>&1)"; code=$?
+check_exit "FM2i rejects a mapping entry indented under a plain scalar (exit 1)" 1 "$code"
+check_contains "FM2i names both keys" "$out" 'is indented under the plain scalar `description`'
+
 out="$(node "$CHECKER" "$FIX/bad-unterminated.md" 2>&1)"; code=$?
 check_exit "FM2d rejects an unterminated frontmatter block (exit 1)" 1 "$code"
 check_contains "FM2d names it as unterminated" "$out" "unterminated frontmatter block"
@@ -121,6 +163,18 @@ check_exit "FM3c accepts a colon inside a block scalar and a flow collection (ex
 node "$CHECKER" "$FIX/good-url.md" >/dev/null 2>&1
 check_exit "FM3d accepts a URL value, which carries a colon but no colon-space (exit 0)" 0 $?
 
+node "$CHECKER" "$FIX/good-folding.md" >/dev/null 2>&1
+check_exit "FM3f accepts a plain scalar folded across two lines (exit 0)" 0 $?
+
+node "$CHECKER" "$FIX/good-nested-map.md" >/dev/null 2>&1
+check_exit "FM3g accepts a legal nested mapping (exit 0)" 0 $?
+
+node "$CHECKER" "$FIX/good-multiline-quote.md" >/dev/null 2>&1
+check_exit "FM3h accepts a quoted scalar that closes on a later line (exit 0)" 0 $?
+
+node "$CHECKER" "$FIX/good-tab-after-colon.md" >/dev/null 2>&1
+check_exit "FM3i accepts a tab after the key colon, which is not indentation (exit 0)" 0 $?
+
 out="$(node "$CHECKER" "$FIX/no-frontmatter.md" 2>&1)"; code=$?
 check_exit "FM3e accepts a file with no frontmatter at all (exit 0)" 0 "$code"
 check_contains "FM3e counts no block for a file that has none" "$out" "checked 0 frontmatter block(s)"
@@ -130,7 +184,7 @@ check_contains "FM3e counts no block for a file that has none" "$out" "checked 0
 real_out="$(node "$CHECKER" plugins 2>&1)"
 real_exit=$?
 [[ "$real_exit" -eq 0 ]]
-check "FM4a every frontmatter block in plugins/ is strict-parseable" ok $?
+check "FM4a no frontmatter block in plugins/ carries a fault this checker detects" ok $?
 [[ "$real_exit" -ne 0 ]] && echo "$real_out"
 
 grep -qE '^checked [0-9]+ frontmatter block' <<<"$real_out"
@@ -161,7 +215,7 @@ check "FM5a all six formerly-broken skills still exist" ok $?
 [[ -n "$missing" ]] && echo "  missing:$missing"
 
 node "$CHECKER" "${six[@]}" >/dev/null 2>&1
-check_exit "FM5b all six formerly-broken skills now parse (exit 0)" 0 $?
+check_exit "FM5b all six formerly-broken skills are free of the fault (exit 0)" 0 $?
 
 # --- MUTATION: the checker is not vacuous against real content ---
 #

@@ -30,6 +30,23 @@
 // only that one entry is the wrong type. Verified against a strict parser
 // rather than assumed — the two cases must not claim the same consequence.
 //
+// Faults covered, each of which makes the block silently fail to load:
+//   1. colon-space in a plain (unquoted) scalar
+//   2. a plain scalar ending in a bare colon
+//   3. a tab in a line's indentation
+//   4. a duplicated top-level key
+//   5. a quoted scalar that is never closed
+//   6. a plain scalar opening with a YAML reserved indicator (@ or `)
+//   7. a mapping entry indented under a plain scalar
+//   8. an unterminated frontmatter block
+//
+// This is a targeted scan, NOT a YAML parser, and it does not claim to
+// accept only valid YAML. Every rule above was checked in both directions
+// against a strict parser: each fault is one it really rejects, and the
+// legal shapes that look similar are left alone — plain multi-line folding,
+// a block scalar whose body contains colons, nested mappings, quotes and
+// apostrophes inside a plain scalar, and a tab after the key's colon.
+//
 // Deliberately implemented with node builtins and a line scan rather than a
 // YAML library: CI installs the pinned Claude CLI and nothing else, never
 // `npm install`, so node_modules/ is not present when this runs.
@@ -44,11 +61,14 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 // Not plain scalars: a quoted string, a block scalar, a flow collection, or
-// an anchor/alias. Each may legally carry a colon-space.
+// an anchor/alias. Each may legally contain a colon-space.
 const NOT_A_PLAIN_SCALAR = /^["'|>[{&*]/;
 
-const KEY_LINE = /^(\s*)([A-Za-z0-9_.-]+):(\s*)(.*)$/;
-const LIST_ITEM = /^\s*-\s+(.*)$/;
+// `@` and a backtick are reserved as the first character of a plain scalar.
+const RESERVED_INDICATOR = /^[@`]/;
+
+const KEY_LINE = /^([ \t]*)([A-Za-z0-9_.-]+):([ \t]*)(.*)$/;
+const LIST_ITEM = /^[ \t]*-[ \t]+(.*)$/;
 
 function collectMarkdownFiles(target, out) {
   let st;
@@ -84,50 +104,168 @@ function extractFrontmatter(file, src, violations) {
   return lines.slice(1).map((text, j) => ({ text, line: j + 2 }));
 }
 
-function valueOf(text) {
-  const key = text.match(KEY_LINE);
-  if (key) return { value: key[4], key: key[2] };
-  const item = text.match(LIST_ITEM);
-  if (item) return { value: item[1], key: null };
-  return null;
+// Walks a quoted scalar looking for its unescaped closing quote. A double
+// quote escapes with a backslash, a single quote by doubling itself. Quoted
+// scalars may legally span lines, so "not closed here" is not yet a fault.
+function closesOnThisLine(text, quote) {
+  for (let i = 1; i < text.length; i++) {
+    const ch = text[i];
+    if (quote === '"' && ch === "\\") {
+      i++;
+      continue;
+    }
+    if (ch !== quote) continue;
+    if (quote === "'" && text[i + 1] === "'") {
+      i++;
+      continue;
+    }
+    return true;
+  }
+  return false;
+}
+
+// The three faults a plain (unquoted) scalar can carry on its own. Split out
+// of checkBlock to keep that walk readable: it is a state machine over the
+// block's lines, and inlining these made it both long and branchy.
+function checkPlainScalar(file, line, name, value, violations) {
+  if (RESERVED_INDICATOR.test(value)) {
+    violations.push(
+      `${file}:${line}: the unquoted value of \`${name}\` opens with the reserved ` +
+        `indicator "${value[0]}" — a strict YAML parser rejects the whole ` +
+        `frontmatter block. Quote the value.`
+    );
+  }
+
+  if (value.includes(": ")) {
+    violations.push(
+      `${file}:${line}: colon-space in the unquoted value of \`${name}\` — ` +
+        `a strict YAML parser rejects the whole frontmatter block, so the ` +
+        `file loads with no metadata. Use an em dash, or quote the value.`
+    );
+  } else if (value.endsWith(":")) {
+    violations.push(
+      `${file}:${line}: the unquoted value of \`${name}\` ends in a bare ` +
+        `colon — a strict YAML parser rejects the whole frontmatter block. ` +
+        `Use an em dash, or quote the value.`
+    );
+  }
+}
+
+// A sequence item carrying a colon-space is legal YAML but almost never what
+// was meant, so it is reported with its own wording — see the header.
+function checkSequenceItem(file, line, value, violations) {
+  if (NOT_A_PLAIN_SCALAR.test(value) || !value.includes(": ")) return;
+  violations.push(
+    `${file}:${line}: colon-space in an unquoted sequence item — YAML reads ` +
+      `this as a mapping, so the item becomes an object instead of the ` +
+      `string it reads as. Use an em dash, or quote the item.`
+  );
+}
+
+// Duplicates are only tracked at the top level. Deeper down, a line scan
+// cannot tell a real duplicate from the same key in two sequence items,
+// which is legal — so checking there would over-fire on ordinary lists.
+function checkTopLevelKey(file, line, name, seen, violations) {
+  if (!seen.has(name)) {
+    seen.set(name, line);
+    return;
+  }
+  violations.push(
+    `${file}:${line}: duplicate top-level key \`${name}\` (first seen on line ` +
+      `${seen.get(name)}) — a strict YAML parser rejects the whole ` +
+      `frontmatter block.`
+  );
 }
 
 function checkBlock(file, block, violations) {
+  const topLevelKeys = new Map();
+  let openQuote = null; // { quote, line, key }
+  let blockScalarIndent = null;
+  let plainScalarParent = null; // { indent, key }
+
   for (const { text, line } of block) {
-    if (text.trim() === "" || text.trimStart().startsWith("#")) continue;
-
-    const found = valueOf(text);
-    if (!found) continue;
-
-    const value = found.value.trim();
-    if (value === "" || NOT_A_PLAIN_SCALAR.test(value)) continue;
-
-    // A sequence item and a key's value fail differently, so they must not
-    // be reported as if they failed the same way.
-    if (found.key === null) {
-      if (value.includes(": ")) {
-        violations.push(
-          `${file}:${line}: colon-space in an unquoted sequence item — YAML reads ` +
-            `this as a mapping, so the item becomes an object instead of the ` +
-            `string it reads as. Use an em dash, or quote the item.`
-        );
-      }
+    // --- inside a multi-line quoted scalar: only look for the close ---
+    if (openQuote) {
+      if (closesOnThisLine(`${openQuote.quote}${text}`, openQuote.quote)) openQuote = null;
       continue;
     }
 
-    if (value.includes(": ")) {
+    // --- inside a block scalar: its body may contain anything ---
+    if (blockScalarIndent !== null) {
+      const indent = text.match(/^[ \t]*/)[0].length;
+      if (text.trim() === "" || indent > blockScalarIndent) continue;
+      blockScalarIndent = null;
+    }
+
+    if (text.trim() === "" || text.trimStart().startsWith("#")) continue;
+
+    const lead = text.match(/^[ \t]*/)[0];
+    if (lead.includes("\t")) {
       violations.push(
-        `${file}:${line}: colon-space in the unquoted value of \`${found.key}\` — ` +
-          `a strict YAML parser rejects the whole frontmatter block, so the ` +
-          `file loads with no metadata. Use an em dash, or quote the value.`
-      );
-    } else if (value.endsWith(":")) {
-      violations.push(
-        `${file}:${line}: the unquoted value of \`${found.key}\` ends in a bare ` +
-          `colon — a strict YAML parser rejects the whole frontmatter block. ` +
-          `Use an em dash, or quote the value.`
+        `${file}:${line}: tab character in indentation — YAML forbids tabs for ` +
+          `indentation and rejects the whole frontmatter block. Use spaces.`
       );
     }
+
+    const key = text.match(KEY_LINE);
+    const item = text.match(LIST_ITEM);
+
+    if (!key) {
+      if (item) {
+        checkSequenceItem(file, line, item[1].trim(), violations);
+        plainScalarParent = null;
+      }
+      // Anything else is a plain multi-line continuation, which is legal.
+      continue;
+    }
+
+    const indent = key[1].length;
+    const name = key[2];
+    const value = key[4].trim();
+
+    // A mapping entry cannot be indented underneath a plain scalar.
+    if (plainScalarParent && indent > plainScalarParent.indent) {
+      violations.push(
+        `${file}:${line}: \`${name}\` is indented under the plain scalar ` +
+          `\`${plainScalarParent.key}\` — a strict YAML parser rejects the whole ` +
+          `frontmatter block. Quote the value above, or make it a block scalar.`
+      );
+    }
+
+    if (indent === 0) checkTopLevelKey(file, line, name, topLevelKeys, violations);
+
+    if (value === "") {
+      plainScalarParent = null;
+      continue;
+    }
+
+    if (value[0] === "|" || value[0] === ">") {
+      blockScalarIndent = indent;
+      plainScalarParent = null;
+      continue;
+    }
+
+    if (value[0] === '"' || value[0] === "'") {
+      if (!closesOnThisLine(value, value[0])) openQuote = { quote: value[0], line, key: name };
+      plainScalarParent = null;
+      continue;
+    }
+
+    if (NOT_A_PLAIN_SCALAR.test(value)) {
+      plainScalarParent = null;
+      continue;
+    }
+
+    // --- a plain scalar ---
+    plainScalarParent = { indent, key: name };
+    checkPlainScalar(file, line, name, value, violations);
+  }
+
+  if (openQuote) {
+    violations.push(
+      `${file}:${openQuote.line}: the quoted value of \`${openQuote.key}\` is never ` +
+        `closed — a strict YAML parser rejects the whole frontmatter block.`
+    );
   }
 }
 
