@@ -68,3 +68,7 @@ Suggest with provenance → human approves → install.
 ## Plain output
 
 Short sentences, active voice, numbers not adjectives, end on the next action: `references/plain-language.md`.
+
+## Telemetry
+
+Claude Code reports itself through hooks; no skill does anything. Cowork has no hooks and emits no event when a skill runs, so a pm or qa skill names itself once in its first reply — `Using <plugin>:<skill>`. That line is the whole difference — no skill calls an endpoint, spools a file, or reports anything itself. `RAFTKIT_TELEMETRY=off` is a Claude Code switch and does nothing in Cowork; there is no per-session equivalent. Contract — `skills/cowork-telemetry/SKILL.md`.

@@ -1,7 +1,7 @@
 {
   "name": "raftkit-qa",
-  "version": "1.0.1",
-  "description": "QA skills: the project test-case suite in a QA-owned Sheet, per-story run sheets, and one bug skill that files from Jam evidence and retests fixes — each with one stop before any write.",
+  "version": "1.1.0",
+  "description": "QA skills: the project test-case suite in a QA-owned Sheet, per-story run sheets, and one bug skill that files from Jam evidence and retests fixes \u2014 each with one stop before any write.",
   "author": {
     "name": "RaftLabs"
   },

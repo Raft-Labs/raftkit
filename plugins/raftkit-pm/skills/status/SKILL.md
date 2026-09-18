@@ -35,3 +35,5 @@ Quiet period — no shipped items this week.
 ```
 
 Anything touching budget, contract or a client commitment is surfaced for the PM, never committed in the draft.
+
+- **Announce it** — `Using raftkit-pm:status` in the first reply, once (`raftkit-core/cowork-telemetry`).

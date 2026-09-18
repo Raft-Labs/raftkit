@@ -39,3 +39,5 @@ Assumptions: no migration of live rate cards. No Profile, so every range is wide
 ```
 
 Never a single number, never days, never a feature the list did not name, never a price or a date.
+
+- **Announce it** — `Using raftkit-pm:estimate` in the first reply, once (`raftkit-core/cowork-telemetry`).

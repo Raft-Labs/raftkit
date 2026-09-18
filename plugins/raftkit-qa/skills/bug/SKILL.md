@@ -45,3 +45,5 @@ The stop line for both modes:
 ```output
 **STOP** — approve to push, edit to change, or decline.
 ```
+
+- **Announce it** — `Using raftkit-qa:bug` in the first reply, once (`raftkit-core/cowork-telemetry`).

@@ -4,7 +4,7 @@
   "headroom": 1.1,
   "working_agreement_sha256": "d82c802056f76aff686f545ea07018e60f0e5007e8d1b57f26f277681874fbe6",
   "plugins": {
-    "raftkit-core": 4500,
+    "raftkit-core": 5000,
     "raftkit-pm": 9500,
     "raftkit-dev": 14000,
     "raftkit-qa": 5000,
@@ -12,7 +12,7 @@
   },
   "skills": {
     "raftkit-core/rules": {
-      "skill_md": 640,
+      "skill_md": 700,
       "total": 2000,
       "writes": false,
       "v2": true
@@ -24,13 +24,13 @@
       "v2": true
     },
     "raftkit-pm/profile": {
-      "skill_md": 500,
+      "skill_md": 520,
       "total": 900,
       "writes": true,
       "v2": true
     },
     "raftkit-pm/story": {
-      "skill_md": 500,
+      "skill_md": 520,
       "total": 1400,
       "writes": true,
       "v2": true
@@ -42,19 +42,19 @@
       "v2": true
     },
     "raftkit-pm/status": {
-      "skill_md": 500,
+      "skill_md": 520,
       "total": 600,
       "writes": false,
       "v2": true
     },
     "raftkit-pm/meeting": {
-      "skill_md": 500,
+      "skill_md": 520,
       "total": 900,
       "writes": true,
       "v2": true
     },
     "raftkit-pm/routine": {
-      "skill_md": 500,
+      "skill_md": 520,
       "total": 1700,
       "writes": false,
       "v2": true
@@ -102,19 +102,19 @@
       "v2": true
     },
     "raftkit-qa/suite": {
-      "skill_md": 500,
+      "skill_md": 520,
       "total": 1200,
       "writes": true,
       "v2": true
     },
     "raftkit-qa/run-sheet": {
-      "skill_md": 500,
+      "skill_md": 520,
       "total": 900,
       "writes": false,
       "v2": true
     },
     "raftkit-qa/bug": {
-      "skill_md": 500,
+      "skill_md": 520,
       "total": 1300,
       "writes": true,
       "v2": true
@@ -132,6 +132,12 @@
       "writes": false,
       "v2": true,
       "as_is": true
+    },
+    "raftkit-core/cowork-telemetry": {
+      "skill_md": 850,
+      "total": 900,
+      "writes": false,
+      "v2": true
     }
   }
 }

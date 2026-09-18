@@ -35,3 +35,5 @@ Additive only, never a rewrite: `references/amend.md`. One stop covers the diff,
 ## Check
 
 Fetch the story and its subtasks, judge against the template, print the verdict from `raftkit-core:rules` → `references/readiness.md`. Read-only.
+
+- **Announce it** — `Using raftkit-pm:story` in the first reply, once (`raftkit-core/cowork-telemetry`).
