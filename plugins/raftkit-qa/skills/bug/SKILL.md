@@ -1,6 +1,6 @@
 ---
 name: bug
-description: File a bug into Asana from a Jam recording or retest a returned fix — "file a bug", "log this Jam as a bug", "raise a defect for this failing step", "retest this bug", "did the fix hold". Reads the live Bugs Template once per chat, quotes evidence verbatim, proposes the judgment fields, stops once before the write. Fixing: raftkit-dev:fix.
+description: File a bug into Asana from a Jam recording or retest a returned fix — "file a bug", "log this Jam as a bug", "raise a defect for this failing step", "retest this bug", "did the fix hold". Reads the live Bugs Template once, quotes evidence verbatim, proposes the judgment fields, stops once before the write. Fixing — raftkit-dev:fix.
 user-invocable: true
 ---
 

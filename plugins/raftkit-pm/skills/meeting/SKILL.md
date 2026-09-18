@@ -1,6 +1,6 @@
 ---
 name: meeting
-description: Turn one client call into cited decisions, a Project Profile delta and an Asana task batch — "extract the decisions from this call", "turn this call into action items and tasks", "what did we decide and who owns what". Every item carries a transcript citation; out-of-scope asks are flagged SCOPE CHANGE; one stop covers everything. Scheduling: raftkit-pm:routine.
+description: Turn one client call into cited decisions, a Project Profile delta and an Asana task batch — "extract the decisions from this call", "turn this call into action items and tasks", "what did we decide and who owns what". Every item carries a transcript citation; out-of-scope asks are flagged SCOPE CHANGE; one stop covers everything. Scheduling — raftkit-pm:routine.
 user-invocable: true
 ---
 
