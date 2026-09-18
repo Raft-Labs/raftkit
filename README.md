@@ -119,6 +119,14 @@ export RAFTKIT_TELEMETRY=off     # or DO_NOT_TRACK=1
 
 When a skill hard-stops, the refusal is reported as telemetry and appears in the admin dashboard with a triage status, so blockers reach the team instead of dying in your terminal. Nothing is filed on any issue tracker: a captured refusal line can carry client project detail, and this repository is public, so that data belongs only behind the dashboard's authentication.
 
+### In Cowork
+
+Cowork sessions run in a sandbox with no host filesystem and no hooks, so none of the above runs there and **`RAFTKIT_TELEMETRY=off` has no effect in Cowork** — it sets an environment variable that only the hooks read.
+
+Cowork reports through its own OpenTelemetry export instead, which an admin turns on once under Admin settings. It covers prompts, tool failures and errors on its own, but emits no event when a skill runs, so each `raftkit-pm` and `raftkit-qa` skill names itself in its first reply — `Using raftkit-pm:story`. That line is the only record that a skill ran at all. No skill calls an endpoint, spools a file, or reports anything itself.
+
+Assistant responses are read for that announcement and for refusals, then dropped — they are never stored. The real switch is the admin's OTLP endpoint: unset it and nothing is exported, for anyone. There is no per-session equivalent inside Cowork. See `raftkit-core/skills/cowork-telemetry`.
+
 ## For project repos
 
 Run `/raftkit-dev:setup` inside a project repo the first time you open it with raftkit-dev installed. In one transaction it merges the RaftLabs working agreement and the Module Design Standard into the repo's `CLAUDE.md`, registers the raftkit marketplace in `.claude/settings.json` (so teammates are prompted to install raftkit on trust), installs the pre-push hook, the CI quality guardrail and the review config, and offers the opt-in PR auto-review workflow. It shows the whole plan and stops once before writing anything, then verifies what it wrote. Re-running it reports drift instead of redoing the work.
