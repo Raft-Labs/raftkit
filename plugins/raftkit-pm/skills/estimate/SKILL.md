@@ -1,6 +1,6 @@
 ---
 name: estimate
-description: Estimate a whole feature list into FE, BE and QA hour ranges for a proposal — "estimate this feature list", "hours for the proposal", "break this scope into FE/BE/QA hours". Takes the list as pasted, a document or a Sheet, widens where knowledge is thin, writes one Sheet after one stop. Hours only. One story: raftkit-pm:story size.
+description: Estimate a whole feature list into FE, BE and QA hour ranges for a proposal — "estimate this feature list", "hours for the proposal", "break this scope into FE/BE/QA hours". Takes the list as pasted, a document or a Sheet, widens where knowledge is thin, writes one Sheet after one stop. Hours only. One story — raftkit-pm:story size.
 user-invocable: true
 ---
 

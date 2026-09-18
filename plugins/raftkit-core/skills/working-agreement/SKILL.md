@@ -1,6 +1,6 @@
 ---
 name: working-agreement
-description: The RaftLabs working agreement for AI-assisted delivery (ten rules: model tiers, small phases, visible plan, green baseline, tests from acceptance criteria, verify after, loop limit, one stop, incidents first, session hygiene) plus the Module Design Standard, as installable text. raftkit-dev:setup installs both into a client CLAUDE.md. Consult it to quote a rule or check the exact text.
+description: The RaftLabs working agreement for AI-assisted delivery (ten rules — model tiers, small phases, visible plan, green baseline, tests from acceptance criteria, verify after, loop limit, one stop, incidents first, session hygiene) plus the Module Design Standard, as installable text. raftkit-dev:setup installs both into a client CLAUDE.md. Consult it to quote a rule or check the exact text.
 user-invocable: false
 ---
 

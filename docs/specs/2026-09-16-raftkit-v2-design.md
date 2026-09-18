@@ -125,7 +125,7 @@ Budgets cover SKILL.md + references (executable scripts and templates excluded).
 | `status` | 600 | status-update | Already lean. No stop (writes nothing). |
 | `meeting` | 900 + extraction ref | meeting-decisions (minus routine) | Extraction + profile delta + task batch as one draft, one STOP, partial-failure rule from core. |
 | `routine` | 500 + 2 prompt templates | meeting-decisions/scheduled-routine, deprecation-sweep | Hands over a filled routine prompt (meeting notes or deprecation sweep). The founders' unattended-write decision stated once here. |
-| **dropped** | | story-skill-generator | A per-project fork of user-story built to avoid re-reading the profile; the session cache removes the reason. Content retrievable from `archive/v1`. |
+| **dropped** | | story-skill-generator | A per-project fork of user-story built to avoid re-reading the profile; the session cache removes the reason. Content retrievable from the `v1-final` tag. |
 
 ### raftkit-dev (126.5k → ~13k words + scripts/templates; docs product moves out)
 

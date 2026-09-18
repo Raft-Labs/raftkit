@@ -1,6 +1,6 @@
 ---
 name: docs-product
-description: Design a project's documentation from scratch, document an existing codebase, or scaffold a project — "help me design this project", "document this codebase for me", "set up the project docs", "reverse-engineer the docs", "scaffold the project". The full co-authoring design flow with 29 templates and diagrams. Opt-in: install raftkit-docs. Parity checks on a story are raftkit-dev:docs.
+description: Design a project's documentation from scratch, document an existing codebase, or scaffold a project — "help me design this project", "document this codebase for me", "set up the project docs", "reverse-engineer the docs", "scaffold the project". The full co-authoring design flow with 29 templates and diagrams. Opt-in — install raftkit-docs. Parity checks on a story are raftkit-dev:docs.
 user-invocable: true
 ---
 

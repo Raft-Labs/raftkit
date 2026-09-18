@@ -1,6 +1,6 @@
 {
   "name": "raftkit-core",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "RaftKit rules (Asana constants, the one human stop per run, fetch-once live reads, Asana HTML, free tier, scope line, escalation, readiness, plain output), the RaftLabs working agreement and Module Design Standard, usage and token telemetry hooks, and the bulk-read shunt with its bulk-reader subagent.",
   "author": {
     "name": "RaftLabs"

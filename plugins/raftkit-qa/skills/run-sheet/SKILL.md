@@ -1,6 +1,6 @@
 ---
 name: run-sheet
-description: Turn one Asana story into a numbered manual run sheet — "make a run sheet for this story", "turn this story into test steps", "generate the manual test run for task X". Steps derive from the story's scenarios and every [AC], expected results quote the story verbatim, gaps are named. Writes nothing. Project-wide suite: suite. Filing a failure: bug.
+description: Turn one Asana story into a numbered manual run sheet — "make a run sheet for this story", "turn this story into test steps", "generate the manual test run for task X". Steps derive from the story's scenarios and every [AC], expected results quote it verbatim, gaps are named. Writes nothing. Project-wide suite — suite. Failures — bug.
 user-invocable: true
 ---
 
