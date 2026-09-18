@@ -1,7 +1,7 @@
 {
   "name": "raftkit-pm",
-  "version": "1.0.1",
-  "description": "PM skills: the Project Profile, one story skill (author, amend, check, size), feature-list estimation, the weekly client update, meeting decisions, and routine handover — each with one stop before any write.",
+  "version": "1.1.0",
+  "description": "PM skills: the Project Profile, one story skill (author, amend, check, size), feature-list estimation, the weekly client update, meeting decisions, and routine handover \u2014 each with one stop before any write.",
   "author": {
     "name": "RaftLabs"
   },

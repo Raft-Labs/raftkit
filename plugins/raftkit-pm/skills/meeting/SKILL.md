@@ -37,3 +37,5 @@ Profile delta: 3 changed, 2 new, 1 conflict. Tasks: 6 proposed, 1 owner unclear 
 5. **On go**: write the approved parts, read back once, report each created task with its link and anything left unassigned.
 
 Nothing is sent to Slack or email. A decision that touches budget, contract or a client commitment is surfaced for founders, never treated as settled.
+
+- **Announce it** — `Using raftkit-pm:meeting` in the first reply, once (`raftkit-core/cowork-telemetry`).

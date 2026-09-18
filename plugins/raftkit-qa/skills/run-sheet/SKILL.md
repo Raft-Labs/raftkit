@@ -30,3 +30,5 @@ A failing step routes to `raftkit-qa:bug` with its number, action and expected r
 Run sheet: 27 steps covering 6 [AC]s — gaps: listed
 - [AC] "export completes within 10 s" — no runnable step; the story gives no test data.
 ```
+
+- **Announce it** — `Using raftkit-qa:run-sheet` in the first reply, once (`raftkit-core/cowork-telemetry`).

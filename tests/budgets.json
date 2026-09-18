@@ -24,13 +24,13 @@
       "v2": true
     },
     "raftkit-pm/profile": {
-      "skill_md": 500,
+      "skill_md": 520,
       "total": 900,
       "writes": true,
       "v2": true
     },
     "raftkit-pm/story": {
-      "skill_md": 500,
+      "skill_md": 520,
       "total": 1400,
       "writes": true,
       "v2": true
@@ -42,19 +42,19 @@
       "v2": true
     },
     "raftkit-pm/status": {
-      "skill_md": 500,
+      "skill_md": 520,
       "total": 600,
       "writes": false,
       "v2": true
     },
     "raftkit-pm/meeting": {
-      "skill_md": 500,
+      "skill_md": 520,
       "total": 900,
       "writes": true,
       "v2": true
     },
     "raftkit-pm/routine": {
-      "skill_md": 500,
+      "skill_md": 520,
       "total": 1700,
       "writes": false,
       "v2": true
@@ -102,19 +102,19 @@
       "v2": true
     },
     "raftkit-qa/suite": {
-      "skill_md": 500,
+      "skill_md": 520,
       "total": 1200,
       "writes": true,
       "v2": true
     },
     "raftkit-qa/run-sheet": {
-      "skill_md": 500,
+      "skill_md": 520,
       "total": 900,
       "writes": false,
       "v2": true
     },
     "raftkit-qa/bug": {
-      "skill_md": 500,
+      "skill_md": 520,
       "total": 1300,
       "writes": true,
       "v2": true

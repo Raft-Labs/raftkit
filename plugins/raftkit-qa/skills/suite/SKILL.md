@@ -40,3 +40,5 @@ Approve writes the new rows and deltas. Both conflicts keep QA's version unless 
 - Renumber or reuse a case ID; drop, rename or reorder a column.
 - Merge two projects into one Sheet.
 - Half-write on an access error: stop and name the exact fix (which account needs edit access to which Sheet).
+
+- **Announce it** — `Using raftkit-qa:suite` in the first reply, once (`raftkit-core/cowork-telemetry`).

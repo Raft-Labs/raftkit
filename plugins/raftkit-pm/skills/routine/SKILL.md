@@ -33,3 +33,5 @@ Two routines, one handover shape. `raftkit-core:rules` apply. This skill writes 
 ## When it stops working
 
 Nothing ran → created as Local. No recording found → the event was renamed; re-read the name from Fathom. Thin notes → restore the full-transcript line. An earlier task changed → restore the create-only line. Everything unassigned or a surface unreachable → reconnect that connector. Flags without citations, or tasks being created → restore the citation and read-only lines.
+
+- **Announce it** — `Using raftkit-pm:routine` in the first reply, once (`raftkit-core/cowork-telemetry`).

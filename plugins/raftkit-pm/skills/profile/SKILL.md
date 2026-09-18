@@ -32,3 +32,5 @@ Profile draft for Riverside Bookings (1216…). 4 subtasks, 38 facts: ✅ 21 / �
 38 facts — ✅ 21 / ⚠️ 12 / ❓ 5. Top gaps: payment provider, refund window.
 Profile lives at: <link>
 ```
+
+- **Announce it** — `Using raftkit-pm:profile` in the first reply, once (`raftkit-core/cowork-telemetry`).
