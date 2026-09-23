@@ -6,25 +6,30 @@
 //
 // A green result is cached under <git common dir>/raftkit/verify.json, keyed
 // by the tree hash of HEAD and the exact command. It is reused only while the
-// working tree is clean; a dirty tree always runs, and a red result is never
-// cached. The pre-push hook does not use this script and keeps its full gates.
+// working tree is clean and for at most an hour; a dirty tree or --fresh
+// always runs, and a red result is never cached. The pre-push hook does not
+// use this script and keeps its full gates.
 //
-// Usage: node verify.mjs [--only test|lint|typecheck] [--root <repo>]
-// Exit codes: 0 green or nothing to run · 1 a gate failed · 2 bad input or an
-// undetermined package manager (nothing run).
+// Only the root scripts named exactly test, lint and typecheck run. A gate
+// that exists only under another name (test:unit, lint:ci) is named and not
+// run, and the result is not green.
+//
+// Usage: node verify.mjs [--only test|lint|typecheck] [--fresh] [--root <repo>]
+// Exit codes: 0 green, or no Node manifest · 1 a gate failed · 2 not verified:
+// bad input, an undetermined package manager, nothing run, or a gate not run.
 import { spawn, execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync, renameSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROLES = ["test", "lint", "typecheck"];
-const TAIL = 20, KEEP_TREES = 20;
+const TAIL = 20, KEEP_TREES = 20, REUSE_MS = 60 * 60 * 1000;
 const DETECT = fileURLToPath(new URL("../skills/setup/scripts/detect-toolchain.mjs", import.meta.url));
 
 const args = process.argv.slice(2);
 const flag = (n) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : undefined; };
 const say = (line, code) => { console.log(line); process.exit(code); };
-const only = flag("--only");
+const only = flag("--only"), fresh = args.includes("--fresh");
 if (args.includes("--only") && !ROLES.includes(only)) say(`verify: --only takes ${ROLES.join(", ")}; nothing was run`, 2);
 
 const git = (cwd, ...a) => execFileSync("git", ["-C", cwd, ...a], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
@@ -41,7 +46,11 @@ if (detected.state !== "detected") say(`verify: package manager ${detected.state
 const roles = only ? [only] : ROLES;
 const present = roles.filter((r) => Object.hasOwn(detected.rootScripts ?? {}, r));
 const absent = roles.filter((r) => !present.includes(r));
-if (!present.length) say(`verify: nothing to run — no ${roles.join(", ")} script at the repo root`, 0);
+// Gate scripts under another name (test:unit, lint.ci) for a role with no exact script.
+const variantsOf = (role) => (detected.rootQuality ?? []).filter((s) => s.startsWith(`${role}:`) || s.startsWith(`${role}.`));
+const notRun = absent.flatMap(variantsOf);
+const missing = absent.map((r) => ` · no ${r} script${variantsOf(r).length ? ` (${variantsOf(r).join(", ")} not run)` : ""}`).join("");
+if (!present.length) say(`verify: nothing was run — no ${roles.join(", ")} script at the repo root${notRun.length ? ` (${notRun.join(", ")} not run)` : ""}`, 2);
 const commandOf = (role) => `${detected.manager} run ${role}`;
 
 // --- tree state and cache ------------------------------------------------------
@@ -82,7 +91,8 @@ function run(role) {
 }
 const results = [];
 for (const role of present) {
-  if (reusable?.results?.[role]?.command === commandOf(role)) results.push({ role, cached: true, code: 0 });
+  const hit = fresh ? null : reusable?.results?.[role];
+  if (hit?.command === commandOf(role) && Date.now() - Date.parse(hit.at) < REUSE_MS) results.push({ role, cached: true, code: 0 });
   else results.push({ role, cached: false, ...(await run(role)) });
 }
 
@@ -105,9 +115,9 @@ if (before.tree && !before.dirty && after.tree === before.tree && !after.dirty) 
 
 // --- report --------------------------------------------------------------------
 const where = before.dirty ? `tree ${before.tree?.slice(0, 12) ?? "(no commit)"} + uncommitted changes` : `tree ${before.tree?.slice(0, 12) ?? "(no commit)"}`;
-const missing = absent.map((r) => ` · no ${r} script`).join("");
 const red = results.filter((r) => r.code !== 0);
 const green = results.filter((r) => r.code === 0).map((r) => `${r.role}${r.cached ? " (cached)" : ""}`);
+if (!red.length && notRun.length) say(`verify: not green — green: ${green.join(", ")}${missing} · ${where}`, 2);
 if (!red.length) say(`verify: green — ${green.join(", ")}${missing} · ${where}`, 0);
 console.log(`verify: red — ${red.map((r) => `${r.role} (exit ${r.code})`).join(", ")} failed${green.length ? `; green: ${green.join(", ")}` : ""}${missing} · ${where}`);
 for (const r of red) {

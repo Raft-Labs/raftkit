@@ -131,6 +131,32 @@ printf 'not json' > "$cache"; rm -f "$R/FAIL"; commit_all "$R" "fix"; : > "$COUN
 [[ $RC -eq 0 && "$(runs)" == tlc ]]
 check "V17 an unreadable cache is ignored, never fatal" ok $?
 
+# ---- nothing run is never green; a cached green has a bypass and an age limit --
+mkscripts() { # <dir> <scripts json>
+  mkdir -p "$1" && printf '{"name":"f","scripts":%s}' "$2" > "$1/package.json" && echo '{}' > "$1/package-lock.json"
+  ( cd "$1" && giso git init -q -b main ) && commit_all "$1" "init"
+}
+VAR="$(newtmp)/variants"; mkscripts "$VAR" '{"test:unit":"node -e \"require(\\\"fs\\\").appendFileSync(process.env.VCOUNT,\\\"u\\\")\"","lint:ci":"node -e 0"}'
+: > "$COUNT"; v "$VAR"
+[[ $RC -eq 2 && -z "$(runs)" && "$(lines)" -eq 1 ]] && grep -q 'nothing was run' <<<"$OUT" && grep -q 'test:unit' <<<"$OUT" && grep -q 'lint:ci' <<<"$OUT"
+check "V19 gates only under other names (test:unit, lint:ci): exit 2, nothing run, each named" ok $?
+MIX="$(newtmp)/mixed"; mkscripts "$MIX" '{"test":"node -e \"require(\\\"fs\\\").appendFileSync(process.env.VCOUNT,\\\"t\\\")\"","lint:ci":"node -e 0"}'
+: > "$COUNT"; v "$MIX"
+[[ $RC -eq 2 && "$(runs)" == t && "$(lines)" -eq 1 ]] && ! grep -q '^verify: green' <<<"$OUT" && grep -q 'lint:ci not run' <<<"$OUT" && grep -q 'no typecheck script' <<<"$OUT"
+check "V20 a gate verify does not run makes the result incomplete, never green" ok $?
+NONE="$(newtmp)/nogates"; mkscripts "$NONE" '{"build":"node -e 0"}'
+v "$NONE"
+[[ $RC -eq 2 ]] && grep -q 'nothing was run' <<<"$OUT"
+check "V21 a Node repo with no gate script exits 2: nothing run is never exit 0" ok $?
+F="$(newtmp)/fresh"; mkrepo "$F"; v "$F"; : > "$COUNT"; v "$F" --fresh
+[[ $RC -eq 0 && "$(runs)" == tlc ]] && ! grep -q 'cached' <<<"$OUT"
+check "V22 --fresh re-runs every gate on a verified clean tree" ok $?
+fcache="$(cd "$F" && giso git rev-parse --path-format=absolute --git-common-dir)/raftkit/verify.json"
+node -e 'const fs=require("fs"); const c=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); for (const e of c) for (const r of Object.values(e.results)) r.at=new Date(Date.now()-2*3600e3).toISOString(); fs.writeFileSync(process.argv[1], JSON.stringify(c))' "$fcache"
+: > "$COUNT"; v "$F"
+[[ $RC -eq 0 && "$(runs)" == tlc ]]
+check "V23 a cached green older than an hour is not reused" ok $?
+
 # ---- the pre-push hook keeps its full gates ---------------------------------
 HOOK="$REPO_ROOT/plugins/raftkit-dev/skills/setup/assets/pre-push"
 ! grep -qE 'verify\.mjs|verify\.json|raftkit/verify' "$HOOK" && grep -q '__QUALITY_SCRIPTS__' "$HOOK"
