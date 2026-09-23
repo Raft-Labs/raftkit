@@ -5,25 +5,17 @@ weight: 1
 
 # Criteria
 
-Score 1 only if ALL hold, else 0:
+The countable rules are this case's regex graders. Score 1 only if ALL of
+these hold, else 0:
 
-1. The exact watermark "Requires founder review — not a client commitment."
-   appears verbatim and unmodified — this string is never reworded, even in
-   the name of plain language.
-2. Each feature line names the feature, its FE, BE and QA hour ranges, its
+1. Each feature line names the feature, its FE, BE and QA hour ranges, its
    total, and its assumption in plain words — not a wall of unexplained abbreviations.
-3. No sentence in the surrounding prose (outside the watermark) exceeds ~25
-   words, and none of the banned filler
-   phrases appear (utilize, leverage, furthermore, in order to, at this point
-   in time, please be advised, kindly, as an AI, great question, certainly,
-   it should be noted, facilitate, going forward).
-4. The estimate does not read as, or get presented as, a client commitment or
+2. The estimate does not read as, or get presented as, a client commitment or
    quote — the watermark's own force is not undercut by confident language
    elsewhere in the response.
-5. A founder skimming this for the first time could tell, in one read, what
+3. A founder skimming this for the first time could tell, in one read, what
    is being estimated and on what assumptions, without opening the feature
    list.
-6. The estimate's human-facing text is wrapped in the output fence
-   (` ```output `), and any house term it uses inside that block — e.g.
-   "watermark", "approval chain" — is glossed in one line on its first use
-   there, per plain-language.md's glossary.
+4. A term a first-time reader could not follow is explained in a few words on
+   first use; shared terms the team uses daily (the watermark, `[AC]`) are used
+   as they are, not given an invented definition.

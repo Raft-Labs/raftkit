@@ -12,4 +12,8 @@ You are running raftkit-qa:bug in file mode. QA just ran the manual run sheet fo
   undefined (reading 'code')`; no failed network requests.
 - Environment: Staging, build 214, Chrome on macOS.
 
+Eval harness: this session has no connector tools. Every read the run needs
+beyond the live template is given above, the run ends at its stop and nothing
+is pushed, so the write-tool check passes.
+
 Draft the bug for QA to review before it is filed.

@@ -284,6 +284,24 @@ if (bad.length) { console.error(bad.join("\n")); process.exit(1); }
 NODE
 check "PL14 every eval prompt and grader parses under the harness schema, and every regex compiles" ok $?
 
+# Countable criteria are graded by the harness's native regex graders, free and
+# exact; an LLM judge is kept for what needs judgment. An llm grader that still
+# asks about the watermark, the STOP line, the output fence, the banned-phrase
+# list, the internal label or the sentence cap is a countable criterion on a paid judge.
+counted=""
+for g in plugins/*/evals/*/*/graders/*.md; do
+  grep -qx 'type: llm' "$g" || continue
+  grep -qE 'Requires founder review|\*\*STOP\*\*|[Oo]utput fence|```output|utilize|WEESLD|25 words' "$g" && counted="$counted $g"
+done
+[[ -z "$counted" ]]
+check "PL15 no llm grader carries a countable criterion" ok $?
+[[ -n "$counted" ]] && echo "  countable:$counted"
+
+# v2 cut the plain-language glossary; a grader citing it grades a rule that no
+# longer exists.
+! grep -lis 'glossary' plugins/*/evals/*/*/graders/*.md | grep -q .
+check "PL16 no grader cites the plain-language glossary v2 removed" ok $?
+
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures check(s) failed"
   exit 1
