@@ -522,7 +522,7 @@ start_stub() { # <code> -> echoes port
   # Without this the stub servers survive the run and pile up across invocations.
   node "$stub/stub.mjs" "$1" > "$stub/port.$1" 2>/dev/null &
   echo $! >> "$stub/pids"
-  for _ in 1 2 3 4 5 6 7 8 9 10; do
+  for _ in $(seq 1 30); do   # up to 9s: a loaded machine starts node slowly
     [[ -s "$stub/port.$1" ]] && break
     sleep 0.3
   done
@@ -737,7 +737,7 @@ start_counting_stub() { # <code> <location> <countfile> -> echoes port
   printf '0' > "$3"
   node "$stub/countstub.mjs" "$1" "$2" "$3" > "$stub/port.$tag" 2>/dev/null &
   echo $! >> "$stub/pids"
-  for _ in 1 2 3 4 5 6 7 8 9 10; do
+  for _ in $(seq 1 30); do   # up to 9s: a loaded machine starts node slowly
     [[ -s "$stub/port.$tag" ]] && break
     sleep 0.3
   done
@@ -1103,7 +1103,7 @@ start_capture_stub() { # <code> <dir> [reply] -> echoes port
   mkdir -p "$2"
   node "$stub/capstub.mjs" "$1" "$2" "${3:-{\}}" > "$stub/port.$tag" 2>/dev/null &
   echo $! >> "$stub/pids"
-  for _ in 1 2 3 4 5 6 7 8 9 10; do
+  for _ in $(seq 1 30); do   # up to 9s: a loaded machine starts node slowly
     [[ -s "$stub/port.$tag" ]] && break
     sleep 0.3
   done
