@@ -5,7 +5,8 @@ how is history recorded, where do decisions go — for THIS repository.
 
 ## The in-memory discovery result
 
-`scripts/audit-docs.mjs --root <repo> --json` produces it deterministically:
+`raftkit-dev:docs`'s `scripts/audit-docs.mjs --root <repo> --json` produces it
+deterministically:
 documentation roots, convention (`module-indexed` · `flat-ownership-indexed` ·
 `ambiguous` · `none`), index files, ownership mapping (table rows and per-doc
 "Update when you change:" footers), history convention (per-doc footer chains
@@ -35,7 +36,7 @@ Two cases, same rule:
 In both cases: make no documentation mutation, return the documented
 conflict/bad-input result (the scripts exit 2), and ask the human which
 convention should become authoritative. Update the loser (descriptor or docs)
-only through the normal confirmed lifecycle.
+only after that answer.
 
 ## Branch routing
 
@@ -62,7 +63,8 @@ minimal, documented schema — it asserts only what it names:
 | `convention` | string | the authoritative documentation convention this repository uses |
 | `note` | string (optional) | human context for the choice |
 
-`scripts/validate-docs.mjs --convention <path>` enforces this: the descriptor
+`raftkit-dev:docs`'s `scripts/validate-docs.mjs --convention <path>` enforces
+this: the descriptor
 must resolve **inside** the repository root (symlink-aware — an out-of-root path
 is rejected even if it exists), and **any unknown field is rejected**. The
 descriptor never overrides a discovered repository convention silently; a

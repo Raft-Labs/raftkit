@@ -401,6 +401,6 @@ sequenceDiagram
   they're the entry point for Claude Code and human reviewers.
 - A skipped diagram is never silent: the doc carries "N/A — <reason>" where
   the diagram would live.
-- **Diagrams are part of the change-tracking sidecar.** Any change that
+- **Diagrams are part of every sync.** Any change that
   affects a diagram (new module, new external integration, removed table,
   new event) means the diagram must be regenerated AND its version bumped.

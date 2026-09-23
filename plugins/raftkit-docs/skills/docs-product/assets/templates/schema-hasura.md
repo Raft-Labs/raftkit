@@ -136,8 +136,8 @@ delete_permissions: []     # block hard delete; use soft delete via update
 ## Migration commands
 
 ```bash
-# Create
-.claude/skills/hasura/scripts/new-migration.sh create-table <table> \
+# Create: raftkit-dev:hasura scaffolds it with raftkit-dev:hasura/scripts/new-migration.sh
+new-migration.sh create-table <table> \
   --col "name:VARCHAR(100):not-null" \
   --col "slug:VARCHAR(120):not-null"
 

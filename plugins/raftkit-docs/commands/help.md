@@ -22,4 +22,4 @@ The full documentation product, installed only where a team wants it. Day-to-day
 
 ## Boundaries
 
-Parity on a story ("do the docs still match the code?") is `raftkit-dev:docs`, which owns the two deterministic readers this plugin calls. Installing the governance pack is `raftkit-dev:setup`. Asana writes route through `raftkit-pm`.
+Parity on a story ("do the docs still match the code?") is `raftkit-dev:docs`, which owns the two deterministic readers this plugin calls. Installing the governance pack is `raftkit-dev:setup`. Story drafting routes to `raftkit-pm:story`, bug filing to `raftkit-qa:bug`.

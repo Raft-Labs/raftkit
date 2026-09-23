@@ -53,6 +53,6 @@ policy, product decisions. Never re-ask what the handoff already answers
 8. **Initial history entry** — an initial changes-log entry (or the
    convention's equivalent) records the code-state snapshot, the generation
    date, and the stated limitations.
-9. **Handoff** — normal change tracking owns every subsequent edit.
+9. **Handoff** — `raftkit-dev:docs` owns every later sync.
 
 Never document dead code, never over-document, never fabricate edge cases.

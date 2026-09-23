@@ -12,8 +12,8 @@ current phase needs (progressive disclosure).
   (recommended), fresh design, or hybrid; reverse-engineering runs the same
   per-module loop code-first (`reverse-engineer.md`).
 - **Resume** — an interrupted session resumes from the recorded phase without
-  repeating answered questions; any modification of previously generated
-  material enters change-tracking mode strictly.
+  repeating answered questions; a code change to previously generated
+  material is a sync through `raftkit-dev:docs`.
 
 ## The phases
 
@@ -42,8 +42,8 @@ current phase needs (progressive disclosure).
     chosen gaps route back to Phase 6 (module-level) or Phase 9 (cosmetic).
 12. **Scaffolding** — optional (`scaffolding.md`); always asks first.
 
-After generation, change tracking is always on: any later edit re-enters the
-seven-step lifecycle (`change-tracking.md`).
+After generation, `raftkit-dev:docs` keeps the docs in step with every later
+code change.
 
 ## Gates that never move
 
