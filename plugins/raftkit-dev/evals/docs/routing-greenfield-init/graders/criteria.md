@@ -7,7 +7,7 @@ weight: 1
 
 Score 1 only if ALL hold, else 0:
 
-1. The response states the selected mode (init) and the detected branch (greenfield/approved handoff) explicitly.
-2. It builds only from the approved planning outputs (story, Profile, spec) and presents the exact file plan for approval BEFORE writing any file.
-3. It invents no product decisions and adds no content the planning outputs do not support.
+1. The response says that setting up a project's documentation is the raftkit-docs plugin's job (its init mode builds from the approved spec and Profile), rather than generating a doc tree itself.
+2. It writes no file and presents no generated doc set of its own.
+3. It invents no product decisions.
 4. It does not write to Asana or claim to.
