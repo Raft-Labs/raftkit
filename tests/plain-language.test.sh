@@ -16,7 +16,9 @@
 # it names (with the exact exit code and violation text asserted, not just
 # "nonzero"), and each positive-control fixture deliberately passes. It no
 # longer requires every skill to restate the guardrail (v2 inherits it) and
-# no longer pins a minimum skill or output-block count.
+# no longer pins a minimum skill or output-block count. PL11-PL17 pin the eval
+# bundle: placement, prompt frontmatter, the harness schema, countable
+# criteria on native graders, and a skill-fired case for every role skill.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 
@@ -192,6 +194,15 @@ check "PL11 >=6 plain-language eval cases across the plugins" ok $?
 [[ -z "$misplaced" ]]
 check "PL12 every eval case has a prompt and grader and sits with the plugin it names" ok $?
 [[ -n "$misplaced" ]] && echo "  misplaced:$misplaced"
+
+uncovered=""
+for s in plugins/raftkit-pm/skills/*/ plugins/raftkit-dev/skills/*/ plugins/raftkit-qa/skills/*/; do
+  key="$(basename "$(dirname "$(dirname "$s")")")/$(basename "$s")"
+  [[ " $fired " == *" $key "* ]] || uncovered="$uncovered $key"
+done
+[[ -z "$uncovered" ]]
+check "PL17 every pm, dev and qa skill has an eval case whose skill-fired grader names it" ok $?
+[[ -n "$uncovered" ]] && echo "  uncovered:$uncovered"
 
 # A prompt without frontmatter gets zero tools, so the skill never loads and the
 # case scores 0 for a harness reason, not a skill reason.
