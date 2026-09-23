@@ -139,9 +139,10 @@ check "DF11 the verifier agent is Sonnet, read-and-run only, and dispatched by r
 # DF12 · the plan record has one writer. Parallel phases committing the same
 #        file race on the index or conflict on merge-back, and a third file
 #        breaks working-agreement rule 2, so no phase edits it; the parent
-#        marks phases done (resume after /clear reads it) and commits it once
+#        marks phases done (resume after /clear reads it) and commits it once,
+#        with the last phase, so the review pass runs on a committed record
 ok=0
-grep -qF 'only the parent marks phases done in the record, and commits it with the review fixes' "$IMPL/SKILL.md" \
+grep -qF 'only the parent marks phases done in the record, and commits it with the last phase' "$IMPL/SKILL.md" \
   || { echo "  the parent is not the record's only writer"; ok=1; }
 grep -qF 'marking it done in the record' "$IMPL/SKILL.md" && { echo "  a phase still marks the record"; ok=1; }
 check "DF12 only the parent writes implement's plan record" ok $ok
@@ -181,6 +182,18 @@ bug_c3="$(grep -oE '`Fixed in build: pending[^`]*` counts as empty' "$BUG" | hea
   || echo "  fix writes '${fix_c3:-nothing}', retest reads '${bug_c3:-nothing}' as empty"
 [[ "$fix_c3" == "$c3" && "$bug_c3" == "$c3" ]]
 check "DF17 fix and qa retest carry the identical pending-build string" ok $?
+
+# DF18 · parallel phases never share one checkout (cross-group C6): each runs in
+#        its own worktree, which setup's worktree.baseRef "head" branches from
+#        the run's HEAD, and the parent lands each phase's one commit on the
+#        branch. In one checkout, parallel commits race on index.lock and carry
+#        each other's files.
+ok=0
+build="$(grep -m1 '^4\. \*\*Build' "$IMPL/SKILL.md")"
+grep -qF 'isolation: "worktree"' <<<"$build" || { echo "  implement's phases are not dispatched with worktree isolation"; ok=1; }
+grep -qF 'the parent cherry-picks' <<<"$build" || { echo "  no step lands a phase's worktree commit on the branch"; ok=1; }
+grep -qF 'baseRef: "head"' "$DEV/skills/setup/scripts/merge-settings.mjs" || { echo "  setup no longer branches worktrees from HEAD"; ok=1; }
+check "DF18 implement runs each phase in a worktree and cherry-picks its commit onto the branch" ok $ok
 
 echo
 echo "dev-flow: $failures failure(s)"
