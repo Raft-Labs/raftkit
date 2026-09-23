@@ -1,6 +1,6 @@
 ---
 name: story-driver
-description: Use this to build a RaftKit plugin skill end-to-end from an Asana story. Trigger whenever the user hands over a raftkit board task (a link or GID) and wants it implemented — e.g. "build this story", "implement this task", "do M3 · scope-guard", or pastes an app.asana.com task URL from the raftkit project. It fetches and parses the story into a scope contract, surveys what already exists, then orchestrates plugin-dev (scaffold + validate) and skill-creator (author + optimize) together to produce the skill, and finishes with a branch, commits, and a PR — stopping once, before anything leaves the session. Use it even when the user only says "take this Asana task and develop it" without naming this skill.
+description: Builds a RaftKit change from one story on the raftkit Asana board — "build this story", "implement this task", "do M3 · scope-guard", "take this Asana task and develop it", or a pasted task link or GID. Parses the story into a scope contract, builds test-first, runs every repo suite, and stops once before any push, PR or Asana write.
 user-invocable: true
 ---
 
