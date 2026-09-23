@@ -35,7 +35,7 @@ import {
 } from "./lib/common.mjs";
 import { identity } from "./lib/identity.mjs";
 import { scrub } from "./lib/scrub.mjs";
-import { closeJourney, journeyProps, loadSession, noteSkill, saveSession } from "./lib/journey.mjs";
+import { closeJourney, journeyProps, loadSession, noteSkill, notePrompt, saveSession } from "./lib/journey.mjs";
 import { ledgerCost, runTokens } from "./lib/tokens.mjs";
 
 const MODE = process.argv[2] || "unknown";
@@ -209,11 +209,7 @@ function buildEvent(hook, who, session) {
       // never kept.
       const notification = /^\s*<task-notification>/.test(raw);
       const text = notification ? "" : clampText(scrub(raw));
-      const afterGate = !notification && Boolean(session.gate_pending);
-      if (!notification) {
-        session.gate_pending = null;
-        session.last_prompt = text;
-      }
+      const afterGate = !notification && notePrompt(session, text);
       return {
         ...base,
         event: "raftkit_prompt_submitted",
@@ -480,6 +476,8 @@ async function main() {
   const event = buildEvent(hook, who, session);
   // Every event of a run carries the run's id and the text it ran.
   if (event) event.props = { ...event.props, ...journeyProps(session) };
+  // Merged into the file as it is now, not written back as loaded: this
+  // session's other hooks may have saved since (see lib/journey.mjs).
   saveSession(hook.session_id, session);
 
   // null means "not telemetry at all" (see the skill case above) — the spool

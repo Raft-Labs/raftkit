@@ -1436,6 +1436,44 @@ expect_eq "from the plugin cache, the installed version of each plugin is report
 expect_eq "  and the skill's sha12 is read from that version" "$(printf 'cached implement skill\n' | shasum -a 256 | cut -c1-12)" \
   "$(last_event_field "$d/spool/events.jsonl" 'props.skill_sha12')"
 
+# --- hooks that fire together keep each other's changes
+# A typed /raftkit-dev:implement fires UserPromptExpansion (skill) and
+# UserPromptSubmit (prompt) close together, both async, both rewriting the
+# session's state. Neither may lose what the other wrote.
+race_state() { # <telemetry dir> <session> — skill_seen|journey open|last_prompt, from the state file
+  node -e 'const s=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); process.stdout.write([s.skill_seen, Boolean(s.journey && s.journey.open), s.last_prompt].join("|"))' \
+    "$1/sessions/$2.journey.json" 2>/dev/null
+}
+lost=0
+for trial in $(seq 1 10); do
+  d="$(new_sandbox)"
+  printf '{"session_id":"r%s","hook_event_name":"UserPromptExpansion","command_name":"raftkit-dev:implement","command_args":"story 7"}' "$trial" \
+    | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" skill >/dev/null 2>&1 &
+  p1=$!
+  (( trial % 2 == 0 )) && sleep 0.02   # odd trials start together, even ones 20 ms apart
+  printf '{"session_id":"r%s","hook_event_name":"UserPromptSubmit","prompt":"build story 7"}' "$trial" \
+    | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1 &
+  p2=$!
+  wait "$p1" "$p2"
+  [[ "$(race_state "$d" "r$trial")" == "true|true|build story 7" ]] || lost=$((lost + 1))
+done
+expect_eq "a skill hook and a prompt hook fired together both keep their changes (trials lost, of 10)" "0" "$lost"
+
+# A typed command that answers a STOP is the reply: only the prompt and stop
+# hooks touch the waiting STOP, so the expansion hook firing first cannot eat it.
+d="$(new_sandbox)"; sp="$d/spool/events.jsonl"
+hook "$d" skill '{"session_id":"j12","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-dev:implement"}}'
+hook "$d" stop '{"session_id":"j12","last_assistant_message":"**STOP** — approve to push, edit to change, or decline."}'
+hook "$d" skill '{"session_id":"j12","hook_event_name":"UserPromptExpansion","command_name":"raftkit-dev:fix","command_args":"bug 7"}'
+hook "$d" prompt '{"session_id":"j12","user_prompt":"/raftkit-dev:fix bug 7"}'
+expect_eq "a typed command after a STOP is still paired as its reply" "true" "$(ev "$sp" 'E.at(-1).props.after_gate')"
+
+# A hook that changed nothing leaves the session's state alone.
+d="$(new_sandbox)"
+hook "$d" commit '{"session_id":"j13","tool_name":"Bash","tool_input":{"command":"git commit -m x"}}'
+hook "$d" stop '{"session_id":"j13","last_assistant_message":"done"}'
+expect_eq "a commit or a plain turn writes no session state" "no" "$([[ -e "$d/sessions/j13.journey.json" ]] && echo yes || echo no)"
+
 # ================================================================ 14. entry map
 # A plain-language request must reach RaftKit even when the skill listing has
 # dropped RaftKit's descriptions. SessionStart puts a short map into context.

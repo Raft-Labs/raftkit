@@ -10,19 +10,87 @@
 //
 // It lives in a file rather than being read back from the spool, because a
 // flush from any other session drains the spool mid-run.
+//
+// Hooks of one session run at the same time: a typed slash command fires its
+// expansion and prompt hooks together. So a hook never writes back the state it
+// loaded. Each change is recorded as an operation, and saveSession re-reads the
+// file under a short lock and applies only this hook's operations to it.
 
 import { randomUUID } from "node:crypto";
-import { readJsonFile, sessionFile, writeJsonFile } from "./common.mjs";
+import { dirname } from "node:path";
+import { acquireLock, ensureDir, readJsonFile, sessionFile, writeJsonFile } from "./common.mjs";
 
 const fresh = () => ({ skill_seen: false, journey: null, gate_pending: null, last_prompt: "" });
+const OPS = Symbol("ops"); // a symbol key, so JSON never writes it
 
-export function loadSession(sessionId) {
-  const saved = readJsonFile(sessionFile(sessionId, "journey"), {});
+function readState(path) {
+  const saved = readJsonFile(path, {});
   return { ...fresh(), ...(saved && typeof saved === "object" ? saved : {}) };
 }
 
+const sameGate = (a, b) => Boolean(a && b) && a.ts === b.ts && a.journey_id === b.journey_id;
+
+// Each operation, applied to whatever state is on disk when the hook saves.
+const APPLY = {
+  seen: (s) => {
+    s.skill_seen = true;
+  },
+  // Replaces the journey this hook saw, or an older one another hook opened meanwhile.
+  open: (s, { journey, over }) => {
+    if (!s.journey || s.journey.id === over || String(s.journey.started_at || "") <= String(journey.started_at || "")) {
+      s.journey = journey;
+    }
+  },
+  close: (s, { id, gate }) => {
+    if (s.journey && s.journey.id === id) s.journey.open = false;
+    if (gate) s.gate_pending = gate;
+  },
+  // Only the STOP this prompt answered; one shown since stays waiting.
+  reply: (s, { gate }) => {
+    if (sameGate(s.gate_pending, gate)) s.gate_pending = null;
+  },
+  prompt: (s, { text }) => {
+    s.last_prompt = text;
+  },
+};
+
+function change(state, op, args = {}) {
+  APPLY[op](state, args);
+  state[OPS].push([op, args]);
+}
+
+export function loadSession(sessionId) {
+  const state = readState(sessionFile(sessionId, "journey"));
+  state[OPS] = [];
+  return state;
+}
+
+// A synchronous pause: the lock is held for one small read and one rename.
+const pause = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+
+function lockFor(path) {
+  for (let i = 0; i < 100; i++) {
+    const release = acquireLock(`${path}.lock`, { staleMs: 5000 });
+    if (release) return release;
+    pause(5);
+  }
+  return null; // still merged, just without the lock
+}
+
+/** Apply this hook's changes to the state on disk. Writes nothing when it changed nothing. */
 export function saveSession(sessionId, state) {
-  return writeJsonFile(sessionFile(sessionId, "journey"), state);
+  const ops = state[OPS] || [];
+  const path = sessionFile(sessionId, "journey");
+  if (!path || ops.length === 0) return false;
+  ensureDir(dirname(path));
+  const release = lockFor(path);
+  try {
+    const current = readState(path);
+    for (const [op, args] of ops) APPLY[op](current, args);
+    return writeJsonFile(path, current);
+  } finally {
+    release?.();
+  }
 }
 
 export const opensRun = (name) =>
@@ -34,18 +102,26 @@ export const opensRun = (name) =>
  * called only when one opens.
  */
 export function noteSkill(state, name, { typed, start }) {
-  state.skill_seen = true;
+  if (!state.skill_seen) change(state, "seen");
   if (!opensRun(name)) return false;
   if (!typed && state.journey?.open) return false;
-  state.journey = { id: randomUUID(), skill: name, open: true, ...start() };
-  state.gate_pending = null;
+  change(state, "open", { journey: { id: randomUUID(), skill: name, open: true, ...start() }, over: state.journey?.id || "" });
   return true;
 }
 
 /** The run's STOP was shown, or a skill refused: the run is over. */
 export function closeJourney(state, { gate, ts }) {
-  if (state.journey) state.journey.open = false;
-  if (gate) state.gate_pending = { ts, journey_id: state.journey?.id || "" };
+  const id = state.journey?.id || "";
+  change(state, "close", { id, gate: gate ? { ts, journey_id: id } : null });
+}
+
+/** A human prompt. Returns true when it is the reply to a waiting STOP. */
+export function notePrompt(state, text) {
+  const gate = state.gate_pending;
+  change(state, "prompt", { text });
+  if (!gate) return false;
+  change(state, "reply", { gate });
+  return true;
 }
 
 /** Props every event of the session carries while a journey is on record. */
