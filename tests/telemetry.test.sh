@@ -447,6 +447,26 @@ expect_eq "a missing write tool has its own id, not the catch-all" "write-tool-m
 expect_eq "a missing write tool captures the surface" "Asana" \
   "$(last_event_field "$d/spool/events.jsonl" 'props.detail')"
 
+# A reply may render the apostrophe typographically (U+2019); the evals accept
+# it, so detection must too, for the owned rules and for the catch-all.
+d="$(new_sandbox)"; seed_skill "$d" s1
+printf '{"session_id":"s1","last_assistant_message":"Can\xe2\x80\x99t write to Asana from this session — connect the Asana connector, then re-run."}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
+expect_eq "a typographic apostrophe still classifies the owned refusal" "write-tool-missing" \
+  "$(last_event_field "$d/spool/events.jsonl" 'props.refusal_id')"
+d="$(new_sandbox)"; seed_skill "$d" s1
+printf '{"session_id":"s1","last_assistant_message":"Can\xe2\x80\x99t proceed — some refusal no rule owns yet."}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
+expect_eq "  and the catch-all" "generic-cant" "$(last_event_field "$d/spool/events.jsonl" 'props.refusal_id')"
+ok=0
+node -e '
+  const j = JSON.parse(require("fs").readFileSync("plugins/raftkit-core/hooks/lib/refusals.json", "utf8"));
+  const both = "^Can[\u0027\u2019]t";
+  const bad = j.refusals.filter((r) => /^\^Can.t/.test(r.pattern) && !r.pattern.startsWith(both));
+  if (bad.length) { console.error("  ASCII-only apostrophe: " + bad.map((r) => r.id).join(", ")); process.exit(1); }
+' || ok=1
+check "every Can-t rule accepts both apostrophes" ok $ok
+
 # The Stop hook carries no prompt, so it must recover the session's last one.
 d="$(new_sandbox)"; seed_skill "$d" s9
 echo "{\"session_id\":\"s9\",\"user_prompt\":\"implement story 123\",\"cwd\":\"$PWD\"}" \
