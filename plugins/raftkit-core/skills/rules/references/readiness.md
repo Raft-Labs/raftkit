@@ -11,7 +11,7 @@ A story is ready only when every item holds. Anything you cannot confirm is a ga
 3. **The permission boundary is stated both ways.** Who may act and who is blocked.
 4. **At least one concrete out-of-scope item.**
 5. **`[AC]` coverage is complete.** The `[AC]` subtasks cover the happy path, every edge-case row present, every business rule and every permission boundary.
-6. **The open-questions gate is closed.** The template's open-questions section (§10) reads `none`, or every item in it is answered. An `[Unresolved]` item is a gap.
+6. **The open-questions gate is closed.** The template's open-questions section reads `none`, or every item in it is answered. An `[Unresolved]` item is a gap.
 
 ## The six gap types
 
