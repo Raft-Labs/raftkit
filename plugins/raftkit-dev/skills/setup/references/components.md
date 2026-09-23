@@ -77,7 +77,7 @@ Object keys merge additively and `permissions.allow` and `symlinkDirectories` ar
 
 ## Conditional capabilities
 
-Hasura is detected, not installed: when the repository has a Hasura config with sibling `migrations/` and `metadata/` directories, the plan offers to record the discovered conventions in `.raftkit/hasura.json` so `raftkit-dev:hasura` reads them instead of re-deriving them. Declining changes nothing else.
+Hasura is detected, not installed: when the repository has a Hasura config with sibling `migrations/` and `metadata/` directories, the plan offers to record the discovered conventions in `.raftkit/hasura.json` so `raftkit-dev:hasura` reads them instead of re-deriving them. Its only writer is raftkit-dev's `skills/hasura/scripts/detect-hasura.mjs --root <repo> --write`, run on go, with `--env HASURA_ROOT=<dir>` when detection lists several roots; setup never writes the file by hand. Declining changes nothing else.
 
 ## The marker
 
