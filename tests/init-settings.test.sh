@@ -219,6 +219,54 @@ printf '%s' '{"worktree": {"symlinkDirectories": "node_modules"}}' > "$t_w6"
 node "$SCRIPT" "$t_w6" --node >/dev/null 2>&1
 check_eq "W6 wrong-shape symlinkDirectories (string): exit code is exactly 2" "2" "$?"
 
+# O. Opt-in lines (2.3): each writes only when named, and never allowlists a push,
+#    a PR or an Asana write.
+allow_of() { node -e 'console.log((JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).permissions?.allow ?? []).join("\n"))' "$1" 2>/dev/null; }
+mf="$(newtmp)/package.json"; printf '%s' '{"scripts":{"test":"vitest run","lint":"eslint .","lint:ci":"eslint --max-warnings 0 ."}}' > "$mf"
+do1="$(newtmp)"; to1="$do1/settings.json"; node "$SCRIPT" "$to1" >/dev/null 2>&1
+! grep -qE 'git (fetch|switch|add|commit)|run ' <<<"$(allow_of "$to1")" && [[ "$(jget "$to1" '.env')" == undefined ]]
+check "O1 without an opt-in no local-git or gate rule and no env is written" ok $?
+do2="$(newtmp)"; to2="$do2/settings.json"
+node "$SCRIPT" "$to2" --allow-local --pm npm --manifest "$mf" --scripts "test lint:ci" >/dev/null 2>&1
+a2="$(allow_of "$to2")"
+for r in 'Bash(git fetch *)' 'Bash(git switch *)' 'Bash(git add *)' 'Bash(git commit *)' 'Bash(npm run test *)' 'Bash(npm run lint:ci *)'; do grep -qxF "$r" <<<"$a2" || { echo "  missing: $r"; false; }; done
+check "O2 --allow-local adds local git fetch/switch/add/commit and one rule per approved gate script" ok $?
+added2="$(comm -13 <(allow_of "$to1" | sort) <(sort <<<"$a2"))"
+[[ "$(wc -l <<<"$added2" | tr -d ' ')" -eq 6 ]] && ! grep -qiE 'push|gh |pr |asana|mcp__|Bash\(\*|git \*' <<<"$added2" && ! grep -qF 'npm run lint *' <<<"$added2"
+check "O3 the opt-in adds exactly those six rules: no push, PR, Asana, all of git, or unapproved script" ok $?
+do4="$(newtmp)"; to4="$do4/settings.json"
+node "$SCRIPT" "$to4" --allow-local --pm npm --manifest "$mf" --scripts "deploy" >/dev/null 2>&1; rc4=$?
+[[ $rc4 -eq 1 && ! -e "$to4" ]]
+check "O4 a gate script missing from the manifest is refused and nothing is written" ok $?
+accepted=0
+for bad in 'test;rm' '$(x)' '-x' 'push'; do
+  d="$(newtmp)"; node "$SCRIPT" "$d/s.json" --allow-local --pm npm --manifest "$mf" --scripts "$bad" >/dev/null 2>&1
+  [[ $? -eq 1 && ! -e "$d/s.json" ]] || { echo "  accepted: $bad"; accepted=1; }
+done
+check "O5 injection-shaped or unknown script names are refused" ok $accepted
+d="$(newtmp)"; node "$SCRIPT" "$d/s.json" --allow-local --pm "npm;x" --manifest "$mf" --scripts test >/dev/null 2>&1
+[[ $? -eq 1 && ! -e "$d/s.json" ]]
+check "O6 an unknown package manager is refused" ok $?
+do7="$(newtmp)"; to7="$do7/settings.json"; node "$SCRIPT" "$to7" --sg-push-sweep-off >/dev/null 2>&1
+check_eq "O7 --sg-push-sweep-off sets env.SG_PUSH_SWEEP to 0" '"0"' "$(jget "$to7" '.env.SG_PUSH_SWEEP')"
+do8="$(newtmp)"; to8="$do8/settings.json"; printf '%s' '{"env":{"SG_PUSH_SWEEP":"1"}}' > "$to8"; b8="$(shasum "$to8")"
+node "$SCRIPT" "$to8" --sg-push-sweep-off >/dev/null 2>&1; rc8=$?
+[[ $rc8 -eq 2 && "$b8" == "$(shasum "$to8")" ]]
+check "O8 an existing different SG_PUSH_SWEEP is a conflict and nothing is written" ok $?
+do9="$(newtmp)"; to9="$do9/settings.json"; node "$SCRIPT" "$to9" --disable-plugins "expo@claude-plugins-official,pyright-lsp@claude-plugins-official" >/dev/null 2>&1
+[[ "$(node -e 'const s=require(process.argv[1]); console.log(s.enabledPlugins["expo@claude-plugins-official"]===false && s.enabledPlugins["pyright-lsp@claude-plugins-official"]===false)' "$to9" 2>/dev/null)" == true ]]
+check "O9 --disable-plugins turns each named plugin off at project scope" ok $?
+accepted=0
+for managed in raftkit-dev@raftkit superpowers@claude-plugins-official 'x;y@z'; do
+  d="$(newtmp)"; node "$SCRIPT" "$d/s.json" --disable-plugins "$managed" >/dev/null 2>&1
+  [[ $? -eq 1 && ! -e "$d/s.json" ]] || { echo "  accepted: $managed"; accepted=1; }
+done
+check "O10 a RaftKit plugin, an engine or a malformed id is never disabled" ok $accepted
+do11="$(newtmp)"; to11="$do11/settings.json"; printf '%s' '{"enabledPlugins":{"expo@claude-plugins-official":true}}' > "$to11"; b11="$(shasum "$to11")"
+node "$SCRIPT" "$to11" --disable-plugins expo@claude-plugins-official >/dev/null 2>&1; rc11=$?
+[[ $rc11 -eq 2 && "$b11" == "$(shasum "$to11")" ]]
+check "O11 disabling a plugin the project explicitly enables is a conflict" ok $?
+
 # 6. Re-run with identical input -> byte-identical output, zero diff
 d6="$(newtmp)"
 target6="$d6/settings.json"

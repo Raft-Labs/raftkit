@@ -18,15 +18,17 @@ Everything a repo needs to behave the RaftKit way, installed once and verified. 
 Not a git repository. Run setup from inside a git repo — nothing was written.
 ```
 
-   Confirm `raftkit-core` is installed; without it there is no content to install. Run `claude plugin list --json` once and check the engines `implement`, `fix` and `ui` call by name: superpowers, pr-review-toolkit, code-simplifier, claude-md-management, security-guidance, frontend-design. Name any missing or disabled one with its command, and carry on:
+   Run `scripts/check-engines.mjs --root <repo>` once. Exit 3 means `raftkit-core` is missing and there is nothing to install: stop. Each missing or disabled engine is named with its command, and setup carries on:
 
 ```output
 Missing: superpowers. Install it with: claude plugin install superpowers@claude-plugins-official
 Setup continues without it; the skills that need it will say so.
 ```
 
+   The same report names every enabled plugin's blocking Stop hook with its disable command, and the plugins this repo's stack does not use. Setup changes neither; both go in the draft.
+
 2. **Detect the toolchain** with `scripts/detect-toolchain.mjs` and resolve every component per `references/components.md`. Conflicting signals, a foreign hook owner, or several `core.hooksPath` values become questions in the draft. An existing `.raftkit/governance-pack.json` makes this a re-run and says what changed.
-3. **Stop once** with the whole plan: every file to write with its diff, the toolchain the hook and CI will use, whether this is a commit or a PR, and the PR auto-review workflow as a separate labelled line the developer opts into by name. A re-run shows only what drifted, and reports no changes when nothing did.
+3. **Stop once** with the whole plan: every file to write with its diff, the toolchain the hook and CI will use, whether this is a commit or a PR, and each opt-in in `references/components.md` as a separate labelled line the developer accepts by name. A re-run shows only what drifted, and reports no changes when nothing did.
 
 ```output
 Setup plan for <repo>: 6 files (2 new, 4 updated), one commit on <branch>.

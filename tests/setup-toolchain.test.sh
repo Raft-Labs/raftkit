@@ -219,9 +219,97 @@ grep -q '__PM__' "$SETUP/references/components.md" 2>/dev/null \
   && grep -qi 'render nothing' "$SETUP/references/components.md" 2>/dev/null \
   && grep -q 'setup-node-cache-any\|corepack' "$SETUP/references/components.md" 2>/dev/null
 check "S39 components.md documents tokens, marker, fail-closed rendering, setup options" ok $?
-grep -q 'claude plugin list --json' "$SETUP/SKILL.md" 2>/dev/null \
-  && grep -qi 'Setup continues without it' "$SETUP/SKILL.md" 2>/dev/null
-check "S40 the engine check names a missing engine and continues" ok $?
+grep -q 'scripts/check-engines.mjs' "$SETUP/SKILL.md" 2>/dev/null \
+  && grep -qi 'Setup continues without it' "$SETUP/SKILL.md" 2>/dev/null \
+  && ! grep -q 'claude plugin list --json' "$SETUP/SKILL.md"
+check "S40 the engine check runs through check-engines.mjs, names a missing engine and continues" ok $?
+
+# ---- E1–E12 · check-engines.mjs: engines, blocking Stop hooks, unused plugins --
+ENG=$SETUP/scripts/check-engines.mjs
+EW="$(mktemp -d)"; tmpdirs+=("$EW")
+mkplug() { # <dir> <plugin.json body> [hooks.json body]
+  mkdir -p "$EW/p/$1/.claude-plugin"; printf '%s' "$2" > "$EW/p/$1/.claude-plugin/plugin.json"
+  if [[ -n "${3:-}" ]]; then mkdir -p "$EW/p/$1/hooks"; printf '%s' "$3" > "$EW/p/$1/hooks/hooks.json"; fi
+}
+SYNC_STOP='{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"${CLAUDE_PLUGIN_ROOT}/scripts/on-stop.sh"}]}]}}'
+mkplug core '{"name":"raftkit-core","version":"9.9.9"}'
+mkplug sp '{"name":"superpowers"}'
+mkplug sg '{"name":"security-guidance"}' '{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"sg.sh","asyncRewake":true}]}]}}'
+mkplug fd '{"name":"frontend-design"}' "$SYNC_STOP"
+mkplug warp '{"name":"warp"}' "$SYNC_STOP"
+mkplug inline '{"name":"inline","hooks":{"hooks":{"SubagentStop":[{"hooks":[{"type":"prompt","prompt":"Is the work done?"}]}]}}}'
+mkplug pathhooks '{"name":"pathhooks","hooks":"./extra.json"}'
+printf '%s' "$SYNC_STOP" > "$EW/p/pathhooks/extra.json"
+mkplug asyncp '{"name":"asyncp"}' '{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"x","async":true}]}]}}'
+mkplug expo '{"name":"expo"}'
+mkplug tslsp '{"name":"typescript-lsp"}'
+mkplug dependent '{"name":"dependent","dependencies":["typescript-lsp"]}'
+mkplug pyright '{"name":"pyright-lsp"}'
+mkplug mystery '{"name":"mystery"}'
+mkplug off '{"name":"off"}' "$SYNC_STOP"
+pl() { printf '{"id":"%s","version":"1.0.0","scope":"user","enabled":%s,"installPath":"%s"}' "$1" "$2" "$EW/p/$3"; }
+{ echo '['
+  pl raftkit-core@raftkit true core; echo ','
+  pl superpowers@claude-plugins-official true sp; echo ','
+  pl security-guidance@claude-plugins-official true sg; echo ','
+  pl frontend-design@claude-plugins-official false fd; echo ','
+  pl warp@claude-code-warp true warp; echo ','
+  pl inline@somewhere true inline; echo ','
+  pl pathhooks@somewhere true pathhooks; echo ','
+  pl asyncp@somewhere true asyncp; echo ','
+  pl expo@claude-plugins-official true expo; echo ','
+  pl typescript-lsp@claude-plugins-official true tslsp; echo ','
+  pl dependent@somewhere true dependent; echo ','
+  pl pyright-lsp@claude-plugins-official true pyright; echo ','
+  pl mystery@somewhere true mystery; echo ','
+  pl off@somewhere false off
+  echo ']'; } > "$EW/plugins.json"
+mkdir -p "$EW/repo" && cp -R "$FIX/npm/." "$EW/repo/" && touch "$EW/repo/pyproject.toml"
+eng() { EOUT=$(node "$ENG" --root "$1" --plugins-json "$2" ${3:-} 2>&1); ERC=$?; }
+ejson() { node -e 'const d=JSON.parse(process.argv[1]); let v=d; for (const k of process.argv[2].split(".")) v=v?.[k]; console.log(JSON.stringify(v))' "$EJ" "$1" 2>/dev/null; }
+eng "$EW/repo" "$EW/plugins.json"; ETXT="$EOUT"
+eng "$EW/repo" "$EW/plugins.json" --json; EJ="$EOUT"
+[[ $ERC -eq 0 ]] && grep -qF "raftkit-core 1.0.0: $EW/p/core" <<<"$ETXT"
+check "E1 raftkit-core present: exit 0 and its install path is reported for the CLAUDE.md sources" ok $?
+grep -qxF 'Missing: pr-review-toolkit. Install it with: claude plugin install pr-review-toolkit@claude-plugins-official' <<<"$ETXT"
+check "E2 a missing engine is named with its install command" ok $?
+grep -qxF 'Disabled: frontend-design. Enable it with: claude plugin enable frontend-design@claude-plugins-official' <<<"$ETXT"
+check "E3 a disabled engine is named with its enable command" ok $?
+[[ "$(ejson engines)" == "$(node -e 'const p=require("./plugins/raftkit-dev/.claude-plugin/plugin.json"); console.log(JSON.stringify(p.dependencies.map((d)=>typeof d==="string"?d:d.name).filter((n)=>n!=="raftkit-core")))')" ]]
+check "E4 the engines checked are exactly raftkit-dev's declared dependencies" ok $?
+blocking="$(grep '^Blocking Stop hook:' <<<"$ETXT")"
+grep -qF 'warp@claude-code-warp' <<<"$blocking" && grep -qF 'inline@somewhere' <<<"$blocking" && grep -qF 'pathhooks@somewhere' <<<"$blocking" \
+  && grep -qF 'claude plugin disable warp@claude-code-warp --scope local' <<<"$blocking" \
+  && [[ "$(grep -c 'claude plugin disable .* --scope local' <<<"$blocking")" -eq 3 ]]
+check "E5 every enabled plugin's synchronous Stop or SubagentStop hook is named with its disable command" ok $?
+! grep -qE 'security-guidance|asyncp|off@|frontend-design' <<<"$blocking"
+check "E6 async, asyncRewake and disabled plugins' hooks are not reported as blocking" ok $?
+[[ "$(ejson unused)" == '["expo@claude-plugins-official"]' ]]
+check "E7 only enabled plugins with a known, absent stack signal are unused (no engine, dependency, unknown or detected-stack plugin)" ok $?
+mkdir -p "$EW/repo-expo/apps/mobile" && cp -R "$FIX/npm/." "$EW/repo-expo/" && printf '{"dependencies":{"expo":"~52.0.0"}}' > "$EW/repo-expo/apps/mobile/package.json"
+eng "$EW/repo-expo" "$EW/plugins.json" --json; EJ="$EOUT"
+[[ "$(ejson unused)" == '[]' || "$(ejson unused)" == '["pyright-lsp@claude-plugins-official"]' ]] && ! grep -q 'expo@' <<<"$(ejson unused)"
+check "E8 a stack signal in a workspace package keeps its plugin off the unused list" ok $?
+EJ="$(node "$ENG" --root "$EW/repo" --plugins-json "$EW/plugins.json" --json 2>&1)"
+[[ "$(ejson securityGuidance.pushSweepOffered)" == true ]]
+check "E9 the duplicate push-review line is offered while security-guidance is enabled and SG_PUSH_SWEEP is unset" ok $?
+mkdir -p "$EW/repo-sg/.claude" && cp -R "$FIX/npm/." "$EW/repo-sg/" && printf '{"env":{"SG_PUSH_SWEEP":"0"}}' > "$EW/repo-sg/.claude/settings.json"
+eng "$EW/repo-sg" "$EW/plugins.json" --json; EJ="$EOUT"
+[[ "$(ejson securityGuidance.pushSweepOffered)" == false ]]
+check "E10 the push-review line is not offered once the repo already sets SG_PUSH_SWEEP" ok $?
+node -e 'const fs=require("fs"); const a=JSON.parse(fs.readFileSync(process.argv[1],"utf8")).filter((p)=>!p.id.startsWith("raftkit-core@")); fs.writeFileSync(process.argv[2], JSON.stringify(a))' "$EW/plugins.json" "$EW/nocore.json"
+eng "$EW/repo" "$EW/nocore.json"
+[[ $ERC -eq 3 ]] && grep -q '^Missing: raftkit-core' <<<"$EOUT"
+check "E11 without raftkit-core the check exits 3 so setup stops" ok $?
+mkdir -p "$EW/repo-ro" && cp -R "$FIX/npm/." "$EW/repo-ro/"
+treehash() { (cd "$EW" && find . -type f -print0 | sort -z | xargs -0 shasum | shasum); }
+before_tree="$(treehash)"
+node "$ENG" --root "$EW/repo-ro" --plugins-json "$EW/plugins.json" >/dev/null 2>&1
+[[ "$before_tree" == "$(treehash)" ]]
+check "E12 the check changes nothing: repo and plugin files are byte-identical afterwards" ok $?
+echo 'not json' > "$EW/bad.json"; eng "$EW/repo" "$EW/bad.json"
+[[ $ERC -eq 1 ]]
+check "E13 an unreadable plugin list exits 1 with its reason" ok $?
 
 # ---- S41–S43 · allowlist + version ------------------------------------------
 # Persistent suite tests the allowlist ALGORITHM synthetically (no branch SHAs —

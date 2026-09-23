@@ -12,7 +12,7 @@ Six components, plus one opt-in seventh. Content the pack installs comes live fr
 | 6 | Repo settings | `scripts/merge-settings.mjs` | `.claude/settings.json` |
 | 7 | **PR auto-review workflow (opt-in)** | `assets/pr-auto-review.yml` + `assets/fix-loop-prompt.md`, rendered by `scripts/render-pr-auto-review.mjs` | `.github/workflows/pr-auto-review.yml` |
 
-Component 7 is never installed by default: it commits code autonomously (Critical-finding fixes only) and needs a repo secret this skill cannot provision. A decline is recorded and not re-asked unless the developer says to reconsider.
+Component 7 is never installed by default: it commits Critical-finding fixes on its own and needs a repo secret this skill cannot provision. A decline is recorded and not re-asked unless the developer says to reconsider.
 
 ## Rendered tokens
 
@@ -26,7 +26,7 @@ Components 2 and 3 are templates rendered fail-closed by `scripts/render-assets.
 | `__SETUP_BLOCK__` | `none` · `corepack` · `setup-node-cache-any` · `setup-bun` | emitted verbatim from this table, chosen by the human from the detection report |
 | `__QUALITY_STEPS__` | one CI run-line per approved script | derived from validated names only |
 
-A declared package-manager version is honoured only as an explicit `x.y.z`; `latest` is rejected and a version is never inferred from a lockfile. Newlines, control characters, command substitutions, backticks and option-like values are rejected. Any validation failure means the renderer emits a reason and must render nothing. After substitution no `__…__` token may remain. Identical approved inputs render byte-identical assets, so an unchanged re-run writes nothing.
+A package-manager version is honoured only as an explicit `x.y.z`, never `latest` or inferred. On any validation failure the renderer emits a reason and must render nothing; identical approved inputs render byte-identical assets.
 
 Rendered assets carry the literal marker `raftkit-governance-pack` in their header. Marker-owned files are the only ones replaced without asking; an unmarked or symlinked hook or workflow is foreign.
 
@@ -45,7 +45,7 @@ Rendered assets carry the literal marker `raftkit-governance-pack` in their head
 
 ## The hook is tracked, not in `.git/hooks`
 
-`.git/hooks/pre-push` is untracked: it cannot join the commit and it vanishes for every other clone. So the hook installs to `.githooks/pre-push` and setup runs `git config core.hooksPath .githooks`. That config is per-clone local state, so every fresh clone runs it once (or re-runs setup, which re-asserts it). Print the line in the summary.
+`core.hooksPath` is per-clone state: every fresh clone runs `git config core.hooksPath .githooks` once, or re-runs setup. Print that line in the summary.
 
 ## Managed settings keys
 
@@ -59,6 +59,19 @@ Rendered assets carry the literal marker `raftkit-governance-pack` in their head
 | `attribution` | `{ "commit": "", "pr": "" }` |
 | `worktree` | `{ baseRef: "head", symlinkDirectories: ["node_modules"] }`; the directory list only with `--node`, passed when detection found a Node manifest |
 | `permissions.allow` | `Bash(git status:*)`, `Bash(git diff:*)`, `Bash(git log:*)`, `Bash(claude plugin list:*)`, `Bash(gh pr view:*)` |
+
+## Opt-in lines
+
+Each is its own labelled line in the draft and is written only when accepted by name.
+
+| Line | Flag | Writes |
+|---|---|---|
+| PR auto-review | component 7 | `.github/workflows/pr-auto-review.yml` |
+| Allow rules | `--allow-local --pm <pm> --manifest package.json --scripts "<approved gate scripts>"` | `Bash(git fetch *)`, `Bash(git switch *)`, `Bash(git add *)`, `Bash(git commit *)`, and `Bash(<pm> run <script> *)` per approved script. Never a push, a PR or an Asana write |
+| Duplicate security review | `--sg-push-sweep-off`, offered while security-guidance is enabled | `env.SG_PUSH_SWEEP: "0"`: the commit-time review stays, the repeat at push stops |
+| Unused plugins | `--disable-plugins <id,...>` from the report's unused list | `enabledPlugins["<id>"]: false`, for everyone who clones the repo |
+
+A blocking Stop hook is only named, with `claude plugin disable <id> --scope local`; setup never runs it.
 
 Object keys merge additively and `permissions.allow` and `symlinkDirectories` are unions, so nothing existing is removed. A managed key whose existing value differs is a conflict: every conflict is reported together and nothing is written (exit 2). Unparseable JSON aborts with its reason and writes nothing (exit 1). Identical inputs produce byte-identical output (exit 0, `no changes`). That same conflict detection is the re-run drift check.
 
@@ -80,4 +93,4 @@ Hasura is detected, not installed: when the repository has a Hasura config with 
 }
 ```
 
-`optional_components` lists only accepted opt-ins; a declined one goes in `optional_components_declined` so the ask is not repeated. `pack_version` is the raftkit-core version, so a repo carrying an older pack is detected on the next run.
+`optional_components` lists only accepted opt-ins (`pr-auto-review`, `allow-rules`, `sg-push-sweep-off`, `disable-plugins`); a declined one goes in `optional_components_declined` so the ask is not repeated. `pack_version` is the raftkit-core version, so a repo carrying an older pack is detected on the next run.
