@@ -195,17 +195,9 @@ make deploy-agent                 # voice worker (if applicable)
 
 ## Supporting skills
 
-See `.claude/skills/`. Pre-installed:
-- `better-auth-best-practices`
-- `neon-postgres`
-- `next-best-practices`
-- `next-cache-components`
-- `turborepo`
-- `vercel-react-best-practices`
-- `vercel-composition-patterns`
-- `web-design-guidelines`
-- `module-audit`
-- `<others per project>`
+Proposed and installed through `raftkit-dev:setup`. List what this project
+installed:
+- `<each installed capability>`
 
 ## Related
 - **Architecture overview:** [architecture-overview.md](./architecture-overview.md)

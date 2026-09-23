@@ -75,8 +75,9 @@ done
 # a sibling, a file in the skill, a link target in the same file, or a doc the
 # generated tree creates (named in the CLAUDE.md template); a bare .mjs name
 # is a shipped script; a relative link resolves. Payload files (assets/) are
-# read inside the generated repo, which has no references/ directory; their
-# _templates/ pointers must name a shipped template.
+# read inside the generated repo, which has no references/ or _templates/
+# directory. Nothing installs skills under .claude/skills/. Fenced blocks are
+# scanned too.
 node - "$DOCS" "$CLAUDE_TPL" <<'NODE'
 const fs = require("fs"), path = require("path");
 const [root, claudeTpl] = process.argv.slice(2);
@@ -100,28 +101,31 @@ for (const f of walk(root)) {
   for (const m of text.matchAll(/`(raftkit-[a-z]+):([a-z-]+)`(?:'s)?\s*(?:→\s*)?`((?:references|scripts|assets)\/[^`\s]+)/g)) qualified.set(m.index + m[0].length - m[3].length, skillOf(m[1], m[2]));
   const miss = (t, why) => bad.push(`${f}: \`${t}\` ${why}`);
   if (!payload) for (const t of links) if (!fs.existsSync(path.join(path.dirname(f), t))) miss(t, "link does not resolve");
-  for (const m of text.matchAll(/`([^`\n]+)`/g)) {
-    const t = m[1].trim().split(/\s+/)[0];
-    const at = m.index + 1;
-    if (placeholder(t)) continue;
+  const pointer = (t, at) => {
+    if (/(^|\/)\.claude\/skills\//.test(t)) return miss(t, "nothing in v2 installs skills under .claude/skills/");
+    if (/(^|\/)_templates\//.test(t)) return miss(t, "no generation step creates a _templates/ folder");
+    if (placeholder(t)) return;
     const q = t.match(/^(raftkit-[a-z]+):([a-z-]+)\/(.+)$/);
-    if (q) { if (!fs.existsSync(path.join(skillOf(q[1], q[2]), q[3]))) miss(t, "not in the named skill"); continue; }
-    const tpl = t.match(/^(?:docs\/project\/)?_templates\/(.+)$/);
-    if (tpl) { if (!fs.existsSync(path.join(root, "skills/docs-product/assets/templates", tpl[1]))) miss(t, "names no shipped template"); continue; }
+    if (q) { if (!fs.existsSync(path.join(skillOf(q[1], q[2]), q[3]))) miss(t, "not in the named skill"); return; }
     if (/^(references|scripts|assets)\/[^/]/.test(t)) {
       const base = qualified.get(at);
       if (base) { if (!fs.existsSync(path.join(base, t))) miss(t, "not in the named skill"); }
       else if (payload && t.startsWith("references/")) miss(t, "a generated repo has no references/ directory");
       else if (!payload && !fs.existsSync(path.join(skillRoot, t))) miss(t, "not in this skill");
-      continue;
+      return;
     }
-    if (payload || t.includes("/")) continue;
+    if (payload || t.includes("/")) return;
     if (/\.md$/.test(t)) {
       const ok = [path.dirname(f), skillRoot, path.join(skillRoot, "references")].some((d) => fs.existsSync(path.join(d, t)))
         || linkNames.has(t) || generated.has(t);
       if (!ok) miss(t, "resolves nowhere");
     } else if (/\.mjs$/.test(t) && !scripts.includes(t)) miss(t, "is no shipped script");
-  }
+  };
+  for (const m of text.matchAll(/`([^`\n]+)`/g)) pointer(m[1].trim().split(/\s+/)[0], m.index + 1);
+  // Fenced blocks: every path-shaped word, since a command there is run as written.
+  for (const m of text.matchAll(/^(`{3,}|~{3,})[^\n]*\n([\s\S]*?)^\1[ \t]*$/gm))
+    for (const w of m[2].matchAll(/[^\s"'`()]+/g))
+      if (/^(?:raftkit-[a-z]+:[a-z-]+\/|(?:references|scripts|assets)\/)|(^|\/)(?:\.claude\/skills|_templates)\//.test(w[0])) pointer(w[0], -1);
 }
 if (bad.length) { console.error(bad.join("\n")); process.exit(1); }
 NODE
