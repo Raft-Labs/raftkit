@@ -352,6 +352,12 @@ node "$MERGE_MD" --core "$empty_core" --claude-md "$dm12/CLAUDE.md" --write >/de
 check "M12 a missing source file exits 1 and writes nothing" ok $?
 [[ -z "$(find "$dm1" "$dm4" -mindepth 1 ! -name CLAUDE.md)" ]]
 check "M13 no temporary file is left beside CLAUDE.md" ok $?
+core14="$(mkcore)"; ds14="$core14/skills/working-agreement/references/design-standard.md"
+printf '%s' "$(cat "$ds14")" > "$ds14.tmp" && mv "$ds14.tmp" "$ds14"
+dm14="$(newtmp)"; node "$MERGE_MD" --core "$core14" --claude-md "$dm14/CLAUDE.md" --write >/dev/null 2>&1; rc14=$?
+[[ $rc14 -eq 0 && "$(marker_sha "$dm14/CLAUDE.md")" == "$(expected_body "$core14" | sha)" ]] \
+  && grep -qi 'no changes' <<<"$(node "$MERGE_MD" --core "$core14" --claude-md "$dm14/CLAUDE.md" --write 2>&1)"
+check "M14 a source without a trailing newline still verifies, and its re-run finds no changes" ok $?
 
 # 6. Re-run with identical input -> byte-identical output, zero diff
 d6="$(newtmp)"

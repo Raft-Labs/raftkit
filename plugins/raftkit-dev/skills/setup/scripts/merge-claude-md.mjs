@@ -33,7 +33,10 @@ const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
 const body = `${agreement}\n${standard}`;
 const digest = sha(body);
 const BEGIN = "<!-- raftkit:working-agreement begin", END = "<!-- raftkit:working-agreement end -->";
-const block = `${BEGIN} sha256=${digest} -->\n${body}${body.endsWith("\n") ? "" : "\n"}${END}\n`;
+// The end marker sits on its own line: a body without a final newline gets one,
+// which is padding, not content, and is left out of the hash.
+const pad = body.endsWith("\n") ? "" : "\n";
+const block = `${BEGIN} sha256=${digest} -->\n${body}${pad}${END}\n`;
 
 // --- locate the existing block, refusing anything ambiguous -----------------
 let existing = null;
@@ -80,7 +83,7 @@ writeFileSync(tmp, next);
 renameSync(tmp, target);
 const landed = readFileSync(target, "utf8");
 const m = landed.match(/^<!-- raftkit:working-agreement begin sha256=([0-9a-f]{64}) -->\n([\s\S]*?)^<!-- raftkit:working-agreement end -->$/m);
-if (!m || m[1] !== digest || sha(m[2]) !== digest) {
+if (!m || m[1] !== digest || m[2] !== body + pad || sha(m[2].slice(0, body.length)) !== digest) {
   if (existing === null) unlinkSync(target); else writeFileSync(target, existing);
   console.error(`reason: the written block does not match sha256 ${short(digest)} — CLAUDE.md restored`);
   process.exit(3);
