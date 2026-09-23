@@ -1,6 +1,6 @@
 # RaftKit — Project Context
 
-RaftKit is RaftLabs' private Claude plugin **marketplace**: one repo shipping five plugins that package the RaftLabs way of delivering software. The plugins **orchestrate** proven third-party plugins (superpowers, pr-review-toolkit, code-simplifier, claude-md-management, security-guidance, frontend-design, find-skills, asana, expo, neon) — **they rebuild nothing**. Asana is the workflow spine: work enters as a templated user story and exits as a squash-merged PR with QA-verified acceptance criteria.
+RaftKit is RaftLabs' private Claude plugin **marketplace**: one repo shipping five plugins that package the RaftLabs way of delivering software. The plugins **orchestrate** proven third-party plugins — superpowers, security-guidance, pr-review-toolkit and frontend-design, the four `raftkit-dev` declares, plus the Asana connector — **they rebuild nothing**. Asana is the workflow spine: work enters as a templated user story and exits as a squash-merged PR with QA-verified acceptance criteria.
 
 Methodology, for what RaftKit produces and for RaftKit itself: **the story is the spec, its acceptance criteria become failing tests, and code exists to turn them green.** Plans are written down and shown, not gated. A run stops exactly once, before anything leaves the session.
 
@@ -9,7 +9,7 @@ Methodology, for what RaftKit produces and for RaftKit itself: **the story is th
 1. **The Asana story you are implementing** — the scope contract. Its `[AC]` subtasks are the definition of done; its "Out of scope" section is a hard exclusion list.
 2. **The v2 design** — [docs/specs/2026-09-16-raftkit-v2-design.md](docs/specs/2026-09-16-raftkit-v2-design.md). The architecture, the per-skill budgets, and why each rule exists.
 3. **PRD** — [claude-plugin-marketplace-prd.md](https://drive.google.com/file/d/1nJrBdvUIizJme9ysDAJPNnF0waKrra4R/view) (also in Google Drive → RaftLabs - General → Raftlabs Framework). Product intent and metrics; the v2 design supersedes its process detail.
-4. **Development board** — Asana project `raftkit` (gid `1216551447756315`): https://app.asana.com/1/1194107417268910/project/1216551447756315
+4. **Development board** — Asana project `raftkit` (gid `1217718419015746`): https://app.asana.com/1/1194107417268910/project/1217718419015746. It moved here on 21 Aug 2026 from `1216551447756315`, which a free-tier custom-field paywall locked; task GIDs were preserved.
 
 ## Workflow constants
 
@@ -24,7 +24,7 @@ plugins/
   raftkit-pm/     # profile, story, estimate, status, meeting, routine     (Cowork)
   raftkit-dev/    # setup, implement, fix, scope-guard, ui, hasura, docs   (Claude Code)
   raftkit-qa/     # suite, run-sheet, bug                                  (Cowork)
-  raftkit-docs/   # docs-product, discovery-interview          (opt-in, not installed by default)
+  raftkit-docs/   # docs-product, discovery-interview          (opt-in by design; org sync installs it today)
 ```
 
 Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Verify manifest and marketplace schema against the current Claude Code plugin docs before scaffolding — do not trust memory.
@@ -53,9 +53,12 @@ Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Veri
 
 | Decision (Asana task) | Impact here |
 |---|---|
-| Org-wide install path P0 (`1216551001583573`) | Distribution assumptions for pm/qa (Cowork installs) |
-| Marketplace repo home (`1216551001744293`) | This repo may move orgs — avoid hardcoded repo URLs |
 | Phase file limit (`1216550892331152`) | Rule 2 of the working agreement ships two files as its value |
+
+Closed, and now facts:
+
+- **Marketplace repo home** (`1216551001744293`, closed 14 Jul 2026): the marketplace publishes from https://github.com/Raft-Labs/raftkit.
+- **Org-wide install path P0** (`1216551001583573`, closed 21 Aug 2026): org install is verified in Claude Code and Cowork and auto-updates, so anything on `main` reaches every user; `main` takes only reviewed releases.
 
 ## Pending with the founders
 
