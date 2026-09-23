@@ -45,9 +45,9 @@ so rather than treating "not on main" as a hard stop.
 ### 1 · Fetch the story
 Get the story identifier. If the user pasted a task **link or GID**, use it. If
 they named the board task instead (e.g. "M3 · scope-guard", "do story-readiness")
-with no GID, **search the raftkit board for that name**, and if exactly one task
-matches, confirm the match in one line and proceed; if zero or several match, ask
-which. Never invent a target.
+with no GID, **search the development board named in `CLAUDE.md` for that
+name**, and if exactly one task matches, confirm the match in one line and
+proceed; if zero or several match, ask which. Never invent a target.
 
 Then resolve the workspace GID and the **Feature Template** constant from
 `raftkit-core:rules` and fetch the story **and all its subtasks** live via the
@@ -83,7 +83,7 @@ wrong.
 
 ### 5 · Build — engines together
 See `references/engine-seam.md` for who owns what.
-- Create the branch first: `feat/<milestone>-<skill-name>` (see git-pr-flow).
+- Create the branch first: `feat/<skill-name>` (see git-pr-flow).
 - **plugin-dev** scaffolds the plugin/skill files in-place (`plugin-structure` +
   `skill-development`; `create-plugin` only for a brand-new multi-part plugin).
 - **skill-creator** authoring guidance drafts the SKILL.md content in the house

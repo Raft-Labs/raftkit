@@ -49,11 +49,15 @@ Limits, Default values — each usually maps to one or more `[AC]`s to cover.
 
 ## Deriving the build target
 
-The board section names the milestone and the skill. Enumerate sections
-**dynamically** — do not hard-code names; the board has an extra empty
-`Untitled section` and the real M5/M6 names are longer than their short forms.
+The story names its target: the title and the Header's `Surface(s)` and
+`Touches these modules`. Board sections are themes, not milestones (e.g.
+`🔧 Improvements · raftkit-pm`, `🛠️ Improvements · raftkit-dev & QA`,
+`✨ New skills & asks`), so a section narrows the plugin at most. List sections
+live; never hard-code them.
 
-| Section prefix | Target plugin |
+Older tasks carry a milestone tag in the title:
+
+| Title tag | Target plugin |
 |---|---|
 | `M1 · …` | `raftkit-core` (or repo scaffold / CI — may be executable, not a skill) |
 | `M2 · …` | `raftkit-pm` |
@@ -61,9 +65,8 @@ The board section names the milestone and the skill. Enumerate sections
 | `M4 · …` | `raftkit-qa` |
 
 Skill name = the short area name in the task title (e.g. `M3 · scope-guard` →
-skill `scope-guard` in `raftkit-dev`). Confirm the derived plugin + skill name
-with the human at the scope-contract gate before building — never invent a
-target.
+skill `scope-guard` in `raftkit-dev`). Show the derived plugin + skill in the
+scope contract; when nothing in the story names it, ask — never invent a target.
 
 ## Output of the parse (restate in chat)
 

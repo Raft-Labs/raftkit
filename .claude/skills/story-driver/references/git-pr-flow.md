@@ -9,15 +9,15 @@ approval gate, and never at all in dry-run mode.
 Create the branch **before** building, off an up-to-date `main`:
 
 ```
-feat/<milestone>-<skill-name>
+feat/<skill-name>
 ```
 
-e.g. `feat/m3-scope-guard`. Milestone prefix is the lowercased section tag
-(`m1`…`m6`). Verify the working tree is clean first; if it is not, stop and ask.
+e.g. `feat/scope-guard`. Verify the working tree is clean first; if it is not,
+stop and ask.
 
 If the branch already exists (a prior attempt, or it is checked out in another
 worktree), do not clobber it: report it, and either continue on it if it is this
-same story's work, or ask before choosing a suffixed name (`feat/m3-scope-guard-2`).
+same story's work, or ask before choosing a suffixed name (`feat/scope-guard-2`).
 A silent fallback that buries the collision is worse than pausing to confirm.
 
 ## Commits
