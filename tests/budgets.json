@@ -8,7 +8,7 @@
     "raftkit-pm": 9500,
     "raftkit-dev": 14000,
     "raftkit-qa": 5000,
-    "raftkit-docs": 46000
+    "raftkit-docs": 38110
   },
   "plugin_tokens": {
     "raftkit-core": 7760,
@@ -163,9 +163,9 @@
       "v2": true
     },
     "raftkit-docs/docs-product": {
-      "skill_md": 1500,
+      "skill_md": 1260,
       "skill_md_tokens": 2370,
-      "total": 40000,
+      "total": 13790,
       "total_tokens": 23860,
       "writes": true,
       "v2": true,
