@@ -217,7 +217,11 @@ const KEYS = {
 };
 const TARGETS = new Set(["last_message","trace","files","mock_calls"]);
 function scalar(v) {
-  if (/^'.*'$/.test(v)) return v.slice(1, -1).replace(/''/g, "'");
+  if (/^'.*'$/.test(v)) {
+    const inner = v.slice(1, -1);
+    if (inner.replace(/''/g, "").includes("'")) throw new Error(`single-quoted value holds a bare ' (YAML needs ''): ${v}`);
+    return inner.replace(/''/g, "'");
+  }
   if (/^".*"$/.test(v)) return JSON.parse(v);
   if (/^\[.*\]$/.test(v)) return v.slice(1, -1).split(",").map((s) => scalar(s.trim())).filter((s) => s !== "");
   if (/^-?\d+(\.\d+)?$/.test(v)) return Number(v);
@@ -226,6 +230,8 @@ function scalar(v) {
 }
 function parse(file) {
   const src = fs.readFileSync(file, "utf8");
+  // a shell echo that expands \b writes a backspace, which still compiles as a regex
+  if (/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(src)) throw new Error(`${path.basename(file)}: control character`);
   const m = src.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
   if (!m) return null;
   const fm = {};
