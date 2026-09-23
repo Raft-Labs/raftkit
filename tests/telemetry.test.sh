@@ -1419,6 +1419,57 @@ expect_eq "from the plugin cache, the installed version of each plugin is report
 expect_eq "  and the skill's sha12 is read from that version" "$(printf 'cached implement skill\n' | shasum -a 256 | cut -c1-12)" \
   "$(last_event_field "$d/spool/events.jsonl" 'props.skill_sha12')"
 
+# ================================================================ 14. entry map
+# A plain-language request must reach RaftKit even when the skill listing has
+# dropped RaftKit's descriptions. SessionStart puts a short map into context.
+# It is not telemetry: the opt-out does not silence it.
+MAP="$PWD/plugins/raftkit-core/hooks/entry-map.mjs"
+map_ctx() { # <cwd> [env...] — the additionalContext the hook prints, or its raw output
+  local cwd="$1"; shift
+  printf '{"session_id":"m1","hook_event_name":"SessionStart","source":"startup","cwd":"%s"}' "$cwd" \
+    | env "$@" node "$MAP" 2>/dev/null \
+    | node -e 'let s="";process.stdin.on("data",(c)=>s+=c).on("end",()=>{ if(!s) return; try { const j=JSON.parse(s); process.stdout.write(j.hookSpecificOutput?.hookEventName==="SessionStart" ? String(j.hookSpecificOutput.additionalContext) : "BAD:"+s); } catch { process.stdout.write("BAD:"+s); } })'
+}
+node -e '
+  const h = JSON.parse(require("fs").readFileSync("plugins/raftkit-core/hooks/hooks.json", "utf8"));
+  const e = (h.hooks.SessionStart || []).flatMap((m) => m.hooks || []).find((x) => (x.args || []).some((a) => /entry-map\.mjs$/.test(a)));
+  process.exit(e && !e.async ? 0 : 1);
+'
+check "the entry map is a synchronous SessionStart hook, so its output is read" ok $?
+
+bare="$(new_sandbox)"; git -C "$bare" init -q 2>/dev/null
+ctx="$(map_ctx "$bare")"
+for want in "story URL → raftkit-dev:implement" "raftkit-dev:fix (it runs systematic-debugging itself)" "→ raftkit-dev:setup" "scope audit → raftkit-dev:scope-guard"; do
+  [[ "$ctx" == *"$want"* ]]; check "the entry map routes: $want" ok $?
+done
+[[ "$ctx" == *"RaftKit is not set up in this repo — run raftkit-dev:setup"* ]]
+check "a repo without setup's marker gets the not-set-up line" ok $?
+words="$(printf '%s' "$ctx" | wc -w | tr -d ' ')"
+[[ "$words" -ge 20 && "$words" -le 60 ]]
+check "the entry map, not-set-up line included, is at most 60 words ($words)" ok $?
+for var in "RAFTKIT_TELEMETRY=off" "DO_NOT_TRACK=1"; do
+  [[ "$(map_ctx "$bare" "$var")" == "$ctx" ]]
+  check "the entry map still prints with $var" ok $?
+done
+setup_done="$(new_sandbox)"; git -C "$setup_done" init -q 2>/dev/null; mkdir -p "$setup_done/.raftkit" "$setup_done/src"
+echo '{}' > "$setup_done/.raftkit/governance-pack.json"
+ctx2="$(map_ctx "$setup_done/src")"
+[[ "$ctx2" == *"raftkit-dev:implement"* && "$ctx2" != *"not set up"* ]]
+check "a repo with setup's marker (checked at the git root) gets the map alone" ok $?
+not_git="$(new_sandbox)"
+ctx3="$(map_ctx "$not_git")"
+[[ "$ctx3" == *"raftkit-dev:implement"* && "$ctx3" != *"not set up"* ]]
+check "outside a git repo there is no not-set-up line" ok $?
+# The map names raftkit-dev's skills, so without raftkit-dev it says nothing.
+alone="$(new_sandbox)"; mkdir -p "$alone/plugins"; cp -R plugins/raftkit-core "$alone/plugins/"
+out="$(printf '{"cwd":"%s"}' "$bare" | node "$alone/plugins/raftkit-core/hooks/entry-map.mjs" 2>/dev/null)"
+expect_eq "without raftkit-dev installed the entry map prints nothing" "" "$out"
+d="$(new_sandbox)"; rmdir "$d"
+map_ctx "$bare" RAFTKIT_TELEMETRY_DIR="$d" >/dev/null
+expect_eq "the entry map writes nothing" "no" "$([[ -e "$d" ]] && echo yes || echo no)"
+echo 'not json {{' | node "$MAP" >/dev/null 2>&1
+check "the entry map exits 0 on malformed input" ok $?
+
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures test(s) failed"
   exit 1
