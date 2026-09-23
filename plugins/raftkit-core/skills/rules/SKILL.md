@@ -26,7 +26,7 @@ Can't read the live template — check your Asana connector, then retry.
 
 ## Fetch once per run
 
-Fetch the story, its `[AC]`s, the template and the profile once at the start and paste them into every subagent prompt; subagents inherit nothing. Reuse anything fetched earlier in this conversation unless you can no longer quote it verbatim. Re-read a task right before overwriting its description. Re-fetch a story's `[AC]`s once before auditing a diff. Which fields to ask for, which reads go out together: `references/asana-calls.md`.
+Fetch the story, its `[AC]`s, the template and the Profile once at the start. Subagents inherit nothing: brief each with only the slice it uses, never the template. A subagent missing a fact stops and asks through the parent. Reuse anything fetched earlier in this conversation unless you can no longer quote it verbatim. Re-read a task right before overwriting its description. Re-fetch a story's `[AC]`s once before auditing a diff. Which fields to ask for, which reads go out together: `references/asana-calls.md`.
 
 ## One stop per run
 
