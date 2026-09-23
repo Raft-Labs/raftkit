@@ -109,6 +109,22 @@ bad="$(grep -rhoE 'verify\.mjs --only [a-z]+' "$IMPL" "$FIX" "$DEV/agents" 2>/de
 [[ -z "$bad" ]] || { echo "  unknown gate: $bad"; ok=1; }
 check "DF10 implement and fix run their gates through verify.mjs" ok $ok
 
+# DF11 · the review tail runs in raftkit-dev:verifier, a Sonnet agent that can
+#        run checks (Bash) but holds no tool that writes a file or dispatches
+V=$DEV/agents/verifier.md
+vfm() { awk 'NR==1&&$0!="---"{exit} NR>1&&$0=="---"{exit} NR>1{print}' "$V"; }
+ok=0
+[[ -f "$V" ]] || { echo "  missing $V"; ok=1; }
+if [[ -f "$V" ]]; then
+  [[ "$(vfm | sed -n 's/^name: *//p')" == verifier ]] || { echo "  name is not verifier"; ok=1; }
+  [[ "$(vfm | sed -n 's/^model: *//p')" == sonnet ]] || { echo "  model is not sonnet"; ok=1; }
+  tools="$(vfm | sed -n 's/^tools: *//p')"
+  grep -q '"Bash"' <<<"$tools" || { echo "  no Bash in tools"; ok=1; }
+  grep -qE '"(Write|Edit|MultiEdit|NotebookEdit|Agent|Task)"' <<<"$tools" && { echo "  a write or dispatch tool in: $tools"; ok=1; }
+fi
+grep -qF '`raftkit-dev:verifier`' "$IMPL/references/review.md" || { echo "  review.md does not dispatch the verifier"; ok=1; }
+check "DF11 the verifier agent is Sonnet, read-and-run only, and dispatched by review.md" ok $ok
+
 echo
 echo "dev-flow: $failures failure(s)"
 [[ "$failures" -eq 0 ]]

@@ -6,7 +6,7 @@ user-invocable: true
 
 # docs
 
-One question, answered with evidence: does this change set leave the docs accurate? Load `raftkit-core:rules` first unless it is already in this conversation. `implement` and `fix` call this once, on the final diff, and there it checks parity only.
+One question, answered with evidence: does this change set leave the docs accurate? Load `raftkit-core:rules` first unless it is already in this conversation. `implement` and `fix` call this once, on the final diff, through `raftkit-dev:verifier`, and there it checks parity only.
 
 ## Run
 

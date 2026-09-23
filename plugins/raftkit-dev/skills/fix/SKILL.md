@@ -27,8 +27,10 @@ One defect per run: a task or a report bundling unrelated defects stops and asks
 Can't start the fix — the bug task is missing <sections>. Add them before a repro test can be written and scoped. Back to QA.
 ```
 
-   Reported → ask all four in one message; echo the answers as the first lines of the next reply and proceed to the repro. A refused ask stops the run; the developer states the `Done when`, this skill never drafts it. Nothing is inferred: a guessed step is a fabricated contract.
-2. **Reproduce, then make it red.** Replicate the defect in the stated environment (never a silent substitute) through `superpowers:systematic-debugging`, and encode it as a test that fails for the reason the bug describes. A test that passes, or fails for another reason, is not a repro. Cannot reproduce → stop with this, back to QA on the ticketed path and to the developer in session on the reported one. Never fix blind.
+   Reported → ask all four in one message; echo the answers as the first lines of the next reply and proceed to the repro. A refused ask stops the run; the developer states the `Done when`, this skill never drafts it.
+
+   Steps 2 and 3 run as one subagent at the defect's tier (`implement/references/review.md`; ordinary debugging is `standard`, distributed state `hard`), loading `superpowers:systematic-debugging` first, given the contract, both steps verbatim and the branch SHA to confirm before its first edit. Relay what it returns verbatim.
+2. **Reproduce, then make it red.** Replicate the defect in the stated environment (never a silent substitute), and encode it as a test that fails for the reason the bug describes. A test that passes, or fails for another reason, is not a repro. Cannot reproduce → stop with this, back to QA on the ticketed path and to the developer in session on the reported one. Never fix blind.
 
 ```output
 Can't reproduce in the stated environment.
@@ -58,4 +60,4 @@ Declining the optional record is a first-class outcome: the repro test is perman
 
 A verbal description is not a trace: ask for the raw stack trace or log excerpt. A trace that does not localise asks for the missing artifact by name — a sourcemap, a request ID, a log window — and never guesses a line. One incident per run.
 
-Feature work halts until the incident is closed. Reproduce the crash as a failing regression test from the trace, fix, verify the whole suite, prepare the PR. Ask for the recent log stream before calling a deployment stable. A structural root cause becomes a drafted follow-up story, never a refactor under pressure. This skill never deploys: deployment is human and release-train owned.
+Reproduce the crash as a failing regression test from the trace, fix, verify the whole suite, prepare the PR. Ask for the recent log stream before calling a deployment stable. A structural root cause becomes a drafted follow-up story, never a refactor under pressure. This skill never deploys: deployment is human and release-train owned.
