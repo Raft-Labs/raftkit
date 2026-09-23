@@ -92,9 +92,9 @@ else
 fi
 
 # HR10 · the ported test suite runs green in isolation (the source's own
-# safety/behaviour oracle). HASURA_SKILL_AUTOCONFIRM guards interactivity.
+# safety/behaviour oracle).
 if [[ -x "$H/scripts/tests/run.sh" || -f "$H/scripts/tests/run.sh" ]]; then
-  ( cd "$H/scripts/tests" && HASURA_SKILL_AUTOCONFIRM=1 bash run.sh ) >/tmp/hr10.out 2>&1
+  ( cd "$H/scripts/tests" && bash run.sh ) >/tmp/hr10.out 2>&1
   check "HR10 ported Hasura unit+integration tests pass in isolation" ok $?
 else
   check "HR10 ported Hasura unit+integration tests pass in isolation" ok 1
@@ -115,6 +115,44 @@ check "HR13 integrations wired (envx, docs schema sync, preflight/setup)" ok $?
 
 grep -qF 'Load `raftkit-core:rules` first unless it is already in this conversation.' "$S"
 check "HR16 SKILL.md loads raftkit-core:rules first" ok $?
+
+# HR17-HR20 · the scaffolder never prompts: --dry-run previews, --write writes,
+# a destructive subcommand writes only with --confirmed. Run against a throwaway
+# repo with stdin closed (or fed a "y"), under a watchdog, so a prompt goes red.
+NM="$PWD/$H/scripts/new-migration.sh"
+fx=$(mktemp -d)
+git -C "$fx" init -q
+mkdir -p "$fx/hasura/migrations/default" "$fx/hasura/metadata/databases/default/tables" "$fx/docs"
+printf 'version: 3\n' > "$fx/hasura/config.yaml"
+printf 'create-dbml:\n\t@true\n' > "$fx/Makefile"
+printf 'Table "users" {\n  "id" uuid [pk, not null]\n  "email" text [not null]\n}\n' > "$fx/docs/schema.dbml"
+nm() { ( cd "$fx" && perl -e 'alarm 60; exec @ARGV' bash "$NM" "$@" ) 2>&1; }
+tree() { ( cd "$fx" && find . -path ./.git -prune -o -type f -print | sort | xargs cksum ); }
+migs() { ls "$fx/hasura/migrations/default" | grep -c "$1"; }
+
+before=$(tree)
+out=$(nm --dry-run create-table widgets --col title:text:not_null </dev/null); rc=$?
+[[ "$rc" -eq 0 && "$(tree)" == "$before" ]] \
+  && grep -q 'up.sql' <<<"$out" && grep -q 'down.sql' <<<"$out" && grep -q 'public_widgets.yaml' <<<"$out" \
+  && grep -q 'CREATE TABLE public.widgets' <<<"$out"
+check "HR17 --dry-run prints up.sql, down.sql and the YAML, exits 0 with stdin closed, writes nothing" ok $?
+
+out=$(printf 'y\n' | nm create-table widgets --col title:text:not_null); rc=$?
+[[ "$rc" -eq 0 && "$(tree)" == "$before" ]] && grep -q 'CREATE TABLE public.widgets' <<<"$out"
+check "HR18 no mode flag previews like --dry-run and never reads an answer from stdin" ok $?
+
+nm create-table widgets --col title:text:not_null --write </dev/null >/dev/null; rc=$?
+[[ "$rc" -eq 0 && "$(migs create_widgets)" -eq 1 && -f "$fx/hasura/metadata/databases/default/tables/public_widgets.yaml" ]] \
+  && ls "$fx"/hasura/migrations/default/*_create_widgets/up.sql "$fx"/hasura/migrations/default/*_create_widgets/down.sql >/dev/null 2>&1
+check "HR19 --write writes the migration and the YAML with stdin closed" ok $?
+
+before=$(tree)
+o1=$(nm --write drop-column users email </dev/null); r1=$?
+o2=$(nm --write rename column email mail --table users </dev/null); r2=$?
+[[ "$r1" -ne 0 && "$r2" -ne 0 && "$(tree)" == "$before" ]] && grep -qi 'explicit OK' <<<"$o1$o2" \
+  && nm --write drop-column users email --confirmed </dev/null >/dev/null && [[ "$(migs drop_email_from_users)" -eq 1 ]]
+check "HR20 a destructive --write is refused without --confirmed and writes with it" ok $?
+rm -rf "$fx"
 
 eval_count=$(find plugins/raftkit-dev/evals/hasura -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
 [[ "${eval_count:-0}" -ge 8 ]] \

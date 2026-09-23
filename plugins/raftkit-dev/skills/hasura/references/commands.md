@@ -22,6 +22,10 @@ the discovered equivalents.
 | Export metadata after console edits | `make hasura-export stage=local` |
 | Query a stage | `${CLAUDE_PLUGIN_ROOT}/skills/hasura/scripts/hasura-query.sh --stage=<s> [--role=user --user-id=<uuid>] <file>` |
 
+Every `new-migration.sh` subcommand takes `--dry-run` (the default: print the
+files, write nothing) or `--write`. `drop-column` and `rename` also need
+`--confirmed`, passed only after the developer's explicit OK.
+
 **Choosing a creation path:**
 - **Typed scaffolders** (`new-migration.sh create-table`, `add-column`,
   etc.) — the default. They generate `up.sql`/`down.sql` **and** the

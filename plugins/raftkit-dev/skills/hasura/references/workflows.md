@@ -16,8 +16,8 @@ The scaffolder will:
 1. Refresh the schema snapshot and check `<schema-snapshot>` for collisions.
 2. Compute a race-safe timestamp.
 3. Render `up.sql`, `down.sql`, and `public_meal_plans.yaml` from templates.
-4. Print all three for review and ask "Write these files?".
-5. On confirmation: write the migration folder + metadata YAML; print
+4. Print all three and exit (`--dry-run`, the default).
+5. With `--write`: write the migration folder + metadata YAML; print
    follow-up instructions.
 
 Then (example paths):

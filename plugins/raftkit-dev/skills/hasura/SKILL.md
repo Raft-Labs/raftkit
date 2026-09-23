@@ -13,23 +13,25 @@ The Hasura development loop: scaffold a migration, author its metadata, apply it
 ## Run
 
 1. **Resolve the conventions** from `.raftkit/hasura.json` or by discovery.
-2. **Scaffold** with `scripts/new-migration.sh`. It prints the `up.sql`, the `down.sql` and the permissions YAML and asks before writing anything. Column specs, every subcommand and the tooling are in `references/commands.md`.
+2. **Scaffold** with `scripts/new-migration.sh`, which never prompts: `--dry-run` prints the `up.sql`, the `down.sql` and the permissions YAML, and `--write` writes them. Column specs and every subcommand are in `references/commands.md`.
 3. **Apply and refresh.** Run the project's own migrate target, then refresh the schema snapshot. A DDL change refreshes the snapshot before and after, so the committed schema never drifts from the database.
 4. **Query** any stage ad hoc with `scripts/hasura-query.sh`, reading the stage's own env file.
 
-Workflows for each change type, and the permission defaults the scaffolder applies, are in `references/workflows.md`. Table and relationship naming is in `references/relationship-naming.md`, enum tables in `references/enum-tables.md`, permission shapes in `references/permissions-patterns.md`.
+Workflows per change type and the scaffolder's permission defaults: `references/workflows.md`. Naming: `references/relationship-naming.md`. Enum tables: `references/enum-tables.md`. Permission shapes: `references/permissions-patterns.md`.
 
 ## Safety rules
 
 - **Never edit an applied migration.** One that has run anywhere is immutable: write a new one.
 - **Apply only through the project's own migrate target**, never `hasura migrate apply` directly.
 - **Every migration is reversible**: an `up.sql` and a `down.sql` that actually reverses it, in one atomic commit per schema change, so a revert is one commit.
-- **Confirm every destructive change** before acting: dropping or renaming a column or table, deleting a migration, or reapplying one.
+- **Confirm every destructive change** before acting: dropping or renaming a column or table, deleting a migration, or reapplying one. Batch them into one message, each with its dry run or command; only an explicit go passes `--confirmed` or runs the target.
 - **Local-first: migrate only `stage=local`.** Development and production migrate through the pipeline, never from a session.
 - **Never declare the `admin` role** in permissions YAML: Hasura grants it implicitly, and declaring it is forbidden in YAML.
 - **Never echo a secret.** Env files are decrypted through the project's own target and their values stay redacted in any output, the admin secret included.
 - **Never overwrite a timestamp collision.** The scaffolder prints the existing block and the remedy, then exits.
 - **Never push to a protected branch** without per-action approval.
+
+**STOP** — approve the destructive changes, edit to change, or decline.
 
 ## Integrations
 
