@@ -8,13 +8,13 @@ Every Agent call passes `model` for its tier (`raftkit-core:working-agreement` â
 
 ## Order
 
-1. **Simplify first**, alone: dispatch `pr-review-toolkit:code-simplifier` with `model: "sonnet"` across the branch diff only. Its findings are triaged by `references/simplify.md`. Re-run the suite after the pass; a red test reverts the change that caused it before the fan-out starts.
+1. **Simplify first**, alone: dispatch `pr-review-toolkit:code-simplifier` with `model: "sonnet"` across the branch diff only. Its findings are triaged by `references/simplify.md`. Re-run the suite with `verify.mjs --only test`; a red test reverts the change that caused it before the fan-out starts.
 2. **Then the fan-out**, all at once on the merge-base diff:
    - `pr-review-toolkit:code-reviewer` with `model: "sonnet"`, scored against the repo's `CLAUDE.md`, which carries the design standard.
    - `pr-review-toolkit:type-design-analyzer`, `pr-review-toolkit:silent-failure-hunter` and `pr-review-toolkit:pr-test-analyzer`, each with `model: "sonnet"`. Never through `review-pr`, which runs them one after another.
    - `raftkit-dev:scope-guard`, given the `[AC]`s, the out-of-scope list, the plan record path and the range command.
    - `raftkit-dev:docs`, given the range's merge-base as its base ref.
-   - Lint and the full test suite.
+   - Lint, typecheck and the full suite through `verify.mjs`.
    - The security-guidance hook evidence already emitted during the edits. Nothing to invoke; never claim a review that did not run.
 
 ## Anchoring

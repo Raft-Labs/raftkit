@@ -99,6 +99,16 @@ refs="$(grep -rlF '${CLAUDE_' "$IMPL/references" "$FIX/references" "$SG" "$DOCS/
 [[ -z "$refs" ]] || { echo "  placeholder in a reference file: $refs"; ok=1; }
 check "DF9 implement and fix quote run-tokens.mjs at the STOP" ok $ok
 
+# DF10 · gate runs go through verify.mjs (cross-group C2): SKILL.md carries the
+#        substituted invocation, and every --only names a gate it accepts
+ok=0
+for f in "$IMPL/SKILL.md" "$FIX/SKILL.md"; do
+  grep -qF 'node ${CLAUDE_PLUGIN_ROOT}/scripts/verify.mjs' "$f" || { echo "  gates not run through verify.mjs: $f"; ok=1; }
+done
+bad="$(grep -rhoE 'verify\.mjs --only [a-z]+' "$IMPL" "$FIX" "$DEV/agents" 2>/dev/null | grep -vE -- '--only (test|lint|typecheck)$')"
+[[ -z "$bad" ]] || { echo "  unknown gate: $bad"; ok=1; }
+check "DF10 implement and fix run their gates through verify.mjs" ok $ok
+
 echo
 echo "dev-flow: $failures failure(s)"
 [[ "$failures" -eq 0 ]]

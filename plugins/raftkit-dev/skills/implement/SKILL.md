@@ -10,7 +10,7 @@ One story, one branch, one PR, one stop. Load `raftkit-core:rules` first unless 
 
 ## Run
 
-1. **Intake, in one turn**: the story and every `[AC]` subtask · the Feature Template · the Project Profile · the squash target and branch convention from the repo's own docs · `superpowers:test-driven-development` and the `pr-review-toolkit` agents available · `git fetch` of the target · the baseline build and typecheck. A miss stops here: an engine with `Missing: <engine>. Install it with: claude plugin install <engine>@claude-plugins-official`, a red baseline with the failing output verbatim, and no documented target with:
+1. **Intake, in one turn**: the story and every `[AC]` subtask · the Feature Template · the Project Profile · the squash target and branch convention from the repo's own docs · `superpowers:test-driven-development` and the `pr-review-toolkit` agents available · `git fetch` of the target · the baseline build and `node ${CLAUDE_PLUGIN_ROOT}/scripts/verify.mjs --only typecheck`. A miss stops here: an engine with `Missing: <engine>. Install it with: claude plugin install <engine>@claude-plugins-official`, a red baseline with the failing output verbatim, and no documented target with:
 
 ```output
 no documented squash target — add the target branch and branch naming to CLAUDE.md, then re-run
