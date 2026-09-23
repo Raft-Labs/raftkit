@@ -10,6 +10,7 @@
 import { readFileSync, existsSync, lstatSync, readdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
+import { QUALITY } from "./quality.mjs";
 
 const args = process.argv.slice(2);
 const flag = (n) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : undefined; };
@@ -42,7 +43,6 @@ else if (families.length === 1) {
 // --- workspace + scripts ----------------------------------------------------
 const workspace = has("pnpm-workspace.yaml") || Boolean(pkg?.workspaces) || has("turbo.json") || has("nx.json");
 const rootScripts = pkg?.scripts ?? {};
-const QUALITY = /^(lint|typecheck|test)([:.].*)?$/;
 const rootQuality = Object.keys(rootScripts).filter((k) => QUALITY.test(k));
 const workspaceCandidates = [];
 for (const dir of ["packages", "apps"]) {

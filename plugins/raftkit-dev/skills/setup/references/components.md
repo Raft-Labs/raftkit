@@ -67,7 +67,7 @@ Each is its own labelled line in the draft and is written only when accepted by 
 | Line | Flag | Writes |
 |---|---|---|
 | PR auto-review | component 7 | `.github/workflows/pr-auto-review.yml` |
-| Allow rules | `--allow-local --pm <pm> --manifest package.json --scripts "<approved gate scripts>"` | `Bash(git fetch *)`, `Bash(git switch *)`, `Bash(git add *)`, `Bash(git commit *)`, and `Bash(<pm> run <script> *)` per approved script. Never a push, a PR or an Asana write |
+| Allow rules | `--allow-local --pm <pm> --manifest package.json --scripts "<approved gate scripts>"` | `Bash(git fetch *)`, `Bash(git switch *)`, `Bash(git add *)`, `Bash(git commit *)`, and `Bash(<pm> run <script> *)` per approved test, lint or typecheck script; any other script is refused. Never a push, a PR or an Asana write |
 | Duplicate security review | `--sg-push-sweep-off`, offered while security-guidance is enabled | `env.SG_PUSH_SWEEP: "0"`: the commit-time review stays, the repeat at push stops |
 | Unused plugins | `--disable-plugins <id,...>` from the report's unused list | `enabledPlugins["<id>"]: false`, for everyone who clones the repo |
 

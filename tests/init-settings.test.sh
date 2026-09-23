@@ -279,6 +279,16 @@ do11="$(newtmp)"; to11="$do11/settings.json"; printf '%s' '{"enabledPlugins":{"e
 node "$SCRIPT" "$to11" --disable-plugins expo@claude-plugins-official >/dev/null 2>&1; rc11=$?
 [[ $rc11 -eq 2 && "$b11" == "$(shasum "$to11")" ]]
 check "O11 disabling a plugin the project explicitly enables is a conflict" ok $?
+mf12="$(newtmp)/package.json"; printf '%s' '{"scripts":{"test":"vitest run","deploy":"sst deploy","push":"git push origin HEAD","db:reset":"prisma migrate reset","pretest":"x","testing":"y"}}' > "$mf12"
+accepted=0
+for bad in deploy push db:reset pretest testing 'test deploy'; do
+  d="$(newtmp)"; node "$SCRIPT" "$d/s.json" --allow-local --pm npm --manifest "$mf12" --scripts "$bad" >/dev/null 2>&1
+  [[ $? -eq 1 && ! -e "$d/s.json" ]] || { echo "  accepted: $bad"; accepted=1; }
+done
+check "O12 a manifest script that is not a test, lint or typecheck gate is refused, even when it exists" ok $accepted
+d12="$(newtmp)"; node "$SCRIPT" "$d12/s.json" --allow-local --pm npm --manifest "$mf12" --scripts test >/dev/null 2>&1
+grep -qxF 'Bash(npm run test *)' <<<"$(allow_of "$d12/s.json")"
+check "O13 the gate script in that same manifest is still allowed" ok $?
 
 # M. merge-claude-md.mjs (2.4): the working agreement + design standard spliced
 #    byte-exact into a marker-delimited block, sha-verified, pure without --write.

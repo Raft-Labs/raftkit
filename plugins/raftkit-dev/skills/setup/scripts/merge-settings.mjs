@@ -5,14 +5,16 @@
 // Opt-ins, each written only when the developer accepted its line at the stop:
 //   --allow-local [--pm <pm> --manifest <package.json> --scripts "<names>"]
 //       allow local git fetch/switch/add/commit, plus `<pm> run <script>` for
-//       each approved gate script present in the manifest. Never push or a PR.
-//   --sg-push-sweep-off   env.SG_PUSH_SWEEP "0": security-guidance stops
-//       re-reviewing at push what it already reviewed at commit.
+//       each approved script present in the manifest that is a test, lint or
+//       typecheck gate (quality.mjs); any other name is refused. Never push or a PR.
+//   --sg-push-sweep-off   env.SG_PUSH_SWEEP "0": security-guidance stops its
+//       push-time review; the commit-time review stays.
 //   --disable-plugins <id,...>   turn plugins off for this repo (project scope).
 // Exit codes: 0 applied (or no changes) · 1 unreadable input, nothing written ·
 // 2 conflict against an existing value, nothing written.
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
+import { QUALITY } from "./quality.mjs";
 
 // The plugins a RaftKit repo enables: raftkit-dev and exactly what its manifest
 // declares, so this list cannot drift from plugin.json.
@@ -74,6 +76,7 @@ if (opts["--allow-local"]) {
     catch (err) { refuse(`cannot read ${opts["--manifest"]} (${err.message})`); }
     for (const name of opts["--scripts"].split(/[\s,]+/).filter(Boolean)) {
       if (!/^[A-Za-z0-9][A-Za-z0-9:_.-]*$/.test(name) || !Object.hasOwn(scripts, name)) refuse(`'${name}' is not a script in ${opts["--manifest"]}`);
+      if (!QUALITY.test(name)) refuse(`'${name}' is not a test, lint or typecheck gate`);
       optInAllow.push(`Bash(${pm} run ${name} *)`);
     }
   }
