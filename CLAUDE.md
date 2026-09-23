@@ -32,7 +32,7 @@ Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Veri
 ## How work happens in this repo
 
 1. **One story at a time.** Read the story task and all its `[AC]` subtasks through the Asana connector before touching anything.
-2. **Plan in the open.** State the scope contract (in scope = the acceptance criteria; everything else = out) and the phases, write it to `docs/specs/<branch>.md`, and show it. It is a record, not a gate.
+2. **Plan in the open.** Write the plan in working-agreement rule 3's shape — the scope contract (in scope = the acceptance criteria; everything else = out), the phases with their files and tier, and the tests — to `docs/specs/<branch>.md`, and show it. It is a record, not a gate.
 3. **Test first for anything executable** — CI checks, hooks, scripts, validation tooling. Skills are markdown; their tests are the story's acceptance criteria and `tests/structure.test.sh`.
 4. **Scope is a hard line.** Nothing beyond the story, nothing missing from it. Improvements go to the board as proposals, not into the diff.
 5. **Keep it lean.** Every skill has a word budget in `tests/budgets.json`; raising one is a deliberate edit a reviewer sees. No speculative abstractions, no restated rules, no rationale prose in an instruction file.
@@ -43,7 +43,7 @@ Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Veri
 
 - **One stop per run.** A skill drafts everything, then stops once before anything leaves the session: an Asana write, a PR, a Sheet write, a message. An explicit go pushes what was shown; an edit re-presents the draft; silence pushes nothing. A run that writes nothing has no stop.
 - **No skill ever auto-sends, auto-merges, auto-files or auto-completes.** Merging a PR, ticking `[AC]` or `Testing`, and closing a bug stay human. Exactly one exception: the opt-in `pr-auto-review` CI workflow commits Critical-finding fixes on the PR branch it runs on and never merges, with its boundary in `raftkit-dev/skills/setup/references/pr-auto-review.md`, not extensible by analogy. Blocker telemetry is not an exception — a hard stop is reported to the admin dashboard, never filed on an issue tracker.
-- **Templates are read live** from Asana by GID, once per run. This repo holds zero cached template text.
+- **Templates are read live** from Asana by GID, fetched once and reused within the conversation while they can still be quoted verbatim. A task is re-read right before its description is overwritten, and a story's `[AC]`s are re-fetched once before a scope audit. This repo holds zero template text.
 - **Project facts live in Project Profiles**, never in plugins.
 - **Asana free tier only:** no dependencies, custom fields, milestones, start dates or approval tasks. Relationships are task links.
 - **Rules live in one place.** `raftkit-core:rules` is inherited, never restated. A role skill that repeats the gate, the free-tier list, the live-fetch rule or the plain-language guardrail fails the structure suite.
