@@ -100,7 +100,9 @@ for key in $listed; do
     check "S8 $key does not restate the plain-language guardrail" ok $?
     ! grep -rqiE 'never from memory or this repo|silence is not (approval|confirmation)|custom fields, milestones' "$dir"
     check "S9 $key does not restate live-fetch, gate or free-tier boilerplate" ok $?
-    ! grep -rqE '1194107417268910|1216778429401199|1215260732424760' "$dir"
+    # Any 16-digit Asana GID, not only the three constants: a decision or task
+    # GID in a skill goes stale the same way.
+    ! grep -rqE '(^|[^0-9])1[0-9]{15}([^0-9]|$)' "$dir"
     check "S10 $key carries no GID (they live only in raftkit-core/rules)" ok $?
   fi
 
