@@ -30,7 +30,7 @@ A reviewer reporting clean without naming a non-empty range reviewed nothing: tr
 
 ## Findings
 
-Every finding is fixed on the branch or answered in the PR's review-findings section with the reason no change is needed. Silence resolves nothing. A `scope-guard` flag is different: a BEYOND item blocks until it is removed or signed off by name, and a MISSING item until it is built or explained.
+Every finding is fixed on the branch, in one review-fix commit, or answered in the PR's review-findings section with the reason no change is needed. Silence resolves nothing. A `scope-guard` flag is different: a BEYOND item blocks until it is removed or signed off by name, and a MISSING item until it is built or explained.
 
 ## Cost
 
