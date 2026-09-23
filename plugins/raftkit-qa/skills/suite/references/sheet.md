@@ -13,7 +13,7 @@
 | status | `not run` · `pass` · `fail` · `blocked`; new cases default to `not run` |
 | owner | `generated` for generated rows; QA writes their name when they add or edit a row |
 
-The skill owns the structure and the IDs; QA owns the values. A regeneration adds rows and proposes changes, never reorders, renames or drops columns, never resets a status QA changed.
+The skill owns the structure and the IDs; QA owns the values. A regeneration hands back new rows and proposed changes, never reorders, renames or drops columns, never resets a status QA changed.
 
 ## Coverage tags
 
@@ -32,7 +32,7 @@ Every generated case cites the profile or doc fact it came from, in the steps or
 1. Read every Sheet row. QA's rows and edits are first-class.
 2. Regenerate from the current Profile.
 3. Diff by case ID:
-   - **new** — not in the Sheet → add with `not run`.
+   - **new** — not in the Sheet → handed back with `not run`.
    - **unchanged** → leave.
    - **delta** — sources changed a row QA has not touched → propose.
    - **conflict** — sources changed a row QA touched → show both versions; QA picks; nothing else changes the row.
@@ -58,7 +58,7 @@ Suite re-sync for <project>: 3 new, 2 deltas, 1 conflict. Paste the CSV rows by 
 
 ## Soft cap and split
 
-When the suite can no longer be generated and verified in one run, or one Sheet is no longer navigable, propose a split by feature area into another Sheet for the same project. QA decides. A split is a size decision; batching is a write mechanic.
+When the suite can no longer be generated and verified in one run, or one Sheet is no longer navigable, propose a split by feature area into another Sheet for the same project. QA decides.
 
 ## Edge and error states
 
