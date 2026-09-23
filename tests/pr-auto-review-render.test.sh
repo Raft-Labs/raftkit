@@ -615,6 +615,25 @@ else
   diff "$expected_steps" "$actual_steps" | sed 's/^/       /' >&2
 fi
 
+# S36 (2.8) — review-pr runs every aspect except `simplify`, with its agents in
+# parallel. The code-simplifier edits code, and the only edits this workflow may
+# make are Critical fixes. The review stays full on every run (no skip for SHAs
+# implement already reviewed), and the amendment is recorded in the boundary doc.
+if [[ -n "$PROMPT_OUT" ]]; then
+  invocations=$(grep -oE '/pr-review-toolkit:review-pr[^`]*' "$PROMPT_OUT" | sort -u)
+  if [[ "$invocations" == '/pr-review-toolkit:review-pr code errors tests types comments parallel' ]] \
+     && grep -qF 'Never run the `simplify` aspect or the code-simplifier agent' "$PROMPT_OUT" \
+     && ! grep -qiE 'skip.*(implement|reviewed).*sha|reviewed sha' "$PROMPT_OUT" \
+     && grep -qF 'without the `simplify` aspect' "$SKILL/references/pr-auto-review.md" \
+     && grep -qF 'full on every run' "$SKILL/references/pr-auto-review.md"; then
+    ok "S36 (2.8) review-pr runs code, errors, tests, types and comments in parallel, never simplify, on every run"
+  else
+    bad "S36 (2.8) the CI review can run the code-simplifier, runs sequentially, or skips a run: [$invocations]"
+  fi
+else
+  bad "S36 (2.8) no rendered prompt to check"
+fi
+
 echo "----"
 if [[ "$failures" -eq 0 ]]; then
   echo "OK: all pr-auto-review render checks passed"

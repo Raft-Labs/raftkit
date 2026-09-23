@@ -12,14 +12,6 @@
       "marketplace": "claude-plugins-official"
     },
     {
-      "name": "claude-md-management",
-      "marketplace": "claude-plugins-official"
-    },
-    {
-      "name": "code-simplifier",
-      "marketplace": "claude-plugins-official"
-    },
-    {
       "name": "security-guidance",
       "marketplace": "claude-plugins-official"
     },

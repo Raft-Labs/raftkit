@@ -21,7 +21,7 @@ Marketplace added — now install your role plugin: raftkit-pm, raftkit-dev, or 
 claude plugin install raftkit-dev@raftkit   # or raftkit-pm / raftkit-qa
 ```
 
-Installing any role plugin automatically installs `raftkit-core` alongside it. `raftkit-dev` additionally auto-installs six declared dependencies from the official Claude marketplace — `superpowers`, `code-simplifier`, `claude-md-management`, `security-guidance`, `pr-review-toolkit`, `frontend-design` — the engines its skills call by name. Inside a Claude Code session, the same commands work as `/plugin marketplace add` and `/plugin install`. Verify with `claude plugin list` — you should see your role plugin, `raftkit-core`, and (for `raftkit-dev`) the six auto-installed engines.
+Installing any role plugin automatically installs `raftkit-core` alongside it. `raftkit-dev` additionally auto-installs four declared dependencies from the official Claude marketplace — `superpowers`, `security-guidance`, `pr-review-toolkit`, `frontend-design` — the engines its skills call by name. Inside a Claude Code session, the same commands work as `/plugin marketplace add` and `/plugin install`. Verify with `claude plugin list` — you should see your role plugin, `raftkit-core`, and (for `raftkit-dev`) the four auto-installed engines.
 
 `raftkit-docs` is optional and installed only where a team wants the full documentation product; day-to-day delivery does not need it.
 
