@@ -44,9 +44,7 @@ After the PR is open, per `raftkit-core:rules` (one stop, then push):
 2. Add a comment on the story with the PR link and a one-line summary of what
    shipped.
 
-Apply the Asana HTML rules on the comment: single `<body>` root, no `<p>`
-(line breaks instead), attributes only on `<a href>`, escape `&`/`<`/`>`. When in
-doubt, plain text with line breaks.
+Apply the Asana HTML floor in `raftkit-core:rules` to the comment.
 
 **Do not** tick `[AC]` subtasks, tick `Testing`, close the story, or merge the
 PR — those are downstream human/QA gates (`raftkit-core:rules`: PR merge and bug close are

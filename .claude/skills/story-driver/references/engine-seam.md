@@ -46,14 +46,8 @@ Owns skill *content* quality and description optimization.
 
 ## raftkit-core — the house rules (consult skills, `user-invocable: false`)
 
-- **`raftkit-core:rules`** — Asana workspace + template GIDs, the live-template
-  fetch protocol, and the exact stop messages. Never guess a GID; never cache a
-  template body.
-- **`raftkit-core:rules`** — human gates (story / plan / PR-merge / bug-close), Asana
-  free-tier constraints, escalate-to-founders triggers, find-skills governance.
-- **`raftkit-core:rules`** — the draft→approve→push gate for every outward write, and
-  the Asana `html_notes` rules (single body root, no `<p>`, attributes only on
-  `<a>`, escape `&`/`<`/`>`).
+- **`raftkit-core:rules`** — constants, the one stop per run, fetch-once, the Asana
+  HTML floor; read it, never restate it.
 
 ## The repo's own gate (hard, non-negotiable)
 
