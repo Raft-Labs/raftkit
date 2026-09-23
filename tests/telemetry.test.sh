@@ -1034,6 +1034,145 @@ node --input-type=module -e '
 ' >/dev/null 2>&1
 check "scrubbing a huge tool output stays bounded and still redacts first" ok $?
 
+# ================================================================ 11. delivery
+# v2's first STOP wedged delivery: the server rejected severity "gate", every
+# flush 4xx'd whole, and nothing said so. These pin the client half of the fix.
+
+# A stub that keeps every request body, so a test can inspect what was sent.
+cat > "$stub/capstub.mjs" <<'STUB'
+import { createServer } from "node:http";
+import { writeFileSync } from "node:fs";
+const [code, dir, reply] = [Number(process.argv[2] || 200), process.argv[3], process.argv[4] || "{}"];
+let n = 0;
+const srv = createServer((req, res) => {
+  const chunks = [];
+  req.on("data", (c) => chunks.push(c));
+  req.on("end", () => {
+    writeFileSync(`${dir}/body.${String(n++).padStart(4, "0")}.json`, Buffer.concat(chunks));
+    res.writeHead(code); res.end(reply);
+  });
+});
+srv.listen(0, () => console.log(srv.address().port));
+setTimeout(() => process.exit(0), 120000);
+STUB
+
+start_capture_stub() { # <code> <dir> [reply] -> echoes port
+  local tag="k$RANDOM"
+  mkdir -p "$2"
+  node "$stub/capstub.mjs" "$1" "$2" "${3:-{\}}" > "$stub/port.$tag" 2>/dev/null &
+  echo $! >> "$stub/pids"
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    [[ -s "$stub/port.$tag" ]] && break
+    sleep 0.3
+  done
+  cat "$stub/port.$tag"
+}
+
+bodies() { # <capture dir> <node expression over `events` (all sent events) and `sizes` (bytes per body)>
+  # eval runs only the expressions written in this file, never captured data.
+  node -e '
+    const fs = require("fs"); const dir = process.argv[1];
+    const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.startsWith("body.")).sort() : [];
+    const raw = files.map((f) => fs.readFileSync(dir + "/" + f));
+    const sizes = raw.map((b) => b.length);
+    const events = raw.flatMap((b) => JSON.parse(b.toString("utf8")).batch || []);
+    process.stdout.write(String(eval(process.argv[2])));
+  ' "$1" "$2" 2>/dev/null
+}
+
+# --- 900 KB batches: a server that caps bodies at 1 MB must never see a bigger one
+d="$(new_sandbox)"; cap="$d/cap"
+port="$(start_capture_stub 200 "$cap")"
+mkdir -p "$d/spool"
+node -e '
+  const fs = require("fs"); const big = "x".repeat(2000); let out = "";
+  for (let i = 0; i < 1200; i++) out += JSON.stringify({ event_id: "b" + i, ts: "2026-09-17T10:37:00.000Z",
+    event: "raftkit_blocked", distinct_id: "x", props: { prompt: big, matched_line: big, detail: big, error: big, args: big } }) + "\n";
+  fs.writeFileSync(process.argv[1] + "/spool/events.jsonl", out);
+' "$d"
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:$port/api/telemetry" node "$FLUSH" >/dev/null 2>&1
+expect_eq "every event of a large spool is delivered" "1200" "$(bodies "$cap" 'events.length')"
+expect_eq "no request body exceeds 900 KB" "true" "$(bodies "$cap" 'sizes.length > 1 && Math.max(...sizes) <= 900000')"
+
+# --- free text is clamped to 512 chars on the wire, even for events spooled before the clamp
+expect_eq "free-text fields reach the server at 512 chars or fewer" "true" \
+  "$(bodies "$cap" 'events.every((e) => ["prompt","matched_line","detail","error","args"].every((k) => e.properties[k].length <= 512))')"
+
+# --- a severity the server does not know is sent as info, with the original kept
+d="$(new_sandbox)"; cap="$d/cap"
+port="$(start_capture_stub 200 "$cap")"
+mkdir -p "$d/spool"
+printf '%s\n' \
+  '{"event_id":"g1","ts":"2026-09-17T10:37:00.000Z","event":"raftkit_gate_shown","distinct_id":"x","props":{"refusal_id":"stop-shown","severity":"gate"}}' \
+  '{"event_id":"g2","ts":"2026-09-17T10:38:00.000Z","event":"raftkit_blocked","distinct_id":"x","props":{"refusal_id":"not-ready","severity":"blocker"}}' \
+  > "$d/spool/events.jsonl"
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:$port/api/telemetry" node "$FLUSH" >/dev/null 2>&1
+expect_eq "a gate event is sent with severity info" "info" "$(bodies "$cap" 'events.find((e) => e.event_id === "g1").properties.severity')"
+expect_eq "  and keeps gate in severity_detail" "gate" "$(bodies "$cap" 'events.find((e) => e.event_id === "g1").properties.severity_detail')"
+expect_eq "a known severity is sent unchanged" "blocker|undefined" \
+  "$(bodies "$cap" 'events.find((e) => e.event_id === "g2").properties.severity + "|" + events.find((e) => e.event_id === "g2").properties.severity_detail')"
+
+# --- a rejected flush says why, and when delivery stopped
+d="$(new_sandbox)"; cap="$d/cap"
+port="$(start_capture_stub 400 "$cap" '{"error":"invalid severity"}')"
+write_spool "$d" 3
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:$port/api/telemetry" node "$FLUSH" >/dev/null 2>&1
+expect_eq "a non-2xx flush writes last-flush-error with the status" "400" \
+  "$(node -e 'process.stdout.write(String(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).status))' "$d/last-flush-error" 2>/dev/null)"
+expect_eq "  and the server's reason" "true" \
+  "$(node -e 'process.stdout.write(String(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).error.includes("invalid severity")))' "$d/last-flush-error" 2>/dev/null)"
+# The streak's start is what "has not delivered since" means, so a repeat keeps it.
+node -e '
+  const fs = require("fs"); const p = process.argv[1];
+  fs.writeFileSync(p, JSON.stringify({ ...JSON.parse(fs.readFileSync(p, "utf8")), ts: "2026-09-17T10:37:10.000Z" }));
+' "$d/last-flush-error"
+rm -f "$d/last-flush"
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:$port/api/telemetry" node "$FLUSH" >/dev/null 2>&1
+expect_eq "a repeated failure keeps the time delivery first failed" "2026-09-17T10:37:10.000Z" \
+  "$(node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).ts)' "$d/last-flush-error" 2>/dev/null)"
+expect_eq "  and keeps the events for the next session" "3" "$(wc -l < "$d/spool/events.jsonl" | tr -d ' ')"
+
+# The developer is told, at most once a day, while the error stands. An async
+# hook's output is never shown, so only session start may spend the day's line.
+echo '{"session_id":"w0","user_prompt":"hi"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1
+expect_eq "an async hook never spends the day's stuck-delivery message" "no" \
+  "$([[ -f "$d/flush-warning-shown" ]] && echo yes || echo no)"
+warn1="$(echo '{"session_id":"w1","hook_event_name":"SessionStart"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start 2>/dev/null)"
+warn2="$(echo '{"session_id":"w2","hook_event_name":"SessionStart"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start 2>/dev/null)"
+if [[ "$warn1" == *'RaftKit telemetry has not delivered since 2026-09-17'* ]]; then
+  echo "PASS: session start tells the developer delivery is stuck, and since when"
+else
+  echo "FAIL: no stuck-delivery message at session start ('${warn1:0:160}')"
+  failures=$((failures + 1))
+fi
+expect_eq "the stuck-delivery message is shown at most once a day" "" "$warn2"
+node -e '
+  const fs = require("fs"); const p = process.argv[1] + "/flush-warning-shown";
+  fs.writeFileSync(p, String(Date.now() - 25 * 60 * 60 * 1000));
+' "$d"
+warn3="$(echo '{"session_id":"w3","hook_event_name":"SessionStart"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start 2>/dev/null)"
+if [[ "$warn3" == *'has not delivered since'* ]]; then
+  echo "PASS: the stuck-delivery message returns the next day"
+else
+  echo "FAIL: the stuck-delivery message did not return after a day ('${warn3:0:120}')"
+  failures=$((failures + 1))
+fi
+
+# A successful flush clears the error, and the message stops.
+port="$(start_capture_stub 200 "$d/cap-ok")"
+rm -f "$d/last-flush"
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:$port/api/telemetry" node "$FLUSH" >/dev/null 2>&1
+expect_eq "a delivered flush removes last-flush-error" "no" "$([[ -f "$d/last-flush-error" ]] && echo yes || echo no)"
+rm -f "$d/flush-warning-shown"
+warn4="$(echo '{"session_id":"w4","hook_event_name":"SessionStart"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start 2>/dev/null)"
+expect_eq "no stuck-delivery message once delivery works" "" "$warn4"
+
+# An offline flush is not a server rejection: nothing to report.
+d="$(new_sandbox)"
+write_spool "$d" 2
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:1/api/telemetry" node "$FLUSH" >/dev/null 2>&1
+expect_eq "an unreachable endpoint writes no last-flush-error" "no" "$([[ -f "$d/last-flush-error" ]] && echo yes || echo no)"
+
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures test(s) failed"
   exit 1

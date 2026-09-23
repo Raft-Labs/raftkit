@@ -251,6 +251,17 @@ export function sha(value, len = 12) {
   return createHash("sha256").update(String(value)).digest("hex").slice(0, len);
 }
 
+// The longest free text an event carries. The server truncates short-text
+// fields rather than rejecting them, but only a client-side clamp keeps an old
+// spool of 2,000-char prompts inside the 900 KB batch cap.
+export const FREE_TEXT_MAX = 512;
+
+/** Cut text to `max` characters, marking the cut. Non-strings pass through. */
+export function clampText(value, max = FREE_TEXT_MAX) {
+  if (typeof value !== "string" || value.length <= max) return value;
+  return value.slice(0, max - 1) + "…";
+}
+
 /** Read all of stdin as text. Resolves "" on any error or when nothing is piped. */
 export function readStdin() {
   return new Promise((resolve) => {

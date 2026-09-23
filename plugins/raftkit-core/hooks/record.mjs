@@ -55,27 +55,58 @@ const noticePending = () => {
   }
 };
 
+// While the server keeps refusing flushes, say so once a day: a wedged spool
+// is otherwise invisible until someone looks at an empty dashboard.
+const WARN_EVERY_MS = 24 * 60 * 60 * 1000;
+
+/** The stuck-delivery line, or "" when delivery is healthy or it was shown today. */
+function flushWarningDue() {
+  try {
+    const err = parseJson(readFileSync(stateFile("last-flush-error"), "utf8"));
+    const since = typeof err.ts === "string" ? err.ts.slice(0, 10) : "";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(since)) return "";
+    let shown = 0;
+    try {
+      shown = Number(readFileSync(stateFile("flush-warning-shown"), "utf8").trim());
+    } catch {
+      /* never shown */
+    }
+    if (Number.isFinite(shown) && Date.now() - shown < WARN_EVERY_MS) return "";
+    const status = Number.isFinite(err.status) && err.status > 0 ? ` (the server answered ${err.status})` : "";
+    return `RaftKit telemetry has not delivered since ${since}${status}. Your events are kept on this machine and retried each session.`;
+  } catch {
+    return ""; // no error on record
+  }
+}
+
 /**
- * Emit the disclosure, then record that it was emitted — never the other way
- * round. Marking first spends the single disclosure whether or not anyone saw
- * it, so a dropped write would silence it permanently.
+ * Emit the session-start messages, then record that each was emitted — never
+ * the other way round. Marking first spends the single disclosure whether or
+ * not anyone saw it, so a dropped write would silence it permanently.
  *
  * Writes fd 1 synchronously rather than through process.stdout: this runs just
  * before process.exit(0), which discards whatever is still buffered on a pipe.
  * The SessionStart entry in hooks.json is deliberately NOT async for the same
  * reason — an async hook's stdout is thrown away and only its exit code read.
  */
-function emitNotice() {
+function emitSessionMessages({ withWarning }) {
+  const notice = noticePending();
+  // Only the synchronous SessionStart hook's output is ever read; marking the
+  // warning shown from an async hook would silence it unseen for a day.
+  const warning = withWarning ? flushWarningDue() : "";
+  const text = [notice ? NOTICE : "", warning].filter(Boolean).join("\n\n");
+  if (!text) return;
   try {
-    writeFileSync(1, JSON.stringify({ systemMessage: NOTICE, suppressOutput: true }));
+    writeFileSync(1, JSON.stringify({ systemMessage: text, suppressOutput: true }));
   } catch {
-    return; // not disclosed, so not marked — the next session tries again
+    return; // not shown, so not marked — the next session tries again
   }
   try {
     ensureDir(spoolDir());
-    writeFileSync(stateFile("notice-shown"), `${new Date().toISOString()} ${NOTICE_VERSION}\n`);
+    if (notice) writeFileSync(stateFile("notice-shown"), `${new Date().toISOString()} ${NOTICE_VERSION}\n`);
+    if (warning) writeFileSync(stateFile("flush-warning-shown"), String(Date.now()));
   } catch {
-    /* a lost marker costs a repeated notice, never a missing one */
+    /* a lost marker costs a repeated message, never a missing one */
   }
 }
 
@@ -366,8 +397,9 @@ async function main() {
   // must stay byte-for-byte untouched, not gain a junk line.
   if (event) spool(event);
 
-  // Surfaced once, then never again.
-  if (noticePending()) emitNotice();
+  // The disclosure is surfaced once, then never again; the stuck-delivery
+  // line at most once a day. Both only at session start, where they render.
+  emitSessionMessages({ withWarning: MODE === "session_start" });
 }
 
 // Belt and braces: an unhandled rejection or a synchronous throw anywhere above
