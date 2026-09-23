@@ -154,6 +154,23 @@ if [[ "$strict" == true ]]; then
   check "S17 strict: GIDs appear only in raftkit-core/skills/rules" ok $?
 fi
 
+# Model-read files outside any skill's budget carry their own entry in `files`.
+budgeted="$( { ls plugins/*/commands/*.md 2>/dev/null; node -e 'console.log(Object.keys(JSON.parse(require("fs").readFileSync("tests/budgets.json","utf8")).files||{}).join("\n"))'; } | grep . | sort -u)"
+nfiles=0
+for f in $budgeted; do
+  nfiles=$((nfiles + 1))
+  [[ -f "$f" ]]; check "S18 budgeted file exists: $f" ok $?
+  c="$(cap "$(jsonq ".files?.[\"$f\"]?.words")")"; n="$(words "$f")"; fits "$n" "$c"
+  check "S19 $f within budget ($n <= $c words)" ok $?
+  c="$(cap "$(jsonq ".files?.[\"$f\"]?.tokens")")"; n="$(tokens "$f")"; fits "$n" "$c"
+  check "S19t $f within budget ($n <= $c tokens)" ok $?
+  if [[ "$f" == */commands/* ]]; then
+    desc_words="$(fm "$f" | sed -n 's/^description: *//p' | head -1 | wc -w | tr -d ' ')"
+    [[ "$desc_words" -ge 1 && "$desc_words" -le 60 ]]
+    check "S20 $f description is 1-60 words ($desc_words)" ok $?
+  fi
+done
+
 echo
-echo "structure: ${#present[@]} skill(s) checked, $failures failure(s)"
+echo "structure: ${#present[@]} skill(s) and $nfiles file(s) checked, $failures failure(s)"
 [[ "$failures" -eq 0 ]]
