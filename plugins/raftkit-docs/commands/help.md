@@ -11,7 +11,7 @@ The user ran `/raftkit-docs:help $ARGUMENTS`.
 
 ## What this plugin is
 
-The full documentation product, installed only where a team wants it. Day-to-day delivery does not need it: `raftkit-dev:docs` already answers "do the docs still match this change?" on every story. Reach for this plugin when a project needs its documentation designed, generated, or reconstructed from code.
+The full documentation product: opt-in by design, though org sync installs it today. Day-to-day delivery does not need it: `raftkit-dev:docs` already answers "do the docs still match this change?" on every story. Reach for this plugin when a project needs its documentation designed, generated, or reconstructed from code.
 
 ## Skills
 
