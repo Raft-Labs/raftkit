@@ -2,7 +2,7 @@
 
 ## Squash target
 
-Resolved from the repo's own docs at implement's intake (step 1), where an undocumented one stops the run; a standalone raise and a `fix` run resolve it the same way first. Never target `main` directly, and never bake a branch name into this skill. One PR per story; stacked PRs are out of scope.
+Resolved from the repo's own docs at implement's intake (step 1), where an undocumented one stops the run; a standalone raise and a `fix` run resolve it the same way first. Never target `main` directly. One PR per story; stacked PRs are out of scope.
 
 ## Before the raise
 
@@ -31,7 +31,7 @@ The push runs the repo's pre-push hook. Never `--no-verify`. A rejection surface
 
 ## Close-out
 
-Two Asana writes, both in the one stop's draft: tick `Development`, and comment the PR link. `[AC]` and `Testing` ticks belong to QA, closing belongs to a human, and merging belongs to a human. If a write fails, the PR still stands: give the story URL, the PR URL and the tick to do by hand.
+Two Asana writes, both in the one stop's draft: tick `Development`, and comment the PR link. If a write fails, the PR still stands: give the story URL, the PR URL and the tick to do by hand.
 
 ## Bug path
 

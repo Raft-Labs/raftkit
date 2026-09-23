@@ -17,7 +17,7 @@ One defect, one red test, one fix, one stop. Load `raftkit-core:rules` first unl
 | A production trace from Sentry, CloudWatch or Crashlytics | **Incident.** Halt feature work and say so, then the same loop with the extra rules below. |
 | A feature or refactor wish ("it should also support X", "this module is ugly") | Not a defect. Name it and route: a feature to `implement` through a story, a cleanup to the board. |
 
-One defect per run: a task or a report bundling unrelated defects stops and asks which one, never batches them. A task that exists but cannot be resolved stops the run; it never falls through to the reported path. A local, CI or test-run trace is an ordinary defect, not an incident.
+One defect per run: a task or a report bundling unrelated defects stops and asks which one, never batches them. A task that exists but cannot be resolved stops the run; it never falls through to the reported path. A local, CI or test-run trace is an ordinary defect, not an incident. A chat that already holds another run says so in one line of the first reply.
 
 ## Run
 
@@ -49,6 +49,7 @@ On go, raise the PR and write the approved Asana changes, then report:
 
 ```output
 Red → green: repro test added, fix in PR #<n>, Fixed in build: pending — first build containing PR #<n>. Back to QA.
+Next story: /clear first.
 ```
 
 Declining the optional record is a first-class outcome: the repro test is permanent and the PR is the record.

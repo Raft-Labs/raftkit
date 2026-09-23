@@ -77,6 +77,15 @@ grep -qF 'Fixed in build: pending — first build containing PR #<n>' "$FIX/SKIL
   && ! grep -qE 'Fixed in build <x>' "$FIX/SKILL.md"
 check "DF7 fix writes Fixed in build: pending with the PR number" ok $?
 
+# DF8 · the go-report (the last output block) of implement and fix ends by
+#       telling the developer to clear the chat before the next story
+last_output_line() { awk '/^```output$/{inb=1; last=""; next} inb&&/^```$/{inb=0; final=last; next} inb{last=$0} END{print final}' "$1"; }
+ok=0
+for f in "$IMPL/SKILL.md" "$FIX/SKILL.md"; do
+  [[ "$(last_output_line "$f")" == "Next story: /clear first." ]] || { echo "  go-report does not end with the /clear line: $f"; ok=1; }
+done
+check "DF8 implement and fix go-reports end with Next story: /clear first." ok $ok
+
 echo
 echo "dev-flow: $failures failure(s)"
 [[ "$failures" -eq 0 ]]
