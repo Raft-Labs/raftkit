@@ -36,7 +36,7 @@ A run fetches, plans, builds and checks without waiting, then stops exactly once
 **STOP** — approve to push, edit to change, or decline.
 ```
 
-- Before any read, confirm this session has a tool for every write the run will make. One missing → the first reply says so and nothing is read:
+- Before any read, confirm this session has a tool for every write the run cannot finish without. One missing → the first reply says so and nothing is read:
 
 ```output
 Can't write to <surface> from this session — connect <connector>, then re-run.
