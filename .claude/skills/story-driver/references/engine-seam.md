@@ -54,7 +54,8 @@ Owns skill *content* quality and description optimization.
   asserts no marketplace↔manifest **description drift**, and enforces the
   **version-bump gate**: any changed `plugins/<plugin>/` dir must also bump its
   `plugin.json` version, anchored at the merge base. Touch a plugin → bump it.
-- **`tests/validate.test.sh`** — the self-test of that gate.
+- **Every `tests/*.test.sh`** — the contract suites, `validate.test.sh` among
+  them. CI runs them all; so does step 6, before the stop.
 
 `story-driver` itself lives in `.claude/skills/` (outside `plugins/*`), so
 editing the skill never trips the version gate — but the skills it *builds* do.
@@ -64,4 +65,4 @@ editing the skill never trips the version gate — but the skills it *builds* do
 `plugin-dev` makes the files exist and pass structural validation →
 `skill-creator` makes the content good and triggering reliable →
 `raftkit-core` keeps every Asana write and gate honest →
-`validate.sh` is the wall the PR must clear.
+`validate.sh` and every `tests/*.test.sh` are the wall the PR must clear.

@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "Build this story: https://app.asana.com/0/1216551447756315/1216553918397045 (M3 · scope-guard). Dry run — don't push anything.",
-      "expected_output": "Fetches Asana task 1216553918397045 + all subtasks live, restates the scope contract (target raftkit-dev/scope-guard, the [AC] pass list, the out-of-scope exclusion list) and stops at the story-approval gate. After approval, plans AC-by-AC, scaffolds plugins/raftkit-dev/skills/scope-guard/SKILL.md via plugin-dev, authors house-style content via skill-creator, bumps raftkit-dev plugin.json version, runs validate.sh + validate.test.sh green, drafts a conventional-commit PR + Asana Development-tick — and because dry-run is on, shows commands/drafts without pushing or writing to Asana.",
+      "expected_output": "Fetches Asana task 1216553918397045 + all subtasks live, restates the scope contract (target raftkit-dev/scope-guard, the [AC] pass list, the out-of-scope exclusion list) and stops at the story-approval gate. After approval, plans AC-by-AC, scaffolds plugins/raftkit-dev/skills/scope-guard/SKILL.md via plugin-dev, authors house-style content via skill-creator, bumps raftkit-dev plugin.json version, runs validate.sh and every tests/*.test.sh green, drafts a conventional-commit PR + Asana Development-tick — and because dry-run is on, shows commands/drafts without pushing or writing to Asana.",
       "files": [],
       "expectations": [
         "Story task 1216553918397045 and its subtasks were fetched live from Asana (not reconstructed from memory)",
@@ -15,6 +15,7 @@
         "A SKILL.md was scaffolded at plugins/raftkit-dev/skills/scope-guard/ with third-person description frontmatter",
         "The raftkit-dev plugin.json version was bumped above its previous value",
         "An AC-by-AC verification was produced mapping every [AC] to how it is satisfied",
+        "scripts/validate.sh and every tests/*.test.sh ran green before the STOP, not validate.test.sh alone",
         "No content addressing an out-of-scope / non-goal item was added",
         "Dry-run was respected: no git push, no PR opened, and no write to Asana occurred",
         "A conventional-commit PR title (changelog line) and a body linking the story + listing ACs were drafted"

@@ -94,11 +94,13 @@ See `references/engine-seam.md` for who owns what.
 
 ### 6 · Verify against the ACs
 Walk every `[AC]` and confirm it is met. Confirm no out-of-scope item entered the
-diff. Run the repo gate locally and require both green:
+diff. Run the repo gate and every contract suite locally:
 ```
 BASE_REF=main bash scripts/validate.sh
-bash tests/validate.test.sh
+for t in tests/*.test.sh; do out=$(bash "$t" 2>&1) || printf 'SUITE FAILED: %s\n%s\n' "$t" "$out"; done
 ```
+`validate.sh` must end on `OK:` and the loop must print nothing. A red suite is
+fixed before the stop, never shown at it.
 
 ### 7 · Close the loop + ship  → the one stop
 Per `references/git-pr-flow.md` and `raftkit-core:rules`: draft the
