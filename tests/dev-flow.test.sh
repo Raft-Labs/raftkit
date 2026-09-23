@@ -86,6 +86,19 @@ for f in "$IMPL/SKILL.md" "$FIX/SKILL.md"; do
 done
 check "DF8 implement and fix go-reports end with Next story: /clear first." ok $ok
 
+# DF9 · the STOP quotes the measured token line (cross-group C1). Claude Code
+#       substitutes ${CLAUDE_PLUGIN_ROOT} and ${CLAUDE_SESSION_ID} in skill and
+#       agent content only, so the invocation lives in SKILL.md, and no
+#       reference file (read later with the Read tool) carries a placeholder.
+ok=0
+for f in "$IMPL/SKILL.md" "$FIX/SKILL.md"; do
+  grep -qF 'node ${CLAUDE_PLUGIN_ROOT}/scripts/run-tokens.mjs ${CLAUDE_SESSION_ID}' "$f" \
+    && grep -qF '`Token total: not measured`' "$f" || { echo "  no measured token line: $f"; ok=1; }
+done
+refs="$(grep -rlF '${CLAUDE_' "$IMPL/references" "$FIX/references" "$SG" "$DOCS/references" 2>/dev/null | grep -v '/SKILL.md$')"
+[[ -z "$refs" ]] || { echo "  placeholder in a reference file: $refs"; ok=1; }
+check "DF9 implement and fix quote run-tokens.mjs at the STOP" ok $ok
+
 echo
 echo "dev-flow: $failures failure(s)"
 [[ "$failures" -eq 0 ]]
