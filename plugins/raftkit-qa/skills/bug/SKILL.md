@@ -1,6 +1,6 @@
 ---
 name: bug
-description: File a bug into Asana from a Jam recording or retest a returned fix — "file a bug", "log this Jam as a bug", "raise a defect for this failing step", "retest this bug", "did the fix hold". Reads the live Bugs Template once, quotes evidence verbatim, proposes the judgment fields, stops once before the write. Fixing — raftkit-dev:fix.
+description: File a bug into Asana from a Jam recording or retest a returned fix — "file a bug", "log this Jam as a bug", "raise a defect for this failing step", "retest this bug", "did the fix hold". Quotes evidence verbatim, proposes the judgment fields, stops once before the write. Fixing — raftkit-dev:fix.
 user-invocable: true
 ---
 
@@ -24,7 +24,7 @@ Filed under <story> · Bugs — <bug link>, tier <tier>, checklist complete.
 
 ## Retest
 
-1. **One bug per run**; none named → ask, never guess. Read the bug once (no template needed; it carries its own labels). Before any other fetch, check its two gates; either failing ends the run:
+1. **One bug per run**; none named → ask, never guess. Read the bug once (no template needed; it carries its own labels). Before any other fetch, check its two gates (`Fixed in build: pending — …` counts as empty); either failing ends the run:
 
 ```output
 Can't retest — no build to test against. Fill "Fixed in build ___" or name it in the hand-back, then hand it back.
