@@ -1,35 +1,15 @@
-# Bug adapter — docs → Asana bug reports, live template
+# Bug adapter — docs → Asana bug reports
 
-Files a bug in the organization's **live** Bug Report Template, fetched by GID
-at run time — no template body is cached in this plugin. All writes route
-through `raftkit-core:rules`.
+Filing a bug is `raftkit-qa:bug`, and so is its retest. From the docs it
+takes the spec passage that states the expected result, quoted verbatim: the
+spec is the expected behaviour. This plugin states no template shape and
+writes nothing to Asana.
 
-## What the skill fills, what the human supplies
+## The link registry
 
-The skill pre-fills from the specs and generated docs:
-
-- module, affected role/test data, steps to reproduce (from the workflow docs),
-  and the **expected result quoted verbatim from the spec** — the spec IS the
-  expected behavior;
-- acceptance criteria, including adjacent behavior that must keep working.
-
-The human supplies only what the spec cannot:
-
-- the **actual** result, environment/build, evidence, reproducibility, a
-  regression check, priority, and any workaround.
-
-Severity (S1–S4) is recommended, not decided; severity and priority are
-independent axes.
+The registry (`asana.json` bugs config) holds the bug task GIDs, GIDs only.
 
 ## Retest, never duplicate
 
-A retest that fails re-tags the **existing** bug task and adds a comment — it
-never files a duplicate. The registry (`asana.json` bugs config) holds the bug
-task GIDs and the retest tag GID, GIDs only.
-
-## Boundaries
-
-Live template only (no cached body); one bug per defect; every write behind
-draft → approve → push; offline behavior matches the story adapter — an artifact
-is produced only from a current-run template fetch, with provenance recorded,
-or the capability is reported blocked.
+A failed retest is `raftkit-qa:bug` retest mode on the registered bug task —
+it never files a duplicate.

@@ -19,8 +19,8 @@ contract, the architecture is discovered input.
 proposal; existing conventions are preserved by default; no doc file is ever
 generated before the human signs off on the full plan. Sync and verify are
 `raftkit-dev:docs` and add no stop of their own. This skill never
-writes to Asana itself — story and bug drafting route through the core
-`raftkit-core:rules`' one stop; hand-offs to humans happen in chat.
+writes to Asana: story drafting is `raftkit-pm:story`, bug filing is
+`raftkit-qa:bug`.
 
 ## Ownership — one product, two surfaces
 
@@ -94,9 +94,9 @@ developer chooses, into design mode.
 
 `assets/templates/` ships 29 adaptable doc templates (progressive disclosure:
 recommended for greenfield generation, mapped onto existing conventions
-otherwise — never forced). The two Asana-facing capabilities (user-story,
-bug-report) are live-template adapters owned by the Asana lifecycle story —
-never cached files. Diagrams follow `references/diagram-catalog.md`: generate
+otherwise — never forced). Story drafting and bug filing from the docs route
+to `raftkit-pm:story` and `raftkit-qa:bug`; this plugin keeps only their link
+registry. Diagrams follow `references/diagram-catalog.md`: generate
 when applicable, record `N/A — <reason>` when not, regenerate on change.
 
 ## Discovery
@@ -134,8 +134,7 @@ range. Capability needs route through `raftkit-dev:setup`; this skill never impr
 ## Out of scope
 
 - Asana writes of any kind from this skill directly; ticking ACs or Testing.
-  (Story/bug drafting is the Asana-lifecycle story's live-template adapter
-  seam, always behind draft → approve → push.)
+  (Story drafting is `raftkit-pm:story`; bug filing is `raftkit-qa:bug`.)
 - Package-manager and hook-manager work, and executing installs
   (`raftkit-dev:setup` owns those).
 - Editing read-only source projects; merging PRs; deploying.
@@ -165,9 +164,9 @@ range. Capability needs route through `raftkit-dev:setup`; this skill never impr
 - `references/discovery-and-routing.md` — convention discovery, descriptor
   proposal, conflict handling.
 - `references/reverse-engineer.md` — the full code-first restoration flow.
-- `references/story-adapter.md` · `references/bug-adapter.md` — the
-  live-template Asana story and bug adapters (render through core
-  `raftkit-core:rules` behind the one stop; never cached template text).
+- `references/story-adapter.md` · `references/bug-adapter.md` — the link
+  registry and refresh rule; drafting routes to `raftkit-pm:story`, filing to
+  `raftkit-qa:bug`.
 - `assets/companion/` — the project-local companion capability, rendered by
   `scripts/render-companion.mjs` and installed by this plugin, never by
   `raftkit-dev:setup`.

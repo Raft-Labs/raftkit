@@ -127,5 +127,18 @@ if (bad.length) { console.error(bad.join("\n")); process.exit(1); }
 NODE
 check "C10 every file pointer in raftkit-docs resolves" ok $?
 
+# --- the Asana adapters route; they never draft from a template themselves ---
+# Drafting a story is raftkit-pm:story and filing a bug is raftkit-qa:bug; the
+# adapters keep only the link registry and its refresh rule. Fetch/render
+# language or a template's section vocabulary means an adapter drafts again.
+REFS=$DOCS/skills/docs-product/references
+SHAPE='fetch|render|Gherkin|numbering|S1–S4|5 to 12'
+grep -qF 'raftkit-pm:story' "$REFS/story-adapter.md" && ! grep -qiE "$SHAPE" "$REFS/story-adapter.md"
+check "C11 the story adapter routes drafting to raftkit-pm:story and states no template shape" ok $?
+grep -qF 'raftkit-qa:bug' "$REFS/bug-adapter.md" && ! grep -qiE "$SHAPE" "$REFS/bug-adapter.md"
+check "C12 the bug adapter routes filing to raftkit-qa:bug and states no template shape" ok $?
+grep -qF 'storyRegistry' "$REFS/story-adapter.md" && grep -qiE 'never (deleted|duplicat)' "$REFS/story-adapter.md"
+check "C13 the story adapter keeps the link registry and its refresh rule" ok $?
+
 echo
 [[ "$failures" -eq 0 ]]

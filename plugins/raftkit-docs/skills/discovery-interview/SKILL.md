@@ -13,8 +13,7 @@ repo's docs get the same interview, and a fix to one is a fix to both.
 This skill owns **how the questions are asked** and the **cross-domain
 catalogs** they draw on. It never owns the question list itself — the
 consuming skill brings its own script, ordered by whatever artifact it is
-building (`raftkit-docs:docs-product` walks the live Feature Template;
-`raftkit-docs:docs-product` walks its 12-phase design flow).
+building (`raftkit-docs:docs-product` walks its 12-phase design flow).
 
 ## The rules that govern every interview
 
@@ -81,9 +80,9 @@ it learns belongs in a Project Profile, never in a plugin
 ## Reference files
 
 - **`references/conversation-craft.md`** — how the questions are delivered:
-  the plain-text question format, explain before critiquing, translate the domain, build a worked example,
-  compare to something familiar, pressure-test complexity, recap, and signal
-  when there is enough.
+  the plain-text question format, explain before critiquing, translate the
+  domain, build a worked example, compare to something familiar,
+  pressure-test complexity, recap, and signal when there is enough.
 - **`references/push-back.md`** — the vague-answer catalog: pattern → the
   follow-up it earns, plus the rule against interrogating complete answers.
 - **`references/proactive-prompts.md`** — the product-level trigger catalog:

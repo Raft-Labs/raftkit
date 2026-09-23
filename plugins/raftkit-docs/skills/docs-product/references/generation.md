@@ -33,9 +33,7 @@ always win.
   `N/A — <reason>` when not.
 - Generated docs carry the repository's own history convention (frontmatter
   version tables or verification footers — whichever the convention uses).
-- The two Asana-facing capabilities (user-story, bug-report) are
-  live-template adapter seams — the user-story live-template adapter and the
-  bug-report live-template adapter render from templates fetched by GID at
-  run time; they are never cached template files in this plugin.
+- Stories and bugs are not generated here: drafting routes to
+  `raftkit-pm:story`, filing to `raftkit-qa:bug`.
 - After generation, verification (Phase 10) runs before the set is called
   done, and `raftkit-dev:docs` owns every later sync.
