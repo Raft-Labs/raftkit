@@ -68,10 +68,10 @@ Each is its own labelled line in the draft and is written only when accepted by 
 |---|---|---|
 | PR auto-review | component 7 | `.github/workflows/pr-auto-review.yml` |
 | Allow rules | `--allow-local --pm <pm> --manifest package.json --scripts "<approved gate scripts>"` | `Bash(git fetch *)`, `Bash(git switch *)`, `Bash(git add *)`, `Bash(git commit *)`, and `Bash(<pm> run <script> *)` per approved test, lint or typecheck script; any other script is refused. Never a push, a PR or an Asana write |
-| Duplicate security review | `--sg-push-sweep-off`, offered while security-guidance is enabled | `env.SG_PUSH_SWEEP: "0"`: the commit-time review stays, the repeat at push stops |
+| Duplicate security review | `--sg-push-sweep-off`, offered while security-guidance is enabled | `env.SG_PUSH_SWEEP: "0"`: the commit-time review stays and push-time review stops, so a commit whose review was still running is not reviewed twice. The cost: a commit never reviewed at commit time, such as one made outside Claude, gets no review at push |
 | Unused plugins | `--disable-plugins <id,...>` from the report's unused list | `enabledPlugins["<id>"]: false`, for everyone who clones the repo |
 
-A blocking Stop hook is only named, with `claude plugin disable <id> --scope local`; setup never runs it.
+A synchronous Stop hook, one that can block the stop, is only named, with `claude plugin disable <id> --scope local`; setup never runs it.
 
 Object keys merge additively and `permissions.allow` and `symlinkDirectories` are unions, so nothing existing is removed. A managed key whose existing value differs is a conflict: every conflict is reported together and nothing is written (exit 2). Unparseable JSON aborts with its reason and writes nothing (exit 1). Identical inputs produce byte-identical output (exit 0, `no changes`). That same conflict detection is the re-run drift check.
 

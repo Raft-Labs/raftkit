@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 // Read-only environment report for setup. Replaces the model reading the whole
 // `claude plugin list --json` payload: it checks the engines raftkit-dev
-// declares, names every enabled plugin's blocking Stop hook, lists enabled
+// declares, names every enabled plugin's synchronous Stop hook (one that can
+// block the stop; whether it does is not knowable statically), lists enabled
 // plugins this repo's stack does not use, and says whether security-guidance's
-// duplicate push-time review can be turned off. It never writes and never runs
+// push-time review can be turned off. It never writes and never runs
 // a disable command; each line is something the developer decides.
 //
 // Usage: node check-engines.mjs --root <repo-root> [--plugins-json <file>] [--json]
@@ -58,7 +59,7 @@ const engineReport = engines.map((e) => {
     : { name: e.name, state: "missing", id, command: `claude plugin install ${id}` };
 });
 
-// --- blocking Stop hooks ------------------------------------------------------
+// --- synchronous Stop hooks -------------------------------------------------
 // A Stop or SubagentStop hook that is neither `async` nor `asyncRewake` runs
 // before the turn ends and can refuse to let it end (exit 2 or a block
 // decision), whatever its type. Hook configs come from hooks/hooks.json and
@@ -74,7 +75,7 @@ function hookConfigs(p) {
   }
   return out;
 }
-const blocking = [];
+const syncStopHooks = [];
 for (const p of enabled) {
   for (const cfg of hookConfigs(p)) {
     for (const event of ["Stop", "SubagentStop"]) {
@@ -82,7 +83,7 @@ for (const p of enabled) {
         for (const h of Array.isArray(group?.hooks) ? group.hooks : []) {
           if (h.async === true || h.asyncRewake === true) continue;
           const what = String(h.command ?? h.prompt ?? h.url ?? h.tool ?? "").split("\n")[0].slice(0, 80);
-          blocking.push({ id: p.id, event, type: h.type ?? "command", what, command: `claude plugin disable ${p.id} --scope local` });
+          syncStopHooks.push({ id: p.id, event, type: h.type ?? "command", what, command: `claude plugin disable ${p.id} --scope local` });
         }
       }
     }
@@ -125,12 +126,12 @@ const unused = enabled
     return !n.startsWith("raftkit-") && !journey.has(n) && !dependedOn.has(n) && STACK[n] && !STACK[n]();
   });
 
-// --- security-guidance's duplicate push-time review ---------------------------
+// --- security-guidance's push-time review --------------------------------------
 const sgOn = enabled.some((p) => nameOf(p.id) === "security-guidance");
 const projectEnv = readJson(path.join(root, ".claude", "settings.json"))?.env ?? {};
 const securityGuidance = { enabled: sgOn, pushSweepOffered: sgOn && projectEnv.SG_PUSH_SWEEP === undefined };
 
-const report = { core, engines: engines.map((e) => e.name), engineReport, blocking, unused, securityGuidance };
+const report = { core, engines: engines.map((e) => e.name), engineReport, syncStopHooks, unused, securityGuidance };
 if (asJson) console.log(JSON.stringify(report, null, 2));
 else {
   console.log(core ? `raftkit-core ${core.version}: ${core.installPath}` : "Missing: raftkit-core. Install it with: claude plugin install raftkit-core@raftkit");
@@ -138,12 +139,12 @@ else {
     if (e.state === "missing") console.log(`Missing: ${e.name}. Install it with: ${e.command}`);
     if (e.state === "disabled") console.log(`Disabled: ${e.name}. Enable it with: ${e.command}`);
   }
-  for (const id of [...new Set(blocking.map((b) => b.id))]) {
-    const hooks = blocking.filter((b) => b.id === id);
+  for (const id of [...new Set(syncStopHooks.map((b) => b.id))]) {
+    const hooks = syncStopHooks.filter((b) => b.id === id);
     const events = [...new Set(hooks.map((b) => b.event))].join(", ");
-    console.log(`Blocking Stop hook: ${id} (${events} ${hooks[0].type}: ${hooks[0].what}). Turn it off in this repo with: ${hooks[0].command}`);
+    console.log(`Synchronous Stop hook (can block the stop): ${id} (${events} ${hooks[0].type}: ${hooks[0].what}). Turn it off in this repo with: ${hooks[0].command}`);
   }
   if (unused.length) console.log(`Unused by this repo's stack: ${unused.join(", ")}`);
-  if (securityGuidance.pushSweepOffered) console.log("security-guidance reviews each push again after reviewing its commits: SG_PUSH_SWEEP=0 can be offered");
+  if (securityGuidance.pushSweepOffered) console.log("security-guidance can review a commit again at push while its commit-time review is still running: SG_PUSH_SWEEP=0 stops push-time review, including for commits never reviewed at commit");
 }
 process.exit(core ? 0 : 3);

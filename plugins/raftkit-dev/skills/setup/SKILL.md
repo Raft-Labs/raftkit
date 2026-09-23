@@ -25,7 +25,7 @@ Missing: superpowers. Install it with: claude plugin install superpowers@claude-
 Setup continues without it; the skills that need it will say so.
 ```
 
-   The same report names every enabled plugin's blocking Stop hook with its disable command, and the plugins this repo's stack does not use. Setup changes neither; both go in the draft.
+   The same report names each enabled plugin's Stop hook that can block the stop, with its disable command, and the plugins this repo's stack does not use. Setup changes neither on its own; each is a draft line.
 
 2. **Detect the toolchain** with `scripts/detect-toolchain.mjs` and resolve every component per `references/components.md`. Conflicting signals, a foreign hook owner, several `core.hooksPath` values, or a `CLAUDE.md` the splice refuses become questions in the draft. An existing `.raftkit/governance-pack.json` makes this a re-run and says what changed.
 3. **Stop once** with the whole plan: every file to write with its diff, the toolchain the hook and CI will use, whether this is a commit or a PR, and each opt-in in `references/components.md` as a separate labelled line the developer accepts by name. A re-run shows only what drifted, and reports no changes when nothing did.

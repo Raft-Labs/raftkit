@@ -277,7 +277,7 @@ grep -qxF 'Disabled: frontend-design. Enable it with: claude plugin enable front
 check "E3 a disabled engine is named with its enable command" ok $?
 [[ "$(ejson engines)" == "$(node -e 'const p=require("./plugins/raftkit-dev/.claude-plugin/plugin.json"); console.log(JSON.stringify(p.dependencies.map((d)=>typeof d==="string"?d:d.name).filter((n)=>n!=="raftkit-core")))')" ]]
 check "E4 the engines checked are exactly raftkit-dev's declared dependencies" ok $?
-blocking="$(grep '^Blocking Stop hook:' <<<"$ETXT")"
+blocking="$(grep '^Synchronous Stop hook (can block the stop): ' <<<"$ETXT")"
 grep -qF 'warp@claude-code-warp' <<<"$blocking" && grep -qF 'inline@somewhere' <<<"$blocking" && grep -qF 'pathhooks@somewhere' <<<"$blocking" \
   && grep -qF 'claude plugin disable warp@claude-code-warp --scope local' <<<"$blocking" \
   && [[ "$(grep -c 'claude plugin disable .* --scope local' <<<"$blocking")" -eq 3 ]]
@@ -293,6 +293,10 @@ check "E8 a stack signal in a workspace package keeps its plugin off the unused 
 EJ="$(node "$ENG" --root "$EW/repo" --plugins-json "$EW/plugins.json" --json 2>&1)"
 [[ "$(ejson securityGuidance.pushSweepOffered)" == true ]]
 check "E9 the duplicate push-review line is offered while security-guidance is enabled and SG_PUSH_SWEEP is unset" ok $?
+grep -qF 'SG_PUSH_SWEEP=0 stops push-time review, including for commits never reviewed at commit' <<<"$ETXT" \
+  && grep -F 'Duplicate security review' "$SETUP/references/components.md" | grep -qF 'gets no review at push' \
+  && ! grep -qi 'blocking stop hook' <<<"$ETXT"
+check "E9b the push-review line states its cost, and a Stop hook is never asserted to block" ok $?
 mkdir -p "$EW/repo-sg/.claude" && cp -R "$FIX/npm/." "$EW/repo-sg/" && printf '{"env":{"SG_PUSH_SWEEP":"0"}}' > "$EW/repo-sg/.claude/settings.json"
 eng "$EW/repo-sg" "$EW/plugins.json" --json; EJ="$EOUT"
 [[ "$(ejson securityGuidance.pushSweepOffered)" == false ]]
