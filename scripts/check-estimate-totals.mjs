@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // Checks the arithmetic of every estimate example the repo ships: in each
 // ```output block that carries a `Total:` line, the four totals must be the
-// sum of the feature bullets above them — lows added to lows, highs to highs.
+// sum of the feature bullets above them — lows added to lows, highs to highs —
+// and each feature bullet must state its own `total a–b h`, the sum of its FE,
+// BE and QA ranges. The Sheet holds a total per feature, so the stop shows it.
 //
 // The example is the specification a run copies, so a total that does not add
 // up teaches the sum wrong. The first version of estimation's canonical
@@ -11,7 +13,8 @@
 // Sums, never averages and never midpoints: the rule is breakdown-method.md's
 // "Sum the lows together and the highs together".
 //
-// A missing discipline, a `Total:` line with no feature bullets above it, and
+// A missing discipline, a feature bullet with no total of its own, a `Total:`
+// line with no feature bullets above it, and
 // a run that matched no block at all are all failures — a silent zero-match
 // pass is how an arithmetic checker stops checking.
 //
@@ -28,6 +31,7 @@ const RANGE = "(\\d+)(?:–(\\d+))?";
 const DISCIPLINES = ["FE", "BE", "QA"];
 const disciplinePattern = (d) => new RegExp(`\\b${d}\\s+${RANGE}\\s*h`);
 const TOTAL_PATTERN = new RegExp(`^Total:\\s*${RANGE}\\s*h`);
+const FEATURE_TOTAL_PATTERN = new RegExp(`\\btotal\\s+${RANGE}\\s*h`);
 
 const targets = process.argv.slice(2);
 if (targets.length === 0) {
@@ -63,15 +67,33 @@ for (const file of targets) {
     const sum = { FE: [0, 0], BE: [0, 0], QA: [0, 0] };
     let complete = true;
     for (const feature of features) {
+      const own = [0, 0];
+      let featureComplete = true;
       for (const d of DISCIPLINES) {
         const m = feature.match(disciplinePattern(d));
         if (!m) {
           problems.push(`${file}: feature bullet states no ${d} range: ${feature.trim()}`);
           complete = false;
+          featureComplete = false;
           continue;
         }
-        sum[d][0] += Number(m[1]);
-        sum[d][1] += Number(m[2] ?? m[1]);
+        const range = [Number(m[1]), Number(m[2] ?? m[1])];
+        sum[d][0] += range[0];
+        sum[d][1] += range[1];
+        own[0] += range[0];
+        own[1] += range[1];
+      }
+      const name = feature.replace(/^- /, "").split(" — ")[0].trim();
+      const t = feature.match(FEATURE_TOTAL_PATTERN);
+      if (!t) {
+        problems.push(`${file}: feature bullet states no total: ${feature.trim()}`);
+      } else if (featureComplete) {
+        const got = [Number(t[1]), Number(t[2] ?? t[1])];
+        if (got[0] !== own[0] || got[1] !== own[1]) {
+          problems.push(
+            `${file}: ${name} totals ${got.join("–")} h, but its FE, BE and QA ranges sum to ${own.join("–")} h`,
+          );
+        }
       }
     }
     if (!complete) continue;

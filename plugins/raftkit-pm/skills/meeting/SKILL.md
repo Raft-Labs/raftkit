@@ -25,7 +25,7 @@ Can't extract — no Project Profile for this project. Run raftkit-pm:profile fi
 3. **Draft, in one message**:
    - the three cited lists;
    - the Profile delta: changed / new / now-confirmed facts, cited `<meeting> @ <timestamp>`, dated the meeting date, ⚠️ by default (only an unambiguous on-call decision earns ✅), conflicts with existing facts shown with both citations, the subtasks it overwrites named, and the delta comment;
-   - the task batch: one task per action item with title, citation, suggested assignee (the owner named on the call; unclear → a question in the draft; unresolved → unassigned, never guessed), recording and related-task links in the description, a due date only when the call set one.
+   - the task batch: one task per action item with title, citation, suggested assignee shown as name + email domain, a member outside RaftLabs marked external (the owner named on the call; two matching members or an unclear owner → a question in the draft; unresolved → unassigned, never guessed), recording and related-task links in the description, a due date only when the call set one, and a spoken date resolved against the meeting date with the phrase shown ("by Friday" → 15 Aug).
 4. **Stop once.** The PM may approve parts: "delta yes, tasks except #3."
 
 ```output
