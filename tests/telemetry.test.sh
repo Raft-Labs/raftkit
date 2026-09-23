@@ -1370,6 +1370,17 @@ echo "{\"session_id\":\"s-new3\",\"hook_event_name\":\"SessionStart\",\"source\"
   | CLAUDE_CONFIG_DIR="$cfgd" RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
 expect_eq "a new segment of the ledger is sent" "2" "$(cost_field "$d/spool/events.jsonl" count)"
 
+# Sessions starting together in one project each read ledger-sent.json before
+# any writes it back, so each spools the same entry. The server dedups on
+# event_id alone, so the id must come from the entry, or its cost counts twice.
+d1="$(new_sandbox)"; d2="$(new_sandbox)"
+for dd in "$d1" "$d2"; do
+  echo "{\"session_id\":\"s-race\",\"hook_event_name\":\"SessionStart\",\"source\":\"startup\",\"cwd\":\"$PWD\"}" \
+    | CLAUDE_CONFIG_DIR="$cfgd" RAFTKIT_TELEMETRY_DIR="$dd" node "$RECORD" session_start >/dev/null 2>&1
+done
+id1="$(cost_field "$d1/spool/events.jsonl" event_id)"; id2="$(cost_field "$d2/spool/events.jsonl" event_id)"
+expect_eq "one ledger entry spooled twice carries one event_id" "true" "$([[ -n "$id1" && "$id1" != undefined && "$id1" == "$id2" ]] && echo true || echo "false ($id1 vs $id2)")"
+
 # The ledger is keyed by the project directory. A session in a subfolder is
 # matched through CLAUDE_PROJECT_DIR, never by walking up to some parent's entry.
 d="$(new_sandbox)"; sub="$PWD/plugins"

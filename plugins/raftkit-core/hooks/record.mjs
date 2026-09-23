@@ -462,7 +462,9 @@ function ledgerEvent(hook, base) {
   const key = `${cost.cost_session_id}@${cost.started_at}`;
   const sent = readJsonFile(stateFile("ledger-sent.json"), {}).keys;
   if (Array.isArray(sent) && sent.includes(key)) return null;
-  return { key, sent: Array.isArray(sent) ? sent : [], event: { ...base, event_id: randomUUID(), event: "raftkit_session_cost", props: { ...base.props, ...cost } } };
+  // Sessions starting together each pass the check above and spool this entry;
+  // an id derived from the entry lets the server's event_id dedup keep one.
+  return { key, sent: Array.isArray(sent) ? sent : [], event: { ...base, event_id: `ledger-${sha(key, 32)}`, event: "raftkit_session_cost", props: { ...base.props, ...cost } } };
 }
 
 async function main() {
