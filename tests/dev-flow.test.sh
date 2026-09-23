@@ -3,7 +3,8 @@
 # docs, the verifier agent) that another component, the platform, or a live
 # template depends on. Each check pins an interface — a string another
 # component reads, a path two skills must agree on, a model a dispatch passes —
-# never wording for its own sake. Mutation-checked when added.
+# or the one clause that carries an acceptance criterion, never wording for its
+# own sake. Mutation-checked when added.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 
@@ -60,7 +61,8 @@ check "DF4 scope-guard reads the out-of-scope list from the Do NOT build line" o
 # DF5 · every named agent dispatch in implement and fix passes a model. The
 #       frontmatter of pr-review-toolkit's agents pins opus; only the
 #       per-invocation model moves them. The five review agents must be named,
-#       so the check cannot pass on a file that dispatches nothing.
+#       so the check cannot pass on a file that dispatches nothing. The phase
+#       and fix-loop subagents dispatch at their tier's model (tiers.md).
 ok=0
 for a in code-simplifier code-reviewer type-design-analyzer silent-failure-hunter pr-test-analyzer; do
   grep -rqF "pr-review-toolkit:$a" "$IMPL" || { echo "  review agent not dispatched: $a"; ok=1; }
@@ -68,7 +70,9 @@ done
 while IFS= read -r hit; do
   grep -qE 'model: "(haiku|sonnet|opus)"' <<<"$hit" || { echo "  dispatch without a model: $hit"; ok=1; }
 done < <(grep -rnE 'pr-review-toolkit:[a-z-]+|raftkit-dev:verifier' "$IMPL" "$FIX" --include='*.md')
-check "DF5 every agent dispatch in implement and fix passes model" ok $ok
+grep -qF "each a subagent at its tier's model" "$IMPL/SKILL.md" || { echo "  implement's phase dispatch names no tier"; ok=1; }
+grep -qF "one subagent at the defect's tier" "$FIX/SKILL.md" || { echo "  fix's loop dispatch names no tier"; ok=1; }
+check "DF5 every agent dispatch in implement and fix passes a model or its tier's" ok $ok
 
 # DF6 · tiers.md maps each tier to an Agent model value a dispatch can pass
 T=plugins/raftkit-core/skills/working-agreement/references/tiers.md
@@ -78,8 +82,9 @@ grep -qE '^\| `mechanical` \| `haiku` \|' "$T" \
 check "DF6 tiers.md names the model each tier dispatches with" ok $?
 
 # DF7 · fix records a pending build, never one no build contains yet; retest
-#       in raftkit-qa reads this exact string as empty (cross-group C3)
-grep -qF 'Fixed in build: pending — first build containing PR #<n>' "$FIX/SKILL.md" \
+#       in raftkit-qa reads this exact string as empty (cross-group C3). The
+#       pin is on the edit instruction: the go-report repeats the string
+grep -qF 'the edit writing `Fixed in build: pending — first build containing PR #<n>`' "$FIX/SKILL.md" \
   && ! grep -qE 'Fixed in build <x>' "$FIX/SKILL.md"
 check "DF7 fix writes Fixed in build: pending with the PR number" ok $?
 
@@ -147,6 +152,23 @@ pm_line="$(grep -n '^In plan mode: read only (no fetch, build or verify)' "$IMPL
 intake_line="$(grep -n '^1\. \*\*Intake' "$IMPL/SKILL.md" | head -1 | cut -d: -f1)"
 [[ -n "$pm_line" && -n "$intake_line" && "$pm_line" -lt "$intake_line" ]]
 check "DF13 plan mode reads only, stated before implement's intake" ok $?
+
+# DF14 · every phase prompt carries the base SHA and checks it before editing
+#        (cross-group C6: setup's worktree.baseRef only helps if the phase checks)
+grep -qF 'the branch SHA, which it confirms with `git merge-base --is-ancestor <sha> HEAD` before its first edit' "$IMPL/SKILL.md" \
+  && grep -qF 'the branch SHA to confirm before its first edit' "$FIX/SKILL.md"
+check "DF14 implement and fix phase prompts carry and check the branch SHA" ok $?
+
+# DF15 · the plan is written inline: no planning skill and no Plan subagent
+grep -qF 'never through `superpowers:brainstorming`, `superpowers:writing-plans` or a `Plan` subagent' "$IMPL/SKILL.md"
+check "DF15 implement never plans through brainstorming, writing-plans or a Plan subagent" ok $?
+
+# DF16 · the PR body carries the review findings and [AC] test coverage, and
+#        the STOP summary line counts findings the same way
+grep -qE '^[0-9]+\. \*\*Review findings\*\*' "$IMPL/references/pr.md" \
+  && grep -qF '`[AC]s with tests n/m`' "$IMPL/references/pr.md" \
+  && grep -qE 'findings: [0-9]+ fixed / [0-9]+ answered\.$' "$IMPL/SKILL.md"
+check "DF16 the PR body and the STOP line carry the review findings" ok $?
 
 echo
 echo "dev-flow: $failures failure(s)"
