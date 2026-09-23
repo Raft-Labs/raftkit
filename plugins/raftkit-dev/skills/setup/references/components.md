@@ -54,7 +54,7 @@ Rendered assets carry the literal marker `raftkit-governance-pack` in their head
 | Key | Managed value |
 |---|---|
 | `extraKnownMarketplaces.raftkit` | `{ source: { source: "github", repo: "Raft-Labs/raftkit" }, autoUpdate: true }` |
-| `enabledPlugins` | `raftkit-core@raftkit`, `raftkit-dev@raftkit`, and the engines above from `claude-plugins-official`, each `true` |
+| `enabledPlugins` | `raftkit-dev@raftkit` and every dependency its `plugin.json` declares, each `true` |
 | `model` | `"opusplan"` |
 | `attribution` | `{ "commit": "", "pr": "" }` |
 | `worktree` | `{ baseRef: "head", symlinkDirectories: ["node_modules"] }`; the directory list only with `--node`, passed when detection found a Node manifest |

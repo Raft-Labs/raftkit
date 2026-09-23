@@ -138,7 +138,11 @@ else {
     if (e.state === "missing") console.log(`Missing: ${e.name}. Install it with: ${e.command}`);
     if (e.state === "disabled") console.log(`Disabled: ${e.name}. Enable it with: ${e.command}`);
   }
-  for (const b of blocking) console.log(`Blocking Stop hook: ${b.id} (${b.event} ${b.type}: ${b.what}). Turn it off in this repo with: ${b.command}`);
+  for (const id of [...new Set(blocking.map((b) => b.id))]) {
+    const hooks = blocking.filter((b) => b.id === id);
+    const events = [...new Set(hooks.map((b) => b.event))].join(", ");
+    console.log(`Blocking Stop hook: ${id} (${events} ${hooks[0].type}: ${hooks[0].what}). Turn it off in this repo with: ${hooks[0].command}`);
+  }
   if (unused.length) console.log(`Unused by this repo's stack: ${unused.join(", ")}`);
   if (securityGuidance.pushSweepOffered) console.log("security-guidance reviews each push again after reviewing its commits: SG_PUSH_SWEEP=0 can be offered");
 }
