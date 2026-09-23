@@ -6,7 +6,7 @@ user-invocable: true
 
 # ui
 
-One story's screens, built to what the story actually says. `raftkit-core:rules` apply. Called from an `implement` phase it takes the story, the phase and the engine check already in hand; standalone it fetches the story once.
+One story's screens, built to what the story actually says. Load `raftkit-core:rules` first unless it is already in this conversation. Called from an `implement` phase it takes the story, the phase and the engine check already in hand; standalone it fetches the story once.
 
 **Nothing user-facing is invented.** Copy is used verbatim, designs are consumed, breakpoints and tokens come from the project. When the story is silent, ask; never fill the gap.
 

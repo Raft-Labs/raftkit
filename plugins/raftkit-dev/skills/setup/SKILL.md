@@ -6,7 +6,7 @@ user-invocable: true
 
 # setup
 
-Everything a repo needs to behave the RaftKit way, installed once and verified. `raftkit-core:rules` apply. A re-run is the update and the drift check; there is no second command.
+Everything a repo needs to behave the RaftKit way, installed once and verified. Load `raftkit-core:rules` first unless it is already in this conversation. A re-run is the update and the drift check; there is no second command.
 
 **All-or-nothing.** Validate everything first, apply in one commit (or one PR on a protected branch), then verify. Content comes live from `raftkit-core:working-agreement`; this skill keeps no copy and authors only its own assets.
 
