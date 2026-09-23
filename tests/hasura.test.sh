@@ -113,6 +113,9 @@ grep -qiE 'envx' <<<"$sk" \
   && grep -qiE 'raftkit-dev:setup' <<<"$sk"
 check "HR13 integrations wired (envx, docs schema sync, preflight/setup)" ok $?
 
+grep -qF 'Load `raftkit-core:rules` first unless it is already in this conversation.' "$S"
+check "HR16 SKILL.md loads raftkit-core:rules first" ok $?
+
 eval_count=$(find plugins/raftkit-dev/evals/hasura -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
 [[ "${eval_count:-0}" -ge 8 ]] \
   && ! find plugins/raftkit-dev/evals/hasura -mindepth 1 -maxdepth 1 -type d '!' -exec test -f '{}/prompt.md' ';' -print 2>/dev/null | grep -q . \

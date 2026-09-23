@@ -6,7 +6,7 @@ user-invocable: true
 
 # hasura
 
-The Hasura development loop: scaffold a migration, author its metadata, apply it through the project's own targets, refresh the schema snapshot, and query any stage. `raftkit-core:rules` apply.
+The Hasura development loop: scaffold a migration, author its metadata, apply it through the project's own targets, refresh the schema snapshot, and query any stage. Load `raftkit-core:rules` first unless it is already in this conversation.
 
 **Conventions are discovered, never assumed.** The Hasura root, the snapshot and its target, the stage names, the env files, the database, the roles, the tenancy column, the secret names and the deploy model all come from this repository. Discover them once and cache them in `.raftkit/hasura.json`; re-derive when that file is missing or a command fails as though it were stale. Everything in `references/` written as a concrete path is an example of one project's naming. See `references/conventions.md`.
 
