@@ -381,6 +381,9 @@ export function repoContext(cwd) {
 }
 
 const versionKey = (v) => String(v).split(/[.-]/).map((x) => (/^\d+$/.test(x) ? x.padStart(8, "0") : x)).join(".");
+const numbered = (name) => /^\d+\.\d+/.test(name);
+// Highest numbered version first; a directory named for a commit only after them.
+const byNewest = (a, b) => numbered(b) - numbered(a) || (versionKey(a) < versionKey(b) ? 1 : -1);
 
 function safeReaddir(dir) {
   try {
@@ -395,8 +398,10 @@ function safeReaddir(dir) {
  *
  * Two layouts exist. From a checkout (or a directory plugin source) the plugins
  * are siblings. From the plugin cache each plugin sits under
- * <marketplace>/<plugin>/<version>/, older versions included, so the version
- * installed_plugins.json names wins, then the highest on disk. Never throws.
+ * <marketplace>/<plugin>/<version>/, where uninstalled and superseded versions
+ * stay on disk for about 14 days. So installed_plugins.json decides: a plugin
+ * it does not list is not installed. Only when that file cannot be read does
+ * the highest version on disk stand in. Never throws.
  */
 export function raftkitPlugins() {
   const out = {};
@@ -413,14 +418,23 @@ export function raftkitPlugins() {
   if (Object.keys(out).length > 1) return out;
 
   const market = dirname(parent);
-  const installed = readJsonFile(join(claudeConfigDir(), "plugins", "installed_plugins.json"), {}).plugins || {};
+  const record = readJsonFile(join(claudeConfigDir(), "plugins", "installed_plugins.json"), null);
+  const installed = record ? (record.plugins && typeof record.plugins === "object" ? record.plugins : {}) : null;
   for (const name of safeReaddir(market)) {
     if (!name.startsWith("raftkit-") || out[name]) continue;
     const base = join(market, name);
-    const entries = Array.isArray(installed[`${name}@${basename(market)}`]) ? installed[`${name}@${basename(market)}`] : [];
-    const recorded = entries.map((e) => e?.installPath).find((p) => typeof p === "string" && p.startsWith(base) && existsSync(p));
-    const newest = safeReaddir(base).sort((a, b) => (versionKey(a) < versionKey(b) ? 1 : -1))[0];
-    put(recorded || join(base, newest || ""));
+    if (!installed) {
+      const newest = safeReaddir(base).sort(byNewest)[0];
+      if (newest) put(join(base, newest));
+      continue;
+    }
+    // Matched by the version directory's name under this cache, not by path
+    // prefix: a symlinked home or temp dir spells the same path two ways.
+    const entries = installed[`${name}@${basename(market)}`];
+    const recorded = (Array.isArray(entries) ? entries : [])
+      .map((e) => (typeof e?.installPath === "string" && basename(dirname(e.installPath)) === name ? join(base, basename(e.installPath)) : ""))
+      .find((dir) => dir && existsSync(dir));
+    if (recorded) put(recorded);
   }
   return out;
 }

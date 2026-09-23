@@ -1478,6 +1478,28 @@ expect_eq "from the plugin cache, the installed version of each plugin is report
   "$(last_event_field "$d/spool/events.jsonl" 'props.plugin_versions.raftkit-dev')"
 expect_eq "  and the skill's sha12 is read from that version" "$(printf 'cached implement skill\n' | shasum -a 256 | cut -c1-12)" \
   "$(last_event_field "$d/spool/events.jsonl" 'props.skill_sha12')"
+# The cache keeps uninstalled and superseded versions on disk for about 14
+# days. A plugin installed_plugins.json does not list is not installed.
+mkdir -p "$mk/raftkit-qa/2.0.0/.claude-plugin"
+echo '{"name":"raftkit-qa","version":"2.0.0"}' > "$mk/raftkit-qa/2.0.0/.claude-plugin/plugin.json"
+d="$(new_sandbox)"
+printf '{"session_id":"j10b","hook_event_name":"SessionStart"}' \
+  | CLAUDE_CONFIG_DIR="$cache" RAFTKIT_TELEMETRY_DIR="$d" node "$mk/raftkit-core/7.0.0/hooks/record.mjs" session_start >/dev/null 2>&1
+expect_eq "an orphaned raftkit plugin left in the cache is not reported" "undefined|7.1.0" \
+  "$(ev "$d/spool/events.jsonl" 'E[0].props.plugin_versions["raftkit-qa"]+"|"+E[0].props.plugin_versions["raftkit-dev"]')"
+printf '{"version":2,"plugins":{}}' > "$cache/plugins/installed_plugins.json"
+expect_eq "  so the entry map does not route to an uninstalled raftkit-dev" "" \
+  "$(printf '{"cwd":"%s"}' "$PWD" | CLAUDE_CONFIG_DIR="$cache" node "$mk/raftkit-core/7.0.0/hooks/entry-map.mjs" 2>/dev/null)"
+# Without that file the disk decides, and a numbered version outranks a
+# directory named for a commit.
+rm "$cache/plugins/installed_plugins.json"; rm -rf "$mk/raftkit-qa"
+mkdir -p "$mk/raftkit-dev/0a1b2c3d4e5f/.claude-plugin"
+echo '{"name":"raftkit-dev","version":"0.0.1"}' > "$mk/raftkit-dev/0a1b2c3d4e5f/.claude-plugin/plugin.json"
+d="$(new_sandbox)"
+printf '{"session_id":"j10c","hook_event_name":"SessionStart"}' \
+  | CLAUDE_CONFIG_DIR="$cache" RAFTKIT_TELEMETRY_DIR="$d" node "$mk/raftkit-core/7.0.0/hooks/record.mjs" session_start >/dev/null 2>&1
+expect_eq "with no install record, the highest numbered version on disk is reported" "7.1.0" \
+  "$(ev "$d/spool/events.jsonl" 'E[0].props.plugin_versions["raftkit-dev"]')"
 
 # --- hooks that fire together keep each other's changes
 # A typed /raftkit-dev:implement fires UserPromptExpansion (skill) and
