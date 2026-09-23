@@ -172,9 +172,15 @@ check "HR21 script paths are skill-relative, every one resolves and runs bare${b
 
 # HR22 · detect-hasura.mjs finds the same Hasura root as lib/common.sh
 # find_hasura_root: the root, then */, then */*/, hidden directories skipped.
+# An argument is a Hasura project dir; <dir>+plain holds a non-Hasura
+# config.yaml, <dir>+dir is an empty directory.
 parity() {
   local fx; fx=$(mktemp -d); local p
-  for p in "$@"; do mkdir -p "$fx/$p"; printf 'version: 3\n' > "$fx/$p/config.yaml"; done
+  for p in "$@"; do case "$p" in
+    *+dir) mkdir -p "$fx/${p%+dir}" ;;
+    *+plain) mkdir -p "$fx/${p%+plain}"; printf 'foo: bar\n' > "$fx/${p%+plain}/config.yaml" ;;
+    *) mkdir -p "$fx/$p"; printf 'version: 3\n' > "$fx/$p/config.yaml" ;;
+  esac; done
   local d f
   d=$(node "$DETECT" --root "$fx" --json 2>/dev/null \
     | node -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>{try{process.stdout.write(JSON.parse(s).conventions.hasuraRoot||"")}catch{}})')
@@ -188,6 +194,8 @@ pr=""
 [[ "$(parity b/h a/h)" == "/a/h|/a/h" ]] || pr+=" sorted"
 [[ "$(parity .hidden infra/hasura)" == "/infra/hasura|/infra/hasura" ]] || pr+=" hidden-skipped"
 [[ "$(parity a/b/c)" == "|" ]] || pr+=" depth-3-ignored"
+[[ "$(parity .+plain services/hasura)" == "/services/hasura|/services/hasura" ]] || pr+=" non-hasura-root-config"
+[[ "$(parity migrations+dir metadata+dir services/hasura)" == "/services/hasura|/services/hasura" ]] || pr+=" root-dirs-still-scan"
 [[ -z "$pr" ]]
 check "HR22 detect-hasura.mjs scans to find_hasura_root's depth and order${pr:+ (diverged:$pr)}" ok $?
 
@@ -208,7 +216,7 @@ CACHE="$CACHE" node -e '
 const got = JSON.parse(require("fs").readFileSync(process.env.CACHE, "utf8"));
 const want = { schema: 1, hasuraRoot: "services/hasura", database: "default", roles: ["anonymous", "user"],
   makeTargets: ["create-dbml", "hasura-migrate"],
-  env: { HASURA_MIGRATIONS_SUBDIR: "migrations/default", HASURA_METADATA_SUBDIR: "metadata/databases/default/tables", TENANCY_COLUMN: "org_id" } };
+  env: { HASURA_ROOT: "services/hasura", HASURA_MIGRATIONS_SUBDIR: "migrations/default", HASURA_METADATA_SUBDIR: "metadata/databases/default/tables", TENANCY_COLUMN: "org_id" } };
 process.exit(JSON.stringify(got) === JSON.stringify(want) ? 0 : 1);' 2>/dev/null; rj=$?
 nx=$(mktemp -d); node "$DETECT" --root "$nx" --write >/dev/null 2>&1; rn=$?
 [[ "$r0" -eq 0 && "$rb" -eq 2 && "$r1" -eq 0 && "$rw" -eq 0 && "$rj" -eq 0 && "$rn" -eq 1 && ! -e "$nx/.raftkit" ]]
@@ -224,6 +232,32 @@ else undoc=" (no cache written)"; fi
 [[ -z "$undoc" ]] && ! grep -rqE 'hasura\.json' "$H/scripts" --include='*.sh'
 check "HR24 every key the cache can hold is documented in conventions.md${undoc:+ (undocumented:$undoc)}" ok $?
 rm -rf "$cx" "$nx"
+
+# HR25 · several candidate roots are all reported and --write needs the chosen
+# one; the cache pins it as env.HASURA_ROOT, and the scaffolder run with that
+# env writes under it from any directory (find_hasura_root alone picks apps/).
+ax=$(mktemp -d)
+git -C "$ax" init -q
+for r in apps/hasura services/hasura; do
+  mkdir -p "$ax/$r/migrations/default" "$ax/$r/metadata/databases/default/tables"
+  printf 'version: 3\n' > "$ax/$r/config.yaml"
+done
+mkdir -p "$ax/docs"
+printf 'create-dbml:\n\t@true\n' > "$ax/Makefile"
+printf 'Table "users" {\n  "id" uuid [pk, not null]\n}\n' > "$ax/docs/schema.dbml"
+sig=$(node "$DETECT" --root "$ax" --json 2>/dev/null)
+grep -q 'apps/hasura' <<<"$sig" && grep -q 'services/hasura' <<<"$sig"; ra=$?
+node "$DETECT" --root "$ax" --write >/dev/null 2>&1; rw=$?
+[[ ! -e "$ax/.raftkit" ]]; rn=$?
+node "$DETECT" --root "$ax" --write --env HASURA_ROOT=services/hasura >/dev/null 2>&1; rc=$?
+cenv=$(node -e 'const j=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));if(j.hasuraRoot!=="services/hasura")process.exit(1);for(const[k,v]of Object.entries(j.env))console.log(`${k}=${v}`)' "$ax/.raftkit/hasura.json" 2>/dev/null)
+( cd "$ax/apps" && env $cenv perl -e 'alarm 60; exec @ARGV' bash "$NM" create-table widgets --col title:text --write </dev/null ) >/dev/null 2>&1; rs=$?
+[[ "$ra" -eq 0 && "$rw" -ne 0 && "$rn" -eq 0 && "$rc" -eq 0 && "$cenv" == *HASURA_ROOT=services/hasura* && "$rs" -eq 0 ]] \
+  && ls "$ax"/services/hasura/migrations/default/*_create_widgets/up.sql >/dev/null 2>&1 \
+  && [[ -f "$ax/services/hasura/metadata/databases/default/tables/public_widgets.yaml" ]] \
+  && ! find "$ax/apps" -name '*widgets*' | grep -q .
+check "HR25 several candidate roots are reported, --write needs the chosen one, and the cache's env.HASURA_ROOT steers the scaffolder from any directory" ok $?
+rm -rf "$ax"
 
 eval_count=$(find plugins/raftkit-dev/evals/hasura -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
 [[ "${eval_count:-0}" -ge 8 ]] \

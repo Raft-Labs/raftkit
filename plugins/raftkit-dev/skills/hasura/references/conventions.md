@@ -6,25 +6,26 @@ Every path, stage name, port and naming pattern this skill uses is discovered fr
 
 Written only by `scripts/detect-hasura.mjs --root <repo> --write`, never by
 hand, so later runs read it instead of re-deriving it. Pass each value found by
-judgment (the tenancy relationship, or the chosen root when two exist) as
-`--env NAME=VALUE`; an unknown name writes nothing. Paths are relative to the
-repository root; run the scripts from there. Re-derive when the file is absent,
-or when a command fails in a way that suggests it is stale.
+judgment as `--env NAME=VALUE`: the tenancy relationship, or `HASURA_ROOT` when
+detection lists several candidate roots (`--write` then requires it). An
+unknown name writes nothing. Paths are relative to the repository root.
+Re-derive when the file is absent, or when a command fails in a way that
+suggests it is stale.
 
 | Key | Holds |
 |---|---|
 | `schema` | `1`, the version of this shape |
-| `hasuraRoot` | the Hasura project directory, as `find_hasura_root` resolves it |
+| `hasuraRoot` | the Hasura project directory, also set as `env.HASURA_ROOT` |
 | `database` | the one database under `<metadata>/databases/` (`default` when several include it), else `null` |
 | `roles` | roles declared in that database's table YAML; `admin` is never listed |
 | `makeTargets` | root Makefile targets whose name contains `hasura` or `dbml` |
 | `env` | the variables to set when running `new-migration.sh` |
 
-`env` holds `HASURA_MIGRATIONS_SUBDIR` and `HASURA_METADATA_SUBDIR` (from
-`config.yaml` and `database`) plus any `--env` value: `HASURA_ROOT`,
-`TENANCY_COLUMN`, `TENANCY_REL`, `TENANCY_MEMBER_REL`, `TENANCY_MEMBER_COLUMN`,
-`TENANCY_STATUS_FIELD`, `TENANCY_STATUS_VALUE` (meanings in
-`scripts/lib/perms.sh`). Stage names, env files, secret names and the deploy
+`env` holds `HASURA_ROOT`, `HASURA_MIGRATIONS_SUBDIR` and
+`HASURA_METADATA_SUBDIR` (from `config.yaml` and `database`) plus any other
+`--env` value: `TENANCY_COLUMN`, `TENANCY_REL`, `TENANCY_MEMBER_REL`,
+`TENANCY_MEMBER_COLUMN`, `TENANCY_STATUS_FIELD`, `TENANCY_STATUS_VALUE`
+(meanings in `scripts/lib/perms.sh`). Stage names, env files, secret names and the deploy
 model are not cached: read them from the repository when a run needs them.
 
 ## What to establish
