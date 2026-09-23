@@ -1173,6 +1173,64 @@ write_spool "$d" 2
 RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:1/api/telemetry" node "$FLUSH" >/dev/null 2>&1
 expect_eq "an unreachable endpoint writes no last-flush-error" "no" "$([[ -f "$d/last-flush-error" ]] && echo yes || echo no)"
 
+# ================================================================ 12. the ledger
+# Claude Code records each session's cost in its own config. SessionStart sends
+# the previous session's cost fields once, as the ground truth the transcript
+# count is calibrated against — and reads nothing else from that file.
+d="$(new_sandbox)"; cfgd="$(new_sandbox)"
+write_ledger() { # <config dir> <lastStartTime>
+  node -e '
+    const [dir, cwd, start] = process.argv.slice(1);
+    require("fs").writeFileSync(dir + "/.claude.json", JSON.stringify({
+      oauthAccount: { emailAddress: "SECRET_EMAIL@example.com" },
+      projects: { [cwd]: {
+        lastSessionId: "prev-0001", lastStartTime: Number(start), lastCost: 1.25, lastDuration: 60000, lastAPIDuration: 30000,
+        lastTotalInputTokens: 10, lastTotalOutputTokens: 20, lastTotalCacheReadInputTokens: 300, lastTotalCacheCreationInputTokens: 40,
+        lastModelUsage: { "claude-opus-5-5": { inputTokens: 10, outputTokens: 20, cacheReadInputTokens: 300, cacheCreationInputTokens: 40, costUSD: 1.25 } },
+        mcpServers: { x: { env: { TOKEN: "SECRET_MCP_VALUE" } } }, allowedTools: ["SECRET_TOOL"],
+      } },
+    }));
+  ' "$1" "$PWD" "$2"
+}
+write_ledger "$cfgd" 1790000000000
+cost_field() { # <spool> <field> — from the one raftkit_session_cost event
+  node -e '
+    const fs = require("fs");
+    const e = fs.readFileSync(process.argv[1], "utf8").trim().split("\n").map((l) => JSON.parse(l)).filter((x) => x.event === "raftkit_session_cost");
+    let v = e.length === 1 ? e[0] : { count: e.length };
+    for (const k of process.argv[2].split(".")) v = v == null ? undefined : v[k];
+    process.stdout.write(String(v));
+  ' "$1" "$2" 2>/dev/null
+}
+echo "{\"session_id\":\"s-new\",\"hook_event_name\":\"SessionStart\",\"source\":\"startup\",\"cwd\":\"$PWD\"}" \
+  | CLAUDE_CONFIG_DIR="$cfgd" RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
+expect_eq "session start sends the previous session's ledger" "prev-0001" "$(cost_field "$d/spool/events.jsonl" props.cost_session_id)"
+expect_eq "  with its token total" "370" "$(cost_field "$d/spool/events.jsonl" props.total)"
+expect_eq "  its cost" "1.25" "$(cost_field "$d/spool/events.jsonl" props.cost_usd)"
+expect_eq "  and its cost per model" "1.25" "$(cost_field "$d/spool/events.jsonl" 'props.by_model.claude-opus-5-5.cost_usd')"
+if grep -q 'SECRET_' "$d/spool/events.jsonl"; then
+  echo "FAIL: something other than the cost fields was read out of the Claude Code config"
+  failures=$((failures + 1))
+else
+  echo "PASS: only the cost fields are read out of the Claude Code config"
+fi
+echo "{\"session_id\":\"s-new2\",\"hook_event_name\":\"SessionStart\",\"source\":\"startup\",\"cwd\":\"$PWD\"}" \
+  | CLAUDE_CONFIG_DIR="$cfgd" RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
+expect_eq "the same ledger entry is sent once" "prev-0001" "$(cost_field "$d/spool/events.jsonl" props.cost_session_id)"
+write_ledger "$cfgd" 1790000999000   # a resumed session's next segment
+echo "{\"session_id\":\"s-new3\",\"hook_event_name\":\"SessionStart\",\"source\":\"startup\",\"cwd\":\"$PWD\"}" \
+  | CLAUDE_CONFIG_DIR="$cfgd" RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
+expect_eq "a new segment of the ledger is sent" "2" "$(cost_field "$d/spool/events.jsonl" count)"
+
+# Per-session state is bounded: files for sessions untouched in two weeks go.
+d="$(new_sandbox)"; mkdir -p "$d/sessions"
+echo '{}' > "$d/sessions/old-0001.tokens.json"; echo '{}' > "$d/sessions/new-0001.tokens.json"; echo '{}' > "$d/tokens.json"
+node -e 'const fs=require("fs"); const t=new Date(Date.now()-20*86400000); fs.utimesSync(process.argv[1], t, t);' "$d/sessions/old-0001.tokens.json"
+echo '{"session_id":"p1","hook_event_name":"SessionStart"}' | CLAUDE_CONFIG_DIR="$cfgd" RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
+expect_eq "session state older than two weeks is removed" "no" "$([[ -f "$d/sessions/old-0001.tokens.json" ]] && echo yes || echo no)"
+expect_eq "  recent session state is kept" "yes" "$([[ -f "$d/sessions/new-0001.tokens.json" ]] && echo yes || echo no)"
+expect_eq "  and the pre-v2.1 token state file is retired" "no" "$([[ -f "$d/tokens.json" ]] && echo yes || echo no)"
+
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures test(s) failed"
   exit 1

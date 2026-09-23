@@ -11,7 +11,9 @@
 #      parse with certainty are left alone
 #   6. every failure path exits 0 and prints nothing (fail open)
 #   7. a deny is recorded as telemetry; an allow costs no telemetry at all
-#   8. token accounting folds a transcript correctly and resumes incrementally
+#   8. token accounting counts each message once, folds subagent files,
+#      skips a fork's copied history, and resumes incrementally; run-tokens.mjs
+#      prints the one line the STOP quotes
 set -uo pipefail
 export NODE_DISABLE_COLORS=1 FORCE_COLOR=0 NO_COLOR=1
 cd "$(dirname "$0")/.."
@@ -238,63 +240,150 @@ expect_eq "telemetry opt-out does not disable the shunt" "deny" \
   "$(verdict "$(read_payload "$REPO/src/big.ts")" RAFTKIT_TELEMETRY=off)"
 
 # ------------------------------------------------- 8. token accounting
-T="$TEST_ROOT/transcript.jsonl"
-mk_msg() { # <model> <isSidechain> <in> <out> <cache_read> <cache_creation>
-  node -e '
-    const [model, side, i, o, cr, cc] = process.argv.slice(1);
-    process.stdout.write(JSON.stringify({
-      type: "assistant", isSidechain: side === "true",
-      message: { model, usage: {
-        input_tokens: +i, output_tokens: +o,
-        cache_read_input_tokens: +cr, cache_creation_input_tokens: +cc } },
-    }) + "\n");
-  ' "$@"
-}
-{
-  echo '{"type":"user","message":{"role":"user","content":"hi"}}'
-  mk_msg claude-opus-5 false 10 20 30 40
-  mk_msg claude-haiku-4-5 true 1 2 3 4
-  echo 'not json at all'
-} > "$T"
+# The fixture mirrors the shapes measured in real CLI 2.1.280 transcripts, with
+# every piece of content removed: one message written as several lines that
+# repeat its usage, subagents in their own files (placeholder usage first,
+# workflow agents one level deeper, agentType in a sibling .meta.json), a usage
+# whose top-level fields are zero with the real numbers in `iterations`, and a
+# fork that copies its parent's records before its own SessionStart:fork.
+CFG="$TEST_ROOT/cfg"
+PROJ="$CFG/projects/-fixture"
+SID="11111111-aaaa-4bbb-8ccc-000000000001"
+FORK="22222222-aaaa-4bbb-8ccc-000000000002"
+T="$PROJ/$SID.jsonl"
+mkdir -p "$PROJ/$SID/subagents/workflows/wf_fixture"
+node - "$PROJ" "$SID" "$FORK" <<'FIXTURE'
+const fs = require("fs");
+const [proj, sid, fork] = process.argv.slice(2);
+const u = (i, o, cr, cc, extra = {}) => ({ input_tokens: i, output_tokens: o, cache_read_input_tokens: cr, cache_creation_input_tokens: cc, ...extra });
+const msg = (sessionId, id, ts, usage, model = "claude-opus-5-5", content = [{ type: "text", text: "" }]) =>
+  JSON.stringify({ type: "assistant", sessionId, timestamp: ts, isSidechain: false, message: { id, model, usage, content } });
+const line = (o) => JSON.stringify(o);
+const main = [
+  line({ type: "user", sessionId: sid, timestamp: "2026-09-18T01:00:00.000Z", message: { role: "user", content: "hi" } }),
+  line({ type: "attachment", sessionId: sid, timestamp: "2026-09-18T01:00:00.100Z", attachment: { type: "skill_listing", names: ["raftkit-dev:implement", "raftkit-dev:fix", "raftkit-core:rules", "other:x"], content: "- raftkit-dev:implement: Take one story\n- raftkit-dev:fix\n- raftkit-core:rules\n- other:x: y" } }),
+  // m1: three lines, one message — counted once
+  msg(sid, "m1", "2026-09-18T01:00:01.000Z", u(10, 20, 30, 40)),
+  msg(sid, "m1", "2026-09-18T01:00:01.100Z", u(10, 20, 30, 40)),
+  msg(sid, "m1", "2026-09-18T01:00:01.200Z", u(10, 20, 30, 40)),
+  // m2: top-level zeros, real numbers in iterations
+  msg(sid, "m2", "2026-09-18T01:00:02.000Z", u(0, 0, 0, 0, { iterations: [{ type: "message", ...u(5, 5, 5, 5) }] }), "claude-opus-5"),
+  msg(sid, "syn", "2026-09-18T01:00:02.500Z", u(0, 0, 0, 0), "<synthetic>"),
+  "not json at all",
+  // m3 starts the RaftKit run: the model invokes implement
+  msg(sid, "m3", "2026-09-18T01:00:03.000Z", u(1, 1, 1, 1), "claude-opus-5-5", [{ type: "tool_use", name: "Skill", input: { skill: "raftkit-dev:implement" } }]),
+  msg(sid, "m4", "2026-09-18T01:00:04.000Z", u(100, 0, 0, 0)),
+  // a nested skill inside the run does not restart it
+  msg(sid, "m5", "2026-09-18T01:00:05.000Z", u(0, 0, 0, 0), "claude-opus-5-5", [{ type: "tool_use", name: "Skill", input: { skill: "raftkit-dev:scope-guard" } }]),
+];
+fs.writeFileSync(`${proj}/${sid}.jsonl`, main.join("\n") + "\n");
+const sub = `${proj}/${sid}/subagents`;
+fs.writeFileSync(`${sub}/agent-a1.meta.json`, JSON.stringify({ agentType: "Explore" }));
+fs.writeFileSync(`${sub}/agent-a1.jsonl`, [
+  msg("x", "s1", "2026-09-18T01:00:03.500Z", u(1, 1, 0, 0), "claude-haiku-4-5"),      // placeholder
+  msg("x", "s1", "2026-09-18T01:00:03.600Z", u(2, 3, 4, 5), "claude-haiku-4-5"),      // final: 14
+].join("\n") + "\n");
+fs.writeFileSync(`${sub}/workflows/wf_fixture/agent-b2.meta.json`, JSON.stringify({ agentType: "general-purpose" }));
+fs.writeFileSync(`${sub}/workflows/wf_fixture/agent-b2.jsonl`, msg("x", "s2", "2026-09-18T01:00:03.700Z", u(6, 6, 6, 6), "claude-sonnet-5") + "\n"); // 24
+// The fork: the parent's m1 copied under the fork's own sessionId and the
+// parent's timestamps, then its own start, then its own message.
+fs.writeFileSync(`${proj}/${fork}.jsonl`, [
+  msg(fork, "m1", "2026-09-18T01:00:01.000Z", u(10, 20, 30, 40)),
+  msg(fork, "m4", "2026-09-18T01:00:04.000Z", u(100, 0, 0, 0)),
+  line({ type: "attachment", sessionId: fork, timestamp: "2026-09-18T02:00:00.000Z", attachment: { type: "hook_success", hookEvent: "SessionStart", hookName: "SessionStart:fork" } }),
+  msg(fork, "f1", "2026-09-18T02:00:01.000Z", u(7, 7, 7, 7)),
+].join("\n") + "\n");
+FIXTURE
 
-tok() { # <jq-ish path> — echoes one field of runTokens()
+TOKENS_LIB="$PWD/plugins/raftkit-core/hooks/lib/tokens.mjs"
+tok() { # <session> <transcript> <dotted field> — one field of runTokens()
   node --input-type=module -e '
     const { runTokens } = await import(process.argv[1]);
-    const t = runTokens(process.argv[2], process.argv[3]);
-    const path = process.argv[4].split(".");
-    let v = t; for (const k of path) v = v?.[k];
+    const t = runTokens(process.argv[3], process.argv[2]);
+    let v = t; for (const k of process.argv[4].split(".")) v = v?.[k];
     process.stdout.write(String(v));
-  ' "$PWD/plugins/raftkit-core/hooks/lib/tokens.mjs" "$T" "$1" "$2"
+  ' "$TOKENS_LIB" "$1" "$2" "$3"
 }
 export RAFTKIT_TELEMETRY_DIR="$TEST_ROOT/tokstate"
-expect_eq "the total is main plus sidechain" "110" "$(tok sessA total)"
-expect_eq "the sidechain is split out" "10" "$(tok sessB sidechain)"
-expect_eq "the main thread is split out" "100" "$(tok sessC main)"
-expect_eq "tokens are attributed per tier" "10" "$(tok sessD by_tier.haiku)"
-expect_eq "a malformed line is skipped, not fatal" "2" "$(tok sessE messages)"
+# main 100 (m1 once) + 20 (m2 via iterations) + 4 (m3) + 100 (m4) = 224; subagents 14 + 24 = 38
+expect_eq "a message spread over several lines is counted once" "224" "$(tok "$SID" "$T" main)"
+expect_eq "subagent files, workflow agents included, are the sidechain" "38" "$(tok "$SID" "$T" sidechain)"
+expect_eq "the total is main plus subagents" "262" "$(tok "$SID" "$T" total)"
+expect_eq "a subagent's placeholder usage is replaced by its final line" "14" "$(tok "$SID" "$T" by_agent.Explore)"
+expect_eq "subagent tokens are attributed by agentType" "24" "$(tok "$SID" "$T" by_agent.general-purpose)"
+expect_eq "subagent tokens appear in the by-model totals" "24" "$(tok "$SID" "$T" by_model.claude-sonnet-5)"
+expect_eq "tokens are still attributed per tier" "14" "$(tok "$SID" "$T" by_tier.haiku)"
+expect_eq "a usage whose top level is zero is counted from its iterations" "20" "$(tok "$SID" "$T" by_model.claude-opus-5)"
+expect_eq "a zero-usage message adds no model row" "undefined" "$(tok "$SID" "$T" 'by_model.<synthetic>')"
+expect_eq "a forked session does not re-count its parent's history" "28" "$(tok "$FORK" "$PROJ/$FORK.jsonl" total)"
 
-# A second read of an unchanged transcript must not double-count, and an
-# appended message must be picked up. This is the incremental contract.
-tok sessG total >/dev/null
-expect_eq "re-reading an unchanged transcript does not double-count" "110" "$(tok sessG total)"
-mk_msg claude-sonnet-5 false 5 5 5 5 >> "$T"
-expect_eq "an appended message is folded in" "130" "$(tok sessG total)"
+# Incremental: an unchanged transcript is not re-counted, a later line for the
+# same message replaces its usage, and a new message is added.
+expect_eq "re-reading an unchanged transcript does not double-count" "262" "$(tok "$SID" "$T" total)"
+node -e '
+  const u = { input_tokens: 150, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 };
+  process.stdout.write(JSON.stringify({ type: "assistant", timestamp: "2026-09-18T01:00:05.500Z", message: { id: "m5", model: "claude-opus-5-5", usage: u, content: [] } }) + "\n");
+' >> "$T"
+expect_eq "a later line for the same message replaces its usage, across reads" "412" "$(tok "$SID" "$T" total)"
+node -e '
+  const u = { input_tokens: 8, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 };
+  process.stdout.write(JSON.stringify({ type: "assistant", timestamp: "2026-09-18T01:00:06.000Z", message: { id: "m6", model: "claude-opus-5-5", usage: u, content: [] } }) + "\n");
+' >> "$T"
+expect_eq "an appended message is folded in" "420" "$(tok "$SID" "$T" total)"
+
+# Listing coverage rides along the first time a skill_listing is seen.
+L="$TEST_ROOT/listing.jsonl"; head -2 "$T" > "$L"
+expect_eq "listing coverage counts RaftKit entries" "3" "$(tok sessL "$L" listing.raftkit)"
+expect_eq "  and those that kept a description" "raftkit-dev:implement" "$(tok sessL2 "$L" listing.described)"
+expect_eq "  and is reported once, not on every turn" "undefined" "$(tok sessL "$L" listing)"
 
 expect_eq "a missing transcript yields null" "null" \
   "$(node --input-type=module -e '
       const { runTokens } = await import(process.argv[1]);
       process.stdout.write(String(runTokens("/nonexistent/x.jsonl", "sX")));
-    ' "$PWD/plugins/raftkit-core/hooks/lib/tokens.mjs")"
+    ' "$TOKENS_LIB")"
 expect_eq "a transcript with no session id yields null" "null" \
   "$(node --input-type=module -e '
       const { runTokens } = await import(process.argv[1]);
       process.stdout.write(String(runTokens(process.argv[2], "")));
-    ' "$PWD/plugins/raftkit-core/hooks/lib/tokens.mjs" "$T")"
-expect_eq "no transcript path yields null" "null" \
-  "$(node --input-type=module -e '
-      const { runTokens } = await import(process.argv[1]);
-      process.stdout.write(String(runTokens("", "sX")));
-    ' "$PWD/plugins/raftkit-core/hooks/lib/tokens.mjs")"
+    ' "$TOKENS_LIB" "$T")"
+
+# ------------------------------------------------- 8b. run-tokens.mjs (C1)
+# The STOP quotes this line, so it is a contract: exactly one line, measured or
+# "not measured", never an estimate, never a write.
+RUN_TOKENS="$PWD/plugins/raftkit-dev/scripts/run-tokens.mjs"
+RT_STATE="$TEST_ROOT/rt-state"   # where a hook would keep state; run-tokens must never create it
+rt() { env CLAUDE_CONFIG_DIR="$CFG" RAFTKIT_TELEMETRY_DIR="$RT_STATE" CLAUDE_PLUGIN_DATA="$RT_STATE" node "$RUN_TOKENS" "$@" 2>/dev/null; }
+out="$(rt "$SID")"
+expect_eq "run-tokens prints exactly one line" "1" "$(printf '%s\n' "$out" | wc -l | tr -d ' ')"
+# The run starts at the implement invocation (m3): 4 + 100 + 150 + 8 = 262 main,
+# plus both subagents, which started after it: 38.
+expect_eq "run-tokens measures the run from its skill invocation" \
+  "Token total: 300 tokens (main 262, subagents 38; claude-opus-5-5: 262, claude-sonnet-5: 24, claude-haiku-4-5: 14) — measured" "$out"
+expect_eq "run-tokens --session measures the whole session" \
+  "Token total: 420 tokens (main 382, subagents 38; claude-opus-5-5: 362, claude-sonnet-5: 24, claude-opus-5: 20, claude-haiku-4-5: 14) — measured" "$(rt "$SID" --session)"
+expect_eq "an unknown session is not measured" "Token total: not measured" "$(rt "33333333-aaaa-4bbb-8ccc-000000000003")"
+# A traversal that would resolve to a real transcript if the id went unchecked.
+expect_eq "a malformed session id is not measured" "Token total: not measured" "$(rt "../-fixture/$SID")"
+expect_eq "no session id is not measured" "Token total: not measured" "$(rt)"
+tree_sum() { find "$TEST_ROOT" -type f -print0 | sort -z | xargs -0 cksum | cksum; }
+before="$(tree_sum)"
+rt "$SID" >/dev/null
+expect_eq "run-tokens writes nothing" "$before|no" "$(tree_sum)|$([[ -e "$RT_STATE" ]] && echo yes || echo no)"
+
+# Installed from the plugin cache, run-tokens finds raftkit-core beside it.
+CACHE="$CFG/plugins/cache/raftkit"
+mkdir -p "$CACHE/raftkit-core/9.9.9" "$CACHE/raftkit-dev/9.9.9"
+cp -R plugins/raftkit-core/. "$CACHE/raftkit-core/9.9.9/"
+cp -R plugins/raftkit-dev/. "$CACHE/raftkit-dev/9.9.9/"
+printf '{"version":2,"plugins":{"raftkit-core@raftkit":[{"scope":"user","installPath":"%s","version":"9.9.9"}]}}' \
+  "$CACHE/raftkit-core/9.9.9" > "$CFG/plugins/installed_plugins.json"
+expect_eq "run-tokens installed from the cache finds raftkit-core" "measured" \
+  "$(env CLAUDE_CONFIG_DIR="$CFG" node "$CACHE/raftkit-dev/9.9.9/scripts/run-tokens.mjs" "$SID" 2>/dev/null | grep -o 'measured$')"
+rm -rf "$CACHE/raftkit-core"
+expect_eq "run-tokens without raftkit-core says not measured" "Token total: not measured" \
+  "$(env CLAUDE_CONFIG_DIR="$CFG" node "$CACHE/raftkit-dev/9.9.9/scripts/run-tokens.mjs" "$SID" 2>/dev/null)"
+rm -rf "$CFG/plugins"
 
 # ------------------------------------------------------- 9. it is wired up
 node -e '

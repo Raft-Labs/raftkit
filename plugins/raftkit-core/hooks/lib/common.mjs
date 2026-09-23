@@ -5,7 +5,7 @@
 // throws, and callers still exit 0 regardless.
 
 import { execFileSync } from "node:child_process";
-import { closeSync, existsSync, mkdirSync, openSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import { closeSync, existsSync, mkdirSync, openSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -31,6 +31,47 @@ export function dataDir() {
 export const spoolDir = () => join(dataDir(), "spool");
 export const spoolFile = () => join(spoolDir(), "events.jsonl");
 export const stateFile = (name) => join(dataDir(), name);
+
+// Per-session state lives in one small file per session, so concurrent
+// sessions never rewrite each other's entries. The id comes from the hook
+// payload, so anything that is not a plain id gets no file at all.
+const SESSION_ID = /^[A-Za-z0-9_-]{1,128}$/;
+export const sessionsDir = () => join(dataDir(), "sessions");
+export function sessionFile(sessionId, kind) {
+  return SESSION_ID.test(String(sessionId || "")) ? join(sessionsDir(), `${sessionId}.${kind}.json`) : "";
+}
+
+export function readJsonFile(path, fallback = {}) {
+  try {
+    return path ? parseJson(readFileSync(path, "utf8"), fallback) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/** Write JSON through a rename, so a concurrent reader never sees half a file. */
+export function writeJsonFile(path, value) {
+  if (!path) return false;
+  const tmp = `${path}.${process.pid}.tmp`;
+  try {
+    ensureDir(dirname(path));
+    writeFileSync(tmp, JSON.stringify(value) + "\n");
+    renameSync(tmp, path);
+    return true;
+  } catch {
+    try {
+      unlinkSync(tmp);
+    } catch {
+      /* nothing was written */
+    }
+    return false;
+  }
+}
+
+/** Where Claude Code keeps its own state: CLAUDE_CONFIG_DIR, else ~/.claude. */
+export function claudeConfigDir() {
+  return process.env.CLAUDE_CONFIG_DIR || join(process.env.HOME || ".", ".claude");
+}
 
 export function ensureDir(path) {
   try {

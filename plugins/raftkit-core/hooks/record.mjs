@@ -9,25 +9,28 @@
 //   2. Never block. Writes locally only; the network belongs to flush.mjs.
 //   3. Never leak credentials. Free text goes through scrub() before it is written.
 
-import { appendFileSync, existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import {
   HOOKS_ROOT,
   ensureDir,
   parseJson,
   pluginVersions,
+  readJsonFile,
   readStdin,
   repoContext,
+  sessionsDir,
   sha,
   spoolDir,
   spoolFile,
   stateFile,
   telemetryDisabled,
+  writeJsonFile,
 } from "./lib/common.mjs";
 import { identity } from "./lib/identity.mjs";
 import { scrub } from "./lib/scrub.mjs";
-import { runTokens } from "./lib/tokens.mjs";
+import { ledgerCost, runTokens } from "./lib/tokens.mjs";
 
 const MODE = process.argv[2] || "unknown";
 
@@ -258,7 +261,8 @@ function buildEvent(hook, who) {
       // Carried on the stop event rather than spooled as one of its own: the
       // spool is a capped buffer, and a second line per turn would evict real
       // raftkit_blocked events to say something this event can already carry.
-      const tokens = runTokens(hook.transcript_path, hook.session_id);
+      const { listing: _listing, ...measured } = runTokens(hook.transcript_path, hook.session_id) || {};
+      const tokens = Object.keys(measured).length ? measured : null;
       const withTokens = tokens ? { ...base.props, tokens } : base.props;
       if (!refusal) {
         return { ...base, event: "raftkit_turn_completed", props: withTokens };
@@ -386,6 +390,49 @@ function pruneSpool() {
   }
 }
 
+// Session state is a working set, not a history: two weeks untouched and it goes.
+const SESSION_STATE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+
+function pruneSessionState() {
+  try {
+    unlinkSync(stateFile("tokens.json")); // the pre-v2.1 single-file token state
+  } catch {
+    /* already gone */
+  }
+  let names = [];
+  try {
+    names = readdirSync(sessionsDir());
+  } catch {
+    return;
+  }
+  const cutoff = Date.now() - SESSION_STATE_TTL_MS;
+  for (const name of names) {
+    const path = join(sessionsDir(), name);
+    try {
+      if (statSync(path).mtimeMs < cutoff) unlinkSync(path);
+    } catch {
+      /* raced with another session's prune */
+    }
+  }
+}
+
+/**
+ * The previous session's cost from Claude Code's own ledger, once per ledger
+ * entry. The ledger is keyed by the directory Claude Code was started in, so
+ * the lookup walks up from cwd rather than spending a git call on the
+ * synchronous path.
+ */
+function ledgerEvent(hook, base) {
+  const dirs = [];
+  for (let dir = hook.cwd || process.cwd(); dir && !dirs.includes(dir); dir = dirname(dir)) dirs.push(dir);
+  const cost = ledgerCost(dirs);
+  if (!cost) return null;
+  const key = `${cost.cost_session_id}@${cost.started_at}`;
+  const sent = readJsonFile(stateFile("ledger-sent.json"), {}).keys;
+  if (Array.isArray(sent) && sent.includes(key)) return null;
+  return { key, sent: Array.isArray(sent) ? sent : [], event: { ...base, event_id: randomUUID(), event: "raftkit_session_cost", props: { ...base.props, ...cost } } };
+}
+
 async function main() {
   if (telemetryDisabled()) return;
 
@@ -396,6 +443,13 @@ async function main() {
   // null means "not telemetry at all" (see the skill case above) — the spool
   // must stay byte-for-byte untouched, not gain a junk line.
   if (event) spool(event);
+
+  if (MODE === "session_start" && event) {
+    pruneSessionState();
+    const ledger = ledgerEvent(hook, event);
+    // Marked sent only once spooled, so a failed write retries next session.
+    if (ledger && spool(ledger.event)) writeJsonFile(stateFile("ledger-sent.json"), { keys: [...ledger.sent, ledger.key].slice(-50) });
+  }
 
   // The disclosure is surfaced once, then never again; the stuck-delivery
   // line at most once a day. Both only at session start, where they render.
