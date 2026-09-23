@@ -17,11 +17,10 @@ Every Agent call passes `model` for its tier (`raftkit-core:working-agreement` â
 
 ## Anchoring
 
-Every reviewer gets this range, never the tools' unstaged default, which is empty once the work is committed:
+The parent runs `git fetch origin <squash-target>` once, before the simplifier, and pins `<base-sha>` to `git merge-base FETCH_HEAD HEAD`. Every reviewer gets this range, never the tools' unstaged default, which is empty once the work is committed:
 
 ```
-git fetch origin <squash-target>
-git diff "$(git merge-base FETCH_HEAD HEAD)" HEAD
+git diff <base-sha> HEAD
 ```
 
 A reviewer reporting clean without naming a non-empty range reviewed nothing: treat that as a failed invocation.

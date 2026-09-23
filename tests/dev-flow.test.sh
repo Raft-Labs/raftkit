@@ -195,6 +195,18 @@ grep -qF 'the parent cherry-picks' <<<"$build" || { echo "  no step lands a phas
 grep -qF 'baseRef: "head"' "$DEV/skills/setup/scripts/merge-settings.mjs" || { echo "  setup no longer branches worktrees from HEAD"; ok=1; }
 check "DF18 implement runs each phase in a worktree and cherry-picks its commit onto the branch" ok $ok
 
+# DF19 · the review range is pinned once, by the parent. The simplifier, four
+#        reviewers and the verifier start together; a range that fetches makes
+#        them race on refs/remotes/origin/<target> once the target has moved,
+#        and a failed fetch reads as a scope block or a failed reviewer.
+ok=0
+R=$IMPL/references/review.md
+range="$(awk '/^## Anchoring/{a=1} a&&/^```/{n++; next} a&&n==1' "$R")"
+grep -qF 'git diff <base-sha> HEAD' <<<"$range" || { echo "  reviewers are not briefed with the pinned range"; ok=1; }
+grep -q 'fetch' <<<"$range" && { echo "  the range reviewers run still fetches"; ok=1; }
+grep -qF 'The parent runs `git fetch origin <squash-target>` once' "$R" || { echo "  nobody fetches the target before the range is pinned"; ok=1; }
+check "DF19 the parent fetches once and every reviewer gets a range that does not fetch" ok $ok
+
 echo
 echo "dev-flow: $failures failure(s)"
 [[ "$failures" -eq 0 ]]
