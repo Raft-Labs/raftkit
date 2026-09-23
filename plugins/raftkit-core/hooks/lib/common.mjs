@@ -5,9 +5,9 @@
 // throws, and callers still exit 0 regardless.
 
 import { execFileSync } from "node:child_process";
-import { closeSync, existsSync, mkdirSync, openSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const HOOKS_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -380,20 +380,73 @@ export function repoContext(cwd) {
   };
 }
 
+const versionKey = (v) => String(v).split(/[.-]/).map((x) => (/^\d+$/.test(x) ? x.padStart(8, "0") : x)).join(".");
+
+function safeReaddir(dir) {
+  try {
+    return readdirSync(dir);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Every installed raftkit-* plugin: { name: { dir, version } }.
+ *
+ * Two layouts exist. From a checkout (or a directory plugin source) the plugins
+ * are siblings. From the plugin cache each plugin sits under
+ * <marketplace>/<plugin>/<version>/, older versions included, so the version
+ * installed_plugins.json names wins, then the highest on disk. Never throws.
+ */
+export function raftkitPlugins() {
+  const out = {};
+  const put = (dir) => {
+    const m = readJsonFile(join(dir, ".claude-plugin", "plugin.json"), null);
+    if (m && typeof m.name === "string" && /^raftkit-/.test(m.name) && !out[m.name]) {
+      out[m.name] = { dir, version: typeof m.version === "string" ? m.version : "" };
+    }
+  };
+  const self = dirname(HOOKS_ROOT);
+  put(self);
+  const parent = dirname(self);
+  for (const name of safeReaddir(parent)) if (name.startsWith("raftkit-")) put(join(parent, name));
+  if (Object.keys(out).length > 1) return out;
+
+  const market = dirname(parent);
+  const installed = readJsonFile(join(claudeConfigDir(), "plugins", "installed_plugins.json"), {}).plugins || {};
+  for (const name of safeReaddir(market)) {
+    if (!name.startsWith("raftkit-") || out[name]) continue;
+    const base = join(market, name);
+    const entries = Array.isArray(installed[`${name}@${basename(market)}`]) ? installed[`${name}@${basename(market)}`] : [];
+    const recorded = entries.map((e) => e?.installPath).find((p) => typeof p === "string" && p.startsWith(base) && existsSync(p));
+    const newest = safeReaddir(base).sort((a, b) => (versionKey(a) < versionKey(b) ? 1 : -1))[0];
+    put(recorded || join(base, newest || ""));
+  }
+  return out;
+}
+
 /** Versions of the installed raftkit plugins, read from their manifests. */
 export function pluginVersions() {
   const out = {};
-  try {
-    // HOOKS_ROOT is <plugin>/hooks; the marketplace layout puts sibling plugins
-    // one level up from the plugin dir when running from a checkout.
-    const pluginDir = dirname(HOOKS_ROOT);
-    const manifest = join(pluginDir, ".claude-plugin", "plugin.json");
-    if (existsSync(manifest)) {
-      const m = parseJson(readFileSync(manifest, "utf8"));
-      if (m.name && m.version) out[m.name] = m.version;
-    }
-  } catch {
-    /* versions are nice-to-have, never load-bearing */
-  }
+  for (const [name, p] of Object.entries(raftkitPlugins())) if (p.version) out[name] = p.version;
   return out;
+}
+
+/**
+ * The first 12 hex of the sha256 of the instruction file a skill name loads
+ * (skills/<skill>/SKILL.md, or commands/<skill>.md for a help command), so a
+ * run can be tied to the exact text it ran. "" when it cannot be found.
+ */
+export function skillSha12(name) {
+  const m = /^(raftkit-[a-z0-9-]+):([a-z0-9-]+)$/.exec(String(name || ""));
+  const plugin = m && raftkitPlugins()[m[1]];
+  if (!plugin) return "";
+  for (const rel of [join("skills", m[2], "SKILL.md"), join("commands", `${m[2]}.md`)]) {
+    try {
+      return sha(readFileSync(join(plugin.dir, rel)), 12);
+    } catch {
+      /* try the next shape */
+    }
+  }
+  return "";
 }

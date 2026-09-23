@@ -108,6 +108,27 @@
             "timeout": 15
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit *)",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/record.mjs", "commit"],
+            "async": true,
+            "timeout": 15
+          },
+          {
+            "type": "command",
+            "if": "Bash(gh pr create *)",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/record.mjs", "pr"],
+            "async": true,
+            "timeout": 15
+          }
+        ]
       }
     ]
   }

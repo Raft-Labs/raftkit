@@ -116,6 +116,11 @@ last_event_field() { # <spool> <dotted property path, e.g. props.refusal_id>
   ' "$1" "$2" 2>/dev/null
 }
 
+seed_skill() { # <telemetry dir> <session id> — a RaftKit run in that session, so its stops count
+  printf '{"session_id":"%s","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-dev:implement"}}' "$2" \
+    | RAFTKIT_TELEMETRY_DIR="$1" node "$RECORD" skill >/dev/null 2>&1
+}
+
 # ---------------------------------------------------------------- 1. spooling
 d="$(new_sandbox)"
 echo "{\"session_id\":\"s1\",\"hook_event_name\":\"SessionStart\",\"source\":\"startup\",\"cwd\":\"$PWD\"}" \
@@ -335,7 +340,7 @@ node -e '
 check "every refusal pattern is a valid regex matching its example" ok $?
 
 # ---------------------------------------------------- 6. blocker classification
-d="$(new_sandbox)"
+d="$(new_sandbox)"; seed_skill "$d" s1
 printf '{"session_id":"s1","last_assistant_message":"NOT READY — 2 gap(s):\\n- Section 3 missing"}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "hard stop is classified as blocked" "raftkit_blocked" "$(last_event_field "$d/spool/events.jsonl" 'event')"
@@ -344,7 +349,7 @@ expect_eq "correct refusal id" "not-ready" "$(last_event_field "$d/spool/events.
 # The one human stop per run is not a blocker: it is the moment the human
 # decides. It gets its own event, and the reply that follows is flagged so the
 # dashboard can tell a go from an edit from an abandoned run.
-d="$(new_sandbox)"
+d="$(new_sandbox)"; seed_skill "$d" s1
 printf '{"session_id":"s1","last_assistant_message":"Story draft ready.\\n**STOP** — approve to write, edit to change, or decline."}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "the one stop is recorded as a gate, not a blocker" "raftkit_gate_shown" "$(last_event_field "$d/spool/events.jsonl" 'event')"
@@ -373,7 +378,7 @@ expect_eq "a renamed skill carries the v1 name it replaced" "user-story" "$(last
 # label bold (`**Missing:**` instead of plain `Missing:`) — both a plain and
 # a bold refusal must still classify, and a line that only contains the
 # phrase without starting with it must not.
-d="$(new_sandbox)"
+d="$(new_sandbox)"; seed_skill "$d" s1
 printf '{"session_id":"s1","last_assistant_message":"Missing: superpowers. Install it with: claude plugin install superpowers@claude-plugins-official"}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "plain capability refusal classifies" "capability-unavailable" \
@@ -381,7 +386,7 @@ expect_eq "plain capability refusal classifies" "capability-unavailable" \
 expect_eq "plain capability refusal captures the detail" "superpowers" \
   "$(last_event_field "$d/spool/events.jsonl" 'props.detail')"
 
-d="$(new_sandbox)"
+d="$(new_sandbox)"; seed_skill "$d" s1
 printf '{"session_id":"s1","last_assistant_message":"**Missing:** superpowers. Install it with: claude plugin install superpowers@claude-plugins-official"}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "bold-prefixed capability refusal still classifies" "capability-unavailable" \
@@ -389,19 +394,19 @@ expect_eq "bold-prefixed capability refusal still classifies" "capability-unavai
 expect_eq "bold-prefixed capability refusal captures the detail" "superpowers" \
   "$(last_event_field "$d/spool/events.jsonl" 'props.detail')"
 
-d="$(new_sandbox)"
+d="$(new_sandbox)"; seed_skill "$d" s1
 printf '{"session_id":"s1","last_assistant_message":"The dev said Missing: superpowers. Install it with: something, but that was a quote."}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "a mid-sentence mention is not misclassified as a blocker" "raftkit_turn_completed" \
   "$(last_event_field "$d/spool/events.jsonl" 'event')"
 
-d="$(new_sandbox)"
+d="$(new_sandbox)"; seed_skill "$d" s1
 printf '{"session_id":"s1","last_assistant_message":"Done — all tests pass and the PR is up."}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "a normal turn is not a blocker" "raftkit_turn_completed" "$(last_event_field "$d/spool/events.jsonl" 'event')"
 
 # The Stop hook carries no prompt, so it must recover the session's last one.
-d="$(new_sandbox)"
+d="$(new_sandbox)"; seed_skill "$d" s9
 echo "{\"session_id\":\"s9\",\"user_prompt\":\"implement story 123\",\"cwd\":\"$PWD\"}" \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1
 printf '{"session_id":"s9","last_assistant_message":"Can'"'"'t read the story — check your Asana connector, then retry."}' \
@@ -1230,6 +1235,152 @@ echo '{"session_id":"p1","hook_event_name":"SessionStart"}' | CLAUDE_CONFIG_DIR=
 expect_eq "session state older than two weeks is removed" "no" "$([[ -f "$d/sessions/old-0001.tokens.json" ]] && echo yes || echo no)"
 expect_eq "  recent session state is kept" "yes" "$([[ -f "$d/sessions/new-0001.tokens.json" ]] && echo yes || echo no)"
 expect_eq "  and the pre-v2.1 token state file is retired" "no" "$([[ -f "$d/tokens.json" ]] && echo yes || echo no)"
+
+# ================================================================ 13. journeys
+# One RaftKit run is one journey: it opens at a skill invocation, carries one
+# journey_id on every event, and its STOP is paired with the human's reply.
+hook() { # <telemetry dir> <mode> <json payload>
+  printf '%s' "$3" | RAFTKIT_TELEMETRY_DIR="$1" node "$RECORD" "$2" >/dev/null 2>&1
+}
+events_json() { # <spool> — the whole spool as one JSON array
+  node -e 'const fs=require("fs"); const p=process.argv[1];
+    process.stdout.write(JSON.stringify(fs.existsSync(p) ? fs.readFileSync(p,"utf8").trim().split("\n").map((l)=>JSON.parse(l)) : []));' "$1"
+}
+ev() { # <spool> <node expression over `E` (all events)>
+  # eval runs only the expressions written in this file, never spooled data.
+  node -e 'const E=JSON.parse(require("fs").readFileSync(0,"utf8")); process.stdout.write(String(eval(process.argv[1])));' "$2" <<< "$(events_json "$1")" 2>/dev/null
+}
+
+# --- pairing: the first HUMAN prompt after the STOP is the reply
+d="$(new_sandbox)"; sp="$d/spool/events.jsonl"
+hook "$d" skill '{"session_id":"j1","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-dev:implement"}}'
+hook "$d" stop '{"session_id":"j1","last_assistant_message":"PR draft ready.\n**STOP** — approve to push, edit to change, or decline."}'
+hook "$d" prompt '{"session_id":"j1","user_prompt":"<task-notification>\n<task-id>a1</task-id>\n<status>completed</status>\n</task-notification>"}'
+hook "$d" stop '{"session_id":"j1","stop_hook_active":true,"last_assistant_message":"Still waiting on your go."}'
+hook "$d" prompt '{"session_id":"j1","user_prompt":"go"}'
+hook "$d" prompt '{"session_id":"j1","user_prompt":"thanks"}'
+expect_eq "a task notification after the STOP is not the reply" "false|task_notification" \
+  "$(ev "$sp" 'const p=E.filter(e=>e.event==="raftkit_prompt_submitted"); p[0].props.after_gate+"|"+p[0].props.prompt_kind')"
+expect_eq "  and its text is never captured" "" \
+  "$(ev "$sp" 'E.filter(e=>e.event==="raftkit_prompt_submitted")[0].props.prompt || ""')"
+expect_eq "a Stop-hook loop turn is marked, and does not consume the gate" "true" \
+  "$(ev "$sp" 'E.filter(e=>e.event==="raftkit_turn_completed").at(-1).props.stop_hook_active')"
+expect_eq "the first human prompt after the STOP is the reply" "true|human" \
+  "$(ev "$sp" 'const p=E.filter(e=>e.event==="raftkit_prompt_submitted"); p[1].props.after_gate+"|"+p[1].props.prompt_kind')"
+expect_eq "  and only that one" "false" "$(ev "$sp" 'E.filter(e=>e.event==="raftkit_prompt_submitted")[2].props.after_gate')"
+
+# --- one journey id and the skill's sha12 on every event of the run
+sha12="$(shasum -a 256 plugins/raftkit-dev/skills/implement/SKILL.md | cut -c1-12)"
+expect_eq "every event of the run carries the same journey_id" "1" \
+  "$(ev "$sp" 'new Set(E.map(e=>e.props.journey_id)).size + (E.every(e=>e.props.journey_id) ? 0 : 100)')"
+expect_eq "  and the skill's sha12" "$sha12" "$(ev "$sp" '[...new Set(E.map(e=>e.props.skill_sha12))].join(",")')"
+
+# --- nested invocations stay in the run; the next run gets a new journey
+d="$(new_sandbox)"; sp="$d/spool/events.jsonl"
+hook "$d" skill '{"session_id":"j2","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-dev:implement"}}'
+hook "$d" skill '{"session_id":"j2","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-core:rules"}}'
+hook "$d" skill '{"session_id":"j2","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-dev:scope-guard"}}'
+hook "$d" stop '{"session_id":"j2","last_assistant_message":"**STOP** — approve to push, edit to change, or decline."}'
+hook "$d" skill '{"session_id":"j2","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-dev:fix"}}'
+hook "$d" skill '{"session_id":"j2","hook_event_name":"UserPromptExpansion","command_name":"raftkit-dev:fix","command_args":"bug 7"}'
+expect_eq "a skill loaded inside an open run stays in that run" "1" \
+  "$(ev "$sp" 'new Set(E.filter(e=>e.event==="raftkit_skill_invoked").slice(0,3).map(e=>e.props.journey_id)).size')"
+expect_eq "  and is marked nested" "false,true,true" \
+  "$(ev "$sp" 'E.filter(e=>e.event==="raftkit_skill_invoked").slice(0,3).map(e=>!e.props.journey_start).join(",")')"
+expect_eq "a skill after the run's STOP starts a new journey" "true" \
+  "$(ev "$sp" 'const s=E.filter(e=>e.event==="raftkit_skill_invoked"); s[3].props.journey_id !== s[0].props.journey_id && s[3].props.journey_start')"
+expect_eq "a typed command always starts a new journey" "true" \
+  "$(ev "$sp" 'const s=E.filter(e=>e.event==="raftkit_skill_invoked"); s[4].props.journey_id !== s[3].props.journey_id')"
+
+# raftkit-core's own skills are loaded by runs; alone they never open one.
+d="$(new_sandbox)"; sp="$d/spool/events.jsonl"
+hook "$d" skill '{"session_id":"j2b","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-core:rules"}}'
+hook "$d" skill '{"session_id":"j2b","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-dev:implement"}}'
+expect_eq "a raftkit-core skill never opens a run; the role skill after it does" "false|true|raftkit-dev:implement" \
+  "$(ev "$sp" 'const s=E.filter(e=>e.event==="raftkit_skill_invoked"); s[0].props.journey_start+"|"+s[1].props.journey_start+"|"+s[1].props.journey_skill')"
+
+# --- gates and blockers count only after a RaftKit skill ran in the session
+d="$(new_sandbox)"; sp="$d/spool/events.jsonl"
+hook "$d" stop '{"session_id":"j3","last_assistant_message":"**STOP** — approve to push, edit to change, or decline."}'
+hook "$d" stop '{"session_id":"j3","last_assistant_message":"NOT READY — 2 gap(s):"}'
+hook "$d" prompt '{"session_id":"j3","user_prompt":"go"}'
+expect_eq "a STOP line in a session with no RaftKit skill is not a gate" "raftkit_turn_completed,raftkit_turn_completed" \
+  "$(ev "$sp" 'E.filter(e=>e.event!=="raftkit_prompt_submitted").map(e=>e.event).join(",")')"
+expect_eq "  so the next prompt is not a reply" "false" "$(ev "$sp" 'E.at(-1).props.after_gate')"
+hook "$d" skill '{"session_id":"j3","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-pm:story"}}'
+hook "$d" stop '{"session_id":"j3","last_assistant_message":"**STOP** — approve to write, edit to change, or decline."}'
+expect_eq "  while the same line after a skill is one" "raftkit_gate_shown" "$(ev "$sp" 'E.at(-1).event')"
+
+# --- the per-run token delta rides on the stop event
+d="$(new_sandbox)"; tr="$d/t.jsonl"
+mkmsg() { node -e 'process.stdout.write(JSON.stringify({type:"assistant",timestamp:new Date().toISOString(),message:{id:process.argv[1],model:"claude-opus-5-5",usage:{input_tokens:+process.argv[2],output_tokens:0,cache_read_input_tokens:0,cache_creation_input_tokens:0}}})+"\n")' "$1" "$2"; }
+mkmsg a1 1000 > "$tr"
+hook "$d" skill "{\"session_id\":\"j4\",\"transcript_path\":\"$tr\",\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Skill\",\"tool_input\":{\"skill\":\"raftkit-dev:implement\"}}"
+mkmsg a2 250 >> "$tr"
+hook "$d" stop "{\"session_id\":\"j4\",\"transcript_path\":\"$tr\",\"last_assistant_message\":\"working\"}"
+expect_eq "the stop event carries the run's tokens since its skill was invoked" "1250|250" \
+  "$(ev "$d/spool/events.jsonl" 'const t=E.at(-1).props.tokens; t.total+"|"+t.run_total')"
+
+# --- listing coverage from the transcript's skill_listing attachment
+d="$(new_sandbox)"; tr="$d/t.jsonl"
+node -e 'process.stdout.write(JSON.stringify({type:"attachment",timestamp:"2026-09-23T00:00:00Z",attachment:{type:"skill_listing",names:["raftkit-dev:implement","raftkit-dev:fix"],content:"- raftkit-dev:implement: Take one story\n- raftkit-dev:fix"}})+"\n")' > "$tr"
+hook "$d" stop "{\"session_id\":\"j5\",\"transcript_path\":\"$tr\",\"last_assistant_message\":\"hi\"}"
+expect_eq "the stop event reports how many RaftKit listings kept a description" "2|1" \
+  "$(ev "$d/spool/events.jsonl" 'const l=E.at(-1).props.listing; l.raftkit+"|"+l.described.length')"
+
+# --- tool_failed: exit code, and at most 200 chars after its header
+d="$(new_sandbox)"; seed_skill "$d" j6
+# Prose, not one long run: the scrubber would redact a 600-char run as base64
+# and the length check would pass on the placeholder.
+long="$(printf 'build step failed %.0s' $(seq 1 40))"
+hook "$d" tool_failure "{\"session_id\":\"j6\",\"tool_name\":\"Bash\",\"error\":\"Exit code 2\\n$long\"}"
+expect_eq "tool_failed carries the exit code" "2" "$(last_event_field "$d/spool/events.jsonl" props.exit_code)"
+expect_eq "  and at most 200 chars of text, header excluded" "true" \
+  "$(ev "$d/spool/events.jsonl" 'const e=E.at(-1).props.error; e.length<=200 && e.length>0 && !e.includes("Exit code")')"
+hook "$d" tool_failure '{"session_id":"j6","tool_name":"Read","error":"File content exceeds maximum allowed tokens"}'
+expect_eq "a failure with no exit code keeps its text" "File content exceeds maximum allowed tokens|undefined" \
+  "$(ev "$d/spool/events.jsonl" 'E.at(-1).props.error+"|"+E.at(-1).props.exit_code')"
+
+# --- commit and PR events come from registered hooks
+node -e '
+  const h = JSON.parse(require("fs").readFileSync("plugins/raftkit-core/hooks/hooks.json", "utf8"));
+  const bash = (h.hooks.PostToolUse || []).filter((m) => m.matcher === "Bash").flatMap((m) => m.hooks || []);
+  const wired = (mode, rule) => bash.some((e) => (e.args || []).at(-1) === mode && e.if === rule && e.async === true);
+  process.exit(wired("commit", "Bash(git commit *)") && wired("pr", "Bash(gh pr create *)") ? 0 : 1);
+'
+check "commit and PR hooks are registered on Bash, filtered by if, async" ok $?
+d="$(new_sandbox)"
+hook "$d" commit '{"session_id":"j7","tool_name":"Bash","tool_input":{"command":"git add -A && git commit -m \"feat: x\""}}'
+expect_eq "a git commit is recorded" "raftkit_commit_made" "$(last_event_field "$d/spool/events.jsonl" event)"
+hook "$d" pr '{"session_id":"j7","tool_name":"Bash","tool_input":{"command":"gh pr create --fill"},"tool_response":{"stdout":"https://github.com/o/r/pull/42\n"}}'
+expect_eq "a raised PR is recorded with its number" "raftkit_pr_raised|42" \
+  "$(ev "$d/spool/events.jsonl" 'E.at(-1).event+"|"+E.at(-1).props.pr_number')"
+d="$(new_sandbox)"
+hook "$d" commit '{"session_id":"j8","tool_name":"Bash","tool_input":{"command":"git log --oneline"}}'
+hook "$d" pr '{"session_id":"j8","tool_name":"Bash","tool_input":{"command":"gh pr view 3"}}'
+expect_eq "a command that is not a commit or a PR records nothing" "no" "$([[ -f "$d/spool/events.jsonl" ]] && echo yes || echo no)"
+
+# --- every installed raftkit-* plugin reports its version
+d="$(new_sandbox)"
+hook "$d" session_start '{"session_id":"j9","hook_event_name":"SessionStart"}'
+expect_eq "events carry every raftkit-* plugin version" "$(node -p 'require("./plugins/raftkit-dev/.claude-plugin/plugin.json").version')" \
+  "$(last_event_field "$d/spool/events.jsonl" 'props.plugin_versions.raftkit-dev')"
+# ...including from the plugin cache, where each plugin sits under its version.
+cache="$(new_sandbox)"; mk="$cache/plugins/cache/raftkit"
+mkdir -p "$mk/raftkit-core/7.0.0" "$mk/raftkit-dev/7.1.0/.claude-plugin" "$mk/raftkit-dev/7.1.0/skills/implement" "$mk/raftkit-dev/0.1.0/.claude-plugin"
+cp -R plugins/raftkit-core/. "$mk/raftkit-core/7.0.0/"
+echo '{"name":"raftkit-dev","version":"7.1.0"}' > "$mk/raftkit-dev/7.1.0/.claude-plugin/plugin.json"
+echo '{"name":"raftkit-dev","version":"0.1.0"}' > "$mk/raftkit-dev/0.1.0/.claude-plugin/plugin.json"
+echo 'cached implement skill' > "$mk/raftkit-dev/7.1.0/skills/implement/SKILL.md"
+printf '{"version":2,"plugins":{"raftkit-dev@raftkit":[{"scope":"user","installPath":"%s","version":"7.1.0"}]}}' "$mk/raftkit-dev/7.1.0" \
+  > "$cache/plugins/installed_plugins.json"
+d="$(new_sandbox)"
+printf '{"session_id":"j10","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-dev:implement"}}' \
+  | CLAUDE_CONFIG_DIR="$cache" RAFTKIT_TELEMETRY_DIR="$d" node "$mk/raftkit-core/7.0.0/hooks/record.mjs" skill >/dev/null 2>&1
+expect_eq "from the plugin cache, the installed version of each plugin is reported" "7.1.0" \
+  "$(last_event_field "$d/spool/events.jsonl" 'props.plugin_versions.raftkit-dev')"
+expect_eq "  and the skill's sha12 is read from that version" "$(printf 'cached implement skill\n' | shasum -a 256 | cut -c1-12)" \
+  "$(last_event_field "$d/spool/events.jsonl" 'props.skill_sha12')"
 
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures test(s) failed"

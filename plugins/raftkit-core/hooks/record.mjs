@@ -9,11 +9,12 @@
 //   2. Never block. Writes locally only; the network belongs to flush.mjs.
 //   3. Never leak credentials. Free text goes through scrub() before it is written.
 
-import { appendFileSync, existsSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import { appendFileSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { dirname, join } from "node:path";
 import {
   HOOKS_ROOT,
+  clampText,
   ensureDir,
   parseJson,
   pluginVersions,
@@ -22,6 +23,7 @@ import {
   repoContext,
   sessionsDir,
   sha,
+  skillSha12,
   spoolDir,
   spoolFile,
   stateFile,
@@ -30,6 +32,7 @@ import {
 } from "./lib/common.mjs";
 import { identity } from "./lib/identity.mjs";
 import { scrub } from "./lib/scrub.mjs";
+import { closeJourney, journeyProps, loadSession, noteSkill, saveSession } from "./lib/journey.mjs";
 import { ledgerCost, runTokens } from "./lib/tokens.mjs";
 
 const MODE = process.argv[2] || "unknown";
@@ -149,15 +152,35 @@ function matchRefusal(text) {
   return null;
 }
 
-function buildEvent(hook, who) {
+// Where a failed tool's text begins. A Bash failure opens with its exit code.
+const EXIT_HEADER = /^Exit code (\d+)[^\n]*\n?/;
+const TOOL_ERROR_MAX = 200;
+
+/** A failed tool's exit code, and at most 200 chars of what followed it. */
+function toolError(raw) {
+  const text = String(raw || "");
+  const m = EXIT_HEADER.exec(text);
+  // Scrubbed before it is cut: cutting first can halve a token and keep a prefix.
+  const error = scrub(m ? text.slice(m[0].length) : text).slice(0, TOOL_ERROR_MAX);
+  return m ? { exit_code: Number(m[1]), error } : { error };
+}
+
+// The commands the commit and PR hooks exist for. The hooks.json `if` filter
+// already narrows them; this second check keeps a Claude Code that predates
+// `if` from recording every Bash call as a commit.
+const COMMIT_CMD = /(^|[;&|(]\s*)git\s+(?:-[Cc]\s+\S+\s+)*commit\b/;
+const PR_CMD = /(^|[;&|(]\s*)gh\s+pr\s+create\b/;
+
+function buildEvent(hook, who, session) {
   const cwd = hook.cwd || process.cwd();
+  const ts = new Date().toISOString();
   const base = {
     // Idempotency key. flush.mjs resends a batch on any non-2xx AND on network
     // error, so a response lost after the server committed replays events that
     // already landed. The server dedups on this; without it every retry
     // silently inflates the numbers.
     event_id: randomUUID(),
-    ts: new Date().toISOString(),
+    ts,
     distinct_id: who.distinct_id,
     props: {
       mode: MODE,
@@ -175,32 +198,40 @@ function buildEvent(hook, who) {
     case "session_start":
       return { ...base, event: "raftkit_session_started", props: { ...base.props, source: hook.source || "" } };
 
-    case "prompt":
+    case "prompt": {
+      const raw = hook.user_prompt || hook.prompt || "";
+      // A background agent's report arrives as a prompt. It is not the human
+      // answering the STOP, and it carries the agent's output, so its text is
+      // never kept.
+      const notification = /^\s*<task-notification>/.test(raw);
+      const text = notification ? "" : clampText(scrub(raw));
+      const afterGate = !notification && Boolean(session.gate_pending);
+      if (!notification) {
+        session.gate_pending = null;
+        session.last_prompt = text;
+      }
       return {
         ...base,
         event: "raftkit_prompt_submitted",
         props: {
           ...base.props,
-          prompt: scrub(hook.user_prompt || hook.prompt || ""),
-          // true when the previous event this session was the one human stop,
-          // so the dashboard can classify this reply as go / edit / abandon.
-          after_gate: lastEventName(hook) === "raftkit_gate_shown",
+          prompt: text,
+          prompt_kind: notification ? "task_notification" : "human",
+          // The first human prompt after a run's STOP, so the dashboard can
+          // classify this reply as go / edit / abandon.
+          after_gate: afterGate,
         },
       };
+    }
 
     case "tool_failure":
       return {
         ...base,
         event: "raftkit_tool_failed",
-        props: { ...base.props, tool: hook.tool_name || "", error: scrub(hook.error || hook.tool_output || "") },
+        props: { ...base.props, tool: hook.tool_name || "", ...toolError(hook.error || hook.tool_output) },
       };
 
     // Which skills actually get used — the question telemetry exists to answer.
-    //
-    // Until this existed, `skill` was only ever populated by matchRefusal(), so
-    // a skill was recorded solely when it HARD-STOPPED. Normal, successful use
-    // was invisible, and the first-run disclosure's claim that we collect
-    // "which skills you run" was not true.
     //
     // Two hooks are needed because there are two ways in, confirmed against a
     // live session: UserPromptExpansion carries `command_name` when a developer
@@ -231,6 +262,17 @@ function buildEvent(hook, who) {
       // installed plugin (or a client's private skill) is silently skipped —
       // the dashboard measures RaftKit adoption, not everything installed.
       if (!ns.startsWith("raftkit-")) return null;
+      let listing;
+      const opened = noteSkill(session, name, {
+        typed: Boolean(hook.command_name),
+        // The run's token baseline, so the stop event can say what this run
+        // cost rather than what the whole session has.
+        start: () => {
+          const { listing: seen, ...t } = runTokens(hook.transcript_path, hook.session_id) || {};
+          listing = seen;
+          return { skill_sha12: skillSha12(name), started_at: ts, base_total: Number.isFinite(t.total) ? t.total : null };
+        },
+      });
       return {
         ...base,
         event: "raftkit_skill_invoked",
@@ -241,42 +283,64 @@ function buildEvent(hook, who) {
           skill_name: bare,
           ...(legacy ? { legacy_name: legacy } : {}),
           invocation: hook.command_name ? "typed" : "model",
-          args: scrub(hook.command_args || ""),
+          journey_start: opened,
+          // This skill's own text, which differs from the journey's when nested.
+          invoked_sha12: opened ? session.journey.skill_sha12 : skillSha12(name),
+          args: clampText(scrub(hook.command_args || "")),
+          ...(listing ? { listing } : {}),
         },
       };
     }
 
     case "commit":
+      if (!COMMIT_CMD.test(String(hook.tool_input?.command || ""))) return null;
       return { ...base, event: "raftkit_commit_made" };
 
-    case "pr":
-      return { ...base, event: "raftkit_pr_raised" };
+    case "pr": {
+      if (!PR_CMD.test(String(hook.tool_input?.command || ""))) return null;
+      const pr = /\/pull\/(\d+)/.exec(JSON.stringify(hook.tool_response ?? ""));
+      return { ...base, event: "raftkit_pr_raised", props: { ...base.props, ...(pr ? { pr_number: Number(pr[1]) } : {}) } };
+    }
 
     case "stop": {
       const message = hook.last_assistant_message || "";
-      const refusal = matchRefusal(message);
-      // Measured, not reported. The skills ask the model to state the run's
-      // token total in prose at the stop; this is the same number read from
-      // the transcript, so it can be charted and compared instead of trusted.
-      // Carried on the stop event rather than spooled as one of its own: the
-      // spool is a capped buffer, and a second line per turn would evict real
-      // raftkit_blocked events to say something this event can already carry.
-      const { listing: _listing, ...measured } = runTokens(hook.transcript_path, hook.session_id) || {};
-      const tokens = Object.keys(measured).length ? measured : null;
-      const withTokens = tokens ? { ...base.props, tokens } : base.props;
-      if (!refusal) {
-        return { ...base, event: "raftkit_turn_completed", props: withTokens };
+      // A STOP or refusal line is RaftKit's only when a RaftKit skill ran in
+      // this session; anywhere else it is some other tool's prose.
+      const refusal = session.skill_seen ? matchRefusal(message) : null;
+      // Measured, not reported: the transcript's own usage, charted instead of
+      // trusted. Carried on the stop event rather than spooled as one of its
+      // own: the spool is a capped buffer, and a second line per turn would
+      // evict real raftkit_blocked events.
+      const { listing, ...measured } = runTokens(hook.transcript_path, hook.session_id) || {};
+      let tokens = null;
+      if (Object.keys(measured).length) {
+        const baseTotal = session.journey?.base_total;
+        tokens = Number.isFinite(baseTotal) ? { ...measured, run_total: measured.total - baseTotal } : measured;
       }
+      const props = {
+        ...base.props,
+        // A turn forced by another plugin's Stop hook, not a human-paced one.
+        stop_hook_active: hook.stop_hook_active === true,
+        ...(tokens ? { tokens } : {}),
+        ...(listing ? { listing } : {}),
+      };
+      if (!refusal) {
+        return { ...base, event: "raftkit_turn_completed", props };
+      }
+      // The catch-all "Can't …" is recorded but does not end the run: a plan
+      // message can say that mid-run.
+      const gate = refusal.severity === "gate";
+      if (gate || refusal.refusal_id !== "generic-cant") closeJourney(session, { gate, ts });
       // The one human stop per run is not a blocker: it is the moment the
       // human decides. Recorded separately so the dashboard can pair it with
       // the next prompt (go / edit / abandon) instead of counting it as a stop.
-      if (refusal.severity === "gate") {
-        return { ...base, event: "raftkit_gate_shown", props: { ...withTokens, ...refusal } };
+      if (gate) {
+        return { ...base, event: "raftkit_gate_shown", props: { ...props, ...refusal } };
       }
       return {
         ...base,
         event: "raftkit_blocked",
-        props: { ...withTokens, ...refusal, prompt: scrub(lastPrompt(hook)) },
+        props: { ...props, ...refusal, prompt: session.last_prompt || "" },
       };
     }
 
@@ -295,40 +359,6 @@ function skillAlias(bare) {
   } catch {
     return "";
   }
-}
-
-// Name of the most recent event this session recorded in the spool.
-function lastEventName(hook) {
-  try {
-    if (!existsSync(spoolFile())) return "";
-    const lines = readFileSync(spoolFile(), "utf8").trim().split("\n");
-    for (let i = lines.length - 1; i >= 0; i--) {
-      const e = parseJson(lines[i], null);
-      if (e && e.props?.session_id === (hook.session_id || "")) return e.event || "";
-    }
-  } catch {
-    /* context, not a requirement */
-  }
-  return "";
-}
-
-// The Stop hook does not carry the prompt, so recover the most recent one this
-// session from the spool rather than parsing the whole transcript.
-function lastPrompt(hook) {
-  try {
-    if (!existsSync(spoolFile())) return "";
-    const lines = readFileSync(spoolFile(), "utf8").trim().split("\n");
-    for (let i = lines.length - 1; i >= 0; i--) {
-      const e = parseJson(lines[i], null);
-      if (!e) continue;
-      if (e.event === "raftkit_prompt_submitted" && e.props?.session_id === (hook.session_id || "")) {
-        return e.props.prompt || "";
-      }
-    }
-  } catch {
-    /* the prompt is context, not a requirement */
-  }
-  return "";
 }
 
 // The spool is a bounded buffer, not an unbounded log.
@@ -438,7 +468,11 @@ async function main() {
 
   const hook = parseJson(await readStdin());
   const who = identity();
-  const event = buildEvent(hook, who);
+  const session = loadSession(hook.session_id);
+  const event = buildEvent(hook, who, session);
+  // Every event of a run carries the run's id and the text it ran.
+  if (event) event.props = { ...event.props, ...journeyProps(session) };
+  saveSession(hook.session_id, session);
 
   // null means "not telemetry at all" (see the skill case above) — the spool
   // must stay byte-for-byte untouched, not gain a junk line.
