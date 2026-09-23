@@ -1,6 +1,6 @@
 ---
 name: rules
-description: The RaftKit rules every role skill inherits — Asana GIDs, the Project Profile convention, one human stop per run, fetch-once for live reads, the Asana HTML floor, free-tier limits, the scope line, founder escalation and the estimation watermark. Read once per session before any RaftKit skill acts; role skills never restate these.
+description: The RaftKit rules every role skill loads first — Asana constants, one stop per run, fetch-once reads, free tier, scope line, founder escalation, estimate watermark.
 user-invocable: false
 ---
 
@@ -26,7 +26,7 @@ Can't read the live template — check your Asana connector, then retry.
 
 ## Fetch once per run
 
-Fetch the story, its `[AC]`s, the template and the profile once at the start and paste them into every subagent prompt; subagents inherit nothing. Reuse anything fetched earlier in this conversation unless you can no longer quote it verbatim. Re-read a task right before overwriting its description. Re-fetch a story's `[AC]`s once before auditing a diff.
+Fetch the story, its `[AC]`s, the template and the Profile once at the start. Subagents inherit nothing: brief each with only the slice it uses, never the template. A subagent missing a fact stops and asks through the parent. Reuse anything fetched earlier in this conversation unless you can no longer quote it verbatim. Re-read a task right before overwriting its description. Re-fetch a story's `[AC]`s once before auditing a diff. Which fields to ask for, which reads go out together: `references/asana-calls.md`.
 
 ## One stop per run
 
@@ -34,6 +34,12 @@ A run fetches, plans, builds and checks without waiting, then stops exactly once
 
 ```output
 **STOP** — approve to push, edit to change, or decline.
+```
+
+- Before any read, confirm this session has a tool for every write the run will make. One missing → the first reply says so and nothing is read:
+
+```output
+Can't write to <surface> from this session — connect <connector>, then re-run.
 ```
 
 - An explicit go pushes exactly what was shown. An edit is not a go: re-present the changed draft. A reply that only chooses among options the draft itself listed is a go, and pushes with those choices. Silence pushes nothing.

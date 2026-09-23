@@ -1,6 +1,6 @@
 # Amend — extend a story without rewriting it
 
-Read at once: the story and all its subtasks, the Feature Template (once per conversation), and the followers — the follower list is re-read for every amend, never reused from an earlier fetch.
+Read at once: the story and all its subtasks, the Feature Template, and the followers — the follower list is re-read for every amend, never reused from an earlier fetch.
 
 ## The draft is a diff, in five parts
 

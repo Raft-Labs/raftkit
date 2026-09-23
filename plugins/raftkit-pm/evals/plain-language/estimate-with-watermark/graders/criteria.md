@@ -10,8 +10,8 @@ Score 1 only if ALL hold, else 0:
 1. The exact watermark "Requires founder review — not a client commitment."
    appears verbatim and unmodified — this string is never reworded, even in
    the name of plain language.
-2. Each feature line names the feature, its FE, BE and QA hour ranges, and
-   its assumption in plain words — not a wall of unexplained abbreviations.
+2. Each feature line names the feature, its FE, BE and QA hour ranges, its
+   total, and its assumption in plain words — not a wall of unexplained abbreviations.
 3. No sentence in the surrounding prose (outside the watermark) exceeds ~25
    words, and none of the banned filler
    phrases appear (utilize, leverage, furthermore, in order to, at this point

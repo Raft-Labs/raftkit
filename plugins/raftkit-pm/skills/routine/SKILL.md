@@ -6,7 +6,7 @@ user-invocable: true
 
 # routine
 
-Two routines, one handover shape. `raftkit-core:rules` apply. This skill writes nothing and has no stop: its output is a prompt the PM pastes into Routines.
+Two routines, one handover shape. Load `raftkit-core:rules` first unless it is already in this conversation. This skill writes nothing and has no stop: its output is a prompt the PM pastes into Routines.
 
 | Routine | What it does each run | Prompt |
 |---|---|---|
@@ -34,4 +34,4 @@ Two routines, one handover shape. `raftkit-core:rules` apply. This skill writes 
 
 Nothing ran → created as Local. No recording found → the event was renamed; re-read the name from Fathom. Thin notes → restore the full-transcript line. An earlier task changed → restore the create-only line. Everything unassigned or a surface unreachable → reconnect that connector. Flags without citations, or tasks being created → restore the citation and read-only lines.
 
-- **Announce it** — `Using raftkit-pm:routine` in the first reply, once (`raftkit-core/cowork-telemetry`).
+- **Announce it** — `Using raftkit-pm:routine` in the first reply, once (`raftkit-core:rules`).

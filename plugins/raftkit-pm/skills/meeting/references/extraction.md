@@ -6,7 +6,7 @@
 - **Scope changes** — anything the client asked for beyond the current SOW or Profile scope. Never folded into the plan as agreed work.
 - **Action items** — a concrete next step someone owns. These become the task batch.
 
-Small talk, rehash and asides are not extracted.
+Small talk, rehash and asides are not extracted. Each action item is listed once: a repeat later in the call merges into the first mention's item.
 
 ## One citation form
 
@@ -23,7 +23,7 @@ SCOPE CHANGE — <what the client asked for>  [<meeting> @ <timestamp>]
   Routing: PM handles / escalate to founders if commercial
 ```
 
-Commercial means budget, contract, relationship risk or a client commitment such as a date. A scope change may also be an action item ("PM to quote the extra module") as long as it stays flagged.
+Commercial means budget, contract, relationship risk or a client commitment such as a date. A scope change that is also an action item ("PM to quote the extra module") is one flagged item, not two.
 
 ## Long transcripts
 

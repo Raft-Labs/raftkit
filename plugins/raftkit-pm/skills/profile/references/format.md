@@ -26,7 +26,3 @@ Roles and permissions — who is allowed to do what
 ```
 
 Facts render as lists (a bold label, then citation and date), never tables. Only two heading levels exist.
-
-## Delta comment
-
-One comment on the parent task per delta run, recording what changed, not the new content: source added, subtasks rewritten, then only the groups with entries — Changed (old tag → new tag, why, citation) · New · Conflicts added · Now-confirmed. Group labels as bold lines with lists under them. Asana keeps no history of an overwritten description; this comment is the only trace.

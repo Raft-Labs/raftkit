@@ -13,7 +13,7 @@
   "skills": {
     "raftkit-core/rules": {
       "skill_md": 700,
-      "total": 2000,
+      "total": 2200,
       "writes": false,
       "v2": true
     },

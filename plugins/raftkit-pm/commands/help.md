@@ -1,5 +1,5 @@
 ---
-description: How to use the raftkit-pm plugin — the PM workflow, every skill, and what to say to trigger it
+description: RaftKit PM router — onboard a project or build its profile → raftkit-pm:profile; write, amend, check or size a user story → raftkit-pm:story; estimate a feature list in hours → raftkit-pm:estimate; draft the weekly client update → raftkit-pm:status; turn a call into decisions and tasks → raftkit-pm:meeting; set up a meeting-notes or deprecation routine → raftkit-pm:routine.
 argument-hint: [skill name or question]
 ---
 

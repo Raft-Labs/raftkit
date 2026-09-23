@@ -1,5 +1,5 @@
 ---
-description: How to use the raftkit-dev plugin — the dev workflow, every skill, and what to say to trigger it
+description: RaftKit dev router — implement a story URL, raise the PR or simplify → raftkit-dev:implement; fix a bug, Sentry trace or incident → raftkit-dev:fix; set up or update a repo → raftkit-dev:setup; check a diff against its story → raftkit-dev:scope-guard; build a story's screens → raftkit-dev:ui; Hasura migrations → raftkit-dev:hasura; do the docs still match → raftkit-dev:docs.
 argument-hint: [skill name or question]
 ---
 
