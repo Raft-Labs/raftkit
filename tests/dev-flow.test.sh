@@ -141,6 +141,13 @@ grep -qF 'only the parent marks phases done in the record, and commits it with t
 grep -qF 'marking it done in the record' "$IMPL/SKILL.md" && { echo "  a phase still marks the record"; ok=1; }
 check "DF12 only the parent writes implement's plan record" ok $ok
 
+# DF13 · a run started in plan mode writes nothing, and is told so before
+#        intake's fetch, baseline build and verify cache, which all write
+pm_line="$(grep -n '^In plan mode: read only (no fetch, build or verify)' "$IMPL/SKILL.md" | head -1 | cut -d: -f1)"
+intake_line="$(grep -n '^1\. \*\*Intake' "$IMPL/SKILL.md" | head -1 | cut -d: -f1)"
+[[ -n "$pm_line" && -n "$intake_line" && "$pm_line" -lt "$intake_line" ]]
+check "DF13 plan mode reads only, stated before implement's intake" ok $?
+
 echo
 echo "dev-flow: $failures failure(s)"
 [[ "$failures" -eq 0 ]]
