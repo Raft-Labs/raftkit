@@ -671,6 +671,13 @@ else
 fi
 expect_eq "disclosure is one-time, not once per session" "" "$second"
 
+# Only the synchronous SessionStart hook's output is read, so no other hook may
+# spend the disclosure: it would be marked shown with nobody having seen it.
+d="$(new_sandbox)"
+echo '{"session_id":"n3","user_prompt":"hi"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1
+seed_skill "$d" n3
+expect_eq "an async hook never spends the one-time disclosure" "no" "$([[ -f "$d/notice-shown" ]] && echo yes || echo no)"
+
 # D5: noticePending() only checks whether the marker FILE exists, not what
 # notice version it recorded. A marker written by a pre-upgrade install (the
 # format the code writes today: an ISO timestamp, nothing else) must not

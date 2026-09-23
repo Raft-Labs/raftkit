@@ -99,11 +99,9 @@ function flushWarningDue() {
  * The SessionStart entry in hooks.json is deliberately NOT async for the same
  * reason — an async hook's stdout is thrown away and only its exit code read.
  */
-function emitSessionMessages({ withWarning }) {
+function emitSessionMessages() {
   const notice = noticePending();
-  // Only the synchronous SessionStart hook's output is ever read; marking the
-  // warning shown from an async hook would silence it unseen for a day.
-  const warning = withWarning ? flushWarningDue() : "";
+  const warning = flushWarningDue();
   const text = [notice ? NOTICE : "", warning].filter(Boolean).join("\n\n");
   if (!text) return;
   try {
@@ -492,8 +490,10 @@ async function main() {
   }
 
   // The disclosure is surfaced once, then never again; the stuck-delivery
-  // line at most once a day. Both only at session start, where they render.
-  emitSessionMessages({ withWarning: MODE === "session_start" });
+  // line at most once a day. Both only from the SessionStart hook, the one
+  // synchronous record hook: any other hook's output is discarded, and
+  // marking either shown there would spend it unseen.
+  if (MODE === "session_start") emitSessionMessages();
 }
 
 // Belt and braces: an unhandled rejection or a synchronous throw anywhere above
