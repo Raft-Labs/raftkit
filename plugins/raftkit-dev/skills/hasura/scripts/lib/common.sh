@@ -15,14 +15,20 @@ find_repo_root() {
 }
 
 # The Hasura project directory — DISCOVERED, never assumed to be
-# services/hasura. Priority: an explicit $HASURA_ROOT override > a
-# config.yaml at the repo root or one level down (the same signal
-# detect-hasura.mjs uses) > services/hasura or hasura/, kept last for exact
+# services/hasura. Priority: an explicit $HASURA_ROOT override (a relative one
+# is relative to the repo root, as the conventions cache records it) > a Hasura
+# config.yaml at the repo root (version:/metadata_directory:/endpoint:, the
+# test detect-hasura.mjs applies), then any */, then */*/ config.yaml (the same
+# scan detect-hasura.mjs uses) > services/hasura or hasura/, kept last for exact
 # compatibility with repos shaped like the project this skill was ported from.
 find_hasura_root() {
   local repo_root="$1"
-  if [ -n "${HASURA_ROOT:-}" ]; then printf '%s' "$HASURA_ROOT"; return; fi
-  [ -f "$repo_root/config.yaml" ] && { printf '%s' "$repo_root"; return; }
+  if [ -n "${HASURA_ROOT:-}" ]; then
+    case "$HASURA_ROOT" in /*) printf '%s' "$HASURA_ROOT" ;; *) printf '%s' "$repo_root/$HASURA_ROOT" ;; esac
+    return
+  fi
+  grep -qE '^[[:space:]]*version[[:space:]]*:|metadata_directory[[:space:]]*:|endpoint[[:space:]]*:' "$repo_root/config.yaml" 2>/dev/null \
+    && { printf '%s' "$repo_root"; return; }
   local d
   for d in "$repo_root"/*/ "$repo_root"/*/*/; do
     [ -f "${d}config.yaml" ] && { printf '%s' "${d%/}"; return; }

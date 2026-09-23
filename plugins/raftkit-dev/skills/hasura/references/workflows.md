@@ -6,19 +6,16 @@ Use the project's discovered tenant column (example below uses `org_id` →
 `orgs.id`; substitute the real one):
 
 ```bash
-.claude/skills/hasura/scripts/new-migration.sh create-table meal_plans \
+scripts/new-migration.sh create-table meal_plans \
     --col "org_id:uuid:not_null:fk=orgs.id" \
     --col "title:text:not_null" \
     --col "scheduled_for:timestamptz"
 ```
 
-The scaffolder will:
-1. Refresh the schema snapshot and check `<schema-snapshot>` for collisions.
-2. Compute a race-safe timestamp.
-3. Render `up.sql`, `down.sql`, and `public_meal_plans.yaml` from templates.
-4. Print all three for review and ask "Write these files?".
-5. On confirmation: write the migration folder + metadata YAML; print
-   follow-up instructions.
+The scaffolder refreshes the snapshot, checks it for collisions, picks a
+race-safe timestamp and renders `up.sql`, `down.sql` and
+`public_meal_plans.yaml`: `--dry-run` (the default) prints them, `--write`
+writes them and prints the follow-up steps.
 
 Then (example paths):
 ```bash
@@ -33,14 +30,14 @@ git commit -m "feat(hasura): add meal_plans table"
 ### B. Create an enum table
 
 ```bash
-.claude/skills/hasura/scripts/new-migration.sh create-enum-table event_status \
+scripts/new-migration.sh create-enum-table event_status \
     --values "draft,published,cancelled,archived"
 ```
 
 ### C. Add a column to an existing table
 
 ```bash
-.claude/skills/hasura/scripts/new-migration.sh add-column meal_plans notes text
+scripts/new-migration.sh add-column meal_plans notes text
 ```
 
 The scaffolder refreshes the snapshot, verifies the table exists and the
@@ -55,7 +52,7 @@ Stage names are the project's own (example: `development`):
 ```bash
 make hasura-env stage=development        # one-time per session: decrypt env
 
-.claude/skills/hasura/scripts/hasura-query.sh \
+scripts/hasura-query.sh \
     --stage=development \
     --role=user \
     --user-id=00000000-0000-0000-0000-000000000001 \
@@ -119,7 +116,6 @@ Then:
 2. If the change touches table shape: hand-author/refresh the matching
    `<hasura-root>/metadata/databases/<db>/tables/public_<table>.yaml`
    (the CLI does **not** touch metadata — only the typed scaffolders do).
-   Admin role permissions remain forbidden (rule #6).
 3. Apply + verify + commit:
    ```bash
    make hasura-migrate stage=local
@@ -129,14 +125,6 @@ Then:
            <schema-snapshot>
    git commit -m "feat(hasura): <message>"
    ```
-
-**When to reach for this vs. the scaffolders:**
-- Reach for the migrate-create target when the change is **not table-shape
-  DDL** — pure DML, custom functions/views/triggers beyond the
-  `function-trigger` scaffold, multi-step transactional migrations, or
-  `--from-server` introspection imports.
-- Otherwise prefer the typed scaffolders — they get the permission YAML,
-  collision check, and naming right for free.
 
 **Advanced CLI invocations** (typically not wrapped by the Makefile —
 invoke `hasura` directly only if you genuinely need these, and still apply
@@ -227,10 +215,5 @@ Role names and the tenant column are the project's discovered conventions;
 | both | hybrid (`_or` of the two) |
 | neither | deny-by-default (`id = 00000000-0000-0000-0000-000000000000`) with TODO to replace |
 
-A machine-to-machine role (example: `service`) gets empty filter `{}`. An
-unauthenticated role (example: `anonymous`) is omitted for regular tables.
-`admin` role is **never** declared. Enum tables are select-only. Soft-delete
-projects filter `deleted_at` (e.g. `deleted_at: {_is_null: true}`) in every
-user-visible permission.
-
-See `references/permissions-patterns.md` for the full filter shapes.
+Role defaults (service, anonymous, never `admin`, soft-delete filters) and the
+full filter shapes are in `references/permissions-patterns.md`.
