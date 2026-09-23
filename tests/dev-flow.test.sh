@@ -131,6 +131,16 @@ fi
 grep -qF '`raftkit-dev:verifier`' "$IMPL/references/review.md" || { echo "  review.md does not dispatch the verifier"; ok=1; }
 check "DF11 the verifier agent is Sonnet, read-and-run only, and dispatched by review.md" ok $ok
 
+# DF12 · the plan record has one writer. Parallel phases committing the same
+#        file race on the index or conflict on merge-back, and a third file
+#        breaks working-agreement rule 2, so no phase edits it; the parent
+#        marks phases done (resume after /clear reads it) and commits it once
+ok=0
+grep -qF 'only the parent marks phases done in the record, and commits it with the review fixes' "$IMPL/SKILL.md" \
+  || { echo "  the parent is not the record's only writer"; ok=1; }
+grep -qF 'marking it done in the record' "$IMPL/SKILL.md" && { echo "  a phase still marks the record"; ok=1; }
+check "DF12 only the parent writes implement's plan record" ok $ok
+
 echo
 echo "dev-flow: $failures failure(s)"
 [[ "$failures" -eq 0 ]]
