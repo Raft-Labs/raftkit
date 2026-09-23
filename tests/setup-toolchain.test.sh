@@ -223,6 +223,13 @@ grep -q 'scripts/check-engines.mjs' "$SETUP/SKILL.md" 2>/dev/null \
   && grep -qi 'Setup continues without it' "$SETUP/SKILL.md" 2>/dev/null \
   && ! grep -q 'claude plugin list --json' "$SETUP/SKILL.md"
 check "S40 the engine check runs through check-engines.mjs, names a missing engine and continues" ok $?
+UI=plugins/raftkit-dev/skills/ui
+C4='Load `raftkit-core:rules` first unless it is already in this conversation.'
+grep -qF "$C4" "$SETUP/SKILL.md" && grep -qF "$C4" "$UI/SKILL.md" && ! grep -qF '`raftkit-core:rules` apply' "$SETUP/SKILL.md" "$UI/SKILL.md"
+check "S47 setup and ui load raftkit-core:rules with the exact C4 sentence" ok $?
+grep -qF '`frontend-design:frontend-design` loads only when the story links no designs and the Project Profile defines no visual system' "$UI/SKILL.md" \
+  && [[ "$(grep -r 'frontend-design' "$UI" | wc -l | tr -d ' ')" -eq 1 ]]
+check "S48 ui loads frontend-design only without linked designs and without a Profile visual system" ok $?
 
 # ---- E1–E12 · check-engines.mjs: engines, blocking Stop hooks, unused plugins --
 ENG=$SETUP/scripts/check-engines.mjs
