@@ -2,13 +2,7 @@
 
 ## Squash target
 
-Resolved live, in order: the repo's own branching or release doc, then the release-train doc named in `raftkit-core:rules`. Neither names one → stop:
-
-```output
-no documented squash target — name one in the repo docs
-```
-
-Never target `main` directly, and never bake a branch name into this skill. One PR per story; stacked PRs are out of scope.
+Resolved from the repo's own docs before the first reply (`implement` step 1, `fix` before its step 1), where an undocumented one stops the run. Never target `main` directly. One PR per story; stacked PRs are out of scope.
 
 ## Before the raise
 
@@ -18,15 +12,16 @@ The raise is blocked while scope is open. Inside a full run the review pass has 
 
 The title is the future squash commit and therefore the changelog line: `type(scope): summary`, conventional-commit type, imperative summary, no trailing period, within the repo's commitlint header length or 100 characters. A failing draft title is never raised — propose a compliant one, say why the draft failed, and use the approved one.
 
-## Description — five sections, all present
+## Description — six sections, all present
+
+The repo's own PR template, when it has one, sets the headings and their order; every section below still appears in it.
 
 1. **Story link**, plus the permalink of any clarification logged this run.
 2. **Acceptance criteria** as a checklist, taken from the live story.
 3. **Out of scope**, each item confirmed not built.
-4. **Tests** — what ran and the result.
+4. **Tests** — what ran, the result, and `[AC]s with tests n/m`.
 5. **Docs** — the result from `raftkit-dev:docs`, verbatim, with the change set it inspected. Never fabricated to fill the section. `Docs: not evaluated` blocks the raise the same way an empty section does: run the check with the real change set first.
-
-An empty section blocks the raise, and so does `Docs: not evaluated` — run the check against the real change set first.
+6. **Review findings** — one line per finding, `fixed in <sha>` or `answered — <reason>`, or `none`.
 
 On the incident path there is no story: sections 1 to 3 become the incident source with its raw artifact, the containment scope as the change contract, and the permanent regression test. Nothing else downgrades — a branch with neither a story nor an incident trace is not raisable.
 
@@ -36,7 +31,7 @@ The push runs the repo's pre-push hook. Never `--no-verify`. A rejection surface
 
 ## Close-out
 
-Two Asana writes, both in the one stop's draft: tick `Development`, and comment the PR link. `[AC]` and `Testing` ticks belong to QA, closing belongs to a human, and merging belongs to a human. If a write fails, the PR still stands: give the story URL, the PR URL and the tick to do by hand.
+Two Asana writes, both in the one stop's draft: tick `Development`, and comment the PR link. If a write fails, the PR still stands: give the story URL, the PR URL and the tick to do by hand.
 
 ## Bug path
 
