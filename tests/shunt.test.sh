@@ -37,6 +37,7 @@ seq 1 900 > "$REPO/src/my-skills-notes.md"   # NOT inside skills/ — must shunt
 printf 'a\0b\n%.0s' $(seq 1 900) > "$REPO/src/blob.bin"
 seq 1 500 > "$REPO/src/exact.ts"          # exactly at the default threshold
 seq 1 900 > "$TEST_ROOT/outside-big.ts"   # oversized, but not in the repo
+mkdir -p "$REPO/clients/acme.bank" && seq 1 900 > "$REPO/clients/acme.bank/q3-layoffs"   # no extension, dotted directory
 
 expect_eq() { # <name> <expected> <actual>
   if [[ "$2" == "$3" ]]; then
@@ -206,6 +207,14 @@ expect_eq "a deny is recorded" "raftkit_shunt" \
 expect_eq "the deny records the lines it avoided" "900" \
   "$(node -e 'const fs=require("fs");const p=process.argv[1]+"/spool/events.jsonl";
      process.stdout.write(String(JSON.parse(fs.readFileSync(p,"utf8").trim().split("\n").pop()).props.lines_avoided));' "$d")"
+last_ext() { node -e 'const fs=require("fs");const p=process.argv[1]+"/spool/events.jsonl";
+  process.stdout.write(JSON.stringify(fs.existsSync(p)?JSON.parse(fs.readFileSync(p,"utf8").trim().split("\n").pop()).props.path_ext:null));' "$1"; }
+expect_eq "the deny records the file's extension" '".ts"' "$(last_ext "$d")"
+# Every session sends this record, so it carries the extension and never a path.
+dx="$TEST_ROOT/tele-noext"; mkdir -p "$dx"
+printf '%s' "$(read_payload "$REPO/clients/acme.bank/q3-layoffs")" |
+  env RAFTKIT_TELEMETRY_DIR="$dx" PATH="$TEST_ROOT/stub:$PATH" node "$SHUNT" >/dev/null 2>&1
+expect_eq "a file with no extension under a dotted directory records no path fragment" '""' "$(last_ext "$dx")"
 
 d2="$TEST_ROOT/tele-allow"; mkdir -p "$d2"
 printf '%s' "$(read_payload "$REPO/src/small.ts")" | env RAFTKIT_TELEMETRY_DIR="$d2" node "$SHUNT" >/dev/null 2>&1

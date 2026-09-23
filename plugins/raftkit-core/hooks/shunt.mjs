@@ -17,7 +17,7 @@
 
 import { appendFileSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import { isAbsolute, relative, resolve, sep } from "node:path";
+import { extname, isAbsolute, relative, resolve, sep } from "node:path";
 import { ensureDir, parseJson, readStdin, repoContext, spoolDir, spoolFile, telemetryDisabled } from "./lib/common.mjs";
 import { identity } from "./lib/identity.mjs";
 import {
@@ -157,7 +157,7 @@ async function main() {
   deny(denyReason(rel.split(sep).join("/"), shown, minLines));
   recordDeny(hook, root, {
     tool: hook.tool_name || "",
-    path_ext: rel.includes(".") ? rel.slice(rel.lastIndexOf(".")) : "",
+    path_ext: extname(rel).slice(0, 16), // the file name's extension only, never a directory
     lines: Number.isFinite(lines) ? lines : -1,
     threshold: minLines,
     lines_avoided: Number.isFinite(lines) ? lines : 0,
