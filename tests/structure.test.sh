@@ -23,8 +23,8 @@ jsonq() { node -e 'const j=JSON.parse(require("fs").readFileSync("tests/budgets.
 ctoks() { node -e 'let s="";process.stdin.setEncoding("utf8").on("data",d=>s+=d).on("end",()=>process.stdout.write(String(Math.ceil([...s].length/4))))'; }
 words() { cat "$@" 2>/dev/null | wc -w | tr -d ' '; }
 tokens() { cat "$@" 2>/dev/null | ctoks; }
-# assets/ holds payloads shipped verbatim (templates, prompts), not instructions
-# the model reads to act — they are excluded from the instruction budget.
+# assets/ holds payloads shipped verbatim into a client repo, outside the skill's
+# own budget; the ones a model reads (all but templates/) are budgeted per file.
 mdcat() { find "$1" -name '*.md' -type f -not -path '*/assets/*' -print0 | xargs -0 cat 2>/dev/null; }
 mdwords() { mdcat "$1" | wc -w | tr -d ' '; }
 mdtokens() { mdcat "$1" | ctoks; }
@@ -154,8 +154,9 @@ if [[ "$strict" == true ]]; then
   check "S17 strict: GIDs appear only in raftkit-core/skills/rules" ok $?
 fi
 
-# Model-read files outside any skill's budget carry their own entry in `files`.
-budgeted="$( { ls plugins/*/commands/*.md 2>/dev/null; node -e 'console.log(Object.keys(JSON.parse(require("fs").readFileSync("tests/budgets.json","utf8")).files||{}).join("\n"))'; } | grep . | sort -u)"
+# Model-read files outside any skill's budget carry their own entry in `files`:
+# the commands and every assets/ markdown file except the doc templates.
+budgeted="$( { ls plugins/*/commands/*.md 2>/dev/null; find plugins -path '*/assets/*' -name '*.md' -type f -not -path '*/assets/templates/*'; node -e 'console.log(Object.keys(JSON.parse(require("fs").readFileSync("tests/budgets.json","utf8")).files||{}).join("\n"))'; } | grep . | sort -u)"
 nfiles=0
 for f in $budgeted; do
   nfiles=$((nfiles + 1))
