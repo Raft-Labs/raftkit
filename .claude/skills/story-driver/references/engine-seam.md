@@ -4,6 +4,11 @@
 own core skills each own a slice. Reach for them by name — do not reimplement
 their guidance inline.
 
+Load plugin-dev's skills and skill-creator only when the story scaffolds a new
+plugin or skill. An edit to an existing budgeted skill is made in place, within
+its `tests/budgets.json` entry, with neither loaded; the reviewer agents still
+run.
+
 ## plugin-dev — scaffolding + QA
 
 Owns the plugin/skill file structure and the structural QA gate.
@@ -25,7 +30,7 @@ Owns the plugin/skill file structure and the structural QA gate.
 
 Owns skill *content* quality and description optimization.
 
-- Authoring guidance (use this on every build): progressive disclosure (SKILL.md
+- Authoring guidance (new skills only): progressive disclosure (SKILL.md
   < ~500 lines, push detail into `references/`), imperative instructions, explain
   the *why*, a `description` that is third-person and specific enough to trigger
   reliably.

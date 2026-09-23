@@ -17,9 +17,10 @@ writes (`raftkit-core:rules`).
 
 ## What this skill assumes
 
-- `skill-creator` and `plugin-dev` are installed (the build engines).
 - `raftkit-core` is installed — its `rules` skill carries the GIDs and the rules
   this skill obeys.
+- `plugin-dev` is installed — its reviewer agents check every build.
+- `skill-creator` is installed when the story scaffolds a new plugin or skill.
 - The Asana connector is reachable.
 
 If any is missing, stop and say which. For a missing constant or an unreachable
@@ -80,14 +81,16 @@ pass (real TDD). State explicitly what stays out, echoing the exclusion list.
 Show the plan and start building. It is a record, not a gate: interrupt if it is
 wrong.
 
-### 5 · Build — engines together
+### 5 · Build
 See `references/engine-seam.md` for who owns what.
 - Create the branch first: `feat/<skill-name>` (see git-pr-flow).
-- **plugin-dev** scaffolds the plugin/skill files in-place (`plugin-structure` +
-  `skill-development`; `create-plugin` only for a brand-new multi-part plugin).
-- **skill-creator** authoring guidance drafts the SKILL.md content in the house
-  style — third-person `description`, progressive disclosure, explain the *why*,
-  no cached template text.
+- **New plugin or skill only:** **plugin-dev** scaffolds the files in-place
+  (`plugin-structure` + `skill-development`; `create-plugin` only for a
+  brand-new multi-part plugin), and **skill-creator** authoring guidance drafts
+  the SKILL.md content in the house style — third-person `description`,
+  progressive disclosure, explain the *why*, no cached template text.
+- **Edit to an existing skill:** edit in place within its `tests/budgets.json`
+  entry; load neither plugin-dev's skills nor skill-creator.
 - QA, in parallel: dispatch `plugin-dev:plugin-validator` with
   `model: "haiku"` when a plugin changed and `plugin-dev:skill-reviewer` with
   `model: "sonnet"` when a SKILL.md changed; fix what they flag.
