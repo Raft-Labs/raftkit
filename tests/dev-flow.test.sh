@@ -33,6 +33,24 @@ for f in "$IMPL/SKILL.md" "$FIX/SKILL.md" "$SG/SKILL.md" "$DOCS/SKILL.md"; do
 done
 check "DF1 implement, fix, scope-guard and docs load raftkit-core:rules first" ok $ok
 
+# DF2 · the squash target is settled in turn 1: its stop sits in intake, before
+#       readiness, and nothing points at a release-train doc no repo carries
+stop_line="$(grep -n '^no documented squash target — ' "$IMPL/SKILL.md" | head -1 | cut -d: -f1)"
+ready_line="$(grep -n '^2\. \*\*Check readiness' "$IMPL/SKILL.md" | head -1 | cut -d: -f1)"
+[[ -n "$stop_line" && -n "$ready_line" && "$stop_line" -lt "$ready_line" ]] \
+  && ! grep -rqi 'release-train doc\|release-train convention' "$IMPL" \
+  && ! grep -qF 'no documented squash target' "$IMPL/references/pr.md"
+check "DF2 implement stops on an undocumented squash target at intake, not at the raise" ok $?
+
+# DF3 · the plan record implement writes is exempt in scope-guard (same path)
+plan_path="$(grep -o 'Write the plan to `[^`]*`' "$IMPL/SKILL.md" | head -1 | sed 's/.*`\(.*\)`/\1/')"
+[[ -n "$plan_path" ]] && grep -F "\`$plan_path\`" "$SG/SKILL.md" | grep -qF 'always in scope'
+check "DF3 scope-guard never flags implement's plan record (${plan_path:-no path found})" ok $?
+
+# DF4 · scope-guard reads out-of-scope where the live Feature Template puts it
+grep -qF '`Do NOT build`' "$SG/SKILL.md"
+check "DF4 scope-guard reads the out-of-scope list from the Do NOT build line" ok $?
+
 echo
 echo "dev-flow: $failures failure(s)"
 [[ "$failures" -eq 0 ]]

@@ -2,13 +2,7 @@
 
 ## Squash target
 
-Resolved live, in order: the repo's own branching or release doc, then the release-train doc named in `raftkit-core:rules`. Neither names one → stop:
-
-```output
-no documented squash target — name one in the repo docs
-```
-
-Never target `main` directly, and never bake a branch name into this skill. One PR per story; stacked PRs are out of scope.
+Resolved from the repo's own docs at implement's intake (step 1), where an undocumented one stops the run; a standalone raise and a `fix` run resolve it the same way first. Never target `main` directly, and never bake a branch name into this skill. One PR per story; stacked PRs are out of scope.
 
 ## Before the raise
 
@@ -20,13 +14,13 @@ The title is the future squash commit and therefore the changelog line: `type(sc
 
 ## Description — five sections, all present
 
+The repo's own PR template, when it has one, sets the headings and their order; every section below still appears in it.
+
 1. **Story link**, plus the permalink of any clarification logged this run.
 2. **Acceptance criteria** as a checklist, taken from the live story.
 3. **Out of scope**, each item confirmed not built.
 4. **Tests** — what ran and the result.
 5. **Docs** — the result from `raftkit-dev:docs`, verbatim, with the change set it inspected. Never fabricated to fill the section. `Docs: not evaluated` blocks the raise the same way an empty section does: run the check with the real change set first.
-
-An empty section blocks the raise, and so does `Docs: not evaluated` — run the check against the real change set first.
 
 On the incident path there is no story: sections 1 to 3 become the incident source with its raw artifact, the containment scope as the change contract, and the permanent regression test. Nothing else downgrades — a branch with neither a story nor an incident trace is not raisable.
 

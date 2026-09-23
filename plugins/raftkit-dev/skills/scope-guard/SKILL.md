@@ -12,7 +12,7 @@ One branch, one story, two lists. Load `raftkit-core:rules` first unless it is a
 
 ## Inputs
 
-The story and its `[AC]` subtasks including the out-of-scope section (matched on its heading, not a number), the plan record at `docs/specs/<branch>.md` when one exists, and the diff. Injected inputs are used as given and never re-fetched. Standalone: no story named → ask, never guess.
+The story and its `[AC]` subtasks, its out-of-scope list (the `Do NOT build` line under the story's Scope section), the plan record at `docs/specs/<branch>.md` when one exists, and the diff. Injected inputs are used as given and never re-fetched. Standalone: no story named → ask, never guess.
 
 ```output
 Can't read the story — check your Asana connector, then retry.
@@ -29,7 +29,7 @@ git fetch origin <base-branch>
 git diff "$(git merge-base FETCH_HEAD HEAD)" HEAD
 ```
 
-Walk it file group by file group. Each changed item is in scope when it maps to an `[AC]`, to a clarification recorded in the plan record, or to a documentation file that record lists. An item matching the story's out-of-scope list is an automatic BEYOND flag, not a judgment. Anything else is BEYOND. Then walk the other way: an `[AC]` with no corresponding change or test is MISSING. An empty diff is not a pass — every `[AC]` is MISSING.
+Walk it file group by file group. Each changed item is in scope when it maps to an `[AC]`, to a clarification recorded in the plan record, or to a documentation file that record lists; `docs/specs/<branch>.md` itself is always in scope. An item matching the out-of-scope list is an automatic BEYOND flag, not a judgment. Anything else is BEYOND. Then walk the other way: an `[AC]` with no corresponding change or test is MISSING. An empty diff is not a pass — every `[AC]` is MISSING.
 
 ## Output
 
