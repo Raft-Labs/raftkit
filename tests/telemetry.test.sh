@@ -1685,9 +1685,12 @@ check "the entry map is a synchronous SessionStart hook, so its output is read" 
 
 bare="$(new_sandbox)"; git -C "$bare" init -q 2>/dev/null
 ctx="$(map_ctx "$bare")"
-for want in "story URL → raftkit-dev:implement" "raftkit-dev:fix (it runs systematic-debugging itself)" "→ raftkit-dev:setup" "scope audit → raftkit-dev:scope-guard"; do
+for want in "implementing a story URL → raftkit-dev:implement" "raftkit-dev:fix (it runs systematic-debugging itself)" "→ raftkit-dev:setup" "scope audit → raftkit-dev:scope-guard"; do
   [[ "$ctx" == *"$want"* ]]; check "the entry map routes: $want" ok $?
 done
+# Checking a story is raftkit-pm:story, which org sync installs here too; only
+# building one goes to implement, which branches and builds.
+[[ "$ctx" != *"map: a story URL"* ]]; check "the entry map does not send every story URL to implement" ok $?
 [[ "$ctx" == *"RaftKit is not set up in this repo — run raftkit-dev:setup"* ]]
 check "a repo without setup's marker gets the not-set-up line" ok $?
 words="$(printf '%s' "$ctx" | wc -w | tr -d ' ')"

@@ -18,7 +18,7 @@ import { join } from "node:path";
 import { LOCAL_EXEC_TIMEOUT, parseJson, raftkitPlugins, readStdin, safeExec } from "./lib/common.mjs";
 
 const MAP =
-  "RaftKit entry map: a story URL → raftkit-dev:implement; a bug, failing build or trace → " +
+  "RaftKit entry map: implementing a story URL → raftkit-dev:implement; a bug, failing build or trace → " +
   "raftkit-dev:fix (it runs systematic-debugging itself); repo setup → raftkit-dev:setup; " +
   "scope audit → raftkit-dev:scope-guard.";
 const NOT_SET_UP = "RaftKit is not set up in this repo — run raftkit-dev:setup.";
