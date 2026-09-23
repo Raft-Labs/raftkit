@@ -9,7 +9,7 @@ and their formatting is inconsistent.
 - A task link or GID (the story) — or a board task **name** to resolve by search
   (SKILL.md Step 1: one match → confirm and proceed; zero/many → ask).
 - The live task **plus all its subtasks**, fetched through the Asana connector.
-- The live User Story Template (GID from `raftkit-core:rules`) as the format
+- The live Feature Template (constant in `raftkit-core:rules`) as the format
   reference — read every run, never from memory.
 
 ## Subtasks
@@ -29,19 +29,22 @@ API returns them. Filter by prefix / exact name; never rely on position.
 
 ## Description sections
 
-The description is the story body in the house template shape. Section headings
-are plain numbered lines and **numbering intentionally skips 10** (…9 → 11 → 12).
-Punctuation varies between template and story (ASCII `-` vs em-dash `—`); do not
-match on punctuation. The two sections that carry scope:
+The description is the story body in the Feature Template shape: a Header, then
+sections numbered `1 ·` to `12 ·`. Punctuation varies between template and story
+(ASCII `-` vs em-dash `—`, `·` vs `.`); match on the words, not the punctuation.
+The parts that carry scope:
 
-- **Story header** — the `STORY:` line carries the full title; `Surface(s)`,
-  `Actor / role`, `Who is allowed / not allowed`, `Priority`/`Type`, and
-  `Depends on / related`.
-- **Section 9, "Out of scope / non-goals"** — the **hard exclusion list**.
+- **Header** — the `STORY:` line carries the full title; `Surface(s)`,
+  `Actor / role`, `Allowed / blocked`, `Priority`/`Type`,
+  `Depends on / related`, and `Touches these modules`.
+- **`3 · Scope` → the `Do NOT build:` line** — the **hard exclusion list**.
   Anything here must NOT appear in the diff. Treat it as a fail condition, not a
-  suggestion.
+  suggestion. A story with no `Do NOT build:` line gets a question; never infer
+  the exclusions.
+- **`10 · Open questions & TBCs`** — every `[Unresolved]` item is a question; the
+  run does not build past it.
 
-WEESLD (section 6) rows — Waiting, Empty, Error (most important), Success,
+WEESLD (`7 · Edge cases`) rows — Waiting, Empty, Error (most important), Success,
 Limits, Default values — each usually maps to one or more `[AC]`s to cover.
 
 ## Deriving the build target
@@ -67,6 +70,6 @@ target.
 - STORY title + surface + actor + permission boundary.
 - Target: `<plugin>/<skill>` (or "executable — CI/script/hook").
 - The `[AC]` list, verbatim — this is the pass list.
-- The Out-of-scope list, verbatim — this is the exclusion list.
-- Any `❓`/unresolved facts or source conflicts the story flags — stop and ask,
-  never guess (`raftkit-core:rules`: no invented facts).
+- The `Do NOT build:` line, verbatim — this is the exclusion list.
+- Any `[Unresolved]` item or source conflict — stop and ask, never guess
+  (`raftkit-core:rules`: no invented facts).

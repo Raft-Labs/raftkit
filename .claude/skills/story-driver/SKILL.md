@@ -49,21 +49,23 @@ with no GID, **search the raftkit board for that name**, and if exactly one task
 matches, confirm the match in one line and proceed; if zero or several match, ask
 which. Never invent a target.
 
-Then resolve the workspace + template GIDs from `raftkit-core:rules` and fetch the
-story **and all its subtasks** live via the Asana connector, plus the live User
-Story Template as the format reference. Read templates live every run — never from
-memory or from this repo.
+Then resolve the workspace GID and the **Feature Template** constant from
+`raftkit-core:rules` and fetch the story **and all its subtasks** live via the
+Asana connector, plus the live Feature Template as the format reference. Read
+templates live every run — never from memory or from this repo.
 
 ### 2 · Understand + scope contract
 Parse the story per `references/story-parsing.md` and restate in chat:
 - STORY title, surface, actor, permission boundary;
 - the derived target `<plugin>/<skill>` (or "executable — CI/script/hook");
 - the `[AC]` list verbatim — the **pass list**;
-- the "Out of scope / non-goals" list verbatim — the **hard exclusion list**;
-- any `❓`/unresolved facts or source conflicts — name them and ask; never guess.
+- the `Do NOT build:` line under `3 · Scope` verbatim — the **hard exclusion
+  list**;
+- any `[Unresolved]` item or source conflict — name it and ask; never guess.
 
-Show the contract and carry on. A `❓` or a source conflict is a question in the
-same message, and the run does not build past it until it is answered.
+Show the contract and carry on. An unresolved item or a source conflict is a
+question in the same message, and the run does not build past it until it is
+answered.
 
 ### 3 · Survey the codebase
 Report what already exists vs. what's to build: does the target plugin dir exist,
