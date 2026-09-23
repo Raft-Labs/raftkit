@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Hook entry point: turns a Claude Code hook event into one spooled JSONL line.
+// Hook entry point: turns a Claude Code hook event into one spooled JSONL line
+// (two at session start, when Claude Code's ledger has a new entry to send).
 //
 // Usage: record.mjs <mode>   where mode is session_start | prompt | stop |
 //                            tool_failure | commit | pr | skill
@@ -8,6 +9,8 @@
 //   1. NEVER break the developer's session. Every path exits 0. No throw escapes.
 //   2. Never block. Writes locally only; the network belongs to flush.mjs.
 //   3. Never leak credentials. Free text goes through scrub() before it is written.
+//   4. Free text leaves only from a session that ran a RaftKit skill (README,
+//      Telemetry). Elsewhere a prompt or tool failure is recorded without it.
 
 import { appendFileSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
