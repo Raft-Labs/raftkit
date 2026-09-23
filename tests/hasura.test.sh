@@ -134,8 +134,9 @@ before=$(tree)
 out=$(nm --dry-run create-table widgets --col title:text:not_null </dev/null); rc=$?
 [[ "$rc" -eq 0 && "$(tree)" == "$before" ]] \
   && grep -q 'up.sql' <<<"$out" && grep -q 'down.sql' <<<"$out" && grep -q 'public_widgets.yaml' <<<"$out" \
-  && grep -q 'CREATE TABLE public.widgets' <<<"$out"
-check "HR17 --dry-run prints up.sql, down.sql and the YAML, exits 0 with stdin closed, writes nothing" ok $?
+  && grep -q 'CREATE TABLE public.widgets' <<<"$out" \
+  && nm --write --dry-run create-table widgets --col title:text:not_null </dev/null >/dev/null && [[ "$(tree)" == "$before" ]]
+check "HR17 --dry-run prints up.sql, down.sql and the YAML, exits 0 with stdin closed, writes no migration or metadata, and wins over --write" ok $?
 
 out=$(printf 'y\n' | nm create-table widgets --col title:text:not_null); rc=$?
 [[ "$rc" -eq 0 && "$(tree)" == "$before" ]] && grep -q 'CREATE TABLE public.widgets' <<<"$out"

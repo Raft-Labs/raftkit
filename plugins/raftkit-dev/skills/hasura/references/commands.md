@@ -23,8 +23,9 @@ the discovered equivalents.
 | Query a stage | `scripts/hasura-query.sh --stage=<s> [--role=user --user-id=<uuid>] <file>` |
 
 Every `new-migration.sh` subcommand takes `--dry-run` (the default: print the
-files, write nothing) or `--write`. `drop-column` and `rename` also need
-`--confirmed`, passed only after the developer's explicit OK.
+files, write no migration or metadata; the snapshot refresh still runs) or
+`--write`. `drop-column` and `rename` also need `--confirmed`, passed only
+after the developer's explicit OK.
 
 **Choosing a creation path:**
 - **Typed scaffolders** (`new-migration.sh create-table`, `add-column`,

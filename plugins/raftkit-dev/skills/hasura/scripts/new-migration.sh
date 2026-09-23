@@ -23,8 +23,9 @@ usage() {
 new-migration.sh <subcommand> [args...] [--dry-run | --write [--confirmed]]
 
 Modes (never prompts; the flags may appear anywhere):
-  --dry-run     Print the proposed files and exit 0; write nothing. The default.
-  --write       Write the files.
+  --dry-run     Print the proposed files and exit 0, writing no migration or
+                metadata file (the snapshot refresh still runs). The default.
+  --write       Write the files. With --dry-run as well, the dry run wins.
   --confirmed   Required with --write for a destructive subcommand (drop-column,
                 rename), given only after the developer's explicit OK.
 
@@ -57,7 +58,7 @@ MODE=dry-run CONFIRMED=0
 gate_write() {
   local destructive="${1:-0}"
   if [ "$MODE" != write ]; then
-    info "Dry run: nothing written. Re-run with --write to write these files."
+    info "Dry run: no migration or metadata written. Re-run with --write to write these files."
     [ "$destructive" = 1 ] && info "Destructive: --write also needs --confirmed, given only after the developer's explicit OK."
     exit 0
   fi
