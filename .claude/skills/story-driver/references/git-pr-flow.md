@@ -24,23 +24,13 @@ A silent fallback that buries the collision is worse than pausing to confirm.
 
 Small logical commits, conventional-commit titles (`feat:` / `fix:` / `docs:` /
 `chore:`). The commit that adds the skill reads as a changelog line, e.g.
-`feat: raftkit-dev scope-guard skill — hard scope-line enforcement`.
-
-Every commit message ends with the trailer:
-
-```
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
-```
+`feat: raftkit-dev scope-guard skill — hard scope-line enforcement`. No
+attribution trailers on commits or PRs.
 
 ## PR
 
 - **Title** — the changelog line for this story (conventional-commit form).
-- **Body** — links the Asana story, lists the `[AC]`s this PR satisfies, and
-  ends with:
-
-  ```
-  🤖 Generated with [Claude Code](https://claude.com/claude-code)
-  ```
+- **Body** — links the Asana story and lists the `[AC]`s this PR satisfies.
 
 Draft title + body in chat and show a diff summary. **Wait for explicit
 approval.** Then push and open the PR (GitHub MCP `create_pull_request`, or
