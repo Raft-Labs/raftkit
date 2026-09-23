@@ -189,7 +189,9 @@ node -e '
 check "repoSlug normalizes remotes and strips embedded credentials" ok $?
 
 # ------------------------------------------------------------- 2. scrubbing
-d="$(new_sandbox)"
+# Prompt text is kept only in a session that ran a RaftKit skill, so each
+# prompt-scrubbing case runs in one — otherwise it passes on an empty prompt.
+d="$(new_sandbox)"; seed_skill "$d" s1
 secret_prompt='deploy using ghp_AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHH1234 and sk-proj-ZZZZYYYYXXXXWWWWVVVV1111 now'
 echo "{\"session_id\":\"s1\",\"user_prompt\":\"$secret_prompt\",\"cwd\":\"$PWD\"}" \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1
@@ -609,8 +611,14 @@ check "the extended guard catches a createIssue GraphQL mutation via gh api grap
 grep -qi 'dashboard' "$README"
 check "README states blockers go to the dashboard" ok $?
 
-grep -qi 'every prompt' "$README" && grep -qi 'failed tool call' "$README"
-check "README states every prompt and every failed tool call is captured" ok $?
+# D1: free text is collected only where RaftKit ran. The README and the
+# one-time notice must say exactly that, and the old unconditional claims —
+# which the code no longer matches — must be gone.
+grep -qi 'only in a session where a RaftKit skill ran' "$README" \
+  && grep -qi 'first 512 characters' "$README" && grep -qi 'first 200 characters' "$README"
+check "README states prompt and error text is collected only where a RaftKit skill ran, and how much" ok $?
+! grep -qiE 'every prompt you submit, in full|anything from a repo you didn.t run RaftKit in' "$README"
+check "README no longer claims full prompts everywhere or nothing from other repos" ok $?
 
 grep -q 'RAFTKIT_TELEMETRY=off' "$README"
 check "opt-out is stated in the README" ok $?
@@ -752,7 +760,7 @@ write_spool() { # <dir> <n> — n synthetic prompt events, oldest first
 }
 
 # --- F2 end-to-end: an auth header in a real prompt must not reach the spool -
-d="$(new_sandbox)"
+d="$(new_sandbox)"; seed_skill "$d" s1
 echo '{"session_id":"s1","user_prompt":"why does curl -H \"Authorization: Bearer ghs_LIVETOKEN99887766554433\" 401","cwd":"'"$PWD"'"}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1
 captured="$(last_event_field "$d/spool/events.jsonl" 'props.prompt')"
@@ -762,6 +770,8 @@ if [[ "$captured" == *"ghs_LIVETOKEN"* ]]; then
 else
   echo "PASS: Authorization header token never reaches the spool"
 fi
+[[ "$captured" == *"why does curl"* ]]
+check "  and the rest of that prompt was captured, so the check means something" ok $?
 
 # --- F3: the synchronous SessionStart path must fit its declared timeout ----
 # It chained stdin + 2 git + `gh api user` + 2 more git at 3-4s each: 16.1s
@@ -1038,6 +1048,33 @@ node --input-type=module -e '
   process.exit(0);
 ' >/dev/null 2>&1
 check "scrubbing a huge tool output stays bounded and still redacts first" ok $?
+
+# ================================================================ 10b. scope (D1)
+# In a session where no RaftKit skill runs, no prompt or error text is kept.
+d="$(new_sandbox)"; sp="$d/spool/events.jsonl"
+printf '{"session_id":"q1","user_prompt":"refactor the billing module for acme"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1
+expect_eq "a prompt in a session with no RaftKit skill is recorded without its text" "raftkit_prompt_submitted|" \
+  "$(last_event_field "$sp" event)|$(last_event_field "$sp" props.prompt | sed 's/^undefined$//')"
+printf '%s' '{"session_id":"q1","tool_name":"Bash","error":"Exit code 1\ncat: secrets.env: contents here"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" tool_failure >/dev/null 2>&1
+expect_eq "a failed tool in such a session keeps its exit code, not its text" "1|" \
+  "$(last_event_field "$sp" props.exit_code)|$(last_event_field "$sp" props.error | sed 's/^undefined$//')"
+if grep -q 'acme\|secrets.env' "$sp"; then
+  echo "FAIL: free text from a session with no RaftKit skill reached the spool"
+  failures=$((failures + 1))
+else
+  echo "PASS: no free text from a session with no RaftKit skill reaches the spool"
+fi
+seed_skill "$d" q1
+printf '{"session_id":"q1","user_prompt":"now implement the story"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1
+expect_eq "once a RaftKit skill ran, the prompt text is kept" "now implement the story" "$(last_event_field "$sp" props.prompt)"
+long_prompt="$(printf 'please change the header layout %.0s' $(seq 1 40))"
+printf '{"session_id":"q1","user_prompt":"%s"}' "$long_prompt" | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1
+expect_eq "  at most 512 characters of it" "512" "$(ev_len="$(last_event_field "$sp" props.prompt)" node -e 'process.stdout.write(String([...process.env.ev_len].length))')"
+# The disclosure says the same thing the README does.
+d="$(new_sandbox)"
+notice="$(echo '{"session_id":"n9","hook_event_name":"SessionStart"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start 2>/dev/null)"
+[[ "$notice" == *'In a session where a RaftKit skill runs'* && "$notice" == *'prompts'* && "$notice" != *'Prompts preceding a stop'* ]]
+check "the one-time notice states the free-text scope" ok $?
 
 # ================================================================ 11. delivery
 # v2's first STOP wedged delivery: the server rejected severity "gate", every

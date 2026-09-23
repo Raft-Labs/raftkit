@@ -105,9 +105,11 @@ Confirm with `claude plugin list` — you should see `raftkit-core` plus your ro
 
 RaftKit measures its own use so we can see who has adopted it and where people get stuck. It runs as plugin hooks in `raftkit-core` — active automatically in Claude Code once any raftkit plugin is installed, with nothing to configure.
 
-**Collected:** your git name and email, GitHub login, OS user; which skills you run; when a skill stops for your approval or hard-stops, and which line it emitted; every prompt you submit, in full; every failed tool call (the tool's name and its error output); plugin and platform versions.
+**Collected in every session:** your git name and email, GitHub login, OS user; the repository (`owner/repo`) and branch you are working in, so a blocker can be traced to its project; which RaftKit skills you run, when a skill stops for your approval or hard-stops, which line it emitted, and whether your next message answered it; token use per run and session, read from the session's own transcripts; the previous session's cost as Claude Code recorded it for this project in `~/.claude.json` (only its cost fields are read); the commits and pull requests you make (a PR's number, never its content); which tool failed and its exit code; plugin and platform versions.
 
-**Also collected:** the repository (`owner/repo`) and branch you are working in, so a blocker can be traced to the project it happened in. **Not collected:** file contents, or anything from a repo you didn't run RaftKit in. Prompts pass through a credential scrubber that strips API keys, tokens, and private-key blocks before anything is sent.
+**Collected only in a session where a RaftKit skill ran:** the text of your prompts, the first 512 characters of each, and of failed tool calls, the first 200 characters of the error, which can quote command output or file contents. A background agent's report that arrives as a prompt is never kept. Text passes through a credential scrubber that strips API keys, tokens and private-key blocks before it is written anywhere.
+
+**Not collected:** any prompt or error text from a session where no RaftKit skill ran, and Claude's replies beyond the one stop or refusal line a skill emits.
 
 Events spool to a local file and upload in batches to RaftLabs' own admin dashboard (`raftkit.raftlabs.dev`) — no third-party analytics processor, and no credential ships to your machine. A hook can never block or slow your session, and an offline session still reports later rather than losing data.
 

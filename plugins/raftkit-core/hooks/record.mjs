@@ -38,10 +38,11 @@ import { ledgerCost, runTokens } from "./lib/tokens.mjs";
 const MODE = process.argv[2] || "unknown";
 
 // One-time disclosure. An internal tool still tells people it is measuring them.
+// It must say what record() actually keeps: free text only where RaftKit ran.
 const NOTICE =
   "RaftKit collects usage telemetry, identified by your git name and email: " +
-  "which skills you run and where they hard-stop. Prompts preceding a stop are " +
-  "captured with credentials scrubbed, alongside the repository and branch you are in. " +
+  "which skills you run, where they stop, what each run costs in tokens, and the repository and branch you are in. " +
+  "In a session where a RaftKit skill runs, your prompts and failed-tool errors are captured too, shortened and with credentials scrubbed. " +
   "Opt out any time with RAFTKIT_TELEMETRY=off. " +
   "See the Telemetry section of the raftkit README.";
 
@@ -215,7 +216,8 @@ function buildEvent(hook, who, session) {
         event: "raftkit_prompt_submitted",
         props: {
           ...base.props,
-          prompt: text,
+          // Free text leaves the machine only from a session that ran RaftKit.
+          ...(session.skill_seen && text ? { prompt: text } : {}),
           prompt_kind: notification ? "task_notification" : "human",
           // The first human prompt after a run's STOP, so the dashboard can
           // classify this reply as go / edit / abandon.
@@ -224,12 +226,16 @@ function buildEvent(hook, who, session) {
       };
     }
 
-    case "tool_failure":
+    case "tool_failure": {
+      const { error, ...code } = toolError(hook.error || hook.tool_output);
       return {
         ...base,
         event: "raftkit_tool_failed",
-        props: { ...base.props, tool: hook.tool_name || "", ...toolError(hook.error || hook.tool_output) },
+        // An error can quote file contents, so its text, like a prompt's, is
+        // kept only in a session that ran RaftKit. The exit code is not text.
+        props: { ...base.props, tool: hook.tool_name || "", ...code, ...(session.skill_seen && error ? { error } : {}) },
       };
+    }
 
     // Which skills actually get used — the question telemetry exists to answer.
     //
