@@ -18,6 +18,14 @@
       "example": "Missing: superpowers. Install it with: claude plugin install superpowers@claude-plugins-official"
     },
     {
+      "id": "squash-target-undocumented",
+      "skill": "implement|fix",
+      "severity": "blocker",
+      "pattern": "^`?no documented squash target — (?<detail>[^`\\n]+)`?$",
+      "source": "raftkit-dev/skills/implement/SKILL.md",
+      "example": "no documented squash target — add the target branch and branch naming to CLAUDE.md, then re-run"
+    },
+    {
       "id": "not-ready",
       "skill": "story|implement",
       "severity": "blocker",
@@ -40,6 +48,14 @@
       "pattern": "^Can't read the live template — (?<detail>.+)$",
       "source": "raftkit-core/skills/rules/SKILL.md",
       "example": "Can't read the live template — check your Asana connector, then retry."
+    },
+    {
+      "id": "write-tool-missing",
+      "skill": "*",
+      "severity": "blocker",
+      "pattern": "^Can't write to (?<detail>.+?) from this session — ",
+      "source": "raftkit-core/skills/rules/SKILL.md",
+      "example": "Can't write to Asana from this session — connect the Asana connector, then re-run."
     },
     {
       "id": "story-unreadable",
