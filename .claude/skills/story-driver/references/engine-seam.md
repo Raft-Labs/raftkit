@@ -17,7 +17,9 @@ Owns the plugin/skill file structure and the structural QA gate.
   skill; for adding one skill to an existing plugin, scaffold the skill dir
   directly per `skill-development`.
 - **`plugin-validator` agent** — validates manifest + structure + security.
+  Dispatch it with `model: "haiku"`.
 - **`skill-reviewer` agent** — reviews SKILL.md quality + description triggering.
+  Dispatch it with `model: "sonnet"`.
 
 ## skill-creator — authoring + triggering
 

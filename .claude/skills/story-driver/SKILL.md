@@ -88,7 +88,9 @@ See `references/engine-seam.md` for who owns what.
 - **skill-creator** authoring guidance drafts the SKILL.md content in the house
   style — third-person `description`, progressive disclosure, explain the *why*,
   no cached template text.
-- QA: run the `plugin-validator` and `skill-reviewer` agents; fix what they flag.
+- QA, in parallel: dispatch `plugin-dev:plugin-validator` with
+  `model: "haiku"` when a plugin changed and `plugin-dev:skill-reviewer` with
+  `model: "sonnet"` when a SKILL.md changed; fix what they flag.
 - **Bump the touched `plugin.json` version** (semver: a new skill or feature is a
   minor bump, a fix/edit to an existing one is a patch) and keep the marketplace
   entry and manifest descriptions identical — the CI gate fails otherwise.
