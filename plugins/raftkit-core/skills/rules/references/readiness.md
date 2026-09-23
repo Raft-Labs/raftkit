@@ -11,8 +11,9 @@ A story is ready only when every item holds. Anything you cannot confirm is a ga
 3. **The permission boundary is stated both ways.** Who may act and who is blocked.
 4. **At least one concrete out-of-scope item.**
 5. **`[AC]` coverage is complete.** The `[AC]` subtasks cover the happy path, every edge-case row present, every business rule and every permission boundary.
+6. **The open-questions gate is closed.** The template's open-questions section (§10) reads `none`, or every item in it is answered. An `[Unresolved]` item is a gap.
 
-## The five gap types
+## The six gap types
 
 | # | Gap | Shows up as |
 |---|---|---|
@@ -21,6 +22,7 @@ A story is ready only when every item holds. Anything you cannot confirm is a ga
 | 3 | No permission rule | the allowed/blocked boundary missing or one-sided |
 | 4 | No out-of-scope item | the non-goals section empty |
 | 5 | `[AC]` coverage hole | a scenario, rule, row or boundary with no matching `[AC]` |
+| 6 | Open question | an `[Unresolved]` item in the open-questions section |
 
 ## Verdict strings
 
@@ -42,4 +44,4 @@ Each gap line names the section as the live template names it and the concrete m
 
 ## Parsing
 
-Match `[AC]` subtasks by the leading token `[AC] ` only; order is not meaningful. `Development`, `Testing`, `Bugs` are containers, not criteria. Match sections by number and meaning, not punctuation (`-` and `—` are the same). Take numbering from the live template; an intentional gap in numbering is not a missing section. Anything unreadable is a gap, and the gap line says it could not be assessed.
+Match `[AC]` subtasks by the leading token `[AC] ` only; order is not meaningful. An `[AC]` whose name still holds a `{…}` placeholder is not a criterion, and each one is a gap. `Development`, `Testing`, `Bugs` are containers, not criteria. Match sections by number and meaning, not punctuation (`-` and `—` are the same). Take numbering from the live template; an intentional gap in numbering is not a missing section. Anything unreadable is a gap, and the gap line says it could not be assessed.
