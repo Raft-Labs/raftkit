@@ -622,6 +622,10 @@ check "README states blockers go to the dashboard" ok $?
 grep -qi 'only in a session where a RaftKit skill ran' "$README" \
   && grep -qi 'first 512 characters' "$README" && grep -qi 'first 200 characters' "$README"
 check "README states prompt and error text is collected only where a RaftKit skill ran, and how much" ok $?
+# Sent from every session too: the shunt's deny record and listing coverage.
+grep -qi 'when the read shunt declines a file, its extension and line count' "$README" \
+  && grep -qi 'which RaftKit skills the skill listing described' "$README"
+check "README lists the shunt's deny record and the listing coverage among what every session sends" ok $?
 ! grep -qiE 'every prompt you submit, in full|anything from a repo you didn.t run RaftKit in' "$README"
 check "README no longer claims full prompts everywhere or nothing from other repos" ok $?
 
