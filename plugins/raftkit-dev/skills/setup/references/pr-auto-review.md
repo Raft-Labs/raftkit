@@ -15,6 +15,8 @@ A GitHub Actions workflow in the client repo, on `pull_request` opened and synch
 
 Nothing beyond this is exempt from the one stop per run. A future mechanism that wants to write on its own needs its own reviewed amendment here, never an inference from this one.
 
+**Amendment, v2.1:** the workflow runs `review-pr` without the `simplify` aspect, because the code-simplifier edits code and the only writes allowed here are Critical fixes, and runs the other agents in parallel. The review stays full on every run, including a PR `implement` already reviewed: it is the independent net.
+
 ## GITHUB_TOKEN and the bot identity
 
 Pushes made with `GITHUB_TOKEN` do not trigger the repository's own workflows. A fix commit therefore does not re-run the checks on its own push: the workflow verifies each fix itself before committing, and the PR comment discloses that the commit was not exercised by a fresh CI run. A team that wants those runs installs a GitHub App token instead and swaps it into the workflow's checkout step; that is a deliberate change to the rendered file, recorded in the same way as any other edit to a pack-managed file.

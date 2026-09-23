@@ -14,10 +14,9 @@ never re-derive them:
 - `$DEPS_STATUS` — whether a verifiable toolchain exists in this runner.
   One of `ok`, `none`, `unsupported`, `failed`.
 
-Never run `gh repo view` or `gh pr view` to work these out. `gh pr view`
-resolves by branch, and a branch with two open PRs (one into `main`, one
-into `development`) resolves ambiguously — the unverified-code disclosure
-would land on the wrong pull request.
+Never run `gh repo view` or `gh pr view` to work these out: a branch with
+two open PRs resolves ambiguously, and the disclosure would land on the
+wrong pull request.
 
 Wherever this prompt writes `{owner}`, `{repo}` or `{pr}` in prose, it means
 these variables. Never put that literal text into a command or a URL.
@@ -34,13 +33,15 @@ git diff --name-only "$MERGE_BASE" HEAD
 If `origin/$BASE_REF` does not resolve, run `git fetch origin "$BASE_REF"`
 once (always quoted, always from the variable) and retry.
 
-**You must hand `review-pr` that explicit range.** Left to its own devices
-it reviews *unstaged* changes — `git diff` with no arguments — and this is a
-clean CI checkout with no unstaged changes at all, so it would find nothing
-to review and report zero findings on every PR. Invoke the
-`pr-review-toolkit:review-pr` slash command and state, in the invocation,
-that the scope is the diff `"$MERGE_BASE"..HEAD` and the file list that
-command above prints. Never let it fall back to its default scope.
+**You must hand `review-pr` that explicit range.** By default it reviews
+unstaged changes, and a clean CI checkout has none. Invoke it exactly as
+`/pr-review-toolkit:review-pr code errors tests types comments parallel`
+and state, in the same invocation, that the scope is the diff
+`"$MERGE_BASE"..HEAD` and the file list that command above prints.
+Never let it fall back to its default scope.
+
+Never run the `simplify` aspect or the code-simplifier agent: it edits
+code, and the only edits this run may make are Step 4's fixes.
 
 If the merge-base range itself is empty (no files changed), that is a real
 empty PR: report "No critical issues found." and finish at Step 5 normally.
@@ -160,9 +161,8 @@ the full finding list, the tier disclosure, and the line:
 Fix loop in progress — this comment is updated after each pushed commit.
 ```
 
-This ordering is mandatory. Commits are pushed one at a time, and a run that
-dies to a turn limit or a job timeout after a push must never leave commits
-on the branch with no disclosure. The comment comes first; the fixes follow.
+This ordering is mandatory: a run that dies after a push must never leave
+commits on the branch with no disclosure.
 
 ## Step 4 — Fix Critical findings, one at a time
 
@@ -202,11 +202,8 @@ them, one at a time — never batch:
    ```
 
    **Any non-zero exit stops the fix loop** — not only a non-fast-forward
-   rejection. Authentication and permission errors, a rejecting pre-receive
-   hook, a network failure, a protected-branch rule: each leaves the remote
-   in a state you did not choose, and some of them (a network failure after
-   the objects transferred, most of all) can leave the commit *on* the
-   remote while reporting failure. So on any non-zero exit:
+   rejection; some failures leave the commit *on* the remote while
+   reporting failure. So on any non-zero exit:
 
    1. Determine what actually reached the remote, rather than assuming:
 
@@ -238,9 +235,7 @@ them, one at a time — never batch:
    is and stop.
 
    Only AFTER the push has exited 0, capture the commit's full
-   40-character SHA (`git rev-parse HEAD`) for the PR comment. Capturing it
-   before a confirmed push means the comment can link a commit that does not
-   exist on the remote — a 404 in the one artifact reviewers rely on.
+   40-character SHA (`git rev-parse HEAD`) for the PR comment.
 4. Update the summary comment with this finding's line before starting the
    next finding. The comment must never lag the branch by more than one
    commit.
@@ -285,10 +280,6 @@ comment on every run:
 gh api --paginate "repos/$OWNER_REPO/issues/$PR_NUMBER/comments" \
   --jq "[.[] | select(.body | startswith(\"<!-- raftkit:pr-auto-review-summary v1 -->\"))] | last | .id // empty"
 ```
-
-(GitHub's issue-comments API has no server-side body filter, so the marker
-match happens in the `--jq` expression — but it runs over every page, not
-just the first.)
 
 - If one exists: edit it via the per-comment endpoint, keyed by that
   comment's own `id` — `gh api -X PATCH
