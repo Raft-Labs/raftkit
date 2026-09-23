@@ -159,10 +159,16 @@ rm -rf "$fx"
 # a reference carries no variable or .claude/skills path; every scripts/ path resolves.
 bad_refs=$(grep -lE '\$\{CLAUDE_[A-Z_]+\}|\.claude/skills/' "$H"/references/*.md | tr '\n' ' ')
 unprefixed=$(grep -oE '[^ `(]*scripts/[A-Za-z0-9_./-]*[A-Za-z0-9_]' "$S" | grep -v '^\${CLAUDE_SKILL_DIR}/scripts/' | tr '\n' ' ')
-missing=$(grep -ohE 'scripts/[A-Za-z0-9_./-]*[A-Za-z0-9_]' "$S" "$H"/references/*.md | sort -u \
-  | while read -r p; do [[ -e "$H/$p" ]] || echo "$p"; done | tr '\n' ' ')
-[[ -z "$bad_refs$unprefixed$missing" ]] && grep -qF '${CLAUDE_SKILL_DIR}/scripts/new-migration.sh' "$S"
-check "HR21 script paths are skill-relative and every one resolves${bad_refs:+ (refs: $bad_refs)}${unprefixed:+ (unprefixed: $unprefixed)}${missing:+ (missing: $missing)}" ok $?
+named=$(grep -ohE 'scripts/[A-Za-z0-9_./-]*[A-Za-z0-9_]' "$S" "$H"/references/*.md | sort -u)
+missing=$(while read -r p; do [[ -e "$H/$p" ]] || echo "$p"; done <<<"$named" | tr '\n' ' ')
+# A named script is run bare, so it ships executable (the git mode, not only the
+# checkout's); lib/ is sourced, never run.
+noexec=$(grep -v '^scripts/lib/' <<<"$named" | while read -r p; do
+  [[ -f "$H/$p" ]] || continue
+  [[ -x "$H/$p" && "$(git ls-files -s -- "$H/$p" | cut -c1-6)" != 100644 ]] || echo "$p"
+done | tr '\n' ' ')
+[[ -z "$bad_refs$unprefixed$missing$noexec" ]] && grep -qF '${CLAUDE_SKILL_DIR}/scripts/new-migration.sh' "$S"
+check "HR21 script paths are skill-relative, every one resolves and runs bare${bad_refs:+ (refs: $bad_refs)}${unprefixed:+ (unprefixed: $unprefixed)}${missing:+ (missing: $missing)}${noexec:+ (not executable: $noexec)}" ok $?
 
 # HR22 · detect-hasura.mjs finds the same Hasura root as lib/common.sh
 # find_hasura_root: the root, then */, then */*/, hidden directories skipped.
