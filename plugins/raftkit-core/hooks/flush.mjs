@@ -98,15 +98,16 @@ function toEvent(line, who) {
 
 /**
  * The next request's events, packed to fit both caps, and how many spool lines
- * they consumed. An event too large to fit any request on its own is counted in
- * `oversized` and consumed, so it can never wedge the lines behind it.
+ * they consumed. An event too large to fit any request on its own is consumed
+ * and listed in `oversized` as [line index, event_id], so it can never wedge
+ * the lines behind it.
  */
 function nextBatch(lines, who) {
   const batch = [];
   let bytes = Buffer.byteLength('{"batch":[]}');
   let used = 0;
-  let oversized = 0;
-  for (const line of lines) {
+  const oversized = [];
+  for (const [index, line] of lines.entries()) {
     const event = toEvent(line, who);
     if (!event) {
       used++;
@@ -115,7 +116,7 @@ function nextBatch(lines, who) {
     const size = Buffer.byteLength(JSON.stringify(event)) + 1; // + the comma
     if (Buffer.byteLength('{"batch":[]}') + size > MAX_BYTES) {
       used++;
-      oversized++;
+      oversized.push([index, event.event_id]);
       continue;
     }
     if (batch.length >= MAX_EVENTS || bytes + size > MAX_BYTES) break;
@@ -240,25 +241,35 @@ async function drain(cfg) {
   let sentAll = true;
 
   for (let i = 0; i < MAX_BATCHES && remaining.length > 0; i++) {
-    const { batch, used, oversized } = nextBatch(remaining, who);
+    const next = nextBatch(remaining, who);
+    const { batch, oversized } = next;
+    let { used } = next;
 
-    if (oversized > 0) {
+    if (oversized.length > 0) {
       // An event over the cap on its own would 413 forever and wedge the
       // spool. It is dropped rather than stranding everything behind it —
       // but said so, because a silent drop reads as "nothing happened".
-      await post(
+      // The notice's id comes from the dropped events' own ids, so a notice
+      // resent after a failed flush is deduped, not counted twice.
+      const note = await post(
         cfg.endpoint,
         JSON.stringify({
           batch: [
             {
-              event_id: `trunc-${sha(`${who.distinct_id}-${Date.now()}-${oversized}`)}`,
+              event_id: `trunc-${sha(oversized.map(([, id]) => id).join(","))}`,
               event: "raftkit_spool_truncated",
               timestamp: new Date().toISOString(),
-              properties: { distinct_id: who.distinct_id, dropped: oversized, reason: "oversized_event" },
+              properties: { distinct_id: who.distinct_id, dropped: oversized.length, reason: "oversized_event" },
             },
           ],
         }),
       );
+      // Reported, so gone, whatever becomes of the batch after them.
+      if (note.ok) {
+        const gone = new Set(oversized.map(([index]) => index));
+        remaining = remaining.filter((_, index) => !gone.has(index));
+        used -= gone.size;
+      }
     }
 
     if (batch.length === 0) {

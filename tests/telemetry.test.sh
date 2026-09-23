@@ -1096,14 +1096,17 @@ check "the one-time notice states the free-text scope" ok $?
 cat > "$stub/capstub.mjs" <<'STUB'
 import { createServer } from "node:http";
 import { writeFileSync } from "node:fs";
-const [code, dir, reply] = [Number(process.argv[2] || 200), process.argv[3], process.argv[4] || "{}"];
+const [mode, dir, reply] = [process.argv[2] || "200", process.argv[3], process.argv[4] || "{}"];
+// "trunc-ok": accept truncation notices only, refuse every other batch.
+const codeFor = (body) => (mode === "trunc-ok" ? (body.includes('"raftkit_spool_truncated"') ? 200 : 503) : Number(mode));
 let n = 0;
 const srv = createServer((req, res) => {
   const chunks = [];
   req.on("data", (c) => chunks.push(c));
   req.on("end", () => {
-    writeFileSync(`${dir}/body.${String(n++).padStart(4, "0")}.json`, Buffer.concat(chunks));
-    res.writeHead(code); res.end(reply);
+    const body = Buffer.concat(chunks);
+    writeFileSync(`${dir}/body.${String(n++).padStart(4, "0")}.json`, body);
+    res.writeHead(codeFor(body.toString("utf8"))); res.end(reply);
   });
 });
 srv.listen(0, () => console.log(srv.address().port));
@@ -1165,6 +1168,38 @@ expect_eq "a gate event is sent with severity info" "info" "$(bodies "$cap" 'eve
 expect_eq "  and keeps gate in severity_detail" "gate" "$(bodies "$cap" 'events.find((e) => e.event_id === "g1").properties.severity_detail')"
 expect_eq "a known severity is sent unchanged" "blocker|undefined" \
   "$(bodies "$cap" 'events.find((e) => e.event_id === "g2").properties.severity + "|" + events.find((e) => e.event_id === "g2").properties.severity_detail')"
+
+# --- an event too big for any request is reported once, however often delivery fails
+oversized_spool() { # <dir> — one event over the 900 KB cap (nested, so the clamp cannot shrink it), then one normal
+  mkdir -p "$1/spool"
+  node -e '
+    const line = (id, props) => JSON.stringify({ event_id: id, ts: "2026-09-17T10:37:00.000Z", event: "raftkit_turn_completed", distinct_id: "x", props }) + "\n";
+    require("fs").writeFileSync(process.argv[1] + "/spool/events.jsonl", line("big1", { tokens: { blob: "x".repeat(1000000) } }) + line("ok1", { n: 1 }));
+  ' "$1"
+}
+spool_ids() { node -e 'const p=process.argv[1]; const fs=require("fs"); process.stdout.write(fs.existsSync(p) ? fs.readFileSync(p,"utf8").trim().split("\n").filter(Boolean).map((l)=>JSON.parse(l).event_id).join(",") : "")' "$1/spool/events.jsonl"; }
+d="$(new_sandbox)"; cap="$d/cap"
+port="$(start_capture_stub 500 "$cap")"
+oversized_spool "$d"
+for _ in 1 2; do
+  RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:$port/api/telemetry" node "$FLUSH" >/dev/null 2>&1
+done
+expect_eq "a retried truncation notice keeps its event_id, so the server counts it once" "2|1" \
+  "$(bodies "$cap" 'const t=events.filter((e)=>e.event==="raftkit_spool_truncated"); t.length+"|"+new Set(t.map((e)=>e.event_id)).size')"
+expect_eq "  and no request ever carries the oversized event" "false" "$(bodies "$cap" 'events.some((e)=>e.event_id==="big1")')"
+d="$(new_sandbox)"; cap="$d/cap"
+port="$(start_capture_stub trunc-ok "$cap")"
+oversized_spool "$d"
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:$port/api/telemetry" node "$FLUSH" >/dev/null 2>&1
+expect_eq "a delivered truncation notice takes its event out of the spool, though the batch after it failed" "ok1" "$(spool_ids "$d")"
+# Past the 500-event batch cap, so the lines after the dropped one span two requests.
+d="$(new_sandbox)"; cap="$d/cap"
+port="$(start_capture_stub 200 "$cap")"
+oversized_spool "$d"
+node -e 'let out=""; for (let i=0;i<501;i++) out += JSON.stringify({event_id:"n"+i,ts:"2026-09-17T10:37:00.000Z",event:"raftkit_prompt_submitted",distinct_id:"x",props:{n:i}})+"\n"; require("fs").appendFileSync(process.argv[1]+"/spool/events.jsonl", out)' "$d"
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:$port/api/telemetry" node "$FLUSH" >/dev/null 2>&1
+expect_eq "every event behind a dropped one is delivered, once" "502|502|" \
+  "$(bodies "$cap" 'const n=events.filter((e)=>e.event!=="raftkit_spool_truncated"); n.length+"|"+new Set(n.map((e)=>e.event_id)).size')|$(spool_ids "$d")"
 
 # --- a rejected flush says why, and when delivery stopped
 d="$(new_sandbox)"; cap="$d/cap"
