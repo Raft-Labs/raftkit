@@ -57,9 +57,10 @@ Rendered assets carry the literal marker `raftkit-governance-pack` in their head
 | `enabledPlugins` | `raftkit-core@raftkit`, `raftkit-dev@raftkit`, and the engines above from `claude-plugins-official`, each `true` |
 | `model` | `"opusplan"` |
 | `attribution` | `{ "commit": "", "pr": "" }` |
+| `worktree` | `{ baseRef: "head", symlinkDirectories: ["node_modules"] }`; the directory list only with `--node`, passed when detection found a Node manifest |
 | `permissions.allow` | `Bash(git status:*)`, `Bash(git diff:*)`, `Bash(git log:*)`, `Bash(claude plugin list:*)`, `Bash(gh pr view:*)` |
 
-Object keys merge additively and `permissions.allow` is a union, so nothing existing is removed. A managed key whose existing value differs is a conflict: every conflict is reported together and nothing is written (exit 2). Unparseable JSON aborts with its reason and writes nothing (exit 1). Identical inputs produce byte-identical output (exit 0, `no changes`). That same conflict detection is the re-run drift check.
+Object keys merge additively and `permissions.allow` and `symlinkDirectories` are unions, so nothing existing is removed. A managed key whose existing value differs is a conflict: every conflict is reported together and nothing is written (exit 2). Unparseable JSON aborts with its reason and writes nothing (exit 1). Identical inputs produce byte-identical output (exit 0, `no changes`). That same conflict detection is the re-run drift check.
 
 ## Conditional capabilities
 

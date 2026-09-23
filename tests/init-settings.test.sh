@@ -189,6 +189,36 @@ check_eq "invalid JSON: file left untouched" "$before_content" "$after_content"
 check "invalid JSON: a reason is emitted" ok $?
 rm -f /tmp/init-settings-invalid-out.$$
 
+# W. Worktree keys (C6): phases branch from local HEAD; a Node repo also shares
+#    node_modules. A differing baseRef conflicts; symlinkDirectories is a union.
+jget() { node -e 'let v=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); for (const k of process.argv[2].split(".").filter(Boolean)) v=v?.[k]; console.log(v===undefined?"undefined":JSON.stringify(v))' "$1" "$2" 2>/dev/null; }
+dw="$(newtmp)"; tw="$dw/settings.json"
+node "$SCRIPT" "$tw" --node >/dev/null 2>&1
+check "W1 fresh Node repo: script exits ok" ok $?
+check_eq "W1 worktree.baseRef is head" '"head"' "$(jget "$tw" '.worktree.baseRef')"
+check_eq "W1 worktree.symlinkDirectories shares node_modules" '["node_modules"]' "$(jget "$tw" '.worktree.symlinkDirectories')"
+dw2="$(newtmp)"; tw2="$dw2/settings.json"
+node "$SCRIPT" "$tw2" >/dev/null 2>&1
+check_eq "W2 non-Node repo: baseRef still head" '"head"' "$(jget "$tw2" '.worktree.baseRef')"
+check_eq "W2 non-Node repo: no symlinkDirectories written" 'undefined' "$(jget "$tw2" '.worktree.symlinkDirectories')"
+dw3="$(newtmp)"; tw3="$dw3/settings.json"
+printf '%s' '{"worktree": {"symlinkDirectories": [".cache"]}}' > "$tw3"
+node "$SCRIPT" "$tw3" --node >/dev/null 2>&1
+check_eq "W3 existing symlinkDirectories kept, node_modules appended" '[".cache","node_modules"]' "$(jget "$tw3" '.worktree.symlinkDirectories')"
+dw4="$(newtmp)"; tw4="$dw4/settings.json"
+printf '%s' '{"worktree": {"baseRef": "fresh"}}' > "$tw4"
+before_w4="$(shasum "$tw4")"
+out_w4="$(node "$SCRIPT" "$tw4" --node 2>&1)"; rc_w4=$?
+check_eq "W4 differing worktree.baseRef: exit code is exactly 2" "2" "$rc_w4"
+check_eq "W4 differing worktree.baseRef: file left byte-identical" "$before_w4" "$(shasum "$tw4")"
+grep -q 'worktree.baseRef' <<<"$out_w4"
+check "W4 conflict report names worktree.baseRef" ok $?
+assert_shape_conflict "W5 wrong-shape worktree (string)" '{"worktree": "head"}'
+d_w6="$(newtmp)"; t_w6="$d_w6/settings.json"
+printf '%s' '{"worktree": {"symlinkDirectories": "node_modules"}}' > "$t_w6"
+node "$SCRIPT" "$t_w6" --node >/dev/null 2>&1
+check_eq "W6 wrong-shape symlinkDirectories (string): exit code is exactly 2" "2" "$?"
+
 # 6. Re-run with identical input -> byte-identical output, zero diff
 d6="$(newtmp)"
 target6="$d6/settings.json"

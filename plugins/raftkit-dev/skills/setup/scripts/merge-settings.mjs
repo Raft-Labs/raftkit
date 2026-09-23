@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 // Fail-closed merge of raftkit's managed keys into a repo's .claude/settings.json.
+// Usage: merge-settings.mjs <path-to-settings.json> [--node]
+//   --node  the repo has a Node manifest: worktrees also share node_modules.
 // Exit codes: 0 applied (or no changes) · 1 unreadable input, nothing written ·
 // 2 conflict against an existing value, nothing written.
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
@@ -24,6 +26,9 @@ const MANAGED = {
   },
   model: "opusplan",
   attribution: { commit: "", pr: "" },
+  // Worktrees branch from local HEAD, so a phase sees the run's own commits;
+  // node_modules is shared rather than reinstalled per worktree (Node repos only).
+  worktree: { baseRef: "head", symlinkDirectories: ["node_modules"] },
   permissions: {
     allow: [
       "Bash(git status:*)",
@@ -35,11 +40,12 @@ const MANAGED = {
   },
 };
 
-const target = process.argv[2];
-if (!target) {
-  console.error("usage: merge-settings.mjs <path-to-settings.json>");
+const [target, ...flags] = process.argv.slice(2);
+if (!target || target.startsWith("--") || flags.some((f) => f !== "--node")) {
+  console.error("usage: merge-settings.mjs <path-to-settings.json> [--node]");
   process.exit(1);
 }
+const nodeRepo = flags.includes("--node");
 
 function isPlainObject(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -130,18 +136,29 @@ if (eAttr !== null) {
   mergeScalar(["attribution"], result.attribution, "pr", MANAGED.attribution.pr);
 }
 
-// permissions.allow — array union, never a conflict on content; existing order preserved,
-// gaps appended. But the container and the array itself must be shape-checked first.
+// Array union, never a conflict on content; existing order preserved, gaps appended.
+function union(existingArr, managed) {
+  const merged = [...existingArr];
+  for (const item of managed) if (!merged.includes(item)) merged.push(item);
+  return merged;
+}
+
+// worktree — baseRef is a scalar; symlinkDirectories a union, written only for Node repos.
+const eWt = expectObject([], existing, "worktree");
+if (eWt !== null) {
+  result.worktree = eWt;
+  mergeScalar(["worktree"], result.worktree, "baseRef", MANAGED.worktree.baseRef);
+  if (nodeRepo) {
+    const eLinks = expectArray(["worktree"], eWt, "symlinkDirectories");
+    if (eLinks !== null) result.worktree.symlinkDirectories = union(eLinks, MANAGED.worktree.symlinkDirectories);
+  }
+}
+
+// permissions.allow — the container and the array itself are shape-checked first.
 const eParent = expectObject([], existing, "permissions");
 if (eParent !== null) {
   const eAllow = expectArray(["permissions"], eParent, "allow");
-  if (eAllow !== null) {
-    const mergedAllow = [...eAllow];
-    for (const rule of MANAGED.permissions.allow) {
-      if (!mergedAllow.includes(rule)) mergedAllow.push(rule);
-    }
-    result.permissions = { ...eParent, allow: mergedAllow };
-  }
+  if (eAllow !== null) result.permissions = { ...eParent, allow: union(eAllow, MANAGED.permissions.allow) };
 }
 
 if (conflicts.length > 0) {
