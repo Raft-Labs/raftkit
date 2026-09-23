@@ -38,7 +38,7 @@ Owner: PM.
 
 An empty description is one line: `NOT READY — the task description is empty — write the story first.`
 
-Each gap line names the section as the live template names it and the concrete missing thing. Good: `Section 6 "Edge cases" — the Error row is blank; give the exact message and recovery action.` Bad: `edge cases incomplete.`
+Each gap line names the section as the live template names it and the concrete missing thing. Good: `Section 7 "Edge cases" — the Error row is blank; give the exact message and recovery action.` Bad: `edge cases incomplete.`
 
 ## Parsing
 

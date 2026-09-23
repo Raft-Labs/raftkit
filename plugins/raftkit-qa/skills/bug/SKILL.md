@@ -10,15 +10,15 @@ Two modes, one bug lifecycle. Load `raftkit-core:rules` first unless it is alrea
 
 ## File
 
-1. **Validate, then read at once.** No target story → ask; a bug never floats free. Then in one turn: the Bugs Template (skip if already in this chat), the story with its `Bugs` subtask and the project's tags, and the Jam recording (metadata, events, console, network, screenshots). No Jam → the next tier the template lists, marked, with the manual environment block required. No `Bugs` subtask → propose creating it in the same go.
+1. **Validate, then read at once.** No target story → ask; a bug never floats free. Then in one turn: the Bugs Template (skip if already in this chat), the story with its `Bugs` subtask, and the Jam recording (metadata, events, console, network, screenshots). No Jam → the next tier the template lists, marked, with the manual environment block required. No `Bugs` subtask → propose creating it in the same go.
 2. **Pre-fill from evidence** per `references/filing.md`: environment, steps from a clean start, actual result with console and network errors verbatim. Two unrelated defects in one recording → two drafts in one message.
 3. **Propose the judgment fields** instead of asking them one at a time: severity, priority, reproducibility, expected result, `Done when`, each `proposed — edit inline`; one the evidence does not support is `⚠️ assumed until confirmed` and blocks the write. An odd severity/priority pair is flagged, not blocked.
 4. **Self-check** against the template and the checklist in `references/filing.md`; the title is `[Platform][Severity] what + where`.
-5. **Stop once** with the full draft, its target (a new subtask under the story's `Bugs` subtask) and the priority tag (resolved from the project; none → ask in the same message). Every `⚠️` field and open checklist question sits directly above the stop line; a go that does not answer them is an edit.
-6. **On go**: create, tag, read back once, then:
+5. **Stop once** with the full draft, its target (a new subtask under the story's `Bugs` subtask) and the priority tag's exact name (`references/filing.md`). Every `⚠️` field and open checklist question sits directly above the stop line; a go that does not answer them is an edit.
+6. **On go**: create, read back once, then:
 
 ```output
-Filed under <story> · Bugs — <bug link>, tier <tier>, checklist complete.
+Filed under <story> · Bugs — <bug link>, tier <tier>, checklist complete — apply tag <name> by hand.
 ```
 
 
@@ -38,7 +38,7 @@ Can't retest — build <build> isn't available in <environment>.
 ```
 
 3. **Show the pass list as one table.** QA returns pass/fail and evidence for every item in one reply, or a retest Jam link the skill reads.
-4. **Stop once** with the pass comment, or the fail comment (fresh evidence verbatim, failures itemised) plus the `Retest Failed` tag (create-or-ask in the same message). The skill never marks a bug complete; QA does.
+4. **Stop once** with the pass comment, or the fail comment (fresh evidence verbatim, failures itemised) plus the retest-failed tag's exact name (`references/retest.md`). The skill never marks a bug complete; QA does.
 
 The stop line for both modes:
 

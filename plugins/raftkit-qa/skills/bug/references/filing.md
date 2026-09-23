@@ -34,4 +34,4 @@ Type, Severity and Priority set · Environment complete per the template's block
 
 ## Placement
 
-A subtask under the target story's `Bugs` subtask, tagged with the project's priority tag for the chosen priority (resolved from the project, never hardcoded; none → ask, never create silently). One bug per ticket. A link to the failing run-sheet step goes in the body.
+A subtask under the target story's `Bugs` subtask. The priority tag for the chosen priority is looked up by name in the workspace's object search, never hardcoded, and its exact name is shown at the stop; none found → ask there, never create one. No Asana tool applies a tag, so QA applies it by hand. One bug per ticket. A link to the failing run-sheet step goes in the body.

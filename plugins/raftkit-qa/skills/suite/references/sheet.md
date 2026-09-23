@@ -36,12 +36,13 @@ Every generated case cites the profile or doc fact it came from, in the steps or
    - **unchanged** → leave.
    - **delta** — sources changed a row QA has not touched → propose.
    - **conflict** — sources changed a row QA touched → show both versions; QA picks; nothing else changes the row.
+4. Hand back new rows and deltas as one fenced `csv` block in column order, keyed by case ID, and each conflict with the generated version as its own CSV line under QA's. QA pastes what they accept; a QA-authored row without an ID gets one here, once.
 
 QA-touched means owner is not `generated`, the ID was never generated, or the row differs from generation while still owner `generated` (an unclaimed edit is still an edit). Tiebreak: a `generated`-owned row that differs from the new generation is a delta only when it still matches what the last run wrote and that run is in this chat; otherwise it is a conflict.
 
 ## Writes
 
-Batches with a progress line so a large write never looks stalled and an interruption leaves a coherent partial Sheet. Idempotent by case ID: a clean re-run after an access fix never duplicates.
+Only the first run writes: one CSV upload, converted to a Sheet in the folder QA named. On a timeout, look the Sheet up by name before any retry, so a second one is never created. A re-run writes nothing.
 
 ## Success line
 
@@ -49,7 +50,11 @@ Batches with a progress line so a large write never looks stalled and an interru
 Suite: N cases (X generated, Y QA-authored) — Sheet in sync
 ```
 
-Only after the Sheet reflects the counts.
+Only after the new Sheet reads back with those counts. A re-run ends on this line instead:
+
+```output
+Suite re-sync for <project>: 3 new, 2 deltas, 1 conflict. Paste the CSV rows by case ID; a conflicting row keeps QA's version unless you paste over it.
+```
 
 ## Soft cap and split
 
@@ -57,4 +62,4 @@ When the suite can no longer be generated and verified in one run, or one Sheet 
 
 ## Edge and error states
 
-Sheet exists but is empty on a re-run → the draft is a full re-export, flagged as such at the stop; never assume it was emptied on purpose. Sheet unreachable → stop before writing and name which account needs which permission on which Sheet or folder. No Sheets connector → stop and name it.
+Sheet exists but is empty on a re-run → the CSV is a full re-export, flagged as such; never assume it was emptied on purpose. Sheet or folder unreachable → stop and name which account needs which permission on which Sheet or folder.

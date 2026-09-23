@@ -12,15 +12,15 @@ A feature list → FE, BE and QA hour ranges per feature, totalled, in one Googl
 
 ## Inputs, in one ask
 
-The feature list: pasted, a document, or a read-only source Sheet whose feature column is found from the header and named back. A genuinely ambiguous header is asked about, and the PM naming a column always wins. Also the **implementing developer or team lead** who vets the numbers (no name, no numbers), and where the estimate Sheet lives — always a Sheet of its own. The Profile is read for ⚠️ Partial areas; none → say so and widen.
+The feature list: pasted, a document, or a read-only source Sheet whose feature column is found from the header and named back. A genuinely ambiguous header is asked about, and the PM naming a column always wins. Also the **implementing developer or team lead** who vets the numbers (no name, no numbers), and the Drive folder for the estimate Sheet — always a new Sheet of its own. The Profile is read for ⚠️ Partial areas; none → say so and widen.
 
 ## Run
 
 1. **Read at once**: the list, the Profile, and any story a feature names (its gaps widen, never block). Blank, struck-through or out-of-scope rows are skipped and counted.
 2. **Estimate every feature**: FE, BE and QA as low–high hour ranges; no work on a discipline is a stated `0`; one named assumption each; widen where the Profile is ⚠️ Partial, silent or absent, or the feature is one thin line. The range absorbs its drivers; nothing hangs beneath it as `+8 h`. Cross-cutting work attaches to the features needing it, or becomes its own agreed line.
 3. **Total** lows to lows and highs to highs, never a midpoint. Deduplicate the assumptions, state the feature count, and check the arithmetic before showing it.
-4. **Stop once** with the draft below and the Sheet it will write.
-5. **On go**, write the Sheet per `references/sheet.md` and report the link. Sheet unreachable → the estimate stands in chat and the access fix is named.
+4. **Stop once** with the draft below and the new Sheet's name; a re-run adds the rows that changed (`references/sheet.md`).
+5. **On go**, create the Sheet per `references/sheet.md` and report the link. Sheet unreachable → the estimate stands in chat and the access fix is named.
 
 ```output
 Requires founder review — not a client commitment.

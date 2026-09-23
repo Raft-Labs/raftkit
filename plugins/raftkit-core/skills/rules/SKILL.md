@@ -36,6 +36,12 @@ A run fetches, plans, builds and checks without waiting, then stops exactly once
 **STOP** — approve to push, edit to change, or decline.
 ```
 
+- Before any read, confirm this session has a tool for every write the run will make. One missing → the first reply says so and nothing is read:
+
+```output
+Can't write to <surface> from this session — connect <connector>, then re-run.
+```
+
 - An explicit go pushes exactly what was shown. An edit is not a go: re-present the changed draft. A reply that only chooses among options the draft itself listed is a go, and pushes with those choices. Silence pushes nothing.
 - A run that writes nothing has no stop.
 - Merging a PR, ticking `[AC]` or `Testing`, and closing a bug stay human.
