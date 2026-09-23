@@ -102,6 +102,9 @@ export function saveSession(sessionId, state) {
   }
 }
 
+// A skill that opens a run. raftkit-core's skills are loaded by a run (the
+// rules, the agreement) and the help commands are not runs at all. tokens.mjs
+// finds a run's start in the transcript by this same rule.
 export const opensRun = (name) =>
   /^raftkit-[a-z0-9-]+:[a-z0-9-]+$/.test(name) && !name.startsWith("raftkit-core:") && !name.endsWith(":help");
 

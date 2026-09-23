@@ -30,6 +30,7 @@ import { closeSync, existsSync, openSync, readdirSync, readFileSync, readSync, s
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { claudeConfigDir, parseJson, readJsonFile, sessionFile, writeJsonFile } from "./common.mjs";
+import { opensRun } from "./journey.mjs";
 
 // A single catch-up read. Beyond this the tail is taken and the result marked
 // partial: an approximate number that arrives is worth more than an exact one
@@ -293,11 +294,7 @@ export function measureSession(transcriptPath, sessionId, { sinceMs = 0 } = {}) 
 }
 
 // ------------------------------------------------------------------ run start
-
-// A skill that opens a run. raftkit-core's skills are loaded by a run (the
-// rules, the agreement) and the help commands are not runs at all.
-const opensRun = (name) =>
-  /^raftkit-[a-z0-9-]+:[a-z0-9-]+$/.test(name) && !name.startsWith("raftkit-core:") && !name.endsWith(":help");
+// What opens a run is journey.mjs's rule, the one the hooks track runs by.
 
 let closers;
 /**

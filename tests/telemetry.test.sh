@@ -1400,6 +1400,11 @@ hook "$d" skill '{"session_id":"j2b","hook_event_name":"PostToolUse","tool_name"
 expect_eq "a raftkit-core skill never opens a run; the role skill after it does" "false|true|raftkit-dev:implement" \
   "$(ev "$sp" 'const s=E.filter(e=>e.event==="raftkit_skill_invoked"); s[0].props.journey_start+"|"+s[1].props.journey_start+"|"+s[1].props.journey_skill')"
 
+# run-tokens.mjs finds a run's start in the transcript while the hooks track it
+# in journey state; one rule for what opens a run keeps both on the same run.
+expect_eq "one opensRun serves the journeys and the transcript's run start" "1" \
+  "$(grep -hE '(const|function) opensRun' plugins/raftkit-core/hooks/lib/*.mjs | wc -l | tr -d ' ')"
+
 # --- gates and blockers count only after a RaftKit skill ran in the session
 d="$(new_sandbox)"; sp="$d/spool/events.jsonl"
 hook "$d" stop '{"session_id":"j3","last_assistant_message":"**STOP** — approve to push, edit to change, or decline."}'
