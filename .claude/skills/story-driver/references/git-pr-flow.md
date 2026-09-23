@@ -9,38 +9,28 @@ approval gate, and never at all in dry-run mode.
 Create the branch **before** building, off an up-to-date `main`:
 
 ```
-feat/<milestone>-<skill-name>
+feat/<skill-name>
 ```
 
-e.g. `feat/m3-scope-guard`. Milestone prefix is the lowercased section tag
-(`m1`…`m6`). Verify the working tree is clean first; if it is not, stop and ask.
+e.g. `feat/scope-guard`. Verify the working tree is clean first; if it is not,
+stop and ask.
 
 If the branch already exists (a prior attempt, or it is checked out in another
 worktree), do not clobber it: report it, and either continue on it if it is this
-same story's work, or ask before choosing a suffixed name (`feat/m3-scope-guard-2`).
+same story's work, or ask before choosing a suffixed name (`feat/scope-guard-2`).
 A silent fallback that buries the collision is worse than pausing to confirm.
 
 ## Commits
 
 Small logical commits, conventional-commit titles (`feat:` / `fix:` / `docs:` /
 `chore:`). The commit that adds the skill reads as a changelog line, e.g.
-`feat: raftkit-dev scope-guard skill — hard scope-line enforcement`.
-
-Every commit message ends with the trailer:
-
-```
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
-```
+`feat: raftkit-dev scope-guard skill — hard scope-line enforcement`. No
+attribution trailers on commits or PRs.
 
 ## PR
 
 - **Title** — the changelog line for this story (conventional-commit form).
-- **Body** — links the Asana story, lists the `[AC]`s this PR satisfies, and
-  ends with:
-
-  ```
-  🤖 Generated with [Claude Code](https://claude.com/claude-code)
-  ```
+- **Body** — links the Asana story and lists the `[AC]`s this PR satisfies.
 
 Draft title + body in chat and show a diff summary. **Wait for explicit
 approval.** Then push and open the PR (GitHub MCP `create_pull_request`, or
@@ -64,8 +54,8 @@ human gates).
 
 ## Dry-run mode
 
-When invoked dry-run (the default for benchmark/practice runs), do everything up
-to but not including any push/PR/Asana write. Instead, emit:
+Only when the user says dry-run or practice: do everything up to but not
+including any push/PR/Asana write. Instead, emit:
 
 - the exact `git` commands (branch, commits) — or run the local commits, but
   never `git push`;

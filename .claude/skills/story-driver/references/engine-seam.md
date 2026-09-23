@@ -4,6 +4,11 @@
 own core skills each own a slice. Reach for them by name — do not reimplement
 their guidance inline.
 
+Load plugin-dev's skills and skill-creator only when the story scaffolds a new
+plugin or skill. An edit to an existing budgeted skill is made in place, within
+its `tests/budgets.json` entry, with neither loaded; the reviewer agents still
+run.
+
 ## plugin-dev — scaffolding + QA
 
 Owns the plugin/skill file structure and the structural QA gate.
@@ -17,13 +22,15 @@ Owns the plugin/skill file structure and the structural QA gate.
   skill; for adding one skill to an existing plugin, scaffold the skill dir
   directly per `skill-development`.
 - **`plugin-validator` agent** — validates manifest + structure + security.
+  Dispatch it with `model: "haiku"`.
 - **`skill-reviewer` agent** — reviews SKILL.md quality + description triggering.
+  Dispatch it with `model: "sonnet"`.
 
 ## skill-creator — authoring + triggering
 
 Owns skill *content* quality and description optimization.
 
-- Authoring guidance (use this on every build): progressive disclosure (SKILL.md
+- Authoring guidance (new skills only): progressive disclosure (SKILL.md
   < ~500 lines, push detail into `references/`), imperative instructions, explain
   the *why*, a `description` that is third-person and specific enough to trigger
   reliably.
@@ -54,7 +61,8 @@ Owns skill *content* quality and description optimization.
   asserts no marketplace↔manifest **description drift**, and enforces the
   **version-bump gate**: any changed `plugins/<plugin>/` dir must also bump its
   `plugin.json` version, anchored at the merge base. Touch a plugin → bump it.
-- **`tests/validate.test.sh`** — the self-test of that gate.
+- **Every `tests/*.test.sh`** — the contract suites, `validate.test.sh` among
+  them. CI runs them all; so does step 6, before the stop.
 
 `story-driver` itself lives in `.claude/skills/` (outside `plugins/*`), so
 editing the skill never trips the version gate — but the skills it *builds* do.
@@ -64,4 +72,4 @@ editing the skill never trips the version gate — but the skills it *builds* do
 `plugin-dev` makes the files exist and pass structural validation →
 `skill-creator` makes the content good and triggering reliable →
 `raftkit-core` keeps every Asana write and gate honest →
-`validate.sh` is the wall the PR must clear.
+`validate.sh` and every `tests/*.test.sh` are the wall the PR must clear.
