@@ -85,6 +85,11 @@ export RAFTKIT_DEV=1
 # Default to "send nowhere"; the flush tests set their own stub-server URL.
 export RAFTKIT_TELEMETRY_ENDPOINT=""
 
+# Nor read this machine's Claude Code config: the ledger and the plugin cache
+# lookups resolve under an empty sandbox unless a test points them elsewhere.
+export CLAUDE_CONFIG_DIR="$(new_sandbox)"
+unset CLAUDE_PROJECT_DIR
+
 check() { # <name> <expected: ok|fail> <actual exit code>
   local name="$1" expected="$2" actual="$3"
   if { [[ "$expected" == ok && "$actual" -eq 0 ]] || [[ "$expected" == fail && "$actual" -ne 0 ]]; }; then
@@ -1235,11 +1240,13 @@ write_ledger() { # <config dir> <lastStartTime>
   ' "$1" "$PWD" "$2"
 }
 write_ledger "$cfgd" 1790000000000
-cost_field() { # <spool> <field> — from the one raftkit_session_cost event
+cost_field() { # <spool> <field|count> — a field of the one raftkit_session_cost event, or how many were sent
   node -e '
     const fs = require("fs");
-    const e = fs.readFileSync(process.argv[1], "utf8").trim().split("\n").map((l) => JSON.parse(l)).filter((x) => x.event === "raftkit_session_cost");
-    let v = e.length === 1 ? e[0] : { count: e.length };
+    const p = process.argv[1];
+    const e = (fs.existsSync(p) ? fs.readFileSync(p, "utf8").trim().split("\n") : []).filter(Boolean).map((l) => JSON.parse(l)).filter((x) => x.event === "raftkit_session_cost");
+    if (process.argv[2] === "count") { process.stdout.write(String(e.length)); process.exit(0); }
+    let v = e.length === 1 ? e[0] : undefined;   // a field is read only when exactly one was sent
     for (const k of process.argv[2].split(".")) v = v == null ? undefined : v[k];
     process.stdout.write(String(v));
   ' "$1" "$2" 2>/dev/null
@@ -1263,6 +1270,16 @@ write_ledger "$cfgd" 1790000999000   # a resumed session's next segment
 echo "{\"session_id\":\"s-new3\",\"hook_event_name\":\"SessionStart\",\"source\":\"startup\",\"cwd\":\"$PWD\"}" \
   | CLAUDE_CONFIG_DIR="$cfgd" RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
 expect_eq "a new segment of the ledger is sent" "2" "$(cost_field "$d/spool/events.jsonl" count)"
+
+# The ledger is keyed by the project directory. A session in a subfolder is
+# matched through CLAUDE_PROJECT_DIR, never by walking up to some parent's entry.
+d="$(new_sandbox)"; sub="$PWD/plugins"
+echo "{\"session_id\":\"s-sub\",\"hook_event_name\":\"SessionStart\",\"cwd\":\"$sub\"}" \
+  | CLAUDE_CONFIG_DIR="$cfgd" RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
+expect_eq "a parent directory's ledger is never credited to a subfolder session" "0" "$(cost_field "$d/spool/events.jsonl" count)"
+echo "{\"session_id\":\"s-sub2\",\"hook_event_name\":\"SessionStart\",\"cwd\":\"$sub\"}" \
+  | CLAUDE_CONFIG_DIR="$cfgd" CLAUDE_PROJECT_DIR="$PWD" RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
+expect_eq "  while the session's own project directory finds it" "prev-0001" "$(cost_field "$d/spool/events.jsonl" props.cost_session_id)"
 
 # Per-session state is bounded: files for sessions untouched in two weeks go.
 d="$(new_sandbox)"; mkdir -p "$d/sessions"

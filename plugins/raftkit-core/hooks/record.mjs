@@ -11,7 +11,7 @@
 
 import { appendFileSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import {
   HOOKS_ROOT,
   clampText,
@@ -454,13 +454,12 @@ function pruneSessionState() {
 
 /**
  * The previous session's cost from Claude Code's own ledger, once per ledger
- * entry. The ledger is keyed by the directory Claude Code was started in, so
- * the lookup walks up from cwd rather than spending a git call on the
- * synchronous path.
+ * entry. The ledger is keyed by project directory, which hooks receive as
+ * CLAUDE_PROJECT_DIR; cwd covers a runtime that does not set it. Never a
+ * parent directory: that is another project's ledger.
  */
 function ledgerEvent(hook, base) {
-  const dirs = [];
-  for (let dir = hook.cwd || process.cwd(); dir && !dirs.includes(dir); dir = dirname(dir)) dirs.push(dir);
+  const dirs = [process.env.CLAUDE_PROJECT_DIR, hook.cwd].filter((d) => typeof d === "string" && d !== "");
   const cost = ledgerCost(dirs);
   if (!cost) return null;
   const key = `${cost.cost_session_id}@${cost.started_at}`;
