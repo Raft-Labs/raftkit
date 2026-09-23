@@ -2,11 +2,34 @@
 
 Every path, stage name, port and naming pattern this skill uses is discovered from the repository or the Project Profile, never assumed. Concrete values anywhere in this skill are examples of one project's naming.
 
-Discover once per repository and write the result to `.raftkit/hasura.json` so later runs read it instead of re-deriving it. Re-derive when that file is absent, or when a command fails in a way that suggests it is stale.
+## The cache: `.raftkit/hasura.json`
 
-Every path, stage name, port, and naming pattern below is a **convention
-discovered from the repository or the Project Profile**, not a constant of
-this skill. Before doing anything, establish:
+Written only by `scripts/detect-hasura.mjs --root <repo> --write`, never by
+hand, so later runs read it instead of re-deriving it. Pass each value found by
+judgment (the tenancy relationship, or the chosen root when two exist) as
+`--env NAME=VALUE`; an unknown name writes nothing. Paths are relative to the
+repository root; run the scripts from there. Re-derive when the file is absent,
+or when a command fails in a way that suggests it is stale.
+
+| Key | Holds |
+|---|---|
+| `schema` | `1`, the version of this shape |
+| `hasuraRoot` | the Hasura project directory, as `find_hasura_root` resolves it |
+| `database` | the one database under `<metadata>/databases/` (`default` when several include it), else `null` |
+| `roles` | roles declared in that database's table YAML; `admin` is never listed |
+| `makeTargets` | root Makefile targets whose name contains `hasura` or `dbml` |
+| `env` | the variables to set when running `new-migration.sh` |
+
+`env` holds `HASURA_MIGRATIONS_SUBDIR` and `HASURA_METADATA_SUBDIR` (from
+`config.yaml` and `database`) plus any `--env` value: `HASURA_ROOT`,
+`TENANCY_COLUMN`, `TENANCY_REL`, `TENANCY_MEMBER_REL`, `TENANCY_MEMBER_COLUMN`,
+`TENANCY_STATUS_FIELD`, `TENANCY_STATUS_VALUE` (meanings in
+`scripts/lib/perms.sh`). Stage names, env files, secret names and the deploy
+model are not cached: read them from the repository when a run needs them.
+
+## What to establish
+
+Before doing anything, establish:
 
 - **`<hasura-root>`** — the Hasura project directory: locate `config.yaml`
   (the Hasura CLI config) plus sibling `migrations/` and `metadata/`
@@ -37,9 +60,6 @@ this skill. Before doing anything, establish:
 - **Deploy remotes / branch model** — from the Project Profile or git
   config. Some projects have a deploy remote that accepts only one ref;
   never push feature branches to such a remote.
-
-"the discovered value". Concrete paths appear only as clearly-marked
-examples.
 
 ## Environment
 
@@ -75,19 +95,8 @@ values below are one project's example layout:
   stage=local`) to normalize what's there, then diff against the generated
   YAML to spot the drift.
 
-## Integrations
+## Activation
 
-This skill activates only on a detected Hasura project
-(`scripts/detect-hasura.mjs`; a non-Hasura repository gets nothing) and wires
-into the rest of raftkit-dev:
-
-- **`raftkit-dev:setup`** — its engine check confirms what this skill calls, and
-  it proposes activation only for a detected Hasura project, behind the one stop.
-  Discovery of the project's conventions (roots, stages, Make targets, secret env
-  var names, tenancy relationship) runs through the same seam — nothing is assumed.
-- **envx** — when the project keeps encrypted environments, the admin secret
-  and endpoint are sourced through envx (the secret is never echoed; env files
-  are never logged).
-- **docs schema/architecture sync** — a schema change that lands here triggers
-  the docs skill's change-tracking lifecycle so the schema and architecture
-  docs stay in lockstep; the DBML snapshot refresh feeds that sync.
+This skill activates only on a project `scripts/detect-hasura.mjs` detects; a
+non-Hasura repository gets nothing. `raftkit-dev:setup` proposes activation
+behind its one stop.

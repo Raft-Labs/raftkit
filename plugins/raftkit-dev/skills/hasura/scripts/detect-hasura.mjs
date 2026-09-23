@@ -1,8 +1,10 @@
 #!/usr/bin/env node
-// Deterministic Hasura-project detector. Pure reader: it looks for Hasura
-// signals under a root and reports whether the capability should activate and
-// which conventions were discovered. A non-Hasura repository yields nothing and
-// a non-zero exit — the capability never activates or installs assets there.
+// Deterministic Hasura-project detector. It looks for Hasura signals under a
+// root and reports whether the capability should activate and which
+// conventions were discovered. A non-Hasura repository yields nothing and a
+// non-zero exit — the capability never activates or installs assets there.
+// It reads only, unless --write records the conventions in
+// <root>/.raftkit/hasura.json (schema: references/conventions.md).
 //
 // Signals (any is sufficient; more raise confidence):
 //   - a Hasura config.yaml (version:/metadata_directory:/endpoint:)
@@ -12,10 +14,10 @@
 //   - a Hasura CLI config / --project marker
 // Package/Profile stack evidence is passed in by the caller when available.
 //
-// Usage: node detect-hasura.mjs --root <dir> [--json]
-// Exit codes: 0 detected · 1 not detected · 2 bad input.
-import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+// Usage: node detect-hasura.mjs --root <repo> [--json] [--write [--env NAME=VALUE]...]
+// Exit codes: 0 detected · 1 not detected (nothing written) · 2 bad input.
+import { readFileSync, existsSync, readdirSync, statSync, mkdirSync, writeFileSync } from "node:fs";
+import { join, relative, resolve } from "node:path";
 
 const args = process.argv.slice(2);
 const flag = (n) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : undefined; };
@@ -23,6 +25,21 @@ const asJson = args.includes("--json");
 const root = flag("--root");
 if (!root) { console.error("usage: detect-hasura.mjs --root <dir> [--json]"); process.exit(2); }
 if (!existsSync(root)) { console.error(`root not found: ${root}`); process.exit(2); }
+
+// --env records a value the scripts read as an environment variable.
+const ENV_NAMES = ["HASURA_ROOT", "HASURA_MIGRATIONS_SUBDIR", "HASURA_METADATA_SUBDIR", "TENANCY_COLUMN", "TENANCY_REL",
+  "TENANCY_MEMBER_REL", "TENANCY_MEMBER_COLUMN", "TENANCY_STATUS_FIELD", "TENANCY_STATUS_VALUE"];
+const write = args.includes("--write");
+const envArgs = {};
+args.forEach((a, i) => {
+  if (a !== "--env") return;
+  const [name, ...value] = (args[i + 1] ?? "").split("=");
+  if (!ENV_NAMES.includes(name) || value.length === 0) {
+    console.error(`--env takes NAME=VALUE with NAME one of: ${ENV_NAMES.join(", ")}`);
+    process.exit(2);
+  }
+  envArgs[name] = value.join("=");
+});
 
 const isDir = (p) => { try { return statSync(p).isDirectory(); } catch { return false; } };
 const has = (p) => existsSync(join(root, p));
@@ -75,4 +92,37 @@ if (asJson) {
 } else {
   console.log("no Hasura signals — capability does not activate; no Hasura assets installed");
 }
+if (detected && write) writeCache();
 process.exit(detected ? 0 : 1);
+
+// The cache holds what later runs would otherwise re-derive: the Hasura root,
+// the database, the declared roles, the root Makefile's hasura/dbml targets, and
+// `env`, the variables to set when running the scaffolder.
+function writeCache() {
+  const hasuraDir = envArgs.HASURA_ROOT ? resolve(root, envArgs.HASURA_ROOT) : conventions.hasuraRoot;
+  if (!hasuraDir || !existsSync(join(hasuraDir, "config.yaml"))) {
+    console.error("no Hasura config.yaml to record — pass --env HASURA_ROOT=<dir>; nothing written");
+    process.exit(1);
+  }
+  const cfg = readFileSync(join(hasuraDir, "config.yaml"), "utf8");
+  const metadata = cfg.match(/^\s*metadata_directory\s*:\s*(\S+)/m)?.[1] ?? "metadata";
+  const migrations = cfg.match(/^\s*migrations_directory\s*:\s*(\S+)/m)?.[1] ?? "migrations";
+  const list = (dir, keep) => { try { return readdirSync(dir).filter((n) => !n.startsWith(".") && keep(join(dir, n))).sort(); } catch { return []; } };
+  const dbs = list(join(hasuraDir, metadata, "databases"), isDir);
+  const database = dbs.length === 1 ? dbs[0] : dbs.includes("default") ? "default" : null;
+  const tables = database ? join(hasuraDir, metadata, "databases", database, "tables") : null;
+  const roles = new Set();
+  for (const f of tables ? list(tables, (p) => /\.ya?ml$/.test(p)) : []) {
+    for (const m of readFileSync(join(tables, f), "utf8").matchAll(/^\s*-?\s*role\s*:\s*["']?([\w-]+)/gm)) if (m[1] !== "admin") roles.add(m[1]);
+  }
+  const makefile = join(root, "Makefile");
+  const targets = new Set();
+  if (existsSync(makefile)) {
+    for (const m of readFileSync(makefile, "utf8").matchAll(/^([A-Za-z0-9][\w.-]*)[ \t]*:(?![=:])/gm)) if (/hasura|dbml/i.test(m[1])) targets.add(m[1]);
+  }
+  const env = database ? { HASURA_MIGRATIONS_SUBDIR: `${migrations}/${database}`, HASURA_METADATA_SUBDIR: `${metadata}/databases/${database}/tables` } : {};
+  const cache = { schema: 1, hasuraRoot: relative(root, hasuraDir) || ".", database, roles: [...roles].sort(), makeTargets: [...targets].sort(), env: { ...env, ...envArgs } };
+  mkdirSync(join(root, ".raftkit"), { recursive: true });
+  writeFileSync(join(root, ".raftkit", "hasura.json"), `${JSON.stringify(cache, null, 2)}\n`);
+  if (!asJson) console.log("wrote .raftkit/hasura.json");
+}

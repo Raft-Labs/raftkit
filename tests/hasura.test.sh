@@ -185,6 +185,40 @@ pr=""
 [[ -z "$pr" ]]
 check "HR22 detect-hasura.mjs scans to find_hasura_root's depth and order${pr:+ (diverged:$pr)}" ok $?
 
+# HR23-HR24 · .raftkit/hasura.json is written by detect-hasura.mjs --write, in
+# the documented schema, and nothing else writes it.
+cx=$(mktemp -d)
+mkdir -p "$cx/services/hasura/metadata/databases/default/tables" "$cx/services/hasura/migrations/default"
+printf 'version: 3\nmetadata_directory: metadata\nmigrations_directory: migrations\n' > "$cx/services/hasura/config.yaml"
+printf 'table:\n  name: users\nselect_permissions:\n  - role: user\n  - role: anonymous\n  - role: admin\ninsert_permissions:\n  - role: user\n' \
+  > "$cx/services/hasura/metadata/databases/default/tables/public_users.yaml"
+printf 'X := 1\nbuild:\n\t@true\nhasura-migrate:\n\t@true\ncreate-dbml: build\n\t@true\n' > "$cx/Makefile"
+CACHE="$cx/.raftkit/hasura.json"
+node "$DETECT" --root "$cx" >/dev/null 2>&1 && [[ ! -e "$CACHE" ]]; r0=$?
+node "$DETECT" --root "$cx" --write --env BOGUS=1 >/dev/null 2>&1; rb=$?
+[[ ! -e "$CACHE" ]]; r1=$?
+node "$DETECT" --root "$cx" --write --env TENANCY_COLUMN=org_id >/dev/null 2>&1; rw=$?
+CACHE="$CACHE" node -e '
+const got = JSON.parse(require("fs").readFileSync(process.env.CACHE, "utf8"));
+const want = { schema: 1, hasuraRoot: "services/hasura", database: "default", roles: ["anonymous", "user"],
+  makeTargets: ["create-dbml", "hasura-migrate"],
+  env: { HASURA_MIGRATIONS_SUBDIR: "migrations/default", HASURA_METADATA_SUBDIR: "metadata/databases/default/tables", TENANCY_COLUMN: "org_id" } };
+process.exit(JSON.stringify(got) === JSON.stringify(want) ? 0 : 1);' 2>/dev/null; rj=$?
+nx=$(mktemp -d); node "$DETECT" --root "$nx" --write >/dev/null 2>&1; rn=$?
+[[ "$r0" -eq 0 && "$rb" -eq 2 && "$r1" -eq 0 && "$rw" -eq 0 && "$rj" -eq 0 && "$rn" -eq 1 && ! -e "$nx/.raftkit" ]]
+check "HR23 detect-hasura.mjs --write records the conventions in .raftkit/hasura.json; a plain run, an unknown --env or a non-Hasura repo writes nothing" ok $?
+
+undoc=""
+if [[ -f "$CACHE" ]]; then
+  for k in $(CACHE="$CACHE" node -e 'const j=JSON.parse(require("fs").readFileSync(process.env.CACHE,"utf8"));console.log([...Object.keys(j),...Object.keys(j.env)].join(" "))') \
+      $(node -e 'const m=require("fs").readFileSync(process.argv[1],"utf8").match(/ENV_NAMES = \[([^\]]*)\]/);console.log(m?m[1].match(/[A-Z_]+/g).join(" "):"ENV_NAMES_NOT_FOUND")' "$DETECT"); do
+    grep -qF "\`$k\`" "$H/references/conventions.md" || undoc+=" $k"
+  done
+else undoc=" (no cache written)"; fi
+[[ -z "$undoc" ]] && ! grep -rqE 'hasura\.json' "$H/scripts" --include='*.sh'
+check "HR24 every key the cache can hold is documented in conventions.md${undoc:+ (undocumented:$undoc)}" ok $?
+rm -rf "$cx" "$nx"
+
 eval_count=$(find plugins/raftkit-dev/evals/hasura -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
 [[ "${eval_count:-0}" -ge 8 ]] \
   && ! find plugins/raftkit-dev/evals/hasura -mindepth 1 -maxdepth 1 -type d '!' -exec test -f '{}/prompt.md' ';' -print 2>/dev/null | grep -q . \

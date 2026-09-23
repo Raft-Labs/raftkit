@@ -55,9 +55,6 @@ Examples:
 
 ## Tooling reference
 
-Paths here are relative to this skill's directory, the base directory SKILL.md
-names.
-
 - **Scripts** live under `scripts/`. Run from
   anywhere — they auto-locate the repo root.
 - **Templates** under `templates/` use `{{VAR}}`

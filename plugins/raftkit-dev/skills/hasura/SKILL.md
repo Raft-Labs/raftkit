@@ -6,13 +6,13 @@ user-invocable: true
 
 # hasura
 
-The Hasura development loop: scaffold a migration, author its metadata, apply it through the project's own targets, refresh the schema snapshot, and query any stage. Load `raftkit-core:rules` first unless it is already in this conversation.
+Scaffold a migration and its metadata, apply it through the project's own targets, refresh the schema snapshot, and query any stage. Load `raftkit-core:rules` first unless it is already in this conversation.
 
-**Conventions are discovered, never assumed.** The Hasura root, the snapshot and its target, the stage names, the env files, the database, the roles, the tenancy column, the secret names and the deploy model all come from this repository. Discover them once and cache them in `.raftkit/hasura.json`; re-derive when that file is missing or a command fails as though it were stale. Everything in `references/` written as a concrete path is an example of one project's naming. See `references/conventions.md`.
+**Conventions are discovered, never assumed.** The Hasura root, the snapshot and its target, the stage names, the env files, the database, the roles, the tenancy column, the secret names and the deploy model all come from this repository. `${CLAUDE_SKILL_DIR}/scripts/detect-hasura.mjs --root <repo> --write` records the scaffolder's inputs in `.raftkit/hasura.json`; its schema and when to re-derive are in `references/conventions.md`. Everything in `references/` written as a concrete path is an example of one project's naming.
 
 ## Run
 
-1. **Resolve the conventions** from `.raftkit/hasura.json` or by discovery.
+1. **Resolve the conventions** from `.raftkit/hasura.json` or by discovery, and run the scaffolder with its `env` set.
 2. **Scaffold** with `${CLAUDE_SKILL_DIR}/scripts/new-migration.sh`, which never prompts: `--dry-run` prints the `up.sql`, the `down.sql` and the permissions YAML, and `--write` writes them. Column specs and every subcommand are in `references/commands.md`.
 3. **Apply and refresh.** Run the project's own migrate target, then refresh the schema snapshot. A DDL change refreshes the snapshot before and after, so the committed schema never drifts.
 4. **Query** any stage ad hoc with `${CLAUDE_SKILL_DIR}/scripts/hasura-query.sh`, reading the stage's own env file.
