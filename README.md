@@ -23,7 +23,7 @@ claude plugin install raftkit-dev@raftkit   # or raftkit-pm / raftkit-qa
 
 Installing any role plugin automatically installs `raftkit-core` alongside it. `raftkit-dev` additionally auto-installs four declared dependencies from the official Claude marketplace — `superpowers`, `security-guidance`, `pr-review-toolkit`, `frontend-design` — the engines its skills call by name. Inside a Claude Code session, the same commands work as `/plugin marketplace add` and `/plugin install`. Verify with `claude plugin list` — you should see your role plugin, `raftkit-core`, and (for `raftkit-dev`) the four auto-installed engines.
 
-`raftkit-docs` is optional and installed only where a team wants the full documentation product; day-to-day delivery does not need it.
+`raftkit-docs` is opt-in by design: day-to-day delivery does not need it. Org sync installs it today, along with the other four.
 
 ## Plugins
 
@@ -35,7 +35,7 @@ Installing any role plugin automatically installs `raftkit-core` alongside it. `
 | `raftkit-qa` | QA | Test-case suite, per-story run sheets, bugs (file and retest) |
 | `raftkit-docs` | optional | The documentation design product: co-authoring flow, templates, diagrams, reverse-engineering |
 
-v2 ships these five plugins; `raftkit-docs` is opt-in. PM and QA plugins target the Claude apps/Cowork runtime; the install path there is pending the org-wide install decision (Asana task 1216551001583573) — until it lands, use Claude Code with the commands above.
+v2 ships these five plugins. PM and QA plugins target the Claude apps/Cowork runtime. The org-wide install is verified in Claude Code and Cowork: org sync installs all five RaftKit plugins, but not `raftkit-dev`'s engines, and `/raftkit-dev:setup` names any missing engine with its install command. The org install auto-updates, so anything merged to `main` reaches every user.
 
 ## Getting help
 
