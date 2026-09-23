@@ -168,6 +168,14 @@ echo "// edit" > "$S/src.js"; : > "$COUNT"; v "$S"
 [[ "$(runs)" == tlc ]] && grep -q 'uncommitted' <<<"$OUT"
 check "V24b an untracked file outside docs/specs still makes the tree dirty" ok $?
 
+# ---- a red report survives a pipe: every failing gate, lines capped -----------
+L="$(newtmp)/longline"
+mkscripts "$L" '{"test":"node -e \"console.log(\\\"x\\\".repeat(300000)); process.exit(1)\"","typecheck":"node -e \"console.log(\\\"TYPECHECK-DETAIL\\\"); process.exit(1)\""}'
+v "$L"
+[[ $RC -eq 1 ]] && grep -q '^--- test' <<<"$OUT" && grep -q '^--- typecheck' <<<"$OUT" && grep -q 'TYPECHECK-DETAIL' <<<"$OUT" \
+  && [[ "$(printf '%s' "$OUT" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(Math.max(...s.split("\n").map((l)=>[...l].length))))')" -le 400 ]]
+check "V25 a 300,000-char failing line is capped and the next failing gate is still reported" ok $?
+
 # ---- the pre-push hook keeps its full gates ---------------------------------
 HOOK="$REPO_ROOT/plugins/raftkit-dev/skills/setup/assets/pre-push"
 ! grep -qE 'verify\.mjs|verify\.json|raftkit/verify' "$HOOK" && grep -q '__QUALITY_SCRIPTS__' "$HOOK"

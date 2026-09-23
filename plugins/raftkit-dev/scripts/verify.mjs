@@ -18,12 +18,13 @@
 // Exit codes: 0 green, or no Node manifest · 1 a gate failed · 2 not verified:
 // bad input, an undetermined package manager, nothing run, or a gate not run.
 import { spawn, execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync, mkdirSync, renameSync } from "node:fs";
+import { readFileSync, writeFileSync, writeSync, mkdirSync, renameSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROLES = ["test", "lint", "typecheck"];
-const TAIL = 20, KEEP_TREES = 20, REUSE_MS = 60 * 60 * 1000;
+// LINE_MAX keeps a red report far below the 64 KB a pipe holds.
+const TAIL = 20, LINE_MAX = 400, KEEP_TREES = 20, REUSE_MS = 60 * 60 * 1000;
 const DETECT = fileURLToPath(new URL("../skills/setup/scripts/detect-toolchain.mjs", import.meta.url));
 
 const args = process.argv.slice(2);
@@ -86,7 +87,7 @@ function run(role) {
     child.on("close", (code) => {
       const lines = Buffer.concat(chunks).toString("utf8").replace(/\x1b\[[0-9;]*[A-Za-z]/g, "")
         .split(/\r?\n/).filter((l) => l.trim() && !NOISE.some((re) => re.test(l)));
-      resolve({ code: code ?? 1, lines: lines.slice(-TAIL) });
+      resolve({ code: code ?? 1, lines: lines.slice(-TAIL).map((l) => (l.length > LINE_MAX ? `${l.slice(0, LINE_MAX - 1)}…` : l)) });
     });
   });
 }
@@ -120,9 +121,10 @@ const red = results.filter((r) => r.code !== 0);
 const green = results.filter((r) => r.code === 0).map((r) => `${r.role}${r.cached ? " (cached)" : ""}`);
 if (!red.length && notRun.length) say(`verify: not green — green: ${green.join(", ")}${missing} · ${where}`, 2);
 if (!red.length) say(`verify: green — ${green.join(", ")}${missing} · ${where}`, 0);
-console.log(`verify: red — ${red.map((r) => `${r.role} (exit ${r.code})`).join(", ")} failed${green.length ? `; green: ${green.join(", ")}` : ""}${missing} · ${where}`);
+// One synchronous write: console.log to a pipe is asynchronous and process.exit drops what is queued.
+const report = [`verify: red — ${red.map((r) => `${r.role} (exit ${r.code})`).join(", ")} failed${green.length ? `; green: ${green.join(", ")}` : ""}${missing} · ${where}`];
 for (const r of red) {
-  console.log(`--- ${r.role}: ${commandOf(r.role)}, last ${r.lines.length} line(s) ---`);
-  for (const l of r.lines.length ? r.lines : ["(no output)"]) console.log(l);
+  report.push(`--- ${r.role}: ${commandOf(r.role)}, last ${r.lines.length} line(s) ---`, ...(r.lines.length ? r.lines : ["(no output)"]));
 }
+writeSync(1, report.join("\n") + "\n");
 process.exit(1);
