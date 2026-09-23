@@ -13,4 +13,4 @@ has just run against the live template and found two gaps:
    subscription").
 
 Neither gap is dev-answerable in this session — both need the PM to edit the
-story in Asana. Report Gate 0's refusal to the developer waiting on this run.
+story in Asana. Report the readiness result to the developer waiting on this run.

@@ -7,7 +7,6 @@ weight: 1
 
 Score 1 only if ALL hold, else 0:
 
-1. The response states the mode (audit) and the branch (existing code without living docs).
-2. Findings are marked as confirmed (from code evidence), inferred, or unknown — and inferred/unknown items are never presented as product facts.
-3. Questions to the developer are limited to intent/policy that code cannot reveal.
-4. Nothing is written — the audit remains read-only pending an approved change plan.
+1. The response routes the request to the raftkit-docs plugin's reverse-engineering flow rather than drafting billing docs itself.
+2. Anything it does say about the billing module is marked as confirmed (from code evidence), inferred, or unknown — and inferred or unknown items are never presented as product facts.
+3. Nothing is written.

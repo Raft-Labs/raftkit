@@ -16,7 +16,9 @@
 # it names (with the exact exit code and violation text asserted, not just
 # "nonzero"), and each positive-control fixture deliberately passes. It no
 # longer requires every skill to restate the guardrail (v2 inherits it) and
-# no longer pins a minimum skill or output-block count.
+# no longer pins a minimum skill or output-block count. PL11-PL17 pin the eval
+# bundle: placement, prompt frontmatter, the harness schema, countable
+# criteria on native graders, and a skill-fired case for every role skill.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 
@@ -165,24 +167,157 @@ check "PL9 the checker actually scanned blocks, not a silent zero-match pass" ok
 # A case is run by `claude plugin eval <plugin>`, which loads only that plugin.
 # A prompt that says "you are running raftkit-pm:estimate" therefore has to sit
 # under raftkit-pm, or the skill under test is not loaded and the model
-# improvises. This check pins the count and that placement.
+# improvises. A case's graders/skill-fired.md (a tool_used grader on Skill)
+# names the skill under test the same way. These checks pin placement for every
+# case under plugins/*/evals/<group>/<case>, not only the plain-language ones.
 
 total=0
 misplaced=""
+fired=""
 while IFS= read -r d; do
-  total=$((total + 1))
+  [[ "$d" == */evals/plain-language/* ]] && total=$((total + 1))
   [[ -f "$d/prompt.md" ]] || misplaced="$misplaced $d(no-prompt)"
   ls "$d"/graders/*.md >/dev/null 2>&1 || misplaced="$misplaced $d(no-grader)"
   owner="$(sed -n 's/.*\(raftkit-[a-z]*\):[a-z-]*.*/\1/p' "$d/prompt.md" 2>/dev/null | head -1)"
   plugin="$(printf '%s' "$d" | sed -E 's|plugins/([^/]+)/evals/.*|\1|')"
   [[ -z "$owner" || "$owner" == "$plugin" ]] || misplaced="$misplaced $d(names-$owner)"
-done < <(find plugins -path '*/evals/plain-language/*' -mindepth 4 -maxdepth 4 -type d | sort)
+  if [[ -f "$d/graders/skill-fired.md" ]]; then
+    g="$d/graders/skill-fired.md"
+    skill="$(sed -n "s/^input_match: .*)?\([a-z][a-z-]*\)\"'\$/\1/p" "$g" | head -1)"
+    grep -qx 'type: tool_used' "$g" && grep -qx 'tool: Skill' "$g" && [[ -n "$skill" && -d "plugins/$plugin/skills/$skill" ]] \
+      && fired="$fired $plugin/$skill" || misplaced="$misplaced $d(skill-fired-${skill:-unparsed})"
+  fi
+done < <(find plugins -mindepth 4 -maxdepth 4 -type d -path 'plugins/*/evals/*' -not -path '*/evals/results/*' -not -path '*/evals/mocks/*' | sort)
 
 [[ "$total" -ge 6 ]]
 check "PL11 >=6 plain-language eval cases across the plugins" ok $?
 [[ -z "$misplaced" ]]
-check "PL12 every case has a prompt and grader and sits with the plugin it names" ok $?
+check "PL12 every eval case has a prompt and grader and sits with the plugin it names" ok $?
 [[ -n "$misplaced" ]] && echo "  misplaced:$misplaced"
+
+uncovered=""
+for s in plugins/raftkit-pm/skills/*/ plugins/raftkit-dev/skills/*/ plugins/raftkit-qa/skills/*/; do
+  key="$(basename "$(dirname "$(dirname "$s")")")/$(basename "$s")"
+  [[ " $fired " == *" $key "* ]] || uncovered="$uncovered $key"
+done
+[[ -z "$uncovered" ]]
+check "PL17 every pm, dev and qa skill has an eval case whose skill-fired grader names it" ok $?
+[[ -n "$uncovered" ]] && echo "  uncovered:$uncovered"
+
+# A prompt without frontmatter gets zero tools, so the skill never loads and the
+# case scores 0 for a harness reason, not a skill reason.
+nofm=""
+for p in plugins/*/evals/*/*/prompt.md; do
+  fmp="$(awk 'NR==1&&$0!="---"{exit} NR>1&&$0=="---"{exit} NR>1{print}' "$p")"
+  grep -qE '^max_turns: [1-9][0-9]*$' <<<"$fmp" && grep -qE '^allowed_tools: \[.*\bSkill\b.*\]$' <<<"$fmp" || nofm="$nofm $p"
+done
+[[ -z "$nofm" ]]
+check "PL13 every eval prompt declares max_turns and allowed_tools including Skill" ok $?
+[[ -n "$nofm" ]] && echo "  missing:$nofm"
+
+# Every grader and prompt parses under the harness schema (claude 2.1.280:
+# `claude plugin eval` validates the same keys strictly and compiles regex
+# patterns with JS RegExp), so a typo fails here, not in a paid run.
+node - <<'NODE'
+const fs = require("fs"), path = require("path");
+const PROMPT = new Set(["schema_version","name","description","tags","plugins","runs","expected_outcome","model","max_turns","timeout_seconds","allowed_tools","artifact_publish","growthbook_overrides","append_system_prompt","env"]);
+const KEYS = {
+  regex: ["target","pattern","flags","match"], tool_order: ["before","after"],
+  tool_used: ["tool","input_match","min","max"], file_exists: ["path","exists"],
+  llm: ["criteria","focus"], baseline: ["baseline_file","criteria"],
+};
+const TARGETS = new Set(["last_message","trace","files","mock_calls"]);
+function scalar(v) {
+  if (/^'.*'$/.test(v)) {
+    const inner = v.slice(1, -1);
+    if (inner.replace(/''/g, "").includes("'")) throw new Error(`single-quoted value holds a bare ' (YAML needs ''): ${v}`);
+    return inner.replace(/''/g, "'");
+  }
+  if (/^".*"$/.test(v)) return JSON.parse(v);
+  if (/^\[.*\]$/.test(v)) return v.slice(1, -1).split(",").map((s) => scalar(s.trim())).filter((s) => s !== "");
+  if (/^-?\d+(\.\d+)?$/.test(v)) return Number(v);
+  if (v === "true" || v === "false") return v === "true";
+  return v;
+}
+function parse(file) {
+  const src = fs.readFileSync(file, "utf8");
+  // a shell echo that expands \b writes a backspace, which still compiles as a regex
+  if (/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(src)) throw new Error(`${path.basename(file)}: control character`);
+  const m = src.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+  if (!m) return null;
+  const fm = {};
+  for (const line of m[1].split("\n")) {
+    const kv = line.match(/^([a-z_]+): (.*)$/);
+    if (!kv) throw new Error(`unparseable frontmatter line: ${line}`);
+    fm[kv[1]] = scalar(kv[2].trim());
+  }
+  return { fm, body: m[2].trim() };
+}
+const bad = [];
+const root = "plugins";
+for (const plugin of fs.readdirSync(root)) {
+  const evals = path.join(root, plugin, "evals");
+  if (!fs.existsSync(evals)) continue;
+  for (const group of fs.readdirSync(evals)) {
+    if (group === "results" || group === "mocks") continue;
+    for (const c of fs.readdirSync(path.join(evals, group))) {
+      const dir = path.join(evals, group, c);
+      try {
+        const p = parse(path.join(dir, "prompt.md"));
+        if (!p) throw new Error("prompt.md has no frontmatter");
+        for (const k of Object.keys(p.fm)) if (!PROMPT.has(k)) throw new Error(`prompt.md: unknown key ${k}`);
+        if (!Number.isInteger(p.fm.max_turns) || p.fm.max_turns < 1 || p.fm.max_turns > 200) throw new Error("prompt.md: max_turns out of range");
+        if (!p.body) throw new Error("prompt.md: empty prompt");
+        for (const g of fs.readdirSync(path.join(dir, "graders"))) {
+          const gf = path.join(dir, "graders", g), where = `${g}`;
+          const r = parse(gf);
+          if (!r) throw new Error(`${where}: no frontmatter, so the harness skips it`);
+          const { fm, body } = r, keys = KEYS[fm.type];
+          if (!keys) throw new Error(`${where}: type must be one of ${Object.keys(KEYS).join(" | ")}`);
+          for (const k of Object.keys(fm)) if (!["type","name","weight","arm",...keys].includes(k)) throw new Error(`${where}: unknown key ${k} for type ${fm.type}`);
+          if (fm.weight !== undefined && !(fm.weight > 0)) throw new Error(`${where}: weight must be positive`);
+          if (fm.arm !== undefined && !["with-only","both"].includes(fm.arm)) throw new Error(`${where}: bad arm`);
+          if (fm.type === "regex") {
+            const pattern = fm.pattern ?? body, flags = fm.flags ?? "", match = fm.match ?? "contains";
+            if (!pattern) throw new Error(`${where}: no pattern`);
+            if (!/^[dgimsuvy]*$/.test(flags)) throw new Error(`${where}: bad flags ${flags}`);
+            new RegExp(pattern, flags);
+            if (!/^(contains|not_contains|count:\d+)$/.test(match)) throw new Error(`${where}: bad match ${match}`);
+            if (fm.target !== undefined && !TARGETS.has(fm.target)) throw new Error(`${where}: bad target ${fm.target}`);
+          }
+          if (fm.type === "tool_used") {
+            if (typeof fm.tool !== "string" || !fm.tool) throw new Error(`${where}: no tool`);
+            if (fm.input_match !== undefined) new RegExp(fm.input_match);
+            for (const k of ["min","max"]) if (fm[k] !== undefined && !(Number.isInteger(fm[k]) && fm[k] >= 0)) throw new Error(`${where}: bad ${k}`);
+          }
+          if ((fm.type === "llm" || fm.type === "baseline") && !(fm.criteria ?? body)) throw new Error(`${where}: no criteria`);
+          if (/TODO: describe/.test(fm.criteria ?? fm.pattern ?? body)) throw new Error(`${where}: still the blank init template`);
+        }
+      } catch (e) { bad.push(`${dir}: ${e.message}`); }
+    }
+  }
+}
+if (bad.length) { console.error(bad.join("\n")); process.exit(1); }
+NODE
+check "PL14 every eval prompt and grader parses under the harness schema, and every regex compiles" ok $?
+
+# Countable criteria are graded by the harness's native regex graders, free and
+# exact; an LLM judge is kept for what needs judgment. An llm grader that still
+# asks about the watermark, the STOP line, the output fence, the banned-phrase
+# list, the internal label or the sentence cap is a countable criterion on a paid judge.
+counted=""
+for g in plugins/*/evals/*/*/graders/*.md; do
+  grep -qx 'type: llm' "$g" || continue
+  grep -qE 'Requires founder review|\*\*STOP\*\*|[Oo]utput fence|```output|utilize|WEESLD|25 words' "$g" && counted="$counted $g"
+done
+[[ -z "$counted" ]]
+check "PL15 no llm grader carries a countable criterion" ok $?
+[[ -n "$counted" ]] && echo "  countable:$counted"
+
+# v2 cut the plain-language glossary; a grader citing it grades a rule that no
+# longer exists.
+! grep -lis 'glossary' plugins/*/evals/*/*/graders/*.md | grep -q .
+check "PL16 no grader cites the plain-language glossary v2 removed" ok $?
 
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures check(s) failed"
