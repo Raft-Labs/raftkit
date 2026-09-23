@@ -9,7 +9,7 @@ Methodology, for what RaftKit produces and for RaftKit itself: **the story is th
 1. **The Asana story you are implementing** — the scope contract. Its `[AC]` subtasks are the definition of done; its "Out of scope" section is a hard exclusion list.
 2. **The v2 design** — [docs/specs/2026-09-16-raftkit-v2-design.md](docs/specs/2026-09-16-raftkit-v2-design.md). The architecture, the per-skill budgets, and why each rule exists.
 3. **PRD** — [claude-plugin-marketplace-prd.md](https://drive.google.com/file/d/1nJrBdvUIizJme9ysDAJPNnF0waKrra4R/view) (also in Google Drive → RaftLabs - General → Raftlabs Framework). Product intent and metrics; the v2 design supersedes its process detail.
-4. **Development board** — Asana project `raftkit` (gid `1217718419015746`): https://app.asana.com/1/1194107417268910/project/1217718419015746. It moved here on 21 Aug 2026 from `1216551447756315`, which a free-tier custom-field paywall locked; task GIDs were preserved.
+4. **Development board** — Asana project `raftkit` (gid `1217718419015746`): https://app.asana.com/1/1194107417268910/project/1217718419015746. It moved here on 21 Aug 2026 from the pre-migration board, which a free-tier custom-field paywall locked; task GIDs were preserved.
 
 ## Workflow constants
 
