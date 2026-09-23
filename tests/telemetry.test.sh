@@ -1324,10 +1324,11 @@ expect_eq "the first human prompt after the STOP is the reply" "true|human" \
 expect_eq "  and only that one" "false" "$(ev "$sp" 'E.filter(e=>e.event==="raftkit_prompt_submitted")[2].props.after_gate')"
 
 # --- one journey id and the skill's sha12 on every event of the run
+# ("thanks", the prompt after the reply's turn, is past the run: see below)
 sha12="$(shasum -a 256 plugins/raftkit-dev/skills/implement/SKILL.md | cut -c1-12)"
 expect_eq "every event of the run carries the same journey_id" "1" \
-  "$(ev "$sp" 'new Set(E.map(e=>e.props.journey_id)).size + (E.every(e=>e.props.journey_id) ? 0 : 100)')"
-expect_eq "  and the skill's sha12" "$sha12" "$(ev "$sp" '[...new Set(E.map(e=>e.props.skill_sha12))].join(",")')"
+  "$(ev "$sp" 'const R=E.slice(0,-1); new Set(R.map(e=>e.props.journey_id)).size + (R.every(e=>e.props.journey_id) ? 0 : 100)')"
+expect_eq "  and the skill's sha12" "$sha12" "$(ev "$sp" '[...new Set(E.slice(0,-1).map(e=>e.props.skill_sha12))].join(",")')"
 
 # --- nested invocations stay in the run; the next run gets a new journey
 d="$(new_sandbox)"; sp="$d/spool/events.jsonl"
@@ -1473,6 +1474,39 @@ d="$(new_sandbox)"
 hook "$d" commit '{"session_id":"j13","tool_name":"Bash","tool_input":{"command":"git commit -m x"}}'
 hook "$d" stop '{"session_id":"j13","last_assistant_message":"done"}'
 expect_eq "a commit or a plain turn writes no session state" "no" "$([[ -e "$d/sessions/j13.journey.json" ]] && echo yes || echo no)"
+
+# --- a run's tag ends with the turn its reply started
+# The reply's turn is the run's own (the push after "go"); the next human
+# prompt is not, so per-run totals stop there.
+d="$(new_sandbox)"; sp="$d/spool/events.jsonl"; tr="$d/t.jsonl"
+mkmsg a1 1000 > "$tr"
+hook "$d" skill "{\"session_id\":\"j14\",\"transcript_path\":\"$tr\",\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Skill\",\"tool_input\":{\"skill\":\"raftkit-dev:implement\"}}"
+hook "$d" stop '{"session_id":"j14","last_assistant_message":"**STOP** — approve to push, edit to change, or decline."}'
+hook "$d" prompt '{"session_id":"j14","user_prompt":"go"}'
+hook "$d" pr '{"session_id":"j14","tool_name":"Bash","tool_input":{"command":"gh pr create --fill"},"tool_response":{"stdout":"https://github.com/o/r/pull/9\n"}}'
+mkmsg a2 300 >> "$tr"
+hook "$d" stop "{\"session_id\":\"j14\",\"transcript_path\":\"$tr\",\"last_assistant_message\":\"PR 9 raised.\"}"
+hook "$d" prompt '{"session_id":"j14","user_prompt":"unrelated question"}'
+hook "$d" commit '{"session_id":"j14","tool_name":"Bash","tool_input":{"command":"git commit -m x"}}'
+mkmsg a3 50 >> "$tr"
+hook "$d" stop "{\"session_id\":\"j14\",\"transcript_path\":\"$tr\",\"last_assistant_message\":\"done\"}"
+expect_eq "the reply's turn, the push included, stays in the run" "true" \
+  "$(ev "$sp" 'E.slice(0,5).every(e=>e.props.journey_id && e.props.journey_id===E[0].props.journey_id)')"
+expect_eq "  its events say whether the run is still open" "true,false,false,false,false" \
+  "$(ev "$sp" 'E.slice(0,5).map(e=>e.props.journey_open).join(",")')"
+expect_eq "  and its last stop carries the run's tokens" "300" "$(ev "$sp" 'E[4].props.tokens.run_total')"
+expect_eq "after the next human prompt no event carries the run, nor a run total" "true|undefined|1350" \
+  "$(ev "$sp" 'E.slice(5).every(e=>e.props.journey_id===undefined)+"|"+E.at(-1).props.tokens.run_total+"|"+E.at(-1).props.tokens.total')"
+
+# An edit reply re-presents the draft: the run holds through that STOP and its go.
+d="$(new_sandbox)"; sp="$d/spool/events.jsonl"
+hook "$d" skill '{"session_id":"j15","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-dev:implement"}}'
+hook "$d" stop '{"session_id":"j15","last_assistant_message":"**STOP** — approve to push, edit to change, or decline."}'
+hook "$d" prompt '{"session_id":"j15","user_prompt":"edit: rename the endpoint"}'
+hook "$d" stop '{"session_id":"j15","last_assistant_message":"**STOP** — approve to push, edit to change, or decline."}'
+hook "$d" prompt '{"session_id":"j15","user_prompt":"go"}'
+expect_eq "an edit reply keeps the run through the STOP it re-presents, and its go" "1|true|true" \
+  "$(ev "$sp" 'new Set(E.map(e=>e.props.journey_id)).size+"|"+E.every(e=>e.props.journey_id)+"|"+E.at(-1).props.after_gate')"
 
 # ================================================================ 14. entry map
 # A plain-language request must reach RaftKit even when the skill listing has

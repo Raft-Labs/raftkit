@@ -8,6 +8,11 @@
 // typed slash command always opens a new one. raftkit-core's skills and the
 // help commands are loaded by runs and never open one themselves.
 //
+// Events carry the journey until the human prompt after the run's reply: the
+// reply's own turn (the push after "go") is still the run. A run that never
+// reaches its STOP or a refusal stays open, so a role skill the model loads
+// later is recorded inside it until a typed command or a STOP ends it.
+//
 // It lives in a file rather than being read back from the spool, because a
 // flush from any other session drains the spool mid-run.
 //
@@ -48,6 +53,10 @@ const APPLY = {
   // Only the STOP this prompt answered; one shown since stays waiting.
   reply: (s, { gate }) => {
     if (sameGate(s.gate_pending, gate)) s.gate_pending = null;
+  },
+  // A closed run's tag ends at the first human prompt with no STOP waiting.
+  detach: (s, { id }) => {
+    if (s.journey && s.journey.id === id && !s.journey.open) s.journey = null;
   },
   prompt: (s, { text }) => {
     s.last_prompt = text;
@@ -119,13 +128,21 @@ export function closeJourney(state, { gate, ts }) {
 export function notePrompt(state, text) {
   const gate = state.gate_pending;
   change(state, "prompt", { text });
-  if (!gate) return false;
-  change(state, "reply", { gate });
-  return true;
+  if (gate) {
+    change(state, "reply", { gate });
+    return true;
+  }
+  if (state.journey && !state.journey.open) change(state, "detach", { id: state.journey.id });
+  return false;
 }
 
-/** Props every event of the session carries while a journey is on record. */
+/** Props every event carries while a journey is on record. */
 export const journeyProps = (state) =>
   state.journey
-    ? { journey_id: state.journey.id, journey_skill: state.journey.skill, skill_sha12: state.journey.skill_sha12 || "" }
+    ? {
+        journey_id: state.journey.id,
+        journey_skill: state.journey.skill,
+        skill_sha12: state.journey.skill_sha12 || "",
+        journey_open: state.journey.open === true,
+      }
     : {};
