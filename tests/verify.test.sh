@@ -157,6 +157,17 @@ node -e 'const fs=require("fs"); const c=JSON.parse(fs.readFileSync(process.argv
 [[ $RC -eq 0 && "$(runs)" == tlc ]]
 check "V23 a cached green older than an hour is not reused" ok $?
 
+# ---- the plan record is not a gate input -------------------------------------
+# implement keeps docs/specs/<branch>.md uncommitted while it builds and reviews;
+# it must not turn every verify in the run into a fresh one.
+S="$(newtmp)/specs"; mkrepo "$S"; v "$S"
+mkdir -p "$S/docs/specs" && echo "# plan" > "$S/docs/specs/feat-x.md"; : > "$COUNT"; v "$S"
+[[ $RC -eq 0 && -z "$(runs)" ]] && grep -q 'test (cached)' <<<"$OUT" && ! grep -q 'uncommitted' <<<"$OUT"
+check "V24 an uncommitted plan record under docs/specs leaves the tree clean: the cache is reused" ok $?
+echo "// edit" > "$S/src.js"; : > "$COUNT"; v "$S"
+[[ "$(runs)" == tlc ]] && grep -q 'uncommitted' <<<"$OUT"
+check "V24b an untracked file outside docs/specs still makes the tree dirty" ok $?
+
 # ---- the pre-push hook keeps its full gates ---------------------------------
 HOOK="$REPO_ROOT/plugins/raftkit-dev/skills/setup/assets/pre-push"
 ! grep -qE 'verify\.mjs|verify\.json|raftkit/verify' "$HOOK" && grep -q '__QUALITY_SCRIPTS__' "$HOOK"

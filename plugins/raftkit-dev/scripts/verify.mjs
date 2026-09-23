@@ -6,7 +6,7 @@
 //
 // A green result is cached under <git common dir>/raftkit/verify.json, keyed
 // by the tree hash of HEAD and the exact command. It is reused only while the
-// working tree is clean and for at most an hour; a dirty tree or --fresh
+// working tree is clean (docs/specs aside) and for at most an hour; a dirty tree or --fresh
 // always runs, and a red result is never cached. The pre-push hook does not
 // use this script and keeps its full gates.
 //
@@ -57,7 +57,8 @@ const commandOf = (role) => `${detected.manager} run ${role}`;
 const treeState = () => {
   let tree = null;
   try { tree = git(root, "rev-parse", "HEAD^{tree}"); } catch { /* no commit yet: nothing is cacheable */ }
-  const dirty = git(root, "status", "--porcelain", "--untracked-files=normal") !== "";
+  // docs/specs holds implement's plan record, uncommitted while it builds: not a gate input.
+  const dirty = git(root, "status", "--porcelain", "--untracked-files=normal", "--", ".", ":(exclude)docs/specs") !== "";
   return { tree, dirty };
 };
 const before = treeState();
