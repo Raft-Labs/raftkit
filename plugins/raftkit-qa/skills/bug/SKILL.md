@@ -10,7 +10,7 @@ Two modes, one bug lifecycle. Load `raftkit-core:rules` first unless it is alrea
 
 ## File
 
-1. **Validate, then read at once.** No target story → ask; a bug never floats free. Then in one turn: the Bugs Template (skip if already in this chat), the story with its `Bugs` subtask, and the Jam recording (metadata, events, console, network, screenshots). No Jam → the next tier the template lists, marked, with the manual environment block required. No `Bugs` subtask → propose creating it in the same go.
+1. **Validate, then read at once.** No target story → ask; a bug never floats free. Then in one turn: the Bugs Template (skip if already in this chat), the story with its `Bugs` subtask, and the Jam recording (metadata, user events, console, network; frames only for a visual defect; the rules' `references/asana-calls.md`). No Jam → the next tier the template lists, marked, with the manual environment block required. No `Bugs` subtask → propose creating it in the same go.
 2. **Pre-fill from evidence** per `references/filing.md`: environment, steps from a clean start, actual result with console and network errors verbatim. Two unrelated defects in one recording → two drafts in one message.
 3. **Propose the judgment fields** instead of asking them one at a time: severity, priority, reproducibility, expected result, `Done when`, each `proposed — edit inline`; one the evidence does not support is `⚠️ assumed until confirmed` and blocks the write. An odd severity/priority pair is flagged, not blocked.
 4. **Self-check** against the template and the checklist in `references/filing.md`; the title is `[Platform][Severity] what + where`.

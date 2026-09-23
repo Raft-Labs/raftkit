@@ -44,4 +44,4 @@ Re-fetch a description once with `html_notes` (plain `notes` carries no markup);
 
 ## Multi-write batches
 
-When a run pushes several writes (description + subtasks, tick + comment, N bugs), report exactly what landed and what did not, retry only idempotent writes (a comment, a subtask create keyed by name), and never emit the success line until every approved write is confirmed. On an Asana timeout, look the target up by name before any retry so nothing is created twice.
+Never emit the success line until every approved write is confirmed. A subtask create is retried only when a lookup by name finds it absent; after an Asana timeout, look the target up by name before any retry so nothing is created twice.
