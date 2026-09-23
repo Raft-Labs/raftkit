@@ -6,7 +6,7 @@ user-invocable: true
 
 # implement
 
-One story, one branch, one PR, one stop. `raftkit-core:rules` apply, and the repo's working agreement governs the build.
+One story, one branch, one PR, one stop. Load `raftkit-core:rules` first unless it is already in this conversation. The repo's working agreement governs the build.
 
 ## Run
 

@@ -6,7 +6,7 @@ user-invocable: true
 
 # scope-guard
 
-One branch, one story, two lists. `raftkit-core:rules` apply. `implement` and `fix` call this inside their review fan-out and pass the story, its `[AC]`s, the plan record and the diff straight in; a standalone run fetches them itself.
+One branch, one story, two lists. Load `raftkit-core:rules` first unless it is already in this conversation. `implement` and `fix` call this inside their review fan-out and pass the story, its `[AC]`s, the plan record and the diff straight in; a standalone run fetches them itself.
 
 **Fail-closed and report-only.** Every changed hunk maps to an acceptance criterion or it lands in BEYOND. The audit lists and blocks; a human removes flagged code or signs it off.
 
