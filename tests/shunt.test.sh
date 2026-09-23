@@ -7,8 +7,7 @@
 #      are never shunted at any size — the load-bearing exemption, because a
 #      paraphrased scope contract is worse than an expensive one
 #   4. the kill switch and the threshold override are honoured
-#   5. the bash forms it claims to catch are caught, and the ones it cannot
-#      parse with certainty are left alone
+#   5. a Bash call never reaches the shunt: it is not registered on Bash
 #   6. every failure path exits 0 and prints nothing (fail open)
 #   7. a deny is recorded as telemetry; an allow costs no telemetry at all
 #   8. token accounting counts each message once, folds subagent files,
@@ -73,16 +72,6 @@ read_payload() { # <path> [extra-json]
     "$REPO" "$1" "${2:-}"
 }
 
-bash_payload() { # <command>
-  node -e '
-    const [cwd, cmd] = process.argv.slice(1);
-    process.stdout.write(JSON.stringify({
-      session_id: "s1", hook_event_name: "PreToolUse", cwd,
-      tool_name: "Bash", tool_input: { command: cmd },
-    }));
-  ' "$REPO" "$1"
-}
-
 # ------------------------------------------------------- 1. the one deny
 expect_eq "an oversized read is denied" "deny" "$(verdict "$(read_payload "$REPO/src/big.ts")")"
 expect_eq "a relative path resolves against cwd and is denied" "deny" "$(verdict "$(read_payload "src/big.ts")")"
@@ -90,8 +79,9 @@ expect_eq "a relative path resolves against cwd and is denied" "deny" "$(verdict
 r="$(reason "$(read_payload "$REPO/src/big.ts")")"
 grep -q "src/big.ts is 900 lines" <<< "$r" && echo "PASS: the reason names the file and its real line count" ||
   { echo "FAIL: reason line count (got: ${r:0:80})"; failures=$((failures + 1)); }
-grep -q 'subagent_type: "bulk-reader"' <<< "$r" && echo "PASS: the reason carries the bulk-reader call" ||
-  { echo "FAIL: reason lacks the bulk-reader call"; failures=$((failures + 1)); }
+# A plugin agent is dispatched by its scoped name.
+grep -q 'subagent_type: "raftkit-core:bulk-reader"' <<< "$r" && echo "PASS: the reason carries the bulk-reader call by its scoped name" ||
+  { echo "FAIL: reason lacks the scoped bulk-reader call"; failures=$((failures + 1)); }
 grep -q "offset/limit" <<< "$r" && echo "PASS: the reason names the route back for editing" ||
   { echo "FAIL: reason lacks the edit route"; failures=$((failures + 1)); }
 grep -q "RAFTKIT_SHUNT=off" <<< "$r" && echo "PASS: the reason names the bypass" ||
@@ -143,32 +133,35 @@ expect_eq "a plan record is never shunted" "allow" "$(verdict "$(read_payload "$
 # "...skills..." is ordinary content and must still be shunted.
 expect_eq "a lookalike path is still shunted" "deny" "$(verdict "$(read_payload "$REPO/src/my-skills-notes.md")")"
 
-# ------------------------------- 3b. the bulk-reader is not policed
-# The hook runs inside subagent tool calls too, so without this the one agent
-# whose job is the oversized read is the one agent denied it.
-for field in agent_type subagent_type agent_name agentType agent_id; do
-  expect_eq "the bulk-reader bypasses the shunt via $field" "allow" \
-    "$(verdict "$(node -e '
-        const [cwd, file, field] = process.argv.slice(1);
-        process.stdout.write(JSON.stringify({
-          cwd, tool_name: "Read", tool_input: { file_path: file }, [field]: "bulk-reader",
-        }));
-      ' "$REPO" "$REPO/src/big.ts" "$field")")"
-done
-expect_eq "another agent is still policed" "deny" \
-  "$(verdict "$(node -e '
-      const [cwd, file] = process.argv.slice(1);
-      process.stdout.write(JSON.stringify({
-        cwd, tool_name: "Read", tool_input: { file_path: file }, subagent_type: "code-reviewer",
-      }));
-    ' "$REPO" "$REPO/src/big.ts")")"
+# ------------------------------- 3b. the bulk-reader and subagents are not policed
+# The hook runs inside subagent tool calls too. A subagent's context is its
+# own, so its reads are never shunted: Claude Code puts agent_id on every hook
+# payload from inside a subagent, and only there.
+agent_payload() { # <extra-json-fields>
+  node -e '
+    const [cwd, file, extra] = process.argv.slice(1);
+    process.stdout.write(JSON.stringify({ cwd, tool_name: "Read", tool_input: { file_path: file }, ...JSON.parse(extra) }));
+  ' "$REPO" "$REPO/src/big.ts" "$1"
+}
+expect_eq "the bulk-reader, by its scoped plugin name, bypasses the shunt" "allow" \
+  "$(verdict "$(agent_payload '{"agent_type":"raftkit-core:bulk-reader"}')")"
+expect_eq "a Read made inside any subagent is never denied" "allow" \
+  "$(verdict "$(agent_payload '{"agent_id":"a4d33b7f47848085d","agent_type":"Explore"}')")"
+expect_eq "an empty agent_id is not a subagent" "deny" "$(verdict "$(agent_payload '{"agent_id":""}')")"
+# `--agent` sets agent_type on the main thread with no agent_id: still policed.
+expect_eq "a main-thread --agent session is still policed" "deny" \
+  "$(verdict "$(agent_payload '{"agent_type":"code-reviewer"}')")"
 # The hard defence, which needs no payload field at all: a paged read is
 # exempt, so the agent can always get the text even if it is not recognised.
 expect_eq "a paged read by an unrecognised agent is allowed" "allow" \
   "$(verdict "$(read_payload "$REPO/src/big.ts" ',"offset":1,"limit":1500')")"
-# The deny text must name that route, or an unrecognised bulk-reader is stuck.
+# The deny text must name that route, or an unrecognised reader is stuck.
 grep -q "offset and limit" <<< "$r" && echo "PASS: the reason names the paged-read route" ||
   { echo "FAIL: reason lacks the paged-read route"; failures=$((failures + 1)); }
+# The agent reads files, not the project's instructions.
+awk 'NR==1&&$0!="---"{exit} NR>1&&$0=="---"{exit} NR>1{print}' plugins/raftkit-core/agents/bulk-reader.md | grep -qx 'omitClaudeMd: true' &&
+  echo "PASS: the bulk-reader does not load CLAUDE.md" ||
+  { echo "FAIL: bulk-reader frontmatter lacks omitClaudeMd: true"; failures=$((failures + 1)); }
 
 # ------------------------------------------ 4. kill switch and threshold
 expect_eq "RAFTKIT_SHUNT=off allows everything" "allow" \
@@ -184,27 +177,15 @@ expect_eq "a junk threshold falls back to the default" "allow" \
 expect_eq "a zero threshold falls back to the default" "allow" \
   "$(verdict "$(read_payload "$REPO/src/small.ts")" RAFTKIT_SHUNT_MIN_LINES=0)"
 
-# -------------------------------------------------------- 5. bash forms
-expect_eq "cat on a big file is denied" "deny" "$(verdict "$(bash_payload "cat $REPO/src/big.ts")")"
-expect_eq "cat piped into grep is denied" "deny" "$(verdict "$(bash_payload "cat $REPO/src/big.ts | grep foo")")"
-expect_eq "head -n above the threshold is denied" "deny" "$(verdict "$(bash_payload "head -n 900 $REPO/src/big.ts")")"
-expect_eq "head -n below the threshold is allowed" "allow" "$(verdict "$(bash_payload "head -n 20 $REPO/src/big.ts")")"
-expect_eq "cat on a small file is allowed" "allow" "$(verdict "$(bash_payload "cat $REPO/src/small.ts")")"
-expect_eq "grep is allowed" "allow" "$(verdict "$(bash_payload "grep -n foo $REPO/src/big.ts")")"
-# Anything it cannot parse with certainty must pass through untouched.
-expect_eq "a chained command is allowed" "allow" \
-  "$(verdict "$(bash_payload "cat $REPO/src/big.ts; rm -f /tmp/x")")"
-expect_eq "a command substitution is allowed" "allow" \
-  "$(verdict "$(bash_payload "cat \$(echo $REPO/src/big.ts)")")"
-expect_eq "a redirect is allowed" "allow" "$(verdict "$(bash_payload "cat $REPO/src/big.ts > /tmp/out")")"
-# These two match the cat-into-pipe shape and are rejected only by the guard on
-# chaining. Without it the hook would claim to understand a compound command.
-expect_eq "a pipe followed by a chained command is allowed" "allow" \
-  "$(verdict "$(bash_payload "cat $REPO/src/big.ts | grep x; rm -f /tmp/y")")"
-expect_eq "an or-chain is allowed" "allow" \
-  "$(verdict "$(bash_payload "cat $REPO/src/big.ts || echo missing")")"
-expect_eq "cat with two files is allowed" "allow" \
-  "$(verdict "$(bash_payload "cat $REPO/src/big.ts $REPO/src/small.ts")")"
+# -------------------------------------------------------- 5. Bash is not shunted
+# A Bash result over Claude Code's own output cap is truncated anyway, so the
+# shunt could never deny one, yet it spawned node on every Bash call. Even a
+# payload that reaches it is allowed.
+expect_eq "a Bash call is allowed, even one that cats a big file" "allow" \
+  "$(verdict "$(node -e '
+      const [cwd, cmd] = process.argv.slice(1);
+      process.stdout.write(JSON.stringify({ session_id: "s1", hook_event_name: "PreToolUse", cwd, tool_name: "Bash", tool_input: { command: cmd } }));
+    ' "$REPO" "cat $REPO/src/big.ts")")"
 
 # ------------------------------------------------- 6. fail open, always
 for bad in '' 'not json' '{' '[]' 'null' '{"tool_name":"Read"}' '{"tool_name":"Read","tool_input":null}' \
@@ -390,14 +371,15 @@ node -e '
   const h = JSON.parse(require("fs").readFileSync("plugins/raftkit-core/hooks/hooks.json", "utf8"));
   const pre = h.hooks.PreToolUse || [];
   const matchers = pre.map((e) => e.matcher).sort().join(",");
-  if (matchers !== "Bash,Read") { console.error("matchers: " + matchers); process.exit(1); }
+  // Read only: a Bash call must not spawn node for a check that can never deny.
+  if (matchers !== "Read") { console.error("matchers: " + matchers); process.exit(1); }
   // Async hooks have their stdout discarded, and this hooks stdout IS its
   // decision — declaring it async would silently disable every deny.
   for (const entry of pre) for (const hook of entry.hooks) {
     if (hook.async) { console.error("PreToolUse hook must not be async"); process.exit(1); }
     if (!hook.args.some((a) => a.endsWith("shunt.mjs"))) { console.error("wrong script"); process.exit(1); }
   }
-' && echo "PASS: the shunt is registered on Read and Bash, synchronously" ||
+' && echo "PASS: the shunt is registered on Read only, synchronously" ||
   { echo "FAIL: hooks.json registration"; failures=$((failures + 1)); }
 
 grep -q "RAFTKIT_SHUNT=off" plugins/raftkit-core/hooks/hooks.json &&
