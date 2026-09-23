@@ -148,8 +148,10 @@ grep -qF 'marking it done in the record' "$IMPL/SKILL.md" && { echo "  a phase s
 check "DF12 only the parent writes implement's plan record" ok $ok
 
 # DF13 · a run started in plan mode writes nothing, and is told so before
-#        intake's fetch, baseline build and verify cache, which all write
-pm_line="$(grep -n '^In plan mode: read only (no fetch, build or verify)' "$IMPL/SKILL.md" | head -1 | cut -d: -f1)"
+#        intake's git fetch, branch, baseline build and verify cache, which all
+#        write. It names git fetch: a bare "fetch" reads as the story fetch,
+#        which plan mode still needs
+pm_line="$(grep -n '^In plan mode: read only (no `git fetch`, branch, build or verify)' "$IMPL/SKILL.md" | head -1 | cut -d: -f1)"
 intake_line="$(grep -n '^1\. \*\*Intake' "$IMPL/SKILL.md" | head -1 | cut -d: -f1)"
 [[ -n "$pm_line" && -n "$intake_line" && "$pm_line" -lt "$intake_line" ]]
 check "DF13 plan mode reads only, stated before implement's intake" ok $?
@@ -212,6 +214,12 @@ check "DF19 the parent fetches once and every reviewer gets a range that does no
 #        step 3 itself; references/loop.md never reaches it.
 grep -m1 '^3\. \*\*Smallest fix to green' "$FIX/SKILL.md" | grep -qF 'the fix is a separate `fix:` commit'
 check "DF20 fix's step 3 commits the repro test alone and the fix as a separate fix: commit" ok $?
+
+# DF21 · intake reads verify's exit 2 for a repo with no typecheck script (a
+#        default Next.js app has none) as no gate, not a red baseline; V16 pins
+#        the string on verify's side
+grep -m1 '^1\. \*\*Intake' "$IMPL/SKILL.md" | grep -qF '(`no typecheck script` is not red)'
+check "DF21 implement's intake does not stop on a repo with no typecheck script" ok $?
 
 echo
 echo "dev-flow: $failures failure(s)"
