@@ -38,4 +38,4 @@ Next story: /clear first.
 
 ## Standalone
 
-On a branch that already has the work: "raise the PR" runs step 6 onward, "check scope" runs `scope-guard` alone, "simplify this" runs the simplify pass alone. Each reuses the story already in this conversation, or fetches it once when a fresh session does not hold it.
+On a branch that already has the work: "raise the PR" runs step 6 onward, "check scope" runs `scope-guard` alone, "simplify this" runs the simplify pass alone. Each resolves the squash target as step 1 does, and reuses the story in this conversation or fetches it once.

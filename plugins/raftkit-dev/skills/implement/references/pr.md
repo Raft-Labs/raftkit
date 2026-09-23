@@ -2,7 +2,7 @@
 
 ## Squash target
 
-Resolved from the repo's own docs at implement's intake (step 1), where an undocumented one stops the run; a standalone raise and a `fix` run resolve it the same way first. Never target `main` directly. One PR per story; stacked PRs are out of scope.
+Resolved from the repo's own docs before the first reply (`implement` step 1, `fix` before its step 1), where an undocumented one stops the run. Never target `main` directly. One PR per story; stacked PRs are out of scope.
 
 ## Before the raise
 

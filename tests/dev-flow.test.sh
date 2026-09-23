@@ -33,14 +33,20 @@ for f in "$IMPL/SKILL.md" "$FIX/SKILL.md" "$SG/SKILL.md" "$DOCS/SKILL.md"; do
 done
 check "DF1 implement, fix, scope-guard and docs load raftkit-core:rules first" ok $ok
 
-# DF2 · the squash target is settled in turn 1: its stop sits in intake, before
-#       readiness, and nothing points at a release-train doc no repo carries
+# DF2 · the squash target is settled in turn 1: implement's stop sits in intake,
+#       before readiness; fix carries the same line ahead of its contract step
+#       (fix never loads implement's intake); nothing points at a release-train
+#       doc no repo carries, and the raise holds no second copy of the stop
+stop_text="$(grep -m1 '^no documented squash target — ' "$IMPL/SKILL.md")"
 stop_line="$(grep -n '^no documented squash target — ' "$IMPL/SKILL.md" | head -1 | cut -d: -f1)"
 ready_line="$(grep -n '^2\. \*\*Check readiness' "$IMPL/SKILL.md" | head -1 | cut -d: -f1)"
+fix_stop="$( [[ -n "$stop_text" ]] && grep -nF "$stop_text" "$FIX/SKILL.md" | head -1 | cut -d: -f1)"
+contract_line="$(grep -n '^1\. \*\*Get the contract' "$FIX/SKILL.md" | head -1 | cut -d: -f1)"
 [[ -n "$stop_line" && -n "$ready_line" && "$stop_line" -lt "$ready_line" ]] \
+  && [[ -n "$fix_stop" && -n "$contract_line" && "$fix_stop" -lt "$contract_line" ]] \
   && ! grep -rqi 'release-train doc\|release-train convention' "$IMPL" \
   && ! grep -qF 'no documented squash target' "$IMPL/references/pr.md"
-check "DF2 implement stops on an undocumented squash target at intake, not at the raise" ok $?
+check "DF2 implement and fix stop on an undocumented squash target in turn 1, not at the raise" ok $?
 
 # DF3 · the plan record implement writes is exempt in scope-guard (same path)
 plan_path="$(grep -o 'Write the plan to `[^`]*`' "$IMPL/SKILL.md" | head -1 | sed 's/.*`\(.*\)`/\1/')"
