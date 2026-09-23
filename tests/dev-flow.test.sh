@@ -51,6 +51,26 @@ check "DF3 scope-guard never flags implement's plan record (${plan_path:-no path
 grep -qF '`Do NOT build`' "$SG/SKILL.md"
 check "DF4 scope-guard reads the out-of-scope list from the Do NOT build line" ok $?
 
+# DF5 · every named agent dispatch in implement and fix passes a model. The
+#       frontmatter of pr-review-toolkit's agents pins opus; only the
+#       per-invocation model moves them. The five review agents must be named,
+#       so the check cannot pass on a file that dispatches nothing.
+ok=0
+for a in code-simplifier code-reviewer type-design-analyzer silent-failure-hunter pr-test-analyzer; do
+  grep -rqF "pr-review-toolkit:$a" "$IMPL" || { echo "  review agent not dispatched: $a"; ok=1; }
+done
+while IFS= read -r hit; do
+  grep -qE 'model: "(haiku|sonnet|opus)"' <<<"$hit" || { echo "  dispatch without a model: $hit"; ok=1; }
+done < <(grep -rnE 'pr-review-toolkit:[a-z-]+|raftkit-dev:verifier' "$IMPL" "$FIX" --include='*.md')
+check "DF5 every agent dispatch in implement and fix passes model" ok $ok
+
+# DF6 · tiers.md maps each tier to an Agent model value a dispatch can pass
+T=plugins/raftkit-core/skills/working-agreement/references/tiers.md
+grep -qE '^\| `mechanical` \| `haiku` \|' "$T" \
+  && grep -qE '^\| `standard` \| `sonnet` \|' "$T" \
+  && grep -qE '^\| `hard` \| [^|]*`opus` under `opusplan`' "$T"
+check "DF6 tiers.md names the model each tier dispatches with" ok $?
+
 echo
 echo "dev-flow: $failures failure(s)"
 [[ "$failures" -eq 0 ]]

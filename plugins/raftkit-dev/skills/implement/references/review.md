@@ -2,11 +2,16 @@
 
 One pass, on the final diff, mostly in parallel. It runs after the phases are green and before the stop.
 
+## Dispatch
+
+Every Agent call passes `model` for its tier (`raftkit-core:working-agreement` → `references/tiers.md`): a phase at its own tier; the simplifier and the reviewers at `sonnet`, raised only for a finding that needs more.
+
 ## Order
 
-1. **Simplify first**, alone: dispatch `pr-review-toolkit:code-simplifier` across the branch diff only. Its findings are triaged by `references/simplify.md`. Re-run the suite after the pass; a red test reverts the change that caused it before the fan-out starts. This runs first so the reviewers judge the diff that will actually ship.
+1. **Simplify first**, alone: dispatch `pr-review-toolkit:code-simplifier` with `model: "sonnet"` across the branch diff only. Its findings are triaged by `references/simplify.md`. Re-run the suite after the pass; a red test reverts the change that caused it before the fan-out starts. This runs first so the reviewers judge the diff that will actually ship.
 2. **Then the fan-out**, all at once on the merge-base diff:
-   - `pr-review-toolkit`'s `code-reviewer` (scored against the repo's `CLAUDE.md`, which carries the design standard), `type-design-analyzer`, `silent-failure-hunter`, `pr-test-analyzer` — dispatched by their scoped names, in parallel. Do not route through `review-pr`, which runs them one after another by default.
+   - `pr-review-toolkit:code-reviewer` with `model: "sonnet"`, scored against the repo's `CLAUDE.md`, which carries the design standard.
+   - `pr-review-toolkit:type-design-analyzer`, `pr-review-toolkit:silent-failure-hunter` and `pr-review-toolkit:pr-test-analyzer`, each with `model: "sonnet"`. Never through `review-pr`, which runs them one after another.
    - `raftkit-dev:scope-guard`, given the story, the `[AC]`s, the plan record and the diff.
    - `raftkit-dev:docs`, given the same explicit change set.
    - Lint and the full test suite.
@@ -29,4 +34,4 @@ Every finding is fixed on the branch or answered in the PR description with the 
 
 ## Cost
 
-Reviewers run on Sonnet by default; raise the tier only for a finding that needs it. Report the pass's token total at the stop, so an expensive run is visible rather than discovered later.
+Report the pass's token total at the stop, so an expensive run is visible rather than discovered later.
