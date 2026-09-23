@@ -11,7 +11,7 @@
 //                   `claude plugin list --json` in <repo-root>.
 // Exit codes: 0 report produced · 1 plugin list unreadable · 2 bad input ·
 // 3 raftkit-core missing or disabled (setup has nothing to install).
-import { readFileSync, existsSync, readdirSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 
@@ -95,7 +95,7 @@ for (const p of enabled) {
 // enabled plugin depends on are never listed.
 const manifests = [readJson(path.join(root, "package.json"))];
 for (const dir of ["packages", "apps"]) {
-  if (!existsSync(path.join(root, dir))) continue;
+  if (!statSync(path.join(root, dir), { throwIfNoEntry: false })?.isDirectory()) continue;
   for (const sub of readdirSync(path.join(root, dir))) manifests.push(readJson(path.join(root, dir, sub, "package.json")));
 }
 const depNames = new Set(manifests.filter(Boolean).flatMap((m) => Object.keys({ ...m.dependencies, ...m.devDependencies })));

@@ -310,6 +310,12 @@ check "E12 the check changes nothing: repo and plugin files are byte-identical a
 echo 'not json' > "$EW/bad.json"; eng "$EW/repo" "$EW/bad.json"
 [[ $ERC -eq 1 ]]
 check "E13 an unreadable plugin list exits 1 with its reason" ok $?
+mkdir -p "$EW/repo-files" && cp -R "$FIX/npm/." "$EW/repo-files/" && echo x > "$EW/repo-files/packages" && echo x > "$EW/repo-files/apps"
+eng "$EW/repo-files" "$EW/plugins.json"
+[[ $ERC -eq 0 ]] && grep -q '^raftkit-core ' <<<"$EOUT"
+check "E14 a file named packages or apps is skipped, never a crash" ok $?
+node "$DETECT" --root "$EW/repo-files" --json >/dev/null 2>&1
+check "S46 detect-toolchain skips a file named packages or apps too" ok $?
 
 # ---- S41–S43 · allowlist + version ------------------------------------------
 # Persistent suite tests the allowlist ALGORITHM synthetically (no branch SHAs —
