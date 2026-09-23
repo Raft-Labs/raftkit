@@ -20,10 +20,10 @@ no documented squash target — add the target branch and branch naming to CLAUD
 3. **Plan inline, in the open** — never through `superpowers:brainstorming`, `superpowers:writing-plans` or a `Plan` subagent. Branch by the documented convention first, so the record lands on it. Scope is the `[AC]`s and nothing else. Phases compile and test alone within working-agreement rule 2's file limit, each naming its files, its tier and its tests. Write the plan to `docs/specs/<branch>.md` and show it without waiting. `--plan-only` stops here having written only the record; a run started in plan mode is `--plan-only` and writes nothing.
 4. **Build.** Run the phases: independent phases in parallel, dependent ones in order, each a subagent at its tier's model (`references/review.md`), given only its files, the story text it needs and the branch SHA, which it confirms with `git merge-base --is-ancestor <sha> HEAD` before its first edit. Every phase goes red first, one failing test per acceptance criterion, then green, through `superpowers:test-driven-development`; a failure that resists the quick fix switches to `superpowers:systematic-debugging`. Small conventional commits.
 5. **Review once, in parallel**: re-fetch the story's `[AC]`s, then run `references/review.md` with `references/simplify.md`.
-6. **Stop once** with everything that leaves the session: the PR title and its five sections, the Asana comment, the `Development` tick, and the run's token total. See `references/pr.md`.
+6. **Stop once** with everything that leaves the session: the PR title and description, the Asana comment, the `Development` tick, and the run's token total. See `references/pr.md`.
 
 ```output
-Story 1216… ready to raise: 14 files, 22 tests green, scope clean, docs not impacted.
+Story 1216… ready to raise: 14 files, 22 tests green, scope clean, docs not impacted, findings: 3 fixed / 1 answered.
 PR title, description, and the Asana close-out are drafted above.
 **STOP** — approve to push and raise, edit to change, or decline.
 ```

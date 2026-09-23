@@ -12,15 +12,16 @@ The raise is blocked while scope is open. Inside a full run the review pass has 
 
 The title is the future squash commit and therefore the changelog line: `type(scope): summary`, conventional-commit type, imperative summary, no trailing period, within the repo's commitlint header length or 100 characters. A failing draft title is never raised — propose a compliant one, say why the draft failed, and use the approved one.
 
-## Description — five sections, all present
+## Description — six sections, all present
 
 The repo's own PR template, when it has one, sets the headings and their order; every section below still appears in it.
 
 1. **Story link**, plus the permalink of any clarification logged this run.
 2. **Acceptance criteria** as a checklist, taken from the live story.
 3. **Out of scope**, each item confirmed not built.
-4. **Tests** — what ran and the result.
+4. **Tests** — what ran, the result, and `[AC]s with tests n/m`.
 5. **Docs** — the result from `raftkit-dev:docs`, verbatim, with the change set it inspected. Never fabricated to fill the section. `Docs: not evaluated` blocks the raise the same way an empty section does: run the check with the real change set first.
+6. **Review findings** — one line per finding, `fixed in <sha>` or `answered — <reason>`, or `none`.
 
 On the incident path there is no story: sections 1 to 3 become the incident source with its raw artifact, the containment scope as the change contract, and the permanent regression test. Nothing else downgrades — a branch with neither a story nor an incident trace is not raisable.
 
