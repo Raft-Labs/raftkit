@@ -64,8 +64,8 @@ human gates).
 
 ## Dry-run mode
 
-When invoked dry-run (the default for benchmark/practice runs), do everything up
-to but not including any push/PR/Asana write. Instead, emit:
+Only when the user says dry-run or practice: do everything up to but not
+including any push/PR/Asana write. Instead, emit:
 
 - the exact `git` commands (branch, commits) — or run the local commits, but
   never `git push`;

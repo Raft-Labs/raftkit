@@ -28,10 +28,9 @@ never fall back to a remembered template.
 
 ## Mode
 
-Default to **dry-run** unless the user says to ship for real (e.g. "push it",
-"open the PR", "for real"). In dry-run, every step runs except the outward writes
-— no `git push`, no PR, no Asana write; drafts and exact commands are shown
-instead. See `references/git-pr-flow.md`.
+A run is real unless the user says **dry-run** or **practice**. In dry-run, every
+step runs except the outward writes — no `git push`, no PR, no Asana write;
+drafts and exact commands are shown instead. See `references/git-pr-flow.md`.
 
 ## The flow
 

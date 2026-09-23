@@ -25,14 +25,14 @@
     {
       "id": 2,
       "prompt": "take this asana task and develop it — 1216551003584065 (story-readiness in raftkit-pm)",
-      "expected_output": "Recognizes a raftkit board task GID, fetches it live, derives target raftkit-pm/story-readiness, restates the [AC] list and the Do NOT build exclusion list, and pauses at the story-approval gate. Defaults to dry-run since 'ship for real' was not said. Never invents facts; asks on any flagged conflict.",
+      "expected_output": "Recognizes a raftkit board task GID, fetches it live, derives target raftkit-pm/story-readiness, restates the [AC] list and the Do NOT build exclusion list, and pauses at the story-approval gate. Runs for real, since neither dry-run nor practice was said, so the one STOP fires before any push, PR or Asana write. Never invents facts; asks on any flagged conflict.",
       "files": [],
       "expectations": [
         "The bare number 1216551003584065 was treated as a raftkit board task GID and fetched live from Asana",
         "The build target was correctly derived as raftkit-pm/story-readiness",
         "A scope contract was restated with the [AC] pass list and the Do NOT build exclusion list",
         "The story-approval gate fired before any scaffolding",
-        "Dry-run was the default (no 'ship for real' said): no git push, no PR, no Asana write occurred",
+        "The run was not treated as dry-run (neither dry-run nor practice was said), and no git push, PR or Asana write happened before an explicit go at the STOP",
         "If any story fact was flagged unresolved/conflicting, the run asked rather than inventing an answer"
       ]
     },
