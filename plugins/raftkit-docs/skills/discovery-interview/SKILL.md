@@ -81,7 +81,7 @@ it learns belongs in a Project Profile, never in a plugin
 ## Reference files
 
 - **`references/conversation-craft.md`** — how the questions are delivered:
-  explain before critiquing, translate the domain, build a worked example,
+  the plain-text question format, explain before critiquing, translate the domain, build a worked example,
   compare to something familiar, pressure-test complexity, recap, and signal
   when there is enough.
 - **`references/push-back.md`** — the vague-answer catalog: pattern → the

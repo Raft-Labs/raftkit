@@ -96,6 +96,43 @@ the wrong one. I'd use email or phone number instead.
 Do people already have a verified email or phone in the product?
 ```
 
+## The question format
+
+Every question goes out as plain text in one of three shapes. With options:
+
+```output
+**<Question text>?**
+
+Options:
+1. **<Option A>** (Recommended) — <one-sentence reasoning>
+2. <Option B> — <when to pick> · don't pick if <caveat>
+3. <Option C> — <when to pick> · don't pick if <caveat>
+4. Other — describe what you have in mind
+
+Reply with the number, or describe your own.
+```
+
+With only two options (yes/no or A/B):
+
+```output
+**<Question>?**
+
+- Yes/A — <implication>
+- No/B — <implication>
+
+Recommendation: <X> because <reason>.
+```
+
+With no fixed options:
+
+```output
+**<Question>?**
+
+I need: <specific format / examples>.
+
+For instance: "<example answer>"
+```
+
 ## Recap before continuing
 
 After a run of decisions, stop and show the state. It catches a

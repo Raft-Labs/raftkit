@@ -15,10 +15,10 @@ contract, the architecture is discovered input.
 
 ## The one rule that governs everything
 
-**Discover, confirm, then write — never the reverse.** Every documentation
-mutation is preceded by a confirmed impact list; every structural opinion is a
+**Discover, then write — never the reverse.** Every structural opinion is a
 proposal; existing conventions are preserved by default; no doc file is ever
-generated before the human signs off on the full plan. This skill never
+generated before the human signs off on the full plan. Sync and verify are
+`raftkit-dev:docs` and add no stop of their own. This skill never
 writes to Asana itself — story and bug drafting route through the core
 `raftkit-core:rules`' one stop; hand-offs to humans happen in chat.
 
@@ -53,9 +53,9 @@ a seventh command.
 - **audit** — compare docs (or their absence) with the code. Read-only until a
   change plan is approved. On existing code without docs, reverse-engineer per
   `references/reverse-engineer.md`.
-- **sync** — run the change lifecycle for the current approved change set
-  (`references/change-tracking.md`), then hand the parity check to
-  `raftkit-dev:docs`.
+- **sync** — invoke `raftkit-dev:docs` on the explicit change set; it maps,
+  updates and re-verifies the owned docs in the repo's own history
+  convention. This plugin never re-implements it.
 - **verify** — delegated to `raftkit-dev:docs`, which owns the parity check
   and the two deterministic scripts. This plugin never re-implements it.
 - **scaffold** — optional project bootstrap after design
@@ -75,21 +75,20 @@ Always runs first (`references/lifecycle-and-handoff.md` +
    are the yardstick for everything that follows; missing capabilities are
    added only through an approved proposal (hybrid).
 
-All three converge on the same sync/verify contract and the four companion
-gates (`assets/companion/`).
+All three converge on the same sync/verify contract: `raftkit-dev:docs`.
 
 ## The handoff (read, never re-asked)
 
 The approved Asana story (live), the Project Profile (the
 `Project Profile - <project name>` task in the project — see
-`raftkit-core:rules`), the `spec_path` implementation spec (the spec gate — this
-skill never authors a competing one), discovered docs roots and conventions,
-the ownership/change map, open unknowns, and the repository's own verification
-commands. Questions go to the developer **only** for what repository evidence
-cannot establish. Spec-first: work is classified **complete / partial /
-missing** against the spec and story; partial or missing routes to the owning
-approval path — or, when the developer chooses, into design mode — before any
-docs mutation.
+`raftkit-core:rules`), any implementation spec the story links (a record,
+not a gate — this skill never authors a competing one), discovered docs roots
+and conventions, the ownership/change map, open unknowns, and the repository's
+own verification commands. Questions go to the developer **only** for what
+repository evidence cannot establish. Before init writes anything, work is
+classified **complete / partial / missing** against the story and any spec it
+links; partial or missing routes to the owning approval path — or, when the
+developer chooses, into design mode.
 
 ## Templates and diagrams
 
@@ -113,10 +112,9 @@ convention is authoritative.
 
 ## Exact strings (owned here)
 
-- `Docs: not impacted — <reason>` — always with the inspected change set,
-  documentation roots, and ownership evidence named.
-- `Docs: updated and verified — <n> file(s), history recorded`
 - `No approved planning output covers this — route it through the story/PM flow before docs init.`
+
+Sync and verify outcome lines are `raftkit-dev:docs`'s own.
 
 ## Safety boundaries
 
@@ -158,22 +156,14 @@ range. Capability needs route through `raftkit-dev:setup`; this skill never impr
 - `references/generation.md` — adaptive generation: greenfield default tree,
   convention preservation, hybrid via approved proposal.
 - `references/diagram-catalog.md` — diagram types, N/A reasoning, regen rule.
-- `references/verification-checklist.md` — graded P0/P1/P2 gap report and the
-  category-graded done-claim gate.
+- `references/verification-checklist.md` — the graded P0/P1/P2 gap report
+  after generation.
 - `references/scaffolding.md` — bootstrap CLIs, ask-before-touch,
   never-auto-run list.
-- `references/environment-adaptations.md` — CLI adaptation contract.
 - `references/lifecycle-and-handoff.md` — modes, branches, handoff inputs,
-  spec-first classification, mode announcement.
+  the planning check before init, mode announcement.
 - `references/discovery-and-routing.md` — convention discovery, descriptor
   proposal, conflict handling.
-- `references/change-tracking.md` — the seven-step lifecycle: identify →
-  classify → confirm → update → record → ADR only when architectural →
-  re-verify; with the restored guarantees (expansion mapping, per-doc
-  history, changelog and changes-log pointers, diagram regeneration,
-  completion parity).
-- `references/verification.md` — parity checklist, evidence-backed no-impact,
-  the change-set input contract, exact output strings.
 - `references/reverse-engineer.md` — the full code-first restoration flow.
 - `references/story-adapter.md` · `references/bug-adapter.md` — the
   live-template Asana story and bug adapters (render through core

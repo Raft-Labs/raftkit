@@ -37,5 +37,5 @@ always win.
   live-template adapter seams — the user-story live-template adapter and the
   bug-report live-template adapter render from templates fetched by GID at
   run time; they are never cached template files in this plugin.
-- After generation, verification (Phase 10) runs before any done claim, and
-  change tracking owns every subsequent edit.
+- After generation, verification (Phase 10) runs before the set is called
+  done, and `raftkit-dev:docs` owns every later sync.

@@ -195,7 +195,7 @@ make deploy-agent                 # voice worker (if applicable)
 
 ## Supporting skills
 
-See `.claude/skills/` and `skills-lock.json`. Pre-installed:
+See `.claude/skills/`. Pre-installed:
 - `better-auth-best-practices`
 - `neon-postgres`
 - `next-best-practices`
