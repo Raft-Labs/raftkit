@@ -1,5 +1,5 @@
 ---
-description: How to use the raftkit-docs plugin — the documentation design product and when to reach for it
+description: RaftKit docs router — design, generate or reverse-engineer a project's documentation, or scaffold the project → raftkit-docs:docs-product. Whether the docs still match a story's change → raftkit-dev:docs. discovery-interview is the design flow's own interview contract, never run alone.
 argument-hint: [skill name or question]
 ---
 

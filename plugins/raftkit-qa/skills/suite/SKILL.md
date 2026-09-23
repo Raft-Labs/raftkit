@@ -6,7 +6,7 @@ user-invocable: true
 
 # suite
 
-Turn the approved Project Profile into a manual test-case suite QA edits directly in a Google Sheet, and keep the two in step. `raftkit-core:rules` apply.
+Turn the approved Project Profile into a manual test-case suite QA edits directly in a Google Sheet, and keep the two in step. Load `raftkit-core:rules` first unless it is already in this conversation.
 
 **The guarantee:** a regeneration never silently overwrites what QA changed. Case IDs are the sync key; QA edits win; a generated change to a QA-touched row is shown as a conflict, never applied.
 
@@ -41,4 +41,4 @@ Approve writes the new rows and deltas. Both conflicts keep QA's version unless 
 - Merge two projects into one Sheet.
 - Half-write on an access error: stop and name the exact fix (which account needs edit access to which Sheet).
 
-- **Announce it** — `Using raftkit-qa:suite` in the first reply, once (`raftkit-core/cowork-telemetry`).
+- **Announce it** — `Using raftkit-qa:suite` in the first reply, once (`raftkit-core:rules`).

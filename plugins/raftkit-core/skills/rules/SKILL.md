@@ -1,6 +1,6 @@
 ---
 name: rules
-description: The RaftKit rules every role skill inherits — Asana GIDs, the Project Profile convention, one human stop per run, fetch-once for live reads, the Asana HTML floor, free-tier limits, the scope line, founder escalation and the estimation watermark. Read once per session before any RaftKit skill acts; role skills never restate these.
+description: The RaftKit rules every role skill loads first — Asana constants, one stop per run, fetch-once reads, free tier, scope line, founder escalation, estimate watermark.
 user-invocable: false
 ---
 

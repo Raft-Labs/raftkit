@@ -6,7 +6,7 @@ user-invocable: true
 
 # profile
 
-Turn what the PM has (PRD, SOW, master doc, emails, meeting notes) into one Project Profile: the tagged, cited source of truth every other skill reads. `raftkit-core:rules` apply.
+Turn what the PM has (PRD, SOW, master doc, emails, meeting notes) into one Project Profile: the tagged, cited source of truth every other skill reads. Load `raftkit-core:rules` first unless it is already in this conversation.
 
 ## Inputs, in one ask
 
@@ -33,4 +33,4 @@ Profile draft for Riverside Bookings (1216…). 4 subtasks, 38 facts: ✅ 21 / �
 Profile lives at: <link>
 ```
 
-- **Announce it** — `Using raftkit-pm:profile` in the first reply, once (`raftkit-core/cowork-telemetry`).
+- **Announce it** — `Using raftkit-pm:profile` in the first reply, once (`raftkit-core:rules`).

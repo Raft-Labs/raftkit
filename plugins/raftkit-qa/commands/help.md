@@ -1,5 +1,5 @@
 ---
-description: How to use the raftkit-qa plugin — the QA workflow, every skill, and what to say to trigger it
+description: RaftKit QA router — generate or re-sync the project's test-case suite → raftkit-qa:suite; turn one story into manual test steps → raftkit-qa:run-sheet; file a bug from a Jam or a failing step, or retest a returned fix → raftkit-qa:bug. Fixing the bug itself → raftkit-dev:fix.
 argument-hint: [skill name or question]
 ---
 

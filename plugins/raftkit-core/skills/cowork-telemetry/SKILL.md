@@ -1,6 +1,6 @@
 ---
 name: cowork-telemetry
-description: How RaftKit records skill usage in Cowork, where no hook runs — the one line a skill says to name itself, once per run, and why RAFTKIT_TELEMETRY=off does nothing there. Read before adding or reshaping a pm or qa skill's first reply, or when asked why a skill announces itself.
+description: Why a pm or qa skill names itself once in Cowork, and why RAFTKIT_TELEMETRY=off does nothing there. Read before changing a skill's first reply.
 user-invocable: false
 ---
 

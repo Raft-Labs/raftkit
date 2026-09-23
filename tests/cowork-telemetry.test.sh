@@ -3,7 +3,9 @@
 #
 # Claude Code reports itself through hooks. Cowork has no hooks and emits no
 # event when a skill runs, so the only signal is the skill announcing itself.
-# CW1-CW10 pin that contract, its disclosure and its boundaries.
+# CW1-CW10 pin that contract, its disclosure and its boundaries. The role
+# skills point at raftkit-core:rules for it (CW4, CW4b); this skill holds the
+# rationale and is read by exact name.
 #
 # The announcement wording is a cross-repo contract: the already-merged
 # receiver in Raft-Labs/raftkit-admin matches it with a regex. If the shape
@@ -63,16 +65,36 @@ check "CW2b the announcement yields to a skill's own first-output contract" ok $
 joined "$CT" | grep -qi 'Say it once per run, not once per reply'
 check "CW3 the line is once per run, not per reply" ok $?
 
-# Every Cowork-surface skill must carry it, or its usage is invisible.
+# Every Cowork-surface skill must carry it, or its usage is invisible. The
+# bullet points at raftkit-core:rules, which every role skill loads first. The
+# cowork-telemetry helper is invoked by exact name and listed without a
+# description, so a pointer to it reaches nothing a run has loaded.
 missing=""
+stale=""
 count=0
 for f in plugins/raftkit-pm/skills/*/SKILL.md plugins/raftkit-qa/skills/*/SKILL.md; do
   count=$((count + 1))
-  grep -q 'cowork-telemetry' "$f" || missing="$missing $f"
+  grep -qE '^- \*\*Announce it\*\* — `Using raftkit-(pm|qa):[a-z-]+` in the first reply, once \(`raftkit-core:rules`\)\.$' "$f" \
+    || missing="$missing $f"
+  grep -q 'cowork-telemetry' "$f" && stale="$stale $f"
 done
-[[ -z "$missing" && "$count" -ge 9 ]]
-check "CW4 every pm and qa skill carries the announcement contract ($count skills)" ok $?
+[[ -z "$missing" && -z "$stale" && "$count" -ge 9 ]]
+check "CW4 every pm and qa skill carries the announcement, pointing at rules ($count skills)" ok $?
 [[ -n "$missing" ]] && echo "  missing:$missing"
+[[ -n "$stale" ]] && echo "  still points at cowork-telemetry:$stale"
+
+# The pointer only resolves if rules is loaded and says the shape itself.
+unloaded=""
+for f in plugins/raftkit-pm/skills/*/SKILL.md plugins/raftkit-qa/skills/*/SKILL.md; do
+  grep -qF 'Load `raftkit-core:rules` first unless it is already in this conversation.' "$f" \
+    || unloaded="$unloaded $f"
+done
+telemetry="$(awk '/^## Telemetry/{f=1;next} /^## /{f=0} f' "$RULES")"
+[[ -z "$unloaded" ]] \
+  && grep -qF 'Using <plugin>:<skill>' <<<"$telemetry" \
+  && grep -qi 'names itself once in its first reply' <<<"$telemetry"
+check "CW4b every pm and qa skill loads rules first, and rules states the shape" ok $?
+[[ -n "$unloaded" ]] && echo "  does not load rules first:$unloaded"
 
 # Each bullet must name its own skill. A copy-pasted wrong name files another
 # skill's rows in the dashboard, which is worse than filing none.

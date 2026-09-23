@@ -6,7 +6,7 @@ user-invocable: true
 
 # status
 
-One project's board → a client-ready update the PM sends. `raftkit-core:rules` apply. This skill writes nothing and never sends: the draft is handed back and the PM sends it from their own channel. It has no stop.
+One project's board → a client-ready update the PM sends. Load `raftkit-core:rules` first unless it is already in this conversation. This skill writes nothing and never sends: the draft is handed back and the PM sends it from their own channel. It has no stop.
 
 ## Inputs
 
@@ -36,4 +36,4 @@ Quiet period — no shipped items this week.
 
 Anything touching budget, contract or a client commitment is surfaced for the PM, never committed in the draft.
 
-- **Announce it** — `Using raftkit-pm:status` in the first reply, once (`raftkit-core/cowork-telemetry`).
+- **Announce it** — `Using raftkit-pm:status` in the first reply, once (`raftkit-core:rules`).

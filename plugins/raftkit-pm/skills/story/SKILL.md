@@ -6,7 +6,7 @@ user-invocable: true
 
 # story
 
-One skill for a story's life: author, amend, check, size. `raftkit-core:rules` apply; readiness is judged by the rules' `references/readiness.md`.
+One skill for a story's life: author, amend, check, size. Load `raftkit-core:rules` first unless it is already in this conversation.
 
 **Mode** comes from the target: an empty description → **author**; a description that holds a story → **amend**; "is it ready?" → **check** (read-only, verdict only); "how long?" → **size** (`references/sizing.md`, no stop). Readiness in every mode is judged by `raftkit-core:rules` → `references/readiness.md`.
 
@@ -36,4 +36,4 @@ Additive only, never a rewrite: `references/amend.md`. One stop covers the diff,
 
 Fetch the story and its subtasks, judge against the template, print the verdict from `raftkit-core:rules` → `references/readiness.md`. Read-only.
 
-- **Announce it** — `Using raftkit-pm:story` in the first reply, once (`raftkit-core/cowork-telemetry`).
+- **Announce it** — `Using raftkit-pm:story` in the first reply, once (`raftkit-core:rules`).

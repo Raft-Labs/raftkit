@@ -6,7 +6,7 @@ user-invocable: true
 
 # meeting
 
-One transcript → decisions, scope changes and action items, each cited; then a Profile delta and a task batch. `raftkit-core:rules` apply. Fathom already writes the recap; this skill writes none.
+One transcript → decisions, scope changes and action items, each cited; then a Profile delta and a task batch. Load `raftkit-core:rules` first unless it is already in this conversation. Fathom already writes the recap; this skill writes none.
 
 **No citation, no claim.** An item that cannot be tied to a transcript moment is dropped or raised as a question, never asserted.
 
@@ -38,4 +38,4 @@ Profile delta: 3 changed, 2 new, 1 conflict. Tasks: 6 proposed, 1 owner unclear 
 
 Nothing is sent to Slack or email. A decision that touches budget, contract or a client commitment is surfaced for founders, never treated as settled.
 
-- **Announce it** — `Using raftkit-pm:meeting` in the first reply, once (`raftkit-core/cowork-telemetry`).
+- **Announce it** — `Using raftkit-pm:meeting` in the first reply, once (`raftkit-core:rules`).

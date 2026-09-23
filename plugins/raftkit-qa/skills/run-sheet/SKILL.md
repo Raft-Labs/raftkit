@@ -6,7 +6,7 @@ user-invocable: true
 
 # run-sheet
 
-One story → an executable, deterministic run sheet; two stories are two sheets, never merged. `raftkit-core:rules` apply.
+One story → an executable, deterministic run sheet; two stories are two sheets, never merged. Load `raftkit-core:rules` first unless it is already in this conversation.
 
 **The rule:** the story is the only source. Every step traces to a scenario, an `[AC]`, an edge-case row or a permission boundary already in the story. The sheet never adds behaviour and never drops an `[AC]`: what it cannot cover, it names.
 
@@ -31,4 +31,4 @@ Run sheet: 27 steps covering 6 [AC]s — gaps: listed
 - [AC] "export completes within 10 s" — no runnable step; the story gives no test data.
 ```
 
-- **Announce it** — `Using raftkit-qa:run-sheet` in the first reply, once (`raftkit-core/cowork-telemetry`).
+- **Announce it** — `Using raftkit-qa:run-sheet` in the first reply, once (`raftkit-core:rules`).

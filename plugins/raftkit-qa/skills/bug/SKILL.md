@@ -6,7 +6,7 @@ user-invocable: true
 
 # bug
 
-Two modes, one bug lifecycle. `raftkit-core:rules` apply. A recording or a failing step → **file**; a bug handed back with a fix → **retest**.
+Two modes, one bug lifecycle. Load `raftkit-core:rules` first unless it is already in this conversation. A recording or a failing step → **file**; a bug handed back with a fix → **retest**.
 
 ## File
 
@@ -46,4 +46,4 @@ The stop line for both modes:
 **STOP** — approve to push, edit to change, or decline.
 ```
 
-- **Announce it** — `Using raftkit-qa:bug` in the first reply, once (`raftkit-core/cowork-telemetry`).
+- **Announce it** — `Using raftkit-qa:bug` in the first reply, once (`raftkit-core:rules`).

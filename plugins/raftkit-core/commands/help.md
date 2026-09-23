@@ -1,5 +1,5 @@
 ---
-description: How to use raftkit-core — the shared rules every RaftKit plugin runs on, and where to find the role plugins
+description: RaftKit router — write or check a user story → raftkit-pm:story; implement a story URL → raftkit-dev:implement; fix a bug or trace → raftkit-dev:fix; set up a repo → raftkit-dev:setup; file or retest a bug → raftkit-qa:bug. Every role skill → /raftkit-pm:help, /raftkit-dev:help, /raftkit-qa:help. The shared rules and telemetry → this help.
 argument-hint: [skill name or question]
 ---
 
