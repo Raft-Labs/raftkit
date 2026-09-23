@@ -14,6 +14,12 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
+// The plugins a RaftKit repo enables: raftkit-dev and exactly what its manifest
+// declares, so this list cannot drift from plugin.json.
+const manifest = JSON.parse(readFileSync(new URL("../../../.claude-plugin/plugin.json", import.meta.url), "utf8"));
+const pluginIds = ["raftkit-dev@raftkit", ...manifest.dependencies.map((d) =>
+  typeof d === "string" ? `${d}@raftkit` : `${d.name}@${d.marketplace ?? "raftkit"}`)];
+
 // House policy, mirrored from the working ~/.claude/settings.json — never invented here.
 const MANAGED = {
   extraKnownMarketplaces: {
@@ -22,15 +28,7 @@ const MANAGED = {
       autoUpdate: true,
     },
   },
-  enabledPlugins: {
-    "raftkit-core@raftkit": true,
-    "raftkit-dev@raftkit": true,
-    "superpowers@claude-plugins-official": true,
-    "code-simplifier@claude-plugins-official": true,
-    "claude-md-management@claude-plugins-official": true,
-    "security-guidance@claude-plugins-official": true,
-    "pr-review-toolkit@claude-plugins-official": true,
-  },
+  enabledPlugins: Object.fromEntries(pluginIds.map((id) => [id, true])),
   model: "opusplan",
   attribution: { commit: "", pr: "" },
   // Worktrees branch from local HEAD, so a phase sees the run's own commits;

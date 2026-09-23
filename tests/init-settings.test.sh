@@ -100,6 +100,19 @@ check_eq "enabledPlugins merge: pre-existing entry kept" "true" "$other_present"
 core_present="$(node -e 'const s=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); console.log(!!s.enabledPlugins["raftkit-core@raftkit"])' "$target3" 2>/dev/null)"
 check_eq "enabledPlugins merge: raftkit-core added" "true" "$core_present"
 
+# 3a. The managed plugins are raftkit-dev plus exactly its declared dependencies,
+#     so the engine list cannot drift from plugin.json again (it once named 5 of 6).
+node -e '
+  const fs=require("fs");
+  const deps=JSON.parse(fs.readFileSync("plugins/raftkit-dev/.claude-plugin/plugin.json","utf8")).dependencies;
+  const want=["raftkit-dev@raftkit", ...deps.map((d)=>typeof d==="string"?`${d}@raftkit`:`${d.name}@${d.marketplace}`)].sort();
+  const got=Object.keys(JSON.parse(fs.readFileSync(process.argv[1],"utf8")).enabledPlugins).sort();
+  process.exit(JSON.stringify(want)===JSON.stringify(got)?0:1);
+' "$target"
+check "3a enabledPlugins are raftkit-dev and exactly its declared dependencies" ok $?
+! grep -qE 'claude-md-management|code-simplifier' plugins/raftkit-dev/.claude-plugin/plugin.json "$target"
+check "3a raftkit-dev no longer depends on claude-md-management or the code-simplifier plugin" ok $?
+
 # 3b. Wrong-shaped existing values -> conflict, never silently coerced
 #     (a string spread into {...str} or [...str] corrupts it into a char map/array)
 assert_shape_conflict() { # <name> <fixture-json>
@@ -266,6 +279,69 @@ do11="$(newtmp)"; to11="$do11/settings.json"; printf '%s' '{"enabledPlugins":{"e
 node "$SCRIPT" "$to11" --disable-plugins expo@claude-plugins-official >/dev/null 2>&1; rc11=$?
 [[ $rc11 -eq 2 && "$b11" == "$(shasum "$to11")" ]]
 check "O11 disabling a plugin the project explicitly enables is a conflict" ok $?
+
+# M. merge-claude-md.mjs (2.4): the working agreement + design standard spliced
+#    byte-exact into a marker-delimited block, sha-verified, pure without --write.
+MERGE_MD="plugins/raftkit-dev/skills/setup/scripts/merge-claude-md.mjs"
+REAL_CORE="plugins/raftkit-core"
+mkcore() { local c; c="$(newtmp)"; mkdir -p "$c/skills/working-agreement/references"
+  cp "$REAL_CORE/skills/working-agreement/references/working-agreement.md" "$REAL_CORE/skills/working-agreement/references/design-standard.md" "$c/skills/working-agreement/references/"; echo "$c"; }
+body_of() { node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8"); const m=s.match(/^<!-- raftkit:working-agreement begin sha256=([0-9a-f]{64}) -->\n([\s\S]*?)^<!-- raftkit:working-agreement end -->$/m); if(!m) process.exit(1); process.stdout.write(m[2])' "$1"; }
+marker_sha() { grep -oE '^<!-- raftkit:working-agreement begin sha256=[0-9a-f]{64} -->$' "$1" | grep -oE '[0-9a-f]{64}'; }
+expected_body() { cat "$1/skills/working-agreement/references/working-agreement.md"; printf '\n'; cat "$1/skills/working-agreement/references/design-standard.md"; }
+sha() { shasum -a 256 | cut -d' ' -f1; }
+core="$(mkcore)"
+dm1="$(newtmp)"
+out_m1="$(node "$MERGE_MD" --core "$core" --claude-md "$dm1/CLAUDE.md" 2>&1)"; rc_m1=$?
+[[ $rc_m1 -eq 0 && ! -e "$dm1/CLAUDE.md" ]] && grep -qi 'would create' <<<"$out_m1"
+check "M1 without --write the script only reports what it would do and writes nothing" ok $?
+node "$MERGE_MD" --core "$core" --claude-md "$dm1/CLAUDE.md" --write >/dev/null 2>&1
+check "M2 --write creates CLAUDE.md" ok $?
+[[ "$(body_of "$dm1/CLAUDE.md" | sha)" == "$(expected_body "$core" | sha)" && "$(marker_sha "$dm1/CLAUDE.md")" == "$(expected_body "$core" | sha)" ]]
+check "M2 the block body is byte-exact to the two sources and its marker carries that sha256" ok $?
+wa_len="$(wc -c < "$REAL_CORE/skills/working-agreement/references/working-agreement.md" | tr -d ' ')"
+[[ "$(body_of "$dm1/CLAUDE.md" | head -c "$wa_len" | sha)" == "$(node -e 'console.log(require("./tests/budgets.json").working_agreement_sha256)')" ]]
+check "M3 the installed working agreement matches the sha256 pinned in tests/budgets.json" ok $?
+dm4="$(newtmp)"; printf '# Team notes\n\nKeep this.\n' > "$dm4/CLAUDE.md"; orig4="$(cat "$dm4/CLAUDE.md")"
+node "$MERGE_MD" --core "$core" --claude-md "$dm4/CLAUDE.md" --write >/dev/null 2>&1
+[[ "$(head -c ${#orig4} "$dm4/CLAUDE.md")" == "$orig4" && "$(grep -c '^<!-- raftkit:working-agreement begin' "$dm4/CLAUDE.md")" -eq 1 ]]
+check "M4 an existing CLAUDE.md keeps its content byte-exact and gains one block" ok $?
+dm4b="$(newtmp)"; printf '# No trailing newline' > "$dm4b/CLAUDE.md"
+node "$MERGE_MD" --core "$core" --claude-md "$dm4b/CLAUDE.md" --write >/dev/null 2>&1
+grep -qi 'no changes' <<<"$(node "$MERGE_MD" --core "$core" --claude-md "$dm4b/CLAUDE.md" --write 2>&1)" && grep -qx '# No trailing newline' "$dm4b/CLAUDE.md"
+check "M4b a CLAUDE.md without a trailing newline gets the block on its own lines, found again on re-run" ok $?
+h4="$(shasum "$dm4/CLAUDE.md")"; out_m5="$(node "$MERGE_MD" --core "$core" --claude-md "$dm4/CLAUDE.md" --write 2>&1)"
+[[ "$h4" == "$(shasum "$dm4/CLAUDE.md")" ]] && grep -qi 'no changes' <<<"$out_m5"
+check "M5 a re-run on unchanged sources writes nothing and says no changes" ok $?
+printf '\n## After the block\n\nStill mine.\n' >> "$dm4/CLAUDE.md"
+before_block="$(node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8"); process.stdout.write(s.slice(0, s.indexOf("<!-- raftkit:working-agreement begin")))' "$dm4/CLAUDE.md")"
+after_block="$(node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8"); const e="<!-- raftkit:working-agreement end -->\n"; process.stdout.write(s.slice(s.indexOf(e)+e.length))' "$dm4/CLAUDE.md")"
+printf '\nA new rule.\n' >> "$core/skills/working-agreement/references/design-standard.md"
+h6="$(shasum "$dm4/CLAUDE.md")"; node "$MERGE_MD" --core "$core" --claude-md "$dm4/CLAUDE.md" >/dev/null 2>&1
+check_eq "M6 plan mode on a changed source still writes nothing" "$h6" "$(shasum "$dm4/CLAUDE.md")"
+node "$MERGE_MD" --core "$core" --claude-md "$dm4/CLAUDE.md" --write >/dev/null 2>&1
+[[ "$(node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8"); process.stdout.write(s.slice(0, s.indexOf("<!-- raftkit:working-agreement begin")))' "$dm4/CLAUDE.md")" == "$before_block" ]] \
+  && [[ "$(node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8"); const e="<!-- raftkit:working-agreement end -->\n"; process.stdout.write(s.slice(s.indexOf(e)+e.length))' "$dm4/CLAUDE.md")" == "$after_block" ]] \
+  && [[ "$(body_of "$dm4/CLAUDE.md" | sha)" == "$(expected_body "$core" | sha)" ]]
+check "M7 a re-run replaces only the marked block; text before and after it is untouched" ok $?
+refused() { # <name> <file> -> exit 2 and byte-identical
+  local h rc; h="$(shasum "$2" 2>/dev/null)"; node "$MERGE_MD" --core "$core" --claude-md "$2" --write >/dev/null 2>&1; rc=$?
+  [[ $rc -eq 2 && "$h" == "$(shasum "$2" 2>/dev/null)" ]]; check "$1" ok $?
+}
+dm8="$(newtmp)"; printf 'x\n<!-- raftkit:working-agreement begin sha256=%064d -->\nno end\n' 0 > "$dm8/CLAUDE.md"
+refused "M8 a begin marker with no end marker is a conflict and nothing is written" "$dm8/CLAUDE.md"
+dm9="$(newtmp)"; { cat "$dm1/CLAUDE.md"; cat "$dm1/CLAUDE.md"; } > "$dm9/CLAUDE.md"
+refused "M9 two blocks are a conflict and nothing is written" "$dm9/CLAUDE.md"
+dm10="$(newtmp)"; printf '# real\n' > "$dm10/AGENTS.md"; ln -s AGENTS.md "$dm10/CLAUDE.md"
+refused "M10 a symlinked CLAUDE.md is a conflict and nothing is written" "$dm10/CLAUDE.md"
+dm11="$(newtmp)"; { printf '# Notes\n\n'; cat "$REAL_CORE/skills/working-agreement/references/working-agreement.md"; } > "$dm11/CLAUDE.md"
+refused "M11 an unmarked copy of the working agreement is a conflict, never a second copy" "$dm11/CLAUDE.md"
+dm12="$(newtmp)"; empty_core="$(newtmp)"
+node "$MERGE_MD" --core "$empty_core" --claude-md "$dm12/CLAUDE.md" --write >/dev/null 2>&1; rc12=$?
+[[ $rc12 -eq 1 && ! -e "$dm12/CLAUDE.md" ]]
+check "M12 a missing source file exits 1 and writes nothing" ok $?
+[[ -z "$(find "$dm1" "$dm4" -mindepth 1 ! -name CLAUDE.md)" ]]
+check "M13 no temporary file is left beside CLAUDE.md" ok $?
 
 # 6. Re-run with identical input -> byte-identical output, zero diff
 d6="$(newtmp)"

@@ -27,7 +27,7 @@ Setup continues without it; the skills that need it will say so.
 
    The same report names every enabled plugin's blocking Stop hook with its disable command, and the plugins this repo's stack does not use. Setup changes neither; both go in the draft.
 
-2. **Detect the toolchain** with `scripts/detect-toolchain.mjs` and resolve every component per `references/components.md`. Conflicting signals, a foreign hook owner, or several `core.hooksPath` values become questions in the draft. An existing `.raftkit/governance-pack.json` makes this a re-run and says what changed.
+2. **Detect the toolchain** with `scripts/detect-toolchain.mjs` and resolve every component per `references/components.md`. Conflicting signals, a foreign hook owner, several `core.hooksPath` values, or a `CLAUDE.md` the splice refuses become questions in the draft. An existing `.raftkit/governance-pack.json` makes this a re-run and says what changed.
 3. **Stop once** with the whole plan: every file to write with its diff, the toolchain the hook and CI will use, whether this is a commit or a PR, and each opt-in in `references/components.md` as a separate labelled line the developer accepts by name. A re-run shows only what drifted, and reports no changes when nothing did.
 
 ```output
@@ -35,7 +35,7 @@ Setup plan for <repo>: 6 files (2 new, 4 updated), one commit on <branch>.
 **STOP** — approve to apply, edit to change, or decline.
 ```
 
-4. **On go**, apply everything in one commit, set `core.hooksPath`, then verify: the hook is executable and fires under `git push --dry-run` (never a real push), the merged `CLAUDE.md` is readable, each written file exists, and any rendered asset carries no unresolved token. Write the marker. Report:
+4. **On go**, apply everything in one commit, set `core.hooksPath`, then verify: the hook is executable and fires under `git push --dry-run` (never a real push), the `CLAUDE.md` block matches its sha256, each written file exists, and any rendered asset carries no unresolved token. Write the marker. Report:
 
 ```output
 RaftKit setup v<X>: working agreement, design standard, repo settings, hook, CI guardrail, review config — verified

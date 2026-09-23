@@ -1,6 +1,6 @@
 ---
 name: ui
-description: Build a story's UI from its own designs and its exact copy — "build the UI for this story", "create the screens", "implement the UI phase", or a UI phase inside implement. Platform-correct through frontend-design and the project's stack, every state the story defines, nothing invented. Missing copy or an unreachable design stops that element, never the build.
+description: Build a story's UI from its own designs and its exact copy — "build the UI for this story", "create the screens", "implement the UI phase", or a UI phase inside implement. Platform-correct through the project's stack, every state the story defines, nothing invented. Missing copy or an unreachable design stops that element, never the build.
 user-invocable: true
 ---
 
@@ -14,7 +14,7 @@ One story's screens, built to what the story actually says. Load `raftkit-core:r
 
 1. **Confirm there is UI to build.** No design and no copy in the story, or an explicit no-UI-scope note, means generate nothing and say so. That is a correct outcome.
 2. **Pick the stack**: web goes to React and Next.js with the defaults in `references/web-defaults.md`; mobile goes to Expo with `references/recipe-native-ui-structure.md`. A story covering both reads its own parity note and builds each surface to its own conventions. Solved problems come from the recipes rather than being redesigned: `references/recipe-in-app-auto-update.md` and `references/recipe-review-at-happy-moment.md`.
-3. **Build screen by screen**, delegating to `frontend-design:frontend-design`:
+3. **Build screen by screen**; `frontend-design:frontend-design` loads only when the story links no designs and the Project Profile defines no visual system. Every screen gets:
    - **Designs** — build to the linked frames. A layout described only in words is a constraint, not licence to embellish.
    - **Copy** — the story's exact strings, verbatim. No rewording, no tone edits, no placeholder.
    - **States** — every edge-case row the story fills for that screen: waiting, empty, error with its exact message and recovery, success, limits, defaults. A row marked not applicable is reported as considered, not built.

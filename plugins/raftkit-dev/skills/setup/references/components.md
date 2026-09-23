@@ -4,7 +4,7 @@ Six components, plus one opt-in seventh. Content the pack installs comes live fr
 
 | # | Component | Source | Installs to |
 |---|---|---|---|
-| 1 | Working agreement + Module Design Standard | `raftkit-core:working-agreement` → `references/working-agreement.md` and `references/design-standard.md` (live) | `CLAUDE.md` (merged via claude-md-management) |
+| 1 | Working agreement + Module Design Standard | `raftkit-core:working-agreement` → `references/working-agreement.md` and `references/design-standard.md` (live) | One marker-delimited block in `CLAUDE.md`, spliced byte-exact by `scripts/merge-claude-md.mjs --core <raftkit-core path from the engine report>`; `--write` only on go |
 | 2 | Pre-push hook | `assets/pre-push` | `.githooks/pre-push`, tracked and `chmod +x`, plus `git config core.hooksPath .githooks` |
 | 3 | CI quality guardrail | `assets/quality-guardrail.yml` | `.github/workflows/quality-guardrail.yml` |
 | 4 | Review config | `assets/coderabbit.yaml` | `.coderabbit.yaml` |
