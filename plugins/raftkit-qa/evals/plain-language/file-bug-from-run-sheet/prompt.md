@@ -1,6 +1,7 @@
 ---
 max_turns: 12
 allowed_tools: [Read, Glob, Grep, Skill]
+tags: [needs-live-template]
 ---
 
 You are running raftkit-qa:bug in file mode. QA just ran the manual run sheet for the
