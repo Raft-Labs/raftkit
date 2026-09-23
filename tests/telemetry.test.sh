@@ -85,6 +85,11 @@ export RAFTKIT_DEV=1
 # Default to "send nowhere"; the flush tests set their own stub-server URL.
 export RAFTKIT_TELEMETRY_ENDPOINT=""
 
+# Nor read this machine's Claude Code config: the ledger and the plugin cache
+# lookups resolve under an empty sandbox unless a test points them elsewhere.
+export CLAUDE_CONFIG_DIR="$(new_sandbox)"
+unset CLAUDE_PROJECT_DIR
+
 check() { # <name> <expected: ok|fail> <actual exit code>
   local name="$1" expected="$2" actual="$3"
   if { [[ "$expected" == ok && "$actual" -eq 0 ]] || [[ "$expected" == fail && "$actual" -ne 0 ]]; }; then
@@ -114,6 +119,11 @@ last_event_field() { # <spool> <dotted property path, e.g. props.refusal_id>
     }
     process.stdout.write(String(v));
   ' "$1" "$2" 2>/dev/null
+}
+
+seed_skill() { # <telemetry dir> <session id> — a RaftKit run in that session, so its stops count
+  printf '{"session_id":"%s","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-dev:implement"}}' "$2" \
+    | RAFTKIT_TELEMETRY_DIR="$1" node "$RECORD" skill >/dev/null 2>&1
 }
 
 # ---------------------------------------------------------------- 1. spooling
@@ -184,7 +194,9 @@ node -e '
 check "repoSlug normalizes remotes and strips embedded credentials" ok $?
 
 # ------------------------------------------------------------- 2. scrubbing
-d="$(new_sandbox)"
+# Prompt text is kept only in a session that ran a RaftKit skill, so each
+# prompt-scrubbing case runs in one — otherwise it passes on an empty prompt.
+d="$(new_sandbox)"; seed_skill "$d" s1
 secret_prompt='deploy using ghp_AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHH1234 and sk-proj-ZZZZYYYYXXXXWWWWVVVV1111 now'
 echo "{\"session_id\":\"s1\",\"user_prompt\":\"$secret_prompt\",\"cwd\":\"$PWD\"}" \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1
@@ -335,7 +347,7 @@ node -e '
 check "every refusal pattern is a valid regex matching its example" ok $?
 
 # ---------------------------------------------------- 6. blocker classification
-d="$(new_sandbox)"
+d="$(new_sandbox)"; seed_skill "$d" s1
 printf '{"session_id":"s1","last_assistant_message":"NOT READY — 2 gap(s):\\n- Section 3 missing"}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "hard stop is classified as blocked" "raftkit_blocked" "$(last_event_field "$d/spool/events.jsonl" 'event')"
@@ -344,7 +356,7 @@ expect_eq "correct refusal id" "not-ready" "$(last_event_field "$d/spool/events.
 # The one human stop per run is not a blocker: it is the moment the human
 # decides. It gets its own event, and the reply that follows is flagged so the
 # dashboard can tell a go from an edit from an abandoned run.
-d="$(new_sandbox)"
+d="$(new_sandbox)"; seed_skill "$d" s1
 printf '{"session_id":"s1","last_assistant_message":"Story draft ready.\\n**STOP** — approve to write, edit to change, or decline."}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "the one stop is recorded as a gate, not a blocker" "raftkit_gate_shown" "$(last_event_field "$d/spool/events.jsonl" 'event')"
@@ -373,7 +385,7 @@ expect_eq "a renamed skill carries the v1 name it replaced" "user-story" "$(last
 # label bold (`**Missing:**` instead of plain `Missing:`) — both a plain and
 # a bold refusal must still classify, and a line that only contains the
 # phrase without starting with it must not.
-d="$(new_sandbox)"
+d="$(new_sandbox)"; seed_skill "$d" s1
 printf '{"session_id":"s1","last_assistant_message":"Missing: superpowers. Install it with: claude plugin install superpowers@claude-plugins-official"}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "plain capability refusal classifies" "capability-unavailable" \
@@ -381,7 +393,7 @@ expect_eq "plain capability refusal classifies" "capability-unavailable" \
 expect_eq "plain capability refusal captures the detail" "superpowers" \
   "$(last_event_field "$d/spool/events.jsonl" 'props.detail')"
 
-d="$(new_sandbox)"
+d="$(new_sandbox)"; seed_skill "$d" s1
 printf '{"session_id":"s1","last_assistant_message":"**Missing:** superpowers. Install it with: claude plugin install superpowers@claude-plugins-official"}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "bold-prefixed capability refusal still classifies" "capability-unavailable" \
@@ -389,19 +401,19 @@ expect_eq "bold-prefixed capability refusal still classifies" "capability-unavai
 expect_eq "bold-prefixed capability refusal captures the detail" "superpowers" \
   "$(last_event_field "$d/spool/events.jsonl" 'props.detail')"
 
-d="$(new_sandbox)"
+d="$(new_sandbox)"; seed_skill "$d" s1
 printf '{"session_id":"s1","last_assistant_message":"The dev said Missing: superpowers. Install it with: something, but that was a quote."}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "a mid-sentence mention is not misclassified as a blocker" "raftkit_turn_completed" \
   "$(last_event_field "$d/spool/events.jsonl" 'event')"
 
-d="$(new_sandbox)"
+d="$(new_sandbox)"; seed_skill "$d" s1
 printf '{"session_id":"s1","last_assistant_message":"Done — all tests pass and the PR is up."}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "a normal turn is not a blocker" "raftkit_turn_completed" "$(last_event_field "$d/spool/events.jsonl" 'event')"
 
 # The Stop hook carries no prompt, so it must recover the session's last one.
-d="$(new_sandbox)"
+d="$(new_sandbox)"; seed_skill "$d" s9
 echo "{\"session_id\":\"s9\",\"user_prompt\":\"implement story 123\",\"cwd\":\"$PWD\"}" \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1
 printf '{"session_id":"s9","last_assistant_message":"Can'"'"'t read the story — check your Asana connector, then retry."}' \
@@ -515,7 +527,7 @@ start_stub() { # <code> -> echoes port
   # Without this the stub servers survive the run and pile up across invocations.
   node "$stub/stub.mjs" "$1" > "$stub/port.$1" 2>/dev/null &
   echo $! >> "$stub/pids"
-  for _ in 1 2 3 4 5 6 7 8 9 10; do
+  for _ in $(seq 1 30); do   # up to 9s: a loaded machine starts node slowly
     [[ -s "$stub/port.$1" ]] && break
     sleep 0.3
   done
@@ -604,8 +616,18 @@ check "the extended guard catches a createIssue GraphQL mutation via gh api grap
 grep -qi 'dashboard' "$README"
 check "README states blockers go to the dashboard" ok $?
 
-grep -qi 'every prompt' "$README" && grep -qi 'failed tool call' "$README"
-check "README states every prompt and every failed tool call is captured" ok $?
+# D1: free text is collected only where RaftKit ran. The README and the
+# one-time notice must say exactly that, and the old unconditional claims —
+# which the code no longer matches — must be gone.
+grep -qi 'only in a session where a RaftKit skill ran' "$README" \
+  && grep -qi 'first 512 characters' "$README" && grep -qi 'first 200 characters' "$README"
+check "README states prompt and error text is collected only where a RaftKit skill ran, and how much" ok $?
+# Sent from every session too: the shunt's deny record and listing coverage.
+grep -qi 'when the read shunt declines a file, its extension and line count' "$README" \
+  && grep -qi 'which RaftKit skills the skill listing described' "$README"
+check "README lists the shunt's deny record and the listing coverage among what every session sends" ok $?
+! grep -qiE 'every prompt you submit, in full|anything from a repo you didn.t run RaftKit in' "$README"
+check "README no longer claims full prompts everywhere or nothing from other repos" ok $?
 
 grep -q 'RAFTKIT_TELEMETRY=off' "$README"
 check "opt-out is stated in the README" ok $?
@@ -652,6 +674,13 @@ else
   failures=$((failures + 1))
 fi
 expect_eq "disclosure is one-time, not once per session" "" "$second"
+
+# Only the synchronous SessionStart hook's output is read, so no other hook may
+# spend the disclosure: it would be marked shown with nobody having seen it.
+d="$(new_sandbox)"
+echo '{"session_id":"n3","user_prompt":"hi"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1
+seed_skill "$d" n3
+expect_eq "an async hook never spends the one-time disclosure" "no" "$([[ -f "$d/notice-shown" ]] && echo yes || echo no)"
 
 # D5: noticePending() only checks whether the marker FILE exists, not what
 # notice version it recorded. A marker written by a pre-upgrade install (the
@@ -724,7 +753,7 @@ start_counting_stub() { # <code> <location> <countfile> -> echoes port
   printf '0' > "$3"
   node "$stub/countstub.mjs" "$1" "$2" "$3" > "$stub/port.$tag" 2>/dev/null &
   echo $! >> "$stub/pids"
-  for _ in 1 2 3 4 5 6 7 8 9 10; do
+  for _ in $(seq 1 30); do   # up to 9s: a loaded machine starts node slowly
     [[ -s "$stub/port.$tag" ]] && break
     sleep 0.3
   done
@@ -747,7 +776,7 @@ write_spool() { # <dir> <n> — n synthetic prompt events, oldest first
 }
 
 # --- F2 end-to-end: an auth header in a real prompt must not reach the spool -
-d="$(new_sandbox)"
+d="$(new_sandbox)"; seed_skill "$d" s1
 echo '{"session_id":"s1","user_prompt":"why does curl -H \"Authorization: Bearer ghs_LIVETOKEN99887766554433\" 401","cwd":"'"$PWD"'"}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1
 captured="$(last_event_field "$d/spool/events.jsonl" 'props.prompt')"
@@ -757,6 +786,8 @@ if [[ "$captured" == *"ghs_LIVETOKEN"* ]]; then
 else
   echo "PASS: Authorization header token never reaches the spool"
 fi
+[[ "$captured" == *"why does curl"* ]]
+check "  and the rest of that prompt was captured, so the check means something" ok $?
 
 # --- F3: the synchronous SessionStart path must fit its declared timeout ----
 # It chained stdin + 2 git + `gh api user` + 2 more git at 3-4s each: 16.1s
@@ -1033,6 +1064,573 @@ node --input-type=module -e '
   process.exit(0);
 ' >/dev/null 2>&1
 check "scrubbing a huge tool output stays bounded and still redacts first" ok $?
+
+# ================================================================ 10b. scope (D1)
+# In a session where no RaftKit skill runs, no prompt or error text is kept.
+d="$(new_sandbox)"; sp="$d/spool/events.jsonl"
+printf '{"session_id":"q1","user_prompt":"refactor the billing module for acme"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1
+expect_eq "a prompt in a session with no RaftKit skill is recorded without its text" "raftkit_prompt_submitted|" \
+  "$(last_event_field "$sp" event)|$(last_event_field "$sp" props.prompt | sed 's/^undefined$//')"
+printf '%s' '{"session_id":"q1","tool_name":"Bash","error":"Exit code 1\ncat: secrets.env: contents here"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" tool_failure >/dev/null 2>&1
+expect_eq "a failed tool in such a session keeps its exit code, not its text" "1|" \
+  "$(last_event_field "$sp" props.exit_code)|$(last_event_field "$sp" props.error | sed 's/^undefined$//')"
+if grep -q 'acme\|secrets.env' "$sp"; then
+  echo "FAIL: free text from a session with no RaftKit skill reached the spool"
+  failures=$((failures + 1))
+else
+  echo "PASS: no free text from a session with no RaftKit skill reaches the spool"
+fi
+seed_skill "$d" q1
+printf '{"session_id":"q1","user_prompt":"now implement the story"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1
+expect_eq "once a RaftKit skill ran, the prompt text is kept" "now implement the story" "$(last_event_field "$sp" props.prompt)"
+long_prompt="$(printf 'please change the header layout %.0s' $(seq 1 40))"
+printf '{"session_id":"q1","user_prompt":"%s"}' "$long_prompt" | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1
+expect_eq "  at most 512 characters of it" "512" "$(ev_len="$(last_event_field "$sp" props.prompt)" node -e 'process.stdout.write(String([...process.env.ev_len].length))')"
+# The disclosure says the same thing the README does.
+d="$(new_sandbox)"
+notice="$(echo '{"session_id":"n9","hook_event_name":"SessionStart"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start 2>/dev/null)"
+[[ "$notice" == *'In a session where a RaftKit skill runs'* && "$notice" == *'prompts'* && "$notice" != *'Prompts preceding a stop'* ]]
+check "the one-time notice states the free-text scope" ok $?
+
+# ================================================================ 11. delivery
+# v2's first STOP wedged delivery: the server rejected severity "gate", every
+# flush 4xx'd whole, and nothing said so. These pin the client half of the fix.
+
+# A stub that keeps every request body, so a test can inspect what was sent.
+cat > "$stub/capstub.mjs" <<'STUB'
+import { createServer } from "node:http";
+import { writeFileSync } from "node:fs";
+const [mode, dir, reply] = [process.argv[2] || "200", process.argv[3], process.argv[4] || "{}"];
+// "trunc-ok": accept truncation notices only, refuse every other batch.
+const codeFor = (body) => (mode === "trunc-ok" ? (body.includes('"raftkit_spool_truncated"') ? 200 : 503) : Number(mode));
+let n = 0;
+const srv = createServer((req, res) => {
+  const chunks = [];
+  req.on("data", (c) => chunks.push(c));
+  req.on("end", () => {
+    const body = Buffer.concat(chunks);
+    writeFileSync(`${dir}/body.${String(n++).padStart(4, "0")}.json`, body);
+    res.writeHead(codeFor(body.toString("utf8"))); res.end(reply);
+  });
+});
+srv.listen(0, () => console.log(srv.address().port));
+setTimeout(() => process.exit(0), 120000);
+STUB
+
+start_capture_stub() { # <code> <dir> [reply] -> echoes port
+  local tag="k$RANDOM"
+  mkdir -p "$2"
+  node "$stub/capstub.mjs" "$1" "$2" "${3:-{\}}" > "$stub/port.$tag" 2>/dev/null &
+  echo $! >> "$stub/pids"
+  for _ in $(seq 1 30); do   # up to 9s: a loaded machine starts node slowly
+    [[ -s "$stub/port.$tag" ]] && break
+    sleep 0.3
+  done
+  cat "$stub/port.$tag"
+}
+
+bodies() { # <capture dir> <node expression over `events` (all sent events) and `sizes` (bytes per body)>
+  # eval runs only the expressions written in this file, never captured data.
+  node -e '
+    const fs = require("fs"); const dir = process.argv[1];
+    const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.startsWith("body.")).sort() : [];
+    const raw = files.map((f) => fs.readFileSync(dir + "/" + f));
+    const sizes = raw.map((b) => b.length);
+    const events = raw.flatMap((b) => JSON.parse(b.toString("utf8")).batch || []);
+    process.stdout.write(String(eval(process.argv[2])));
+  ' "$1" "$2" 2>/dev/null
+}
+
+# --- 900 KB batches: a server that caps bodies at 1 MB must never see a bigger one
+d="$(new_sandbox)"; cap="$d/cap"
+port="$(start_capture_stub 200 "$cap")"
+mkdir -p "$d/spool"
+node -e '
+  const fs = require("fs"); const big = "x".repeat(2000); let out = "";
+  for (let i = 0; i < 1200; i++) out += JSON.stringify({ event_id: "b" + i, ts: "2026-09-17T10:37:00.000Z",
+    event: "raftkit_blocked", distinct_id: "x", props: { prompt: big, matched_line: big, detail: big, error: big, args: big } }) + "\n";
+  fs.writeFileSync(process.argv[1] + "/spool/events.jsonl", out);
+' "$d"
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:$port/api/telemetry" node "$FLUSH" >/dev/null 2>&1
+expect_eq "every event of a large spool is delivered" "1200" "$(bodies "$cap" 'events.length')"
+expect_eq "no request body exceeds 900 KB" "true" "$(bodies "$cap" 'sizes.length > 1 && Math.max(...sizes) <= 900000')"
+
+# --- free text is clamped to 512 chars on the wire, even for events spooled before the clamp
+expect_eq "free-text fields reach the server at 512 chars or fewer" "true" \
+  "$(bodies "$cap" 'events.every((e) => ["prompt","matched_line","detail","error","args"].every((k) => e.properties[k].length <= 512))')"
+
+# --- a severity the server does not know is sent as info, with the original kept
+d="$(new_sandbox)"; cap="$d/cap"
+port="$(start_capture_stub 200 "$cap")"
+mkdir -p "$d/spool"
+printf '%s\n' \
+  '{"event_id":"g1","ts":"2026-09-17T10:37:00.000Z","event":"raftkit_gate_shown","distinct_id":"x","props":{"refusal_id":"stop-shown","severity":"gate"}}' \
+  '{"event_id":"g2","ts":"2026-09-17T10:38:00.000Z","event":"raftkit_blocked","distinct_id":"x","props":{"refusal_id":"not-ready","severity":"blocker"}}' \
+  > "$d/spool/events.jsonl"
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:$port/api/telemetry" node "$FLUSH" >/dev/null 2>&1
+expect_eq "a gate event is sent with severity info" "info" "$(bodies "$cap" 'events.find((e) => e.event_id === "g1").properties.severity')"
+expect_eq "  and keeps gate in severity_detail" "gate" "$(bodies "$cap" 'events.find((e) => e.event_id === "g1").properties.severity_detail')"
+expect_eq "a known severity is sent unchanged" "blocker|undefined" \
+  "$(bodies "$cap" 'events.find((e) => e.event_id === "g2").properties.severity + "|" + events.find((e) => e.event_id === "g2").properties.severity_detail')"
+
+# --- an event too big for any request is reported once, however often delivery fails
+oversized_spool() { # <dir> — one event over the 900 KB cap (nested, so the clamp cannot shrink it), then one normal
+  mkdir -p "$1/spool"
+  node -e '
+    const line = (id, props) => JSON.stringify({ event_id: id, ts: "2026-09-17T10:37:00.000Z", event: "raftkit_turn_completed", distinct_id: "x", props }) + "\n";
+    require("fs").writeFileSync(process.argv[1] + "/spool/events.jsonl", line("big1", { tokens: { blob: "x".repeat(1000000) } }) + line("ok1", { n: 1 }));
+  ' "$1"
+}
+spool_ids() { node -e 'const p=process.argv[1]; const fs=require("fs"); process.stdout.write(fs.existsSync(p) ? fs.readFileSync(p,"utf8").trim().split("\n").filter(Boolean).map((l)=>JSON.parse(l).event_id).join(",") : "")' "$1/spool/events.jsonl"; }
+d="$(new_sandbox)"; cap="$d/cap"
+port="$(start_capture_stub 500 "$cap")"
+oversized_spool "$d"
+for _ in 1 2; do
+  RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:$port/api/telemetry" node "$FLUSH" >/dev/null 2>&1
+done
+expect_eq "a retried truncation notice keeps its event_id, so the server counts it once" "2|1" \
+  "$(bodies "$cap" 'const t=events.filter((e)=>e.event==="raftkit_spool_truncated"); t.length+"|"+new Set(t.map((e)=>e.event_id)).size')"
+expect_eq "  and no request ever carries the oversized event" "false" "$(bodies "$cap" 'events.some((e)=>e.event_id==="big1")')"
+d="$(new_sandbox)"; cap="$d/cap"
+port="$(start_capture_stub trunc-ok "$cap")"
+oversized_spool "$d"
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:$port/api/telemetry" node "$FLUSH" >/dev/null 2>&1
+expect_eq "a delivered truncation notice takes its event out of the spool, though the batch after it failed" "ok1" "$(spool_ids "$d")"
+# Past the 500-event batch cap, so the lines after the dropped one span two requests.
+d="$(new_sandbox)"; cap="$d/cap"
+port="$(start_capture_stub 200 "$cap")"
+oversized_spool "$d"
+node -e 'let out=""; for (let i=0;i<501;i++) out += JSON.stringify({event_id:"n"+i,ts:"2026-09-17T10:37:00.000Z",event:"raftkit_prompt_submitted",distinct_id:"x",props:{n:i}})+"\n"; require("fs").appendFileSync(process.argv[1]+"/spool/events.jsonl", out)' "$d"
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:$port/api/telemetry" node "$FLUSH" >/dev/null 2>&1
+expect_eq "every event behind a dropped one is delivered, once" "502|502|" \
+  "$(bodies "$cap" 'const n=events.filter((e)=>e.event!=="raftkit_spool_truncated"); n.length+"|"+new Set(n.map((e)=>e.event_id)).size')|$(spool_ids "$d")"
+
+# --- a rejected flush says why, and when delivery stopped
+d="$(new_sandbox)"; cap="$d/cap"
+port="$(start_capture_stub 400 "$cap" '{"error":"invalid severity"}')"
+write_spool "$d" 3
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:$port/api/telemetry" node "$FLUSH" >/dev/null 2>&1
+expect_eq "a non-2xx flush writes last-flush-error with the status" "400" \
+  "$(node -e 'process.stdout.write(String(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).status))' "$d/last-flush-error" 2>/dev/null)"
+expect_eq "  and the server's reason" "true" \
+  "$(node -e 'process.stdout.write(String(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).error.includes("invalid severity")))' "$d/last-flush-error" 2>/dev/null)"
+# The streak's start is what "has not delivered since" means, so a repeat keeps it.
+node -e '
+  const fs = require("fs"); const p = process.argv[1];
+  fs.writeFileSync(p, JSON.stringify({ ...JSON.parse(fs.readFileSync(p, "utf8")), ts: "2026-09-17T10:37:10.000Z" }));
+' "$d/last-flush-error"
+rm -f "$d/last-flush"
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:$port/api/telemetry" node "$FLUSH" >/dev/null 2>&1
+expect_eq "a repeated failure keeps the time delivery first failed" "2026-09-17T10:37:10.000Z" \
+  "$(node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).ts)' "$d/last-flush-error" 2>/dev/null)"
+expect_eq "  and keeps the events for the next session" "3" "$(wc -l < "$d/spool/events.jsonl" | tr -d ' ')"
+
+# The developer is told, at most once a day, while the error stands. An async
+# hook's output is never shown, so only session start may spend the day's line.
+echo '{"session_id":"w0","user_prompt":"hi"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1
+expect_eq "an async hook never spends the day's stuck-delivery message" "no" \
+  "$([[ -f "$d/flush-warning-shown" ]] && echo yes || echo no)"
+warn1="$(echo '{"session_id":"w1","hook_event_name":"SessionStart"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start 2>/dev/null)"
+warn2="$(echo '{"session_id":"w2","hook_event_name":"SessionStart"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start 2>/dev/null)"
+if [[ "$warn1" == *'RaftKit telemetry has not delivered since 2026-09-17'* ]]; then
+  echo "PASS: session start tells the developer delivery is stuck, and since when"
+else
+  echo "FAIL: no stuck-delivery message at session start ('${warn1:0:160}')"
+  failures=$((failures + 1))
+fi
+expect_eq "the stuck-delivery message is shown at most once a day" "" "$warn2"
+node -e '
+  const fs = require("fs"); const p = process.argv[1] + "/flush-warning-shown";
+  fs.writeFileSync(p, String(Date.now() - 25 * 60 * 60 * 1000));
+' "$d"
+warn3="$(echo '{"session_id":"w3","hook_event_name":"SessionStart"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start 2>/dev/null)"
+if [[ "$warn3" == *'has not delivered since'* ]]; then
+  echo "PASS: the stuck-delivery message returns the next day"
+else
+  echo "FAIL: the stuck-delivery message did not return after a day ('${warn3:0:120}')"
+  failures=$((failures + 1))
+fi
+
+# A successful flush clears the error, and the message stops.
+port="$(start_capture_stub 200 "$d/cap-ok")"
+rm -f "$d/last-flush"
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:$port/api/telemetry" node "$FLUSH" >/dev/null 2>&1
+expect_eq "a delivered flush removes last-flush-error" "no" "$([[ -f "$d/last-flush-error" ]] && echo yes || echo no)"
+rm -f "$d/flush-warning-shown"
+warn4="$(echo '{"session_id":"w4","hook_event_name":"SessionStart"}' | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start 2>/dev/null)"
+expect_eq "no stuck-delivery message once delivery works" "" "$warn4"
+
+# An offline flush is not a server rejection: nothing to report.
+d="$(new_sandbox)"
+write_spool "$d" 2
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:1/api/telemetry" node "$FLUSH" >/dev/null 2>&1
+expect_eq "an unreachable endpoint writes no last-flush-error" "no" "$([[ -f "$d/last-flush-error" ]] && echo yes || echo no)"
+
+# ================================================================ 12. the ledger
+# Claude Code records each session's cost in its own config. SessionStart sends
+# the previous session's cost fields once, as the ground truth the transcript
+# count is calibrated against — and reads nothing else from that file.
+d="$(new_sandbox)"; cfgd="$(new_sandbox)"
+write_ledger() { # <config dir> <lastStartTime>
+  node -e '
+    const [dir, cwd, start] = process.argv.slice(1);
+    require("fs").writeFileSync(dir + "/.claude.json", JSON.stringify({
+      oauthAccount: { emailAddress: "SECRET_EMAIL@example.com" },
+      projects: { [cwd]: {
+        lastSessionId: "prev-0001", lastStartTime: Number(start), lastCost: 1.25, lastDuration: 60000, lastAPIDuration: 30000,
+        lastTotalInputTokens: 10, lastTotalOutputTokens: 20, lastTotalCacheReadInputTokens: 300, lastTotalCacheCreationInputTokens: 40,
+        lastModelUsage: { "claude-opus-5-5": { inputTokens: 10, outputTokens: 20, cacheReadInputTokens: 300, cacheCreationInputTokens: 40, costUSD: 1.25 } },
+        mcpServers: { x: { env: { TOKEN: "SECRET_MCP_VALUE" } } }, allowedTools: ["SECRET_TOOL"],
+      } },
+    }));
+  ' "$1" "$PWD" "$2"
+}
+write_ledger "$cfgd" 1790000000000
+cost_field() { # <spool> <field|count> — a field of the one raftkit_session_cost event, or how many were sent
+  node -e '
+    const fs = require("fs");
+    const p = process.argv[1];
+    const e = (fs.existsSync(p) ? fs.readFileSync(p, "utf8").trim().split("\n") : []).filter(Boolean).map((l) => JSON.parse(l)).filter((x) => x.event === "raftkit_session_cost");
+    if (process.argv[2] === "count") { process.stdout.write(String(e.length)); process.exit(0); }
+    let v = e.length === 1 ? e[0] : undefined;   // a field is read only when exactly one was sent
+    for (const k of process.argv[2].split(".")) v = v == null ? undefined : v[k];
+    process.stdout.write(String(v));
+  ' "$1" "$2" 2>/dev/null
+}
+echo "{\"session_id\":\"s-new\",\"hook_event_name\":\"SessionStart\",\"source\":\"startup\",\"cwd\":\"$PWD\"}" \
+  | CLAUDE_CONFIG_DIR="$cfgd" RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
+expect_eq "session start sends the previous session's ledger" "prev-0001" "$(cost_field "$d/spool/events.jsonl" props.cost_session_id)"
+expect_eq "  with its token total" "370" "$(cost_field "$d/spool/events.jsonl" props.total)"
+expect_eq "  its cost" "1.25" "$(cost_field "$d/spool/events.jsonl" props.cost_usd)"
+expect_eq "  and its cost per model" "1.25" "$(cost_field "$d/spool/events.jsonl" 'props.by_model.claude-opus-5-5.cost_usd')"
+if grep -q 'SECRET_' "$d/spool/events.jsonl"; then
+  echo "FAIL: something other than the cost fields was read out of the Claude Code config"
+  failures=$((failures + 1))
+else
+  echo "PASS: only the cost fields are read out of the Claude Code config"
+fi
+echo "{\"session_id\":\"s-new2\",\"hook_event_name\":\"SessionStart\",\"source\":\"startup\",\"cwd\":\"$PWD\"}" \
+  | CLAUDE_CONFIG_DIR="$cfgd" RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
+expect_eq "the same ledger entry is sent once" "prev-0001" "$(cost_field "$d/spool/events.jsonl" props.cost_session_id)"
+write_ledger "$cfgd" 1790000999000   # a resumed session's next segment
+echo "{\"session_id\":\"s-new3\",\"hook_event_name\":\"SessionStart\",\"source\":\"startup\",\"cwd\":\"$PWD\"}" \
+  | CLAUDE_CONFIG_DIR="$cfgd" RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
+expect_eq "a new segment of the ledger is sent" "2" "$(cost_field "$d/spool/events.jsonl" count)"
+
+# The ledger is keyed by the project directory. A session in a subfolder is
+# matched through CLAUDE_PROJECT_DIR, never by walking up to some parent's entry.
+d="$(new_sandbox)"; sub="$PWD/plugins"
+echo "{\"session_id\":\"s-sub\",\"hook_event_name\":\"SessionStart\",\"cwd\":\"$sub\"}" \
+  | CLAUDE_CONFIG_DIR="$cfgd" RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
+expect_eq "a parent directory's ledger is never credited to a subfolder session" "0" "$(cost_field "$d/spool/events.jsonl" count)"
+echo "{\"session_id\":\"s-sub2\",\"hook_event_name\":\"SessionStart\",\"cwd\":\"$sub\"}" \
+  | CLAUDE_CONFIG_DIR="$cfgd" CLAUDE_PROJECT_DIR="$PWD" RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
+expect_eq "  while the session's own project directory finds it" "prev-0001" "$(cost_field "$d/spool/events.jsonl" props.cost_session_id)"
+
+# Per-session state is bounded: files for sessions untouched in two weeks go.
+d="$(new_sandbox)"; mkdir -p "$d/sessions"
+echo '{}' > "$d/sessions/old-0001.tokens.json"; echo '{}' > "$d/sessions/new-0001.tokens.json"; echo '{}' > "$d/tokens.json"
+node -e 'const fs=require("fs"); const t=new Date(Date.now()-20*86400000); fs.utimesSync(process.argv[1], t, t);' "$d/sessions/old-0001.tokens.json"
+echo '{"session_id":"p1","hook_event_name":"SessionStart"}' | CLAUDE_CONFIG_DIR="$cfgd" RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" session_start >/dev/null 2>&1
+expect_eq "session state older than two weeks is removed" "no" "$([[ -f "$d/sessions/old-0001.tokens.json" ]] && echo yes || echo no)"
+expect_eq "  recent session state is kept" "yes" "$([[ -f "$d/sessions/new-0001.tokens.json" ]] && echo yes || echo no)"
+expect_eq "  and the pre-v2.1 token state file is retired" "no" "$([[ -f "$d/tokens.json" ]] && echo yes || echo no)"
+
+# ================================================================ 13. journeys
+# One RaftKit run is one journey: it opens at a skill invocation, carries one
+# journey_id on every event, and its STOP is paired with the human's reply.
+hook() { # <telemetry dir> <mode> <json payload>
+  printf '%s' "$3" | RAFTKIT_TELEMETRY_DIR="$1" node "$RECORD" "$2" >/dev/null 2>&1
+}
+events_json() { # <spool> — the whole spool as one JSON array
+  node -e 'const fs=require("fs"); const p=process.argv[1];
+    process.stdout.write(JSON.stringify(fs.existsSync(p) ? fs.readFileSync(p,"utf8").trim().split("\n").map((l)=>JSON.parse(l)) : []));' "$1"
+}
+ev() { # <spool> <node expression over `E` (all events)>
+  # eval runs only the expressions written in this file, never spooled data.
+  node -e 'const E=JSON.parse(require("fs").readFileSync(0,"utf8")); process.stdout.write(String(eval(process.argv[1])));' "$2" <<< "$(events_json "$1")" 2>/dev/null
+}
+
+# --- pairing: the first HUMAN prompt after the STOP is the reply
+d="$(new_sandbox)"; sp="$d/spool/events.jsonl"
+hook "$d" skill '{"session_id":"j1","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-dev:implement"}}'
+hook "$d" stop '{"session_id":"j1","last_assistant_message":"PR draft ready.\n**STOP** — approve to push, edit to change, or decline."}'
+hook "$d" prompt '{"session_id":"j1","user_prompt":"<task-notification>\n<task-id>a1</task-id>\n<status>completed</status>\n</task-notification>"}'
+hook "$d" stop '{"session_id":"j1","stop_hook_active":true,"last_assistant_message":"Still waiting on your go."}'
+hook "$d" prompt '{"session_id":"j1","user_prompt":"go"}'
+hook "$d" prompt '{"session_id":"j1","user_prompt":"thanks"}'
+expect_eq "a task notification after the STOP is not the reply" "false|task_notification" \
+  "$(ev "$sp" 'const p=E.filter(e=>e.event==="raftkit_prompt_submitted"); p[0].props.after_gate+"|"+p[0].props.prompt_kind')"
+expect_eq "  and its text is never captured" "" \
+  "$(ev "$sp" 'E.filter(e=>e.event==="raftkit_prompt_submitted")[0].props.prompt || ""')"
+expect_eq "a Stop-hook loop turn is marked, and does not consume the gate" "true" \
+  "$(ev "$sp" 'E.filter(e=>e.event==="raftkit_turn_completed").at(-1).props.stop_hook_active')"
+expect_eq "the first human prompt after the STOP is the reply" "true|human" \
+  "$(ev "$sp" 'const p=E.filter(e=>e.event==="raftkit_prompt_submitted"); p[1].props.after_gate+"|"+p[1].props.prompt_kind')"
+expect_eq "  and only that one" "false" "$(ev "$sp" 'E.filter(e=>e.event==="raftkit_prompt_submitted")[2].props.after_gate')"
+
+# --- one journey id and the skill's sha12 on every event of the run
+# ("thanks", the prompt after the reply's turn, is past the run: see below)
+sha12="$(shasum -a 256 plugins/raftkit-dev/skills/implement/SKILL.md | cut -c1-12)"
+expect_eq "every event of the run carries the same journey_id" "1" \
+  "$(ev "$sp" 'const R=E.slice(0,-1); new Set(R.map(e=>e.props.journey_id)).size + (R.every(e=>e.props.journey_id) ? 0 : 100)')"
+expect_eq "  and the skill's sha12" "$sha12" "$(ev "$sp" '[...new Set(E.slice(0,-1).map(e=>e.props.skill_sha12))].join(",")')"
+
+# --- nested invocations stay in the run; the next run gets a new journey
+d="$(new_sandbox)"; sp="$d/spool/events.jsonl"
+hook "$d" skill '{"session_id":"j2","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-dev:implement"}}'
+hook "$d" skill '{"session_id":"j2","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-core:rules"}}'
+hook "$d" skill '{"session_id":"j2","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-dev:scope-guard"}}'
+hook "$d" stop '{"session_id":"j2","last_assistant_message":"**STOP** — approve to push, edit to change, or decline."}'
+hook "$d" skill '{"session_id":"j2","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-dev:fix"}}'
+hook "$d" skill '{"session_id":"j2","hook_event_name":"UserPromptExpansion","command_name":"raftkit-dev:fix","command_args":"bug 7"}'
+expect_eq "a skill loaded inside an open run stays in that run" "1" \
+  "$(ev "$sp" 'new Set(E.filter(e=>e.event==="raftkit_skill_invoked").slice(0,3).map(e=>e.props.journey_id)).size')"
+expect_eq "  and is marked nested" "false,true,true" \
+  "$(ev "$sp" 'E.filter(e=>e.event==="raftkit_skill_invoked").slice(0,3).map(e=>!e.props.journey_start).join(",")')"
+expect_eq "a skill after the run's STOP starts a new journey" "true" \
+  "$(ev "$sp" 'const s=E.filter(e=>e.event==="raftkit_skill_invoked"); s[3].props.journey_id !== s[0].props.journey_id && s[3].props.journey_start')"
+expect_eq "a typed command always starts a new journey" "true" \
+  "$(ev "$sp" 'const s=E.filter(e=>e.event==="raftkit_skill_invoked"); s[4].props.journey_id !== s[3].props.journey_id')"
+
+# raftkit-core's own skills are loaded by runs; alone they never open one.
+d="$(new_sandbox)"; sp="$d/spool/events.jsonl"
+hook "$d" skill '{"session_id":"j2b","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-core:rules"}}'
+hook "$d" skill '{"session_id":"j2b","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-dev:implement"}}'
+expect_eq "a raftkit-core skill never opens a run; the role skill after it does" "false|true|raftkit-dev:implement" \
+  "$(ev "$sp" 'const s=E.filter(e=>e.event==="raftkit_skill_invoked"); s[0].props.journey_start+"|"+s[1].props.journey_start+"|"+s[1].props.journey_skill')"
+
+# run-tokens.mjs finds a run's start in the transcript while the hooks track it
+# in journey state; one rule for what opens a run keeps both on the same run.
+expect_eq "one opensRun serves the journeys and the transcript's run start" "1" \
+  "$(grep -hE '(const|function) opensRun' plugins/raftkit-core/hooks/lib/*.mjs | wc -l | tr -d ' ')"
+
+# --- gates and blockers count only after a RaftKit skill ran in the session
+d="$(new_sandbox)"; sp="$d/spool/events.jsonl"
+hook "$d" stop '{"session_id":"j3","last_assistant_message":"**STOP** — approve to push, edit to change, or decline."}'
+hook "$d" stop '{"session_id":"j3","last_assistant_message":"NOT READY — 2 gap(s):"}'
+hook "$d" prompt '{"session_id":"j3","user_prompt":"go"}'
+expect_eq "a STOP line in a session with no RaftKit skill is not a gate" "raftkit_turn_completed,raftkit_turn_completed" \
+  "$(ev "$sp" 'E.filter(e=>e.event!=="raftkit_prompt_submitted").map(e=>e.event).join(",")')"
+expect_eq "  so the next prompt is not a reply" "false" "$(ev "$sp" 'E.at(-1).props.after_gate')"
+hook "$d" skill '{"session_id":"j3","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-pm:story"}}'
+hook "$d" stop '{"session_id":"j3","last_assistant_message":"**STOP** — approve to write, edit to change, or decline."}'
+expect_eq "  while the same line after a skill is one" "raftkit_gate_shown" "$(ev "$sp" 'E.at(-1).event')"
+
+# --- the per-run token delta rides on the stop event
+d="$(new_sandbox)"; tr="$d/t.jsonl"
+mkmsg() { node -e 'process.stdout.write(JSON.stringify({type:"assistant",timestamp:new Date().toISOString(),message:{id:process.argv[1],model:"claude-opus-5-5",usage:{input_tokens:+process.argv[2],output_tokens:0,cache_read_input_tokens:0,cache_creation_input_tokens:0}}})+"\n")' "$1" "$2"; }
+mkmsg a1 1000 > "$tr"
+hook "$d" skill "{\"session_id\":\"j4\",\"transcript_path\":\"$tr\",\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Skill\",\"tool_input\":{\"skill\":\"raftkit-dev:implement\"}}"
+mkmsg a2 250 >> "$tr"
+hook "$d" stop "{\"session_id\":\"j4\",\"transcript_path\":\"$tr\",\"last_assistant_message\":\"working\"}"
+expect_eq "the stop event carries the run's tokens since its skill was invoked" "1250|250" \
+  "$(ev "$d/spool/events.jsonl" 'const t=E.at(-1).props.tokens; t.total+"|"+t.run_total')"
+
+# --- listing coverage from the transcript's skill_listing attachment
+d="$(new_sandbox)"; tr="$d/t.jsonl"
+node -e 'process.stdout.write(JSON.stringify({type:"attachment",timestamp:"2026-09-23T00:00:00Z",attachment:{type:"skill_listing",names:["raftkit-dev:implement","raftkit-dev:fix"],content:"- raftkit-dev:implement: Take one story\n- raftkit-dev:fix"}})+"\n")' > "$tr"
+hook "$d" stop "{\"session_id\":\"j5\",\"transcript_path\":\"$tr\",\"last_assistant_message\":\"hi\"}"
+expect_eq "the stop event reports how many RaftKit listings kept a description" "2|1" \
+  "$(ev "$d/spool/events.jsonl" 'const l=E.at(-1).props.listing; l.raftkit+"|"+l.described.length')"
+
+# --- tool_failed: exit code, and at most 200 chars after its header
+d="$(new_sandbox)"; seed_skill "$d" j6
+# Prose, not one long run: the scrubber would redact a 600-char run as base64
+# and the length check would pass on the placeholder.
+long="$(printf 'build step failed %.0s' $(seq 1 40))"
+hook "$d" tool_failure "{\"session_id\":\"j6\",\"tool_name\":\"Bash\",\"error\":\"Exit code 2\\n$long\"}"
+expect_eq "tool_failed carries the exit code" "2" "$(last_event_field "$d/spool/events.jsonl" props.exit_code)"
+expect_eq "  and at most 200 chars of text, header excluded" "true" \
+  "$(ev "$d/spool/events.jsonl" 'const e=E.at(-1).props.error; e.length<=200 && e.length>0 && !e.includes("Exit code")')"
+hook "$d" tool_failure '{"session_id":"j6","tool_name":"Read","error":"File content exceeds maximum allowed tokens"}'
+expect_eq "a failure with no exit code keeps its text" "File content exceeds maximum allowed tokens|undefined" \
+  "$(ev "$d/spool/events.jsonl" 'E.at(-1).props.error+"|"+E.at(-1).props.exit_code')"
+
+# --- commit and PR events come from registered hooks
+node -e '
+  const h = JSON.parse(require("fs").readFileSync("plugins/raftkit-core/hooks/hooks.json", "utf8"));
+  const bash = (h.hooks.PostToolUse || []).filter((m) => m.matcher === "Bash").flatMap((m) => m.hooks || []);
+  const wired = (mode, rule) => bash.some((e) => (e.args || []).at(-1) === mode && e.if === rule && e.async === true);
+  process.exit(wired("commit", "Bash(git commit *)") && wired("pr", "Bash(gh pr create *)") ? 0 : 1);
+'
+check "commit and PR hooks are registered on Bash, filtered by if, async" ok $?
+d="$(new_sandbox)"
+hook "$d" commit '{"session_id":"j7","tool_name":"Bash","tool_input":{"command":"git add -A && git commit -m \"feat: x\""}}'
+expect_eq "a git commit is recorded" "raftkit_commit_made" "$(last_event_field "$d/spool/events.jsonl" event)"
+hook "$d" pr '{"session_id":"j7","tool_name":"Bash","tool_input":{"command":"gh pr create --fill"},"tool_response":{"stdout":"https://github.com/o/r/pull/42\n"}}'
+expect_eq "a raised PR is recorded with its number" "raftkit_pr_raised|42" \
+  "$(ev "$d/spool/events.jsonl" 'E.at(-1).event+"|"+E.at(-1).props.pr_number')"
+d="$(new_sandbox)"
+hook "$d" commit '{"session_id":"j8","tool_name":"Bash","tool_input":{"command":"git log --oneline"}}'
+hook "$d" pr '{"session_id":"j8","tool_name":"Bash","tool_input":{"command":"gh pr view 3"}}'
+expect_eq "a command that is not a commit or a PR records nothing" "no" "$([[ -f "$d/spool/events.jsonl" ]] && echo yes || echo no)"
+
+# --- every installed raftkit-* plugin reports its version
+d="$(new_sandbox)"
+hook "$d" session_start '{"session_id":"j9","hook_event_name":"SessionStart"}'
+expect_eq "events carry every raftkit-* plugin version" "$(node -p 'require("./plugins/raftkit-dev/.claude-plugin/plugin.json").version')" \
+  "$(last_event_field "$d/spool/events.jsonl" 'props.plugin_versions.raftkit-dev')"
+# ...including from the plugin cache, where each plugin sits under its version.
+cache="$(new_sandbox)"; mk="$cache/plugins/cache/raftkit"
+mkdir -p "$mk/raftkit-core/7.0.0" "$mk/raftkit-dev/7.1.0/.claude-plugin" "$mk/raftkit-dev/7.1.0/skills/implement" "$mk/raftkit-dev/0.1.0/.claude-plugin"
+cp -R plugins/raftkit-core/. "$mk/raftkit-core/7.0.0/"
+echo '{"name":"raftkit-dev","version":"7.1.0"}' > "$mk/raftkit-dev/7.1.0/.claude-plugin/plugin.json"
+echo '{"name":"raftkit-dev","version":"0.1.0"}' > "$mk/raftkit-dev/0.1.0/.claude-plugin/plugin.json"
+echo 'cached implement skill' > "$mk/raftkit-dev/7.1.0/skills/implement/SKILL.md"
+printf '{"version":2,"plugins":{"raftkit-dev@raftkit":[{"scope":"user","installPath":"%s","version":"7.1.0"}]}}' "$mk/raftkit-dev/7.1.0" \
+  > "$cache/plugins/installed_plugins.json"
+d="$(new_sandbox)"
+printf '{"session_id":"j10","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-dev:implement"}}' \
+  | CLAUDE_CONFIG_DIR="$cache" RAFTKIT_TELEMETRY_DIR="$d" node "$mk/raftkit-core/7.0.0/hooks/record.mjs" skill >/dev/null 2>&1
+expect_eq "from the plugin cache, the installed version of each plugin is reported" "7.1.0" \
+  "$(last_event_field "$d/spool/events.jsonl" 'props.plugin_versions.raftkit-dev')"
+expect_eq "  and the skill's sha12 is read from that version" "$(printf 'cached implement skill\n' | shasum -a 256 | cut -c1-12)" \
+  "$(last_event_field "$d/spool/events.jsonl" 'props.skill_sha12')"
+# The cache keeps uninstalled and superseded versions on disk for about 14
+# days. A plugin installed_plugins.json does not list is not installed.
+mkdir -p "$mk/raftkit-qa/2.0.0/.claude-plugin"
+echo '{"name":"raftkit-qa","version":"2.0.0"}' > "$mk/raftkit-qa/2.0.0/.claude-plugin/plugin.json"
+d="$(new_sandbox)"
+printf '{"session_id":"j10b","hook_event_name":"SessionStart"}' \
+  | CLAUDE_CONFIG_DIR="$cache" RAFTKIT_TELEMETRY_DIR="$d" node "$mk/raftkit-core/7.0.0/hooks/record.mjs" session_start >/dev/null 2>&1
+expect_eq "an orphaned raftkit plugin left in the cache is not reported" "undefined|7.1.0" \
+  "$(ev "$d/spool/events.jsonl" 'E[0].props.plugin_versions["raftkit-qa"]+"|"+E[0].props.plugin_versions["raftkit-dev"]')"
+printf '{"version":2,"plugins":{}}' > "$cache/plugins/installed_plugins.json"
+expect_eq "  so the entry map does not route to an uninstalled raftkit-dev" "" \
+  "$(printf '{"cwd":"%s"}' "$PWD" | CLAUDE_CONFIG_DIR="$cache" node "$mk/raftkit-core/7.0.0/hooks/entry-map.mjs" 2>/dev/null)"
+# Without that file the disk decides, and a numbered version outranks a
+# directory named for a commit.
+rm "$cache/plugins/installed_plugins.json"; rm -rf "$mk/raftkit-qa"
+mkdir -p "$mk/raftkit-dev/0a1b2c3d4e5f/.claude-plugin"
+echo '{"name":"raftkit-dev","version":"0.0.1"}' > "$mk/raftkit-dev/0a1b2c3d4e5f/.claude-plugin/plugin.json"
+d="$(new_sandbox)"
+printf '{"session_id":"j10c","hook_event_name":"SessionStart"}' \
+  | CLAUDE_CONFIG_DIR="$cache" RAFTKIT_TELEMETRY_DIR="$d" node "$mk/raftkit-core/7.0.0/hooks/record.mjs" session_start >/dev/null 2>&1
+expect_eq "with no install record, the highest numbered version on disk is reported" "7.1.0" \
+  "$(ev "$d/spool/events.jsonl" 'E[0].props.plugin_versions["raftkit-dev"]')"
+
+# --- hooks that fire together keep each other's changes
+# A typed /raftkit-dev:implement fires UserPromptExpansion (skill) and
+# UserPromptSubmit (prompt) close together, both async, both rewriting the
+# session's state. Neither may lose what the other wrote.
+race_state() { # <telemetry dir> <session> — skill_seen|journey open|last_prompt, from the state file
+  node -e 'const s=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); process.stdout.write([s.skill_seen, Boolean(s.journey && s.journey.open), s.last_prompt].join("|"))' \
+    "$1/sessions/$2.journey.json" 2>/dev/null
+}
+lost=0
+for trial in $(seq 1 10); do
+  d="$(new_sandbox)"
+  printf '{"session_id":"r%s","hook_event_name":"UserPromptExpansion","command_name":"raftkit-dev:implement","command_args":"story 7"}' "$trial" \
+    | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" skill >/dev/null 2>&1 &
+  p1=$!
+  (( trial % 2 == 0 )) && sleep 0.02   # odd trials start together, even ones 20 ms apart
+  printf '{"session_id":"r%s","hook_event_name":"UserPromptSubmit","prompt":"build story 7"}' "$trial" \
+    | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" prompt >/dev/null 2>&1 &
+  p2=$!
+  wait "$p1" "$p2"
+  [[ "$(race_state "$d" "r$trial")" == "true|true|build story 7" ]] || lost=$((lost + 1))
+done
+expect_eq "a skill hook and a prompt hook fired together both keep their changes (trials lost, of 10)" "0" "$lost"
+
+# A typed command that answers a STOP is the reply: only the prompt and stop
+# hooks touch the waiting STOP, so the expansion hook firing first cannot eat it.
+d="$(new_sandbox)"; sp="$d/spool/events.jsonl"
+hook "$d" skill '{"session_id":"j12","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-dev:implement"}}'
+hook "$d" stop '{"session_id":"j12","last_assistant_message":"**STOP** — approve to push, edit to change, or decline."}'
+hook "$d" skill '{"session_id":"j12","hook_event_name":"UserPromptExpansion","command_name":"raftkit-dev:fix","command_args":"bug 7"}'
+hook "$d" prompt '{"session_id":"j12","user_prompt":"/raftkit-dev:fix bug 7"}'
+expect_eq "a typed command after a STOP is still paired as its reply" "true" "$(ev "$sp" 'E.at(-1).props.after_gate')"
+
+# A hook that changed nothing leaves the session's state alone.
+d="$(new_sandbox)"
+hook "$d" commit '{"session_id":"j13","tool_name":"Bash","tool_input":{"command":"git commit -m x"}}'
+hook "$d" stop '{"session_id":"j13","last_assistant_message":"done"}'
+expect_eq "a commit or a plain turn writes no session state" "no" "$([[ -e "$d/sessions/j13.journey.json" ]] && echo yes || echo no)"
+
+# --- a run's tag ends with the turn its reply started
+# The reply's turn is the run's own (the push after "go"); the next human
+# prompt is not, so per-run totals stop there.
+d="$(new_sandbox)"; sp="$d/spool/events.jsonl"; tr="$d/t.jsonl"
+mkmsg a1 1000 > "$tr"
+hook "$d" skill "{\"session_id\":\"j14\",\"transcript_path\":\"$tr\",\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Skill\",\"tool_input\":{\"skill\":\"raftkit-dev:implement\"}}"
+hook "$d" stop '{"session_id":"j14","last_assistant_message":"**STOP** — approve to push, edit to change, or decline."}'
+hook "$d" prompt '{"session_id":"j14","user_prompt":"go"}'
+hook "$d" pr '{"session_id":"j14","tool_name":"Bash","tool_input":{"command":"gh pr create --fill"},"tool_response":{"stdout":"https://github.com/o/r/pull/9\n"}}'
+mkmsg a2 300 >> "$tr"
+hook "$d" stop "{\"session_id\":\"j14\",\"transcript_path\":\"$tr\",\"last_assistant_message\":\"PR 9 raised.\"}"
+hook "$d" prompt '{"session_id":"j14","user_prompt":"unrelated question"}'
+hook "$d" commit '{"session_id":"j14","tool_name":"Bash","tool_input":{"command":"git commit -m x"}}'
+mkmsg a3 50 >> "$tr"
+hook "$d" stop "{\"session_id\":\"j14\",\"transcript_path\":\"$tr\",\"last_assistant_message\":\"done\"}"
+expect_eq "the reply's turn, the push included, stays in the run" "true" \
+  "$(ev "$sp" 'E.slice(0,5).every(e=>e.props.journey_id && e.props.journey_id===E[0].props.journey_id)')"
+expect_eq "  its events say whether the run is still open" "true,false,false,false,false" \
+  "$(ev "$sp" 'E.slice(0,5).map(e=>e.props.journey_open).join(",")')"
+expect_eq "  and its last stop carries the run's tokens" "300" "$(ev "$sp" 'E[4].props.tokens.run_total')"
+expect_eq "after the next human prompt no event carries the run, nor a run total" "true|undefined|1350" \
+  "$(ev "$sp" 'E.slice(5).every(e=>e.props.journey_id===undefined)+"|"+E.at(-1).props.tokens.run_total+"|"+E.at(-1).props.tokens.total')"
+
+# An edit reply re-presents the draft: the run holds through that STOP and its go.
+d="$(new_sandbox)"; sp="$d/spool/events.jsonl"
+hook "$d" skill '{"session_id":"j15","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-dev:implement"}}'
+hook "$d" stop '{"session_id":"j15","last_assistant_message":"**STOP** — approve to push, edit to change, or decline."}'
+hook "$d" prompt '{"session_id":"j15","user_prompt":"edit: rename the endpoint"}'
+hook "$d" stop '{"session_id":"j15","last_assistant_message":"**STOP** — approve to push, edit to change, or decline."}'
+hook "$d" prompt '{"session_id":"j15","user_prompt":"go"}'
+expect_eq "an edit reply keeps the run through the STOP it re-presents, and its go" "1|true|true" \
+  "$(ev "$sp" 'new Set(E.map(e=>e.props.journey_id)).size+"|"+E.every(e=>e.props.journey_id)+"|"+E.at(-1).props.after_gate')"
+
+# ================================================================ 14. entry map
+# A plain-language request must reach RaftKit even when the skill listing has
+# dropped RaftKit's descriptions. SessionStart puts a short map into context.
+# It is not telemetry: the opt-out does not silence it.
+MAP="$PWD/plugins/raftkit-core/hooks/entry-map.mjs"
+map_ctx() { # <cwd> [env...] — the additionalContext the hook prints, or its raw output
+  local cwd="$1"; shift
+  printf '{"session_id":"m1","hook_event_name":"SessionStart","source":"startup","cwd":"%s"}' "$cwd" \
+    | env "$@" node "$MAP" 2>/dev/null \
+    | node -e 'let s="";process.stdin.on("data",(c)=>s+=c).on("end",()=>{ if(!s) return; try { const j=JSON.parse(s); process.stdout.write(j.hookSpecificOutput?.hookEventName==="SessionStart" ? String(j.hookSpecificOutput.additionalContext) : "BAD:"+s); } catch { process.stdout.write("BAD:"+s); } })'
+}
+node -e '
+  const h = JSON.parse(require("fs").readFileSync("plugins/raftkit-core/hooks/hooks.json", "utf8"));
+  const e = (h.hooks.SessionStart || []).flatMap((m) => m.hooks || []).find((x) => (x.args || []).some((a) => /entry-map\.mjs$/.test(a)));
+  process.exit(e && !e.async ? 0 : 1);
+'
+check "the entry map is a synchronous SessionStart hook, so its output is read" ok $?
+
+bare="$(new_sandbox)"; git -C "$bare" init -q 2>/dev/null
+ctx="$(map_ctx "$bare")"
+for want in "story URL → raftkit-dev:implement" "raftkit-dev:fix (it runs systematic-debugging itself)" "→ raftkit-dev:setup" "scope audit → raftkit-dev:scope-guard"; do
+  [[ "$ctx" == *"$want"* ]]; check "the entry map routes: $want" ok $?
+done
+[[ "$ctx" == *"RaftKit is not set up in this repo — run raftkit-dev:setup"* ]]
+check "a repo without setup's marker gets the not-set-up line" ok $?
+words="$(printf '%s' "$ctx" | wc -w | tr -d ' ')"
+[[ "$words" -ge 20 && "$words" -le 60 ]]
+check "the entry map, not-set-up line included, is at most 60 words ($words)" ok $?
+for var in "RAFTKIT_TELEMETRY=off" "DO_NOT_TRACK=1"; do
+  [[ "$(map_ctx "$bare" "$var")" == "$ctx" ]]
+  check "the entry map still prints with $var" ok $?
+done
+setup_done="$(new_sandbox)"; git -C "$setup_done" init -q 2>/dev/null; mkdir -p "$setup_done/.raftkit" "$setup_done/src"
+echo '{}' > "$setup_done/.raftkit/governance-pack.json"
+ctx2="$(map_ctx "$setup_done/src")"
+[[ "$ctx2" == *"raftkit-dev:implement"* && "$ctx2" != *"not set up"* ]]
+check "a repo with setup's marker (checked at the git root) gets the map alone" ok $?
+not_git="$(new_sandbox)"
+ctx3="$(map_ctx "$not_git")"
+[[ "$ctx3" == *"raftkit-dev:implement"* && "$ctx3" != *"not set up"* ]]
+check "outside a git repo there is no not-set-up line" ok $?
+# The map names raftkit-dev's skills, so without raftkit-dev it says nothing.
+alone="$(new_sandbox)"; mkdir -p "$alone/plugins"; cp -R plugins/raftkit-core "$alone/plugins/"
+out="$(printf '{"cwd":"%s"}' "$bare" | node "$alone/plugins/raftkit-core/hooks/entry-map.mjs" 2>/dev/null)"
+expect_eq "without raftkit-dev installed the entry map prints nothing" "" "$out"
+d="$(new_sandbox)"; rmdir "$d"
+map_ctx "$bare" RAFTKIT_TELEMETRY_DIR="$d" >/dev/null
+expect_eq "the entry map writes nothing" "no" "$([[ -e "$d" ]] && echo yes || echo no)"
+echo 'not json {{' | node "$MAP" >/dev/null 2>&1
+check "the entry map exits 0 on malformed input" ok $?
 
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures test(s) failed"

@@ -5,9 +5,9 @@
 // throws, and callers still exit 0 regardless.
 
 import { execFileSync } from "node:child_process";
-import { closeSync, existsSync, mkdirSync, openSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const HOOKS_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -31,6 +31,47 @@ export function dataDir() {
 export const spoolDir = () => join(dataDir(), "spool");
 export const spoolFile = () => join(spoolDir(), "events.jsonl");
 export const stateFile = (name) => join(dataDir(), name);
+
+// Per-session state lives in one small file per session, so concurrent
+// sessions never rewrite each other's entries. The id comes from the hook
+// payload, so anything that is not a plain id gets no file at all.
+const SESSION_ID = /^[A-Za-z0-9_-]{1,128}$/;
+export const sessionsDir = () => join(dataDir(), "sessions");
+export function sessionFile(sessionId, kind) {
+  return SESSION_ID.test(String(sessionId || "")) ? join(sessionsDir(), `${sessionId}.${kind}.json`) : "";
+}
+
+export function readJsonFile(path, fallback = {}) {
+  try {
+    return path ? parseJson(readFileSync(path, "utf8"), fallback) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/** Write JSON through a rename, so a concurrent reader never sees half a file. */
+export function writeJsonFile(path, value) {
+  if (!path) return false;
+  const tmp = `${path}.${process.pid}.tmp`;
+  try {
+    ensureDir(dirname(path));
+    writeFileSync(tmp, JSON.stringify(value) + "\n");
+    renameSync(tmp, path);
+    return true;
+  } catch {
+    try {
+      unlinkSync(tmp);
+    } catch {
+      /* nothing was written */
+    }
+    return false;
+  }
+}
+
+/** Where Claude Code keeps its own state: CLAUDE_CONFIG_DIR, else ~/.claude. */
+export function claudeConfigDir() {
+  return process.env.CLAUDE_CONFIG_DIR || join(process.env.HOME || ".", ".claude");
+}
 
 export function ensureDir(path) {
   try {
@@ -251,6 +292,17 @@ export function sha(value, len = 12) {
   return createHash("sha256").update(String(value)).digest("hex").slice(0, len);
 }
 
+// The longest free text an event carries. The server truncates short-text
+// fields rather than rejecting them, but only a client-side clamp keeps an old
+// spool of 2,000-char prompts inside the 900 KB batch cap.
+export const FREE_TEXT_MAX = 512;
+
+/** Cut text to `max` characters, marking the cut. Non-strings pass through. */
+export function clampText(value, max = FREE_TEXT_MAX) {
+  if (typeof value !== "string" || value.length <= max) return value;
+  return value.slice(0, max - 1) + "…";
+}
+
 /** Read all of stdin as text. Resolves "" on any error or when nothing is piped. */
 export function readStdin() {
   return new Promise((resolve) => {
@@ -328,20 +380,87 @@ export function repoContext(cwd) {
   };
 }
 
+const versionKey = (v) => String(v).split(/[.-]/).map((x) => (/^\d+$/.test(x) ? x.padStart(8, "0") : x)).join(".");
+const numbered = (name) => /^\d+\.\d+/.test(name);
+// Highest numbered version first; a directory named for a commit only after them.
+const byNewest = (a, b) => numbered(b) - numbered(a) || (versionKey(a) < versionKey(b) ? 1 : -1);
+
+function safeReaddir(dir) {
+  try {
+    return readdirSync(dir);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Every installed raftkit-* plugin: { name: { dir, version } }.
+ *
+ * Two layouts exist. From a checkout (or a directory plugin source) the plugins
+ * are siblings. From the plugin cache each plugin sits under
+ * <marketplace>/<plugin>/<version>/, where uninstalled and superseded versions
+ * stay on disk for about 14 days. So installed_plugins.json decides: a plugin
+ * it does not list is not installed. Only when that file cannot be read does
+ * the highest version on disk stand in. Never throws.
+ */
+export function raftkitPlugins() {
+  const out = {};
+  const put = (dir) => {
+    const m = readJsonFile(join(dir, ".claude-plugin", "plugin.json"), null);
+    if (m && typeof m.name === "string" && /^raftkit-/.test(m.name) && !out[m.name]) {
+      out[m.name] = { dir, version: typeof m.version === "string" ? m.version : "" };
+    }
+  };
+  const self = dirname(HOOKS_ROOT);
+  put(self);
+  const parent = dirname(self);
+  for (const name of safeReaddir(parent)) if (name.startsWith("raftkit-")) put(join(parent, name));
+  if (Object.keys(out).length > 1) return out;
+
+  const market = dirname(parent);
+  const record = readJsonFile(join(claudeConfigDir(), "plugins", "installed_plugins.json"), null);
+  const installed = record ? (record.plugins && typeof record.plugins === "object" ? record.plugins : {}) : null;
+  for (const name of safeReaddir(market)) {
+    if (!name.startsWith("raftkit-") || out[name]) continue;
+    const base = join(market, name);
+    if (!installed) {
+      const newest = safeReaddir(base).sort(byNewest)[0];
+      if (newest) put(join(base, newest));
+      continue;
+    }
+    // Matched by the version directory's name under this cache, not by path
+    // prefix: a symlinked home or temp dir spells the same path two ways.
+    const entries = installed[`${name}@${basename(market)}`];
+    const recorded = (Array.isArray(entries) ? entries : [])
+      .map((e) => (typeof e?.installPath === "string" && basename(dirname(e.installPath)) === name ? join(base, basename(e.installPath)) : ""))
+      .find((dir) => dir && existsSync(dir));
+    if (recorded) put(recorded);
+  }
+  return out;
+}
+
 /** Versions of the installed raftkit plugins, read from their manifests. */
 export function pluginVersions() {
   const out = {};
-  try {
-    // HOOKS_ROOT is <plugin>/hooks; the marketplace layout puts sibling plugins
-    // one level up from the plugin dir when running from a checkout.
-    const pluginDir = dirname(HOOKS_ROOT);
-    const manifest = join(pluginDir, ".claude-plugin", "plugin.json");
-    if (existsSync(manifest)) {
-      const m = parseJson(readFileSync(manifest, "utf8"));
-      if (m.name && m.version) out[m.name] = m.version;
-    }
-  } catch {
-    /* versions are nice-to-have, never load-bearing */
-  }
+  for (const [name, p] of Object.entries(raftkitPlugins())) if (p.version) out[name] = p.version;
   return out;
+}
+
+/**
+ * The first 12 hex of the sha256 of the instruction file a skill name loads
+ * (skills/<skill>/SKILL.md, or commands/<skill>.md for a help command), so a
+ * run can be tied to the exact text it ran. "" when it cannot be found.
+ */
+export function skillSha12(name) {
+  const m = /^(raftkit-[a-z0-9-]+):([a-z0-9-]+)$/.exec(String(name || ""));
+  const plugin = m && raftkitPlugins()[m[1]];
+  if (!plugin) return "";
+  for (const rel of [join("skills", m[2], "SKILL.md"), join("commands", `${m[2]}.md`)]) {
+    try {
+      return sha(readFileSync(join(plugin.dir, rel)), 12);
+    } catch {
+      /* try the next shape */
+    }
+  }
+  return "";
 }
