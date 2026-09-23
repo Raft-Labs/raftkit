@@ -6,7 +6,7 @@ Use the project's discovered tenant column (example below uses `org_id` →
 `orgs.id`; substitute the real one):
 
 ```bash
-.claude/skills/hasura/scripts/new-migration.sh create-table meal_plans \
+scripts/new-migration.sh create-table meal_plans \
     --col "org_id:uuid:not_null:fk=orgs.id" \
     --col "title:text:not_null" \
     --col "scheduled_for:timestamptz"
@@ -33,14 +33,14 @@ git commit -m "feat(hasura): add meal_plans table"
 ### B. Create an enum table
 
 ```bash
-.claude/skills/hasura/scripts/new-migration.sh create-enum-table event_status \
+scripts/new-migration.sh create-enum-table event_status \
     --values "draft,published,cancelled,archived"
 ```
 
 ### C. Add a column to an existing table
 
 ```bash
-.claude/skills/hasura/scripts/new-migration.sh add-column meal_plans notes text
+scripts/new-migration.sh add-column meal_plans notes text
 ```
 
 The scaffolder refreshes the snapshot, verifies the table exists and the
@@ -55,7 +55,7 @@ Stage names are the project's own (example: `development`):
 ```bash
 make hasura-env stage=development        # one-time per session: decrypt env
 
-.claude/skills/hasura/scripts/hasura-query.sh \
+scripts/hasura-query.sh \
     --stage=development \
     --role=user \
     --user-id=00000000-0000-0000-0000-000000000001 \

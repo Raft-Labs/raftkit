@@ -13,11 +13,11 @@ The Hasura development loop: scaffold a migration, author its metadata, apply it
 ## Run
 
 1. **Resolve the conventions** from `.raftkit/hasura.json` or by discovery.
-2. **Scaffold** with `scripts/new-migration.sh`, which never prompts: `--dry-run` prints the `up.sql`, the `down.sql` and the permissions YAML, and `--write` writes them. Column specs and every subcommand are in `references/commands.md`.
-3. **Apply and refresh.** Run the project's own migrate target, then refresh the schema snapshot. A DDL change refreshes the snapshot before and after, so the committed schema never drifts from the database.
-4. **Query** any stage ad hoc with `scripts/hasura-query.sh`, reading the stage's own env file.
+2. **Scaffold** with `${CLAUDE_SKILL_DIR}/scripts/new-migration.sh`, which never prompts: `--dry-run` prints the `up.sql`, the `down.sql` and the permissions YAML, and `--write` writes them. Column specs and every subcommand are in `references/commands.md`.
+3. **Apply and refresh.** Run the project's own migrate target, then refresh the schema snapshot. A DDL change refreshes the snapshot before and after, so the committed schema never drifts.
+4. **Query** any stage ad hoc with `${CLAUDE_SKILL_DIR}/scripts/hasura-query.sh`, reading the stage's own env file.
 
-Workflows per change type and the scaffolder's permission defaults: `references/workflows.md`. Naming: `references/relationship-naming.md`. Enum tables: `references/enum-tables.md`. Permission shapes: `references/permissions-patterns.md`.
+Workflows per change type and the scaffolder's permission defaults: `references/workflows.md`. Naming: `references/relationship-naming.md`. Enum tables: `references/enum-tables.md`. Permission shapes: `references/permissions-patterns.md`. A `scripts/` path in a reference is relative to `${CLAUDE_SKILL_DIR}`.
 
 ## Safety rules
 

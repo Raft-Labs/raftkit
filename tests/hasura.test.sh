@@ -154,6 +154,16 @@ o2=$(nm --write rename column email mail --table users </dev/null); r2=$?
 check "HR20 a destructive --write is refused without --confirmed and writes with it" ok $?
 rm -rf "$fx"
 
+# HR21 · script paths are skill-relative. Claude Code substitutes
+# ${CLAUDE_SKILL_DIR} in SKILL.md only, so SKILL.md runs every script through it;
+# a reference carries no variable or .claude/skills path; every scripts/ path resolves.
+bad_refs=$(grep -lE '\$\{CLAUDE_[A-Z_]+\}|\.claude/skills/' "$H"/references/*.md | tr '\n' ' ')
+unprefixed=$(grep -oE '[^ `(]*scripts/[A-Za-z0-9_./-]*[A-Za-z0-9_]' "$S" | grep -v '^\${CLAUDE_SKILL_DIR}/scripts/' | tr '\n' ' ')
+missing=$(grep -ohE 'scripts/[A-Za-z0-9_./-]*[A-Za-z0-9_]' "$S" "$H"/references/*.md | sort -u \
+  | while read -r p; do [[ -e "$H/$p" ]] || echo "$p"; done | tr '\n' ' ')
+[[ -z "$bad_refs$unprefixed$missing" ]] && grep -qF '${CLAUDE_SKILL_DIR}/scripts/new-migration.sh' "$S"
+check "HR21 script paths are skill-relative and every one resolves${bad_refs:+ (refs: $bad_refs)}${unprefixed:+ (unprefixed: $unprefixed)}${missing:+ (missing: $missing)}" ok $?
+
 eval_count=$(find plugins/raftkit-dev/evals/hasura -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
 [[ "${eval_count:-0}" -ge 8 ]] \
   && ! find plugins/raftkit-dev/evals/hasura -mindepth 1 -maxdepth 1 -type d '!' -exec test -f '{}/prompt.md' ';' -print 2>/dev/null | grep -q . \
