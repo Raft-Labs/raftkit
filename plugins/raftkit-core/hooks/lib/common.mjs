@@ -297,10 +297,21 @@ export function sha(value, len = 12) {
 // spool of 2,000-char prompts inside the 900 KB batch cap.
 export const FREE_TEXT_MAX = 512;
 
-/** Cut text to `max` characters, marking the cut. Non-strings pass through. */
+// Postgres jsonb refuses a NUL and a lone surrogate, and one refused event
+// fails the server's whole insert, so neither may leave this machine.
+const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
+
+/**
+ * Cut text to `max` characters, marking the cut, and make it storable: NULs
+ * dropped, lone surrogates replaced, and never a surrogate pair cut in half.
+ * Non-strings pass through.
+ */
 export function clampText(value, max = FREE_TEXT_MAX) {
-  if (typeof value !== "string" || value.length <= max) return value;
-  return value.slice(0, max - 1) + "…";
+  if (typeof value !== "string") return value;
+  const text = value.replace(/\u0000/g, "").replace(LONE_SURROGATE, "\uFFFD");
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max - 1);
+  return (/[\uD800-\uDBFF]$/.test(cut) ? cut.slice(0, -1) : cut) + "…";
 }
 
 /** Read all of stdin as text. Resolves "" on any error or when nothing is piped. */

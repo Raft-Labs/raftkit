@@ -1208,6 +1208,24 @@ expect_eq "  and keeps gate in severity_detail" "gate" "$(bodies "$cap" 'events.
 expect_eq "a known severity is sent unchanged" "blocker|undefined" \
   "$(bodies "$cap" 'events.find((e) => e.event_id === "g2").properties.severity + "|" + events.find((e) => e.event_id === "g2").properties.severity_detail')"
 
+# --- Postgres jsonb refuses a lone surrogate and a NUL, and one refused event
+#     fails the whole insert: the batch is resent forever and the spool wedges.
+#     The clamp must never cut a surrogate pair in half.
+d="$(new_sandbox)"; cap="$d/cap"
+port="$(start_capture_stub 200 "$cap")"
+mkdir -p "$d/spool"
+node -e '
+  const line = (id, props) => JSON.stringify({ event_id: id, ts: "2026-09-17T10:37:00.000Z", event: "raftkit_turn_completed", distinct_id: "x", props }) + "\n";
+  require("fs").writeFileSync(process.argv[1] + "/spool/events.jsonl",
+    line("u1", { prompt: "a".repeat(510) + "\u{1F600}" + "b".repeat(100) }) + line("u2", { prompt: "x\u0000y" }));
+' "$d"
+RAFTKIT_TELEMETRY_DIR="$d" RAFTKIT_TELEMETRY_ENDPOINT="http://127.0.0.1:$port/api/telemetry" node "$FLUSH" >/dev/null 2>&1
+expect_eq "a clamp at a surrogate pair sends well-formed text" "true|true" \
+  "$(bodies "$cap" 'const p = events.find((e) => e.event_id === "u1").properties.prompt; p.isWellFormed() + "|" + (p.length <= 512)')"
+expect_eq "  and a NUL never reaches the server" '"xy"' "$(bodies "$cap" 'JSON.stringify(events.find((e) => e.event_id === "u2").properties.prompt)')"
+expect_eq "  so the raw body carries no lone-surrogate or NUL escape" "false" \
+  "$(bodies "$cap" 'files.length > 0 && raw.some((b) => /\\u(d[89ab][0-9a-f]{2}|0000)/i.test(b.toString("utf8")))')"
+
 # --- an event too big for any request is reported once, however often delivery fails
 oversized_spool() { # <dir> — one event over the 900 KB cap (nested, so the clamp cannot shrink it), then one normal
   mkdir -p "$1/spool"
