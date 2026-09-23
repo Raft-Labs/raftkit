@@ -412,6 +412,41 @@ printf '{"session_id":"s1","last_assistant_message":"Done — all tests pass and
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "a normal turn is not a blocker" "raftkit_turn_completed" "$(last_event_field "$d/spool/events.jsonl" 'event')"
 
+# v2.1 stops. implement fences the squash-target line; fix carries the same
+# line inline in backticks, so a reply may echo it wrapped in them.
+d="$(new_sandbox)"; seed_skill "$d" s1
+printf '{"session_id":"s1","last_assistant_message":"no documented squash target — add the target branch and branch naming to CLAUDE.md, then re-run"}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
+expect_eq "the undocumented squash target stop is a blocker" "raftkit_blocked" "$(last_event_field "$d/spool/events.jsonl" 'event')"
+expect_eq "the undocumented squash target stop has its own id" "squash-target-undocumented" \
+  "$(last_event_field "$d/spool/events.jsonl" 'props.refusal_id')"
+expect_eq "the undocumented squash target stop captures what to add" "add the target branch and branch naming to CLAUDE.md, then re-run" \
+  "$(last_event_field "$d/spool/events.jsonl" 'props.detail')"
+
+d="$(new_sandbox)"; seed_skill "$d" s1
+printf '{"session_id":"s1","last_assistant_message":"`no documented squash target — add the target branch and branch naming to CLAUDE.md, then re-run`"}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
+expect_eq "fix's backticked squash target stop classifies the same" "squash-target-undocumented" \
+  "$(last_event_field "$d/spool/events.jsonl" 'props.refusal_id')"
+expect_eq "fix's backticked squash target stop keeps no backtick in the detail" "add the target branch and branch naming to CLAUDE.md, then re-run" \
+  "$(last_event_field "$d/spool/events.jsonl" 'props.detail')"
+
+d="$(new_sandbox)"; seed_skill "$d" s1
+printf '{"session_id":"s1","last_assistant_message":"CLAUDE.md now names it, so there is no documented squash target — add problem left."}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
+expect_eq "a mid-sentence squash target mention is not a blocker" "raftkit_turn_completed" \
+  "$(last_event_field "$d/spool/events.jsonl" 'event')"
+
+# rules' write-tool check fires before any read; it must not fall to the
+# catch-all, which leaves the run's journey open.
+d="$(new_sandbox)"; seed_skill "$d" s1
+printf '{"session_id":"s1","last_assistant_message":"Can'"'"'t write to Asana from this session — connect the Asana connector, then re-run."}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
+expect_eq "a missing write tool has its own id, not the catch-all" "write-tool-missing" \
+  "$(last_event_field "$d/spool/events.jsonl" 'props.refusal_id')"
+expect_eq "a missing write tool captures the surface" "Asana" \
+  "$(last_event_field "$d/spool/events.jsonl" 'props.detail')"
+
 # The Stop hook carries no prompt, so it must recover the session's last one.
 d="$(new_sandbox)"; seed_skill "$d" s9
 echo "{\"session_id\":\"s9\",\"user_prompt\":\"implement story 123\",\"cwd\":\"$PWD\"}" \

@@ -170,6 +170,18 @@ grep -qE '^[0-9]+\. \*\*Review findings\*\*' "$IMPL/references/pr.md" \
   && grep -qE 'findings: [0-9]+ fixed / [0-9]+ answered\.$' "$IMPL/SKILL.md"
 check "DF16 the PR body and the STOP line carry the review findings" ok $?
 
+# DF17 · fix writes and qa's retest reads one string (cross-group C3). retest
+#        treats the pending value as no build; if either side rewords it,
+#        retest tests a build that does not exist yet
+c3='Fixed in build: pending — first build containing PR #<n>'
+BUG=plugins/raftkit-qa/skills/bug/SKILL.md
+fix_c3="$(grep -oE 'the edit writing `Fixed in build: pending[^`]*`' "$FIX/SKILL.md" | head -1 | sed -E 's/^the edit writing `(.*)`$/\1/')"
+bug_c3="$(grep -oE '`Fixed in build: pending[^`]*` counts as empty' "$BUG" | head -1 | sed -E 's/^`(.*)` counts as empty$/\1/')"
+[[ "$fix_c3" == "$c3" && "$bug_c3" == "$c3" ]] \
+  || echo "  fix writes '${fix_c3:-nothing}', retest reads '${bug_c3:-nothing}' as empty"
+[[ "$fix_c3" == "$c3" && "$bug_c3" == "$c3" ]]
+check "DF17 fix and qa retest carry the identical pending-build string" ok $?
+
 echo
 echo "dev-flow: $failures failure(s)"
 [[ "$failures" -eq 0 ]]
