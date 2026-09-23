@@ -49,9 +49,10 @@ check "C5 nothing was written on the failed render" ok $?
 
 # --- what a generated repo inherits: no v1 stop ---
 # The v1 gates were a spec-file gate, a confirm on every edit and a
-# category-graded done-claim gate. Any of their vocabulary in the payload a
-# generated repo carries is a stop inside an implement run.
-GATE='confirm|spec[- ]?first|spec[- ]gate|spec file|approved spec|refuse|withheld|override|blockers? stop|must go through'
+# category-graded done-claim gate. Any of their vocabulary, or an approval
+# wait in other words, in the payload a generated repo carries is a stop
+# inside an implement run.
+GATE='confirm|spec[- ]?first|spec[- ]gate|spec file|approved spec|refuse|withheld|override|blockers? stop|must go through|approv(al|e) before|wait for|ask (the (developer|user) )?before|sign[- ]off'
 ! grep -qiE "$GATE" "$CLAUDE_TPL"
 check "C6 the generated CLAUDE.md carries no confirm or spec-file gate" ok $?
 ! grep -qiE "$GATE" "$SRC"
@@ -141,8 +142,11 @@ grep -qF 'raftkit-pm:story' "$REFS/story-adapter.md" && ! grep -qiE "$SHAPE" "$R
 check "C11 the story adapter routes drafting to raftkit-pm:story and states no template shape" ok $?
 grep -qF 'raftkit-qa:bug' "$REFS/bug-adapter.md" && ! grep -qiE "$SHAPE" "$REFS/bug-adapter.md"
 check "C12 the bug adapter routes filing to raftkit-qa:bug and states no template shape" ok $?
-grep -qF 'storyRegistry' "$REFS/story-adapter.md" && grep -qiE 'never (deleted|duplicat)' "$REFS/story-adapter.md"
-check "C13 the story adapter keeps the link registry and its refresh rule" ok $?
+story_flat="$(tr '\n' ' ' < "$REFS/story-adapter.md")"
+grep -qF 'storyRegistry' <<<"$story_flat" && grep -qiE 'never[[:space:]]+duplicat' <<<"$story_flat"
+check "C13 the story adapter keeps the link registry and a refresh never duplicates the task" ok $?
+grep -qiE 'completed .{0,20}subtasks are never[[:space:]]+deleted' <<<"$story_flat"
+check "C14 a refresh never deletes a completed [AC] subtask" ok $?
 
 echo
 [[ "$failures" -eq 0 ]]
