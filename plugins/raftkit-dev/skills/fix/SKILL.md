@@ -27,7 +27,7 @@ One defect per run: a task or a report bundling unrelated defects stops and asks
 Can't start the fix — the bug task is missing <sections>. Add them before a repro test can be written and scoped. Back to QA.
 ```
 
-   Reported → ask all four in one message and confirm the set back. A refused ask stops the run; the developer states the `Done when`, this skill never drafts it. Nothing is inferred: a guessed step is a fabricated contract.
+   Reported → ask all four in one message; echo the answers as the first lines of the next reply and proceed to the repro. A refused ask stops the run; the developer states the `Done when`, this skill never drafts it. Nothing is inferred: a guessed step is a fabricated contract.
 2. **Reproduce, then make it red.** Replicate the defect in the stated environment (never a silent substitute) through `superpowers:systematic-debugging`, and encode it as a test that fails for the reason the bug describes. A test that passes, or fails for another reason, is not a repro. Cannot reproduce → stop with this, back to QA on the ticketed path and to the developer in session on the reported one. Never fix blind.
 
 ```output
@@ -38,17 +38,17 @@ One question: <the single thing most likely to unblock repro>
 ```
 3. **Smallest fix to green.** Nothing speculative, nothing adjacent. The repro test is committed and stays in the suite forever. If the fix reddens any other test, stop and fix that first: never disable or delete a test to get green.
 4. **Review once, in parallel** — the same pass `implement` runs (`implement/references/review.md`), with the `Done when` checklist in place of the acceptance criteria as the scope contract.
-5. **Stop once** with the PR (`implement/references/pr.md`, bug path) and the hand-back. On the ticketed path that is two Asana targets, both named in the draft: the hand-back comment, and the edit filling `Fixed in build ___` on the bug task with the build the fix landed in — the repo's own build or version number, the one QA will install. That field is the retest contract, so the approval of this stop is the explicit instruction the description edit needs. On the reported path it is an offered bug record drafted from the four confirmed answers, which the developer may decline.
+5. **Stop once** with the PR (`implement/references/pr.md`, bug path) and the hand-back. On the ticketed path that is two Asana targets, both named in the draft: the hand-back comment, and the edit writing `Fixed in build: pending — first build containing PR #<n>` on the bug task. That field is the retest contract, so the approval of this stop is the explicit instruction the description edit needs. On the reported path it is an offered bug record drafted from the four answers, which the developer may decline.
 
 ```output
-Red → green: repro test added, fix ready to raise, Fixed in build <x> — back to QA.
+Red → green: repro test added, fix ready to raise, Fixed in build: pending — back to QA.
 **STOP** — approve to push and raise, edit to change, or decline.
 ```
 
 On go, raise the PR and write the approved Asana changes, then report:
 
 ```output
-Red → green: repro test added, fix in PR #<n>, Fixed in build <x> — back to QA.
+Red → green: repro test added, fix in PR #<n>, Fixed in build: pending — first build containing PR #<n>. Back to QA.
 ```
 
 Declining the optional record is a first-class outcome: the repro test is permanent and the PR is the record.

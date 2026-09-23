@@ -71,6 +71,12 @@ grep -qE '^\| `mechanical` \| `haiku` \|' "$T" \
   && grep -qE '^\| `hard` \| [^|]*`opus` under `opusplan`' "$T"
 check "DF6 tiers.md names the model each tier dispatches with" ok $?
 
+# DF7 · fix records a pending build, never one no build contains yet; retest
+#       in raftkit-qa reads this exact string as empty (cross-group C3)
+grep -qF 'Fixed in build: pending — first build containing PR #<n>' "$FIX/SKILL.md" \
+  && ! grep -qE 'Fixed in build <x>' "$FIX/SKILL.md"
+check "DF7 fix writes Fixed in build: pending with the PR number" ok $?
+
 echo
 echo "dev-flow: $failures failure(s)"
 [[ "$failures" -eq 0 ]]

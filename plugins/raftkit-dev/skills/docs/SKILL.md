@@ -6,7 +6,7 @@ user-invocable: true
 
 # docs
 
-One question, answered with evidence: does this change set leave the docs accurate? Load `raftkit-core:rules` first unless it is already in this conversation. `implement` and `fix` call this once, on the final diff.
+One question, answered with evidence: does this change set leave the docs accurate? Load `raftkit-core:rules` first unless it is already in this conversation. `implement` and `fix` call this once, on the final diff, and there it checks parity only.
 
 ## Run
 
@@ -17,13 +17,18 @@ One question, answered with evidence: does this change set leave the docs accura
 Docs: not evaluated — no change set provided.
 ```
 3. **Map** each changed file to the docs that own it, through the discovered mapping, expanding by change type: a schema change reaches its schema doc, the screens and APIs that use it, and any diagram that depicts it.
-4. **Report one of three outcomes**, each with its evidence:
+4. **Report one of four outcomes**, each with its evidence:
 
 ```output
 Docs: not impacted — <reason>
 Inspected change set: <files> (<source, with SHAs when git-resolved>)
 Documentation roots: <roots>
 Ownership evidence: <the mapping source(s) consulted>
+```
+
+```output
+Docs: impacted, not synced — <n> doc(s) out of date: <files>
+Say "sync the docs for this change" to update them.
 ```
 
 ```output
@@ -34,10 +39,10 @@ Docs: updated and verified — <n> file(s), history recorded
 Docs: no recognized documentation convention in this repo — nothing to check.
 ```
 
-The third is `validate-docs.mjs` exit 2 whose stderr names no recognized documentation convention: a real outcome, not a failure, and a repo with no docs system never blocks a story. Any other exit 2 — bad input, or a convention conflict — is a failure: report its stderr verbatim and claim no parity.
+`validate-docs.mjs` decides which: exit 0 is the first, or the third after a sync; exit 1 is the second; exit 2 whose stderr names no recognized documentation convention is the fourth — a real outcome, not a failure, and a repo with no docs system never blocks a story. Any other exit 2 — bad input, or a convention conflict — is a failure: report its stderr verbatim and claim no parity.
 
-5. **Sync, when docs are impacted**: update only the owned docs, match each one's existing style and depth, record the change in the repo's own history convention, regenerate any diagram whose subject changed, and re-verify with `scripts/validate-docs.mjs` scoped to the change set. An architectural change adds a decision record in the repo's own seam; routine edits add no ceremony. If the update reveals docs beyond the mapped set, say so and include them. Called inside a run this skill reports only; a sync is a standalone run.
-6. **No stop of its own.** Doc edits are local files, part of the calling run's diff, and they reach the human in that run's single stop with the file list and the diff summary. A standalone run reports parity and writes nothing.
+5. **Sync, standalone, when docs are impacted**: update only the owned docs, match each one's existing style and depth, record the change in the repo's own history convention, regenerate any diagram whose subject changed, and re-verify with `scripts/validate-docs.mjs` scoped to the change set. An architectural change adds a decision record in the repo's own seam; routine edits add no ceremony. If the update reveals docs beyond the mapped set, say so and include them.
+6. **No stop of its own.** A sync edits local files only and reports the file list with a diff summary.
 
 ## Boundaries
 

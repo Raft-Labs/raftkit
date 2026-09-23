@@ -222,6 +222,8 @@ grep -qi 'never choose a git range silently\|Never choose a git range silently' 
 grep -qi 'writes no Asana task' "$S" 2>/dev/null;                                check "D19e no-Asana rule stated" ok $?
 grep -qi 'discovered mapping' "$S" 2>/dev/null;                                  check "D19f ownership mapping drives expansion" ok $?
 grep -qi 'raftkit-docs' "$S" 2>/dev/null;                                        check "D19g the design product is named as the other plugin" ok $?
+grep -qF 'Docs: impacted, not synced — ' "$S" 2>/dev/null;                       check "D19h impacted-not-synced line in contract" ok $?
+grep -qF 'exit 0' "$S" && grep -qF 'exit 1' "$S" && grep -qF 'exit 2' "$S";   check "D19i every validate-docs exit code maps to an outcome" ok $?
 
 # D20 · eval bundle: authored, structurally valid, no answer leakage
 n=$(find plugins/raftkit-dev/evals/docs -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
