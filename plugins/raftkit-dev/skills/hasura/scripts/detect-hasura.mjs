@@ -48,15 +48,19 @@ if (has("config.yaml")) {
 if (isDir(join(root, "metadata"))) { signals.push("metadata/ directory"); conventions.metadataDir ??= "metadata"; }
 if (isDir(join(root, "migrations"))) { signals.push("migrations/ directory"); conventions.migrationsDir ??= "migrations"; }
 
-// Look one level down for a nested hasura project root (e.g. services/hasura).
+// Look for a nested hasura project root (e.g. services/hasura) exactly as
+// lib/common.sh find_hasura_root does: every */config.yaml, then every
+// */*/config.yaml, names sorted, dot-directories skipped (bash globs skip them).
+const subdirs = (rel) => {
+  try { return readdirSync(join(root, rel)).filter((n) => !n.startsWith(".") && isDir(join(root, rel, n))).sort().map((n) => (rel ? `${rel}/${n}` : n)); }
+  catch { return []; }
+};
 if (signals.length === 0 && isDir(root)) {
-  for (const name of readdirSync(root)) {
-    const sub = join(root, name);
-    if (isDir(sub) && existsSync(join(sub, "config.yaml"))) {
-      signals.push(`nested Hasura project root: ${name}/`);
-      conventions.hasuraRoot = sub;
-      break;
-    }
+  const depth1 = subdirs("");
+  const nested = [...depth1, ...depth1.flatMap(subdirs)].find((rel) => existsSync(join(root, rel, "config.yaml")));
+  if (nested) {
+    signals.push(`nested Hasura project root: ${nested}/`);
+    conventions.hasuraRoot = join(root, nested);
   }
 }
 

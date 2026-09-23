@@ -16,7 +16,7 @@ find_repo_root() {
 
 # The Hasura project directory — DISCOVERED, never assumed to be
 # services/hasura. Priority: an explicit $HASURA_ROOT override > a
-# config.yaml at the repo root or one level down (the same signal
+# config.yaml at the repo root, then */, then */*/ (the same scan
 # detect-hasura.mjs uses) > services/hasura or hasura/, kept last for exact
 # compatibility with repos shaped like the project this skill was ported from.
 find_hasura_root() {

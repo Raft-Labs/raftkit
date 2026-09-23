@@ -164,6 +164,27 @@ missing=$(grep -ohE 'scripts/[A-Za-z0-9_./-]*[A-Za-z0-9_]' "$S" "$H"/references/
 [[ -z "$bad_refs$unprefixed$missing" ]] && grep -qF '${CLAUDE_SKILL_DIR}/scripts/new-migration.sh' "$S"
 check "HR21 script paths are skill-relative and every one resolves${bad_refs:+ (refs: $bad_refs)}${unprefixed:+ (unprefixed: $unprefixed)}${missing:+ (missing: $missing)}" ok $?
 
+# HR22 · detect-hasura.mjs finds the same Hasura root as lib/common.sh
+# find_hasura_root: the root, then */, then */*/, hidden directories skipped.
+parity() {
+  local fx; fx=$(mktemp -d); local p
+  for p in "$@"; do mkdir -p "$fx/$p"; printf 'version: 3\n' > "$fx/$p/config.yaml"; done
+  local d f
+  d=$(node "$DETECT" --root "$fx" --json 2>/dev/null \
+    | node -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>{try{process.stdout.write(JSON.parse(s).conventions.hasuraRoot||"")}catch{}})')
+  f=$(bash -c 'source "$0"; find_hasura_root "$1"' "$H/scripts/lib/common.sh" "$fx" 2>/dev/null)
+  printf '%s|%s' "${d#"$fx"}" "${f#"$fx"}"
+  rm -rf "$fx"
+}
+pr=""
+[[ "$(parity services/hasura)" == "/services/hasura|/services/hasura" ]] || pr+=" depth-2"
+[[ "$(parity zeta apps/hasura)" == "/zeta|/zeta" ]] || pr+=" depth-1-first"
+[[ "$(parity b/h a/h)" == "/a/h|/a/h" ]] || pr+=" sorted"
+[[ "$(parity .hidden infra/hasura)" == "/infra/hasura|/infra/hasura" ]] || pr+=" hidden-skipped"
+[[ "$(parity a/b/c)" == "|" ]] || pr+=" depth-3-ignored"
+[[ -z "$pr" ]]
+check "HR22 detect-hasura.mjs scans to find_hasura_root's depth and order${pr:+ (diverged:$pr)}" ok $?
+
 eval_count=$(find plugins/raftkit-dev/evals/hasura -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
 [[ "${eval_count:-0}" -ge 8 ]] \
   && ! find plugins/raftkit-dev/evals/hasura -mindepth 1 -maxdepth 1 -type d '!' -exec test -f '{}/prompt.md' ';' -print 2>/dev/null | grep -q . \
