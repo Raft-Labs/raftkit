@@ -207,6 +207,12 @@ grep -q 'fetch' <<<"$range" && { echo "  the range reviewers run still fetches";
 grep -qF 'The parent runs `git fetch origin <squash-target>` once' "$R" || { echo "  nobody fetches the target before the range is pinned"; ok=1; }
 check "DF19 the parent fetches once and every reviewer gets a range that does not fetch" ok $ok
 
+# DF20 · fix keeps separate repro and fix commits (1.11). Steps 2 and 3 run in
+#        a subagent handed only those steps verbatim, so the rule has to live in
+#        step 3 itself; references/loop.md never reaches it.
+grep -m1 '^3\. \*\*Smallest fix to green' "$FIX/SKILL.md" | grep -qF 'the fix is a separate `fix:` commit'
+check "DF20 fix's step 3 commits the repro test alone and the fix as a separate fix: commit" ok $?
+
 echo
 echo "dev-flow: $failures failure(s)"
 [[ "$failures" -eq 0 ]]

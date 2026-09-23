@@ -40,7 +40,7 @@ Tried: <steps followed and what was observed>
 Environment used: <the environment stated at intake>
 One question: <the single thing most likely to unblock repro>
 ```
-3. **Smallest fix to green.** Nothing speculative, nothing adjacent. The repro test is committed and stays in the suite forever. The whole suite runs through `node ${CLAUDE_PLUGIN_ROOT}/scripts/verify.mjs --only test`; if the fix reddens any other test, stop and fix that first: never disable or delete a test to get green.
+3. **Smallest fix to green.** Nothing speculative, nothing adjacent. The repro test is committed alone and stays in the suite forever; the fix is a separate `fix:` commit. The whole suite runs through `node ${CLAUDE_PLUGIN_ROOT}/scripts/verify.mjs --only test`; if the fix reddens any other test, stop and fix that first: never disable or delete a test to get green.
 4. **Review once, in parallel** — the same pass `implement` runs (`implement/references/review.md`), with the `Done when` checklist in place of the acceptance criteria as the scope contract.
 5. **Stop once** with the PR (`implement/references/pr.md`, bug path), the hand-back, and the line `node ${CLAUDE_PLUGIN_ROOT}/scripts/run-tokens.mjs ${CLAUDE_SESSION_ID}` prints, quoted as printed (`Token total: not measured` if it cannot run). On the ticketed path that is two Asana targets, both named in the draft: the hand-back comment, and the edit writing `Fixed in build: pending — first build containing PR #<n>` on the bug task. Approving this stop is the explicit instruction that edit needs. On the reported path it is an offered bug record drafted from the four answers, which the developer may decline.
 
