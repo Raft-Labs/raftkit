@@ -142,10 +142,12 @@ out=$(printf 'y\n' | nm create-table widgets --col title:text:not_null); rc=$?
 [[ "$rc" -eq 0 && "$(tree)" == "$before" ]] && grep -q 'CREATE TABLE public.widgets' <<<"$out"
 check "HR18 no mode flag previews like --dry-run and never reads an answer from stdin" ok $?
 
-nm create-table widgets --col title:text:not_null --write </dev/null >/dev/null; rc=$?
+out=$(nm create-table widgets --col title:text:not_null --write </dev/null); rc=$?
 [[ "$rc" -eq 0 && "$(migs create_widgets)" -eq 1 && -f "$fx/hasura/metadata/databases/default/tables/public_widgets.yaml" ]] \
-  && ls "$fx"/hasura/migrations/default/*_create_widgets/up.sql "$fx"/hasura/migrations/default/*_create_widgets/down.sql >/dev/null 2>&1
-check "HR19 --write writes the migration and the YAML with stdin closed" ok $?
+  && ls "$fx"/hasura/migrations/default/*_create_widgets/up.sql "$fx"/hasura/migrations/default/*_create_widgets/down.sql >/dev/null 2>&1 \
+  && grep -qF 'git add hasura/migrations/default/<ts>_<slug>/' <<<"$out" \
+  && grep -qF ' hasura/metadata/databases/default/tables/public_widgets.yaml' <<<"$out"
+check "HR19 --write writes the migration and the YAML with stdin closed, and names their real paths to commit" ok $?
 
 before=$(tree)
 o1=$(nm --write drop-column users email </dev/null); r1=$?

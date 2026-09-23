@@ -88,10 +88,10 @@ Next steps:
   2. make create-dbml                       # refresh docs/schema.dbml AFTER applying
   3. Commit the migration files, the metadata YAML (if any), AND the refreshed
      docs/schema.dbml together:
-       git add services/hasura/migrations/default/<ts>_<slug>/ \\
 EOF
+  printf '       git add %s/<ts>_<slug>/ \\\n' "${MIGRATIONS_DIR#"$REPO_ROOT"/}"
   if [ -n "$table" ]; then
-    printf '               services/hasura/metadata/databases/default/tables/public_%s.yaml \\\n' "$table"
+    printf '               %s/public_%s.yaml \\\n' "${METADATA_DIR#"$REPO_ROOT"/}" "$table"
   fi
   cat <<'EOF'
                docs/schema.dbml
