@@ -53,7 +53,7 @@ Pass a skill name or question for a focused answer, e.g. `/raftkit-dev:help scop
 
 ## Renamed in v2
 
-v2 consolidates 35 skills into 18 installed by default, plus 2 in the opt-in docs plugin. The old names are gone; every new skill's description carries the old trigger phrases, so asking in your own words still works.
+v2 consolidates 35 skills into 18 across the four day-to-day plugins, plus 2 in `raftkit-docs`; `raftkit-core` has since added `cowork-telemetry`. The old names are gone; every new skill's description carries the old trigger phrases, so asking in your own words still works.
 
 | v1 | v2 |
 | --- | --- |
