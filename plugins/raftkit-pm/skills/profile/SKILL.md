@@ -6,7 +6,7 @@ user-invocable: true
 
 # profile
 
-Turn what the PM has (PRD, SOW, master doc, emails, meeting notes) into one Project Profile: the tagged, cited source of truth every other skill reads. `raftkit-core:rules` apply.
+Turn what the PM has (PRD, SOW, master doc, emails, meeting notes) into one Project Profile: the tagged, cited source of truth every other skill reads. Load `raftkit-core:rules` first unless it is already in this conversation.
 
 ## Inputs, in one ask
 
@@ -19,18 +19,18 @@ Resolve the project name against Asana: one match → carry on and show it as `<
 1. **Read at once**: every named source, and the existing `Project Profile - <project name>` task if there is one (its presence decides first build vs delta). An unreadable source is named with the access that is missing and listed as skipped; the rest are read.
 2. **Draft facts** per `references/format.md`: one sentence each, one tag, one citation, an as-of date; anything not clearly confirmed is ⚠️ Partial; a gap is ❓ Missing, never a guess; two sources that disagree become a conflict with both citations for the PM to settle.
 3. **Re-run** → a delta, never a rewrite: changed / new / now-confirmed facts, touching only the subtasks whose sections changed. Untouched facts stay exactly as they were.
-4. **Stop once.** Show the profile or the delta in the shape it will be written (lists, never tables), the project as `<name> (gid)`, the subtasks that will be created or overwritten, and for a delta the one comment that records it. A corrected project re-targets the same draft; the sources are not re-read.
+4. **Stop once.** Show the profile or the delta in the shape it will be written (lists, never tables), the project as `<name> (gid)`, and the subtasks that will be created or overwritten. A corrected project re-targets the same draft; the sources are not re-read.
 
 ```output
 Profile draft for Riverside Bookings (1216…). 4 subtasks, 38 facts: ✅ 21 / ⚠️ 12 / ❓ 5. 2 conflicts.
 **STOP** — approve to write, edit to change, or decline.
 ```
 
-5. **On go**, write the parent task, its subtasks, then the delta comment; read back once. A timed-out write is looked up by name before any retry so a second profile task is never created. Report:
+5. **On go**, write the parent task and its subtasks; read back once. A timed-out write is looked up by name before any retry so a second profile task is never created. Report:
 
 ```output
 38 facts — ✅ 21 / ⚠️ 12 / ❓ 5. Top gaps: payment provider, refund window.
 Profile lives at: <link>
 ```
 
-- **Announce it** — `Using raftkit-pm:profile` in the first reply, once (`raftkit-core/cowork-telemetry`).
+- **Announce it** — `Using raftkit-pm:profile` in the first reply, once (`raftkit-core:rules`).

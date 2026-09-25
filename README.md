@@ -21,9 +21,9 @@ Marketplace added — now install your role plugin: raftkit-pm, raftkit-dev, or 
 claude plugin install raftkit-dev@raftkit   # or raftkit-pm / raftkit-qa
 ```
 
-Installing any role plugin automatically installs `raftkit-core` alongside it. `raftkit-dev` additionally auto-installs six declared dependencies from the official Claude marketplace — `superpowers`, `code-simplifier`, `claude-md-management`, `security-guidance`, `pr-review-toolkit`, `frontend-design` — the engines its skills call by name. Inside a Claude Code session, the same commands work as `/plugin marketplace add` and `/plugin install`. Verify with `claude plugin list` — you should see your role plugin, `raftkit-core`, and (for `raftkit-dev`) the six auto-installed engines.
+Installing any role plugin automatically installs `raftkit-core` alongside it. `raftkit-dev` additionally auto-installs four declared dependencies from the official Claude marketplace — `superpowers`, `security-guidance`, `pr-review-toolkit`, `frontend-design` — the engines its skills call by name. Inside a Claude Code session, the same commands work as `/plugin marketplace add` and `/plugin install`. Verify with `claude plugin list` — you should see your role plugin, `raftkit-core`, and (for `raftkit-dev`) the four auto-installed engines.
 
-`raftkit-docs` is optional and installed only where a team wants the full documentation product; day-to-day delivery does not need it.
+`raftkit-docs` is opt-in by design: day-to-day delivery does not need it. Org sync installs it today, along with the other four.
 
 ## Plugins
 
@@ -35,7 +35,7 @@ Installing any role plugin automatically installs `raftkit-core` alongside it. `
 | `raftkit-qa` | QA | Test-case suite, per-story run sheets, bugs (file and retest) |
 | `raftkit-docs` | optional | The documentation design product: co-authoring flow, templates, diagrams, reverse-engineering |
 
-v2 ships these five plugins; `raftkit-docs` is opt-in. PM and QA plugins target the Claude apps/Cowork runtime; the install path there is pending the org-wide install decision (Asana task 1216551001583573) — until it lands, use Claude Code with the commands above.
+v2 ships these five plugins. PM and QA plugins target the Claude apps/Cowork runtime. The org-wide install is verified in Claude Code and Cowork: org sync installs all five RaftKit plugins, but not `raftkit-dev`'s engines, and `/raftkit-dev:setup` names any missing engine with its install command. The org install auto-updates, so anything merged to `main` reaches every user.
 
 ## Getting help
 
@@ -53,7 +53,7 @@ Pass a skill name or question for a focused answer, e.g. `/raftkit-dev:help scop
 
 ## Renamed in v2
 
-v2 consolidates 35 skills into 18 installed by default, plus 2 in the opt-in docs plugin. The old names are gone; every new skill's description carries the old trigger phrases, so asking in your own words still works.
+v2 consolidates 35 skills into 18 across the four day-to-day plugins, plus 2 in `raftkit-docs`; `raftkit-core` has since added `cowork-telemetry`. The old names are gone; every new skill's description carries the old trigger phrases, so asking in your own words still works.
 
 | v1 | v2 |
 | --- | --- |
@@ -105,9 +105,11 @@ Confirm with `claude plugin list` — you should see `raftkit-core` plus your ro
 
 RaftKit measures its own use so we can see who has adopted it and where people get stuck. It runs as plugin hooks in `raftkit-core` — active automatically in Claude Code once any raftkit plugin is installed, with nothing to configure.
 
-**Collected:** your git name and email, GitHub login, OS user; which skills you run; when a skill stops for your approval or hard-stops, and which line it emitted; every prompt you submit, in full; every failed tool call (the tool's name and its error output); plugin and platform versions.
+**Collected in every session:** your git name and email, GitHub login, OS user; the repository (`owner/repo`) and branch you are working in, so a blocker can be traced to its project; which RaftKit skills you run, when a skill stops for your approval or hard-stops, which line it emitted, and whether your next message answered it; token use per run and session, read from the session's own transcripts; the previous session's cost as Claude Code recorded it for this project in `~/.claude.json` (only its cost fields are read); the commits and pull requests you make (a PR's number, never its content); which tool failed and its exit code; when the read shunt declines a file, its extension and line count; which RaftKit skills the skill listing described; plugin and platform versions.
 
-**Also collected:** the repository (`owner/repo`) and branch you are working in, so a blocker can be traced to the project it happened in. **Not collected:** file contents, or anything from a repo you didn't run RaftKit in. Prompts pass through a credential scrubber that strips API keys, tokens, and private-key blocks before anything is sent.
+**Collected only in a session where a RaftKit skill ran:** the text of your prompts, the first 512 characters of each, and of failed tool calls, the first 200 characters of the error, which can quote command output or file contents. A background agent's report that arrives as a prompt is never kept. Text passes through a credential scrubber that strips API keys, tokens and private-key blocks before it is written anywhere.
+
+**Not collected:** any prompt or error text from a session where no RaftKit skill ran, and Claude's replies beyond the one stop or refusal line a skill emits.
 
 Events spool to a local file and upload in batches to RaftLabs' own admin dashboard (`raftkit.raftlabs.dev`) — no third-party analytics processor, and no credential ships to your machine. A hook can never block or slow your session, and an offline session still reports later rather than losing data.
 

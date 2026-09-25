@@ -20,7 +20,14 @@ LATEST_TS_DIR="$MIGRATIONS_DIR"; export LATEST_TS_DIR
 
 usage() {
   cat <<EOF
-new-migration.sh <subcommand> [args...]
+new-migration.sh <subcommand> [args...] [--dry-run | --write [--confirmed]]
+
+Modes (never prompts; the flags may appear anywhere):
+  --dry-run     Print the proposed files and exit 0, writing no migration or
+                metadata file (the snapshot refresh still runs). The default.
+  --write       Write the files. With --dry-run as well, the dry run wins.
+  --confirmed   Required with --write for a destructive subcommand (drop-column,
+                rename), given only after the developer's explicit OK.
 
 Subcommands (DDL-emitting subcommands run a DBML refresh + collision check first):
   create-table       <name> [--col SPEC]... [--scope user|tenant|hybrid|none]
@@ -33,9 +40,6 @@ Subcommands (DDL-emitting subcommands run a DBML refresh + collision check first
   permission-only    <slug>
 
 Column SPEC: name:type[:not_null][:default=<expr>][:fk=<table>.<col>]
-
-Env vars:
-  HASURA_SKILL_AUTOCONFIRM=1   Skip the "Write these files?" prompt (used by tests).
 EOF
 }
 
@@ -47,12 +51,20 @@ refresh_dbml() {
   fi
 }
 
-confirm_write() {
-  local prompt="$1"
-  if [ "${HASURA_SKILL_AUTOCONFIRM:-0}" = 1 ]; then return 0; fi
-  printf '\n%s [y/N] ' "$prompt"
-  read -r ans
-  [[ "$ans" =~ ^[Yy]$ ]] || die "Aborted."
+MODE=dry-run CONFIRMED=0
+
+# Returns only when the files should be written. A dry run ends here with exit 0;
+# a destructive write without --confirmed ends here with nothing written.
+gate_write() {
+  local destructive="${1:-0}"
+  if [ "$MODE" != write ]; then
+    info "Dry run: no migration or metadata written. Re-run with --write to write these files."
+    [ "$destructive" = 1 ] && info "Destructive: --write also needs --confirmed, given only after the developer's explicit OK."
+    exit 0
+  fi
+  [ "$destructive" = 1 ] && [ "$CONFIRMED" != 1 ] \
+    && die "Destructive change, nothing written. Show the dry run, get the developer's explicit OK, then re-run with --write --confirmed."
+  return 0
 }
 
 write_migration() {
@@ -76,10 +88,10 @@ Next steps:
   2. make create-dbml                       # refresh docs/schema.dbml AFTER applying
   3. Commit the migration files, the metadata YAML (if any), AND the refreshed
      docs/schema.dbml together:
-       git add services/hasura/migrations/default/<ts>_<slug>/ \\
 EOF
+  printf '       git add %s/<ts>_<slug>/ \\\n' "${MIGRATIONS_DIR#"$REPO_ROOT"/}"
   if [ -n "$table" ]; then
-    printf '               services/hasura/metadata/databases/default/tables/public_%s.yaml \\\n' "$table"
+    printf '               %s/public_%s.yaml \\\n' "${METADATA_DIR#"$REPO_ROOT"/}" "$table"
   fi
   cat <<'EOF'
                docs/schema.dbml
@@ -159,7 +171,7 @@ cmd_create_table() {
   printf '\n=== Proposed up.sql ===\n%s\n' "$up"
   printf '\n=== Proposed down.sql ===\n%s\n' "$down"
   printf '\n=== Proposed public_%s.yaml ===\n%s\n' "$name" "$yaml"
-  confirm_write "Write these files?"
+  gate_write
 
   local dir; dir="$(write_migration "create_${name}" "$up" "$down")"
   printf '%s\n' "$yaml" > "$METADATA_DIR/public_${name}.yaml"
@@ -211,7 +223,7 @@ cmd_create_enum_table() {
   printf '\n=== Proposed up.sql ===\n%s\n' "$up"
   printf '\n=== Proposed down.sql ===\n%s\n' "$down"
   printf '\n=== Proposed public_%s.yaml ===\n%s\n' "$name" "$yaml"
-  confirm_write "Write these files?"
+  gate_write
 
   local dir; dir="$(write_migration "create_${name}_enum" "$up" "$down")"
   printf '%s\n' "$yaml" > "$METADATA_DIR/public_${name}.yaml"
@@ -249,7 +261,7 @@ cmd_add_column() {
   down="$(TABLE="$table" COLUMN="$col" render "$SCRIPT_DIR/../templates/add-column.down.sql.tmpl")"
   printf '\n=== Proposed up.sql ===\n%s\n' "$up"
   printf '\n=== Proposed down.sql ===\n%s\n' "$down"
-  confirm_write "Write these files?"
+  gate_write
   write_migration "add_${col}_to_${table}" "$up" "$down" >/dev/null
   print_followup "$table"
 }
@@ -265,7 +277,7 @@ cmd_drop_column() {
   down="$(TABLE="$table" COLUMN="$col" render "$SCRIPT_DIR/../templates/drop-column.down.sql.tmpl")"
   printf '\n=== Proposed up.sql ===\n%s\n' "$up"
   printf '\n=== Proposed down.sql ===\n%s\n' "$down"
-  confirm_write "Write these files?"
+  gate_write 1
   write_migration "drop_${col}_from_${table}" "$up" "$down" >/dev/null
   print_followup "$table"
 }
@@ -294,7 +306,7 @@ cmd_add_index() {
   down="$(INDEX_NAME="$idx_name" render "$SCRIPT_DIR/../templates/add-index.down.sql.tmpl")"
   printf '\n=== Proposed up.sql ===\n%s\n' "$up"
   printf '\n=== Proposed down.sql ===\n%s\n' "$down"
-  confirm_write "Write these files?"
+  gate_write
   write_migration "index_${table}_${idx_suffix}" "$up" "$down" >/dev/null
   print_followup "$table"
 }
@@ -319,7 +331,7 @@ cmd_rename() {
       down="$(FROM="$from" TO="$to" render "$SCRIPT_DIR/../templates/rename-table.down.sql.tmpl")"
       printf '\n=== Proposed up.sql ===\n%s\n' "$up"
       printf '\n=== Proposed down.sql ===\n%s\n' "$down"
-      confirm_write "Write these files?"
+      gate_write 1
       write_migration "rename_${from}_to_${to}" "$up" "$down" >/dev/null
       print_followup "$to"
       ;;
@@ -332,7 +344,7 @@ cmd_rename() {
       down="$(TABLE="$table" FROM="$from" TO="$to" render "$SCRIPT_DIR/../templates/rename-column.down.sql.tmpl")"
       printf '\n=== Proposed up.sql ===\n%s\n' "$up"
       printf '\n=== Proposed down.sql ===\n%s\n' "$down"
-      confirm_write "Write these files?"
+      gate_write 1
       write_migration "rename_${table}_${from}_to_${to}" "$up" "$down" >/dev/null
       print_followup "$table"
       ;;
@@ -349,7 +361,7 @@ cmd_function_trigger() {
   down="$(SLUG="$slug" render "$SCRIPT_DIR/../templates/function-trigger.down.sql.tmpl")"
   printf '\n=== Proposed up.sql ===\n%s\n' "$up"
   printf '\n=== Proposed down.sql ===\n%s\n' "$down"
-  confirm_write "Write empty function/trigger scaffold?"
+  gate_write
   write_migration "$slug" "$up" "$down" >/dev/null
   print_followup ""
 }
@@ -365,12 +377,24 @@ SELECT 1;
 "
   printf '\n=== Proposed up.sql ===\n%s\n' "$up"
   printf '\n=== Proposed down.sql ===\n%s\n' "$down"
-  confirm_write "Write permission-only scaffold?"
+  gate_write
   write_migration "$slug" "$up" "$down" >/dev/null
   print_followup ""
 }
 
 main() {
+  local -a rest=()
+  local a dry=0
+  for a in "$@"; do
+    case "$a" in
+      --dry-run)   dry=1 ;;
+      --write)     MODE=write ;;
+      --confirmed) CONFIRMED=1 ;;
+      *)           rest+=("$a") ;;
+    esac
+  done
+  [ "$dry" = 1 ] && MODE=dry-run   # both given: the safe one wins
+  set -- ${rest[@]+"${rest[@]}"}
   local sub="${1:-}"; shift || true
   case "$sub" in
     create-table)       cmd_create_table       "$@" ;;

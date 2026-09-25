@@ -1,6 +1,6 @@
 ---
 name: story-driver
-description: Use this to build a RaftKit plugin skill end-to-end from an Asana story. Trigger whenever the user hands over a raftkit board task (a link or GID) and wants it implemented — e.g. "build this story", "implement this task", "do M3 · scope-guard", or pastes an app.asana.com task URL from the raftkit project. It fetches and parses the story into a scope contract, surveys what already exists, then orchestrates plugin-dev (scaffold + validate) and skill-creator (author + optimize) together to produce the skill, and finishes with a branch, commits, and a PR — stopping once, before anything leaves the session. Use it even when the user only says "take this Asana task and develop it" without naming this skill.
+description: Builds a RaftKit change from one story on the raftkit Asana board — "build this story", "implement this task", "do M3 · scope-guard", "take this Asana task and develop it", or a pasted task link or GID. Parses the story into a scope contract, builds test-first, runs every repo suite, and stops once before any push, PR or Asana write.
 user-invocable: true
 ---
 
@@ -17,9 +17,10 @@ writes (`raftkit-core:rules`).
 
 ## What this skill assumes
 
-- `skill-creator` and `plugin-dev` are installed (the build engines).
 - `raftkit-core` is installed — its `rules` skill carries the GIDs and the rules
   this skill obeys.
+- `plugin-dev` is installed — its reviewer agents check every build.
+- `skill-creator` is installed when the story scaffolds a new plugin or skill.
 - The Asana connector is reachable.
 
 If any is missing, stop and say which. For a missing constant or an unreachable
@@ -28,10 +29,9 @@ never fall back to a remembered template.
 
 ## Mode
 
-Default to **dry-run** unless the user says to ship for real (e.g. "push it",
-"open the PR", "for real"). In dry-run, every step runs except the outward writes
-— no `git push`, no PR, no Asana write; drafts and exact commands are shown
-instead. See `references/git-pr-flow.md`.
+A run is real unless the user says **dry-run** or **practice**. In dry-run, every
+step runs except the outward writes — no `git push`, no PR, no Asana write;
+drafts and exact commands are shown instead. See `references/git-pr-flow.md`.
 
 ## The flow
 
@@ -45,25 +45,27 @@ so rather than treating "not on main" as a hard stop.
 ### 1 · Fetch the story
 Get the story identifier. If the user pasted a task **link or GID**, use it. If
 they named the board task instead (e.g. "M3 · scope-guard", "do story-readiness")
-with no GID, **search the raftkit board for that name**, and if exactly one task
-matches, confirm the match in one line and proceed; if zero or several match, ask
-which. Never invent a target.
+with no GID, **search the development board named in `CLAUDE.md` for that
+name**, and if exactly one task matches, confirm the match in one line and
+proceed; if zero or several match, ask which. Never invent a target.
 
-Then resolve the workspace + template GIDs from `raftkit-core:rules` and fetch the
-story **and all its subtasks** live via the Asana connector, plus the live User
-Story Template as the format reference. Read templates live every run — never from
-memory or from this repo.
+Then resolve the workspace GID and the **Feature Template** constant from
+`raftkit-core:rules` and fetch the story **and all its subtasks** live via the
+Asana connector, plus the live Feature Template as the format reference. Read
+templates live every run — never from memory or from this repo.
 
 ### 2 · Understand + scope contract
 Parse the story per `references/story-parsing.md` and restate in chat:
 - STORY title, surface, actor, permission boundary;
 - the derived target `<plugin>/<skill>` (or "executable — CI/script/hook");
 - the `[AC]` list verbatim — the **pass list**;
-- the "Out of scope / non-goals" list verbatim — the **hard exclusion list**;
-- any `❓`/unresolved facts or source conflicts — name them and ask; never guess.
+- the `Do NOT build:` line under `3 · Scope` verbatim — the **hard exclusion
+  list**;
+- any `[Unresolved]` item or source conflict — name it and ask; never guess.
 
-Show the contract and carry on. A `❓` or a source conflict is a question in the
-same message, and the run does not build past it until it is answered.
+Show the contract and carry on. An unresolved item or a source conflict is a
+question in the same message, and the run does not build past it until it is
+answered.
 
 ### 3 · Survey the codebase
 Report what already exists vs. what's to build: does the target plugin dir exist,
@@ -79,26 +81,32 @@ pass (real TDD). State explicitly what stays out, echoing the exclusion list.
 Show the plan and start building. It is a record, not a gate: interrupt if it is
 wrong.
 
-### 5 · Build — engines together
+### 5 · Build
 See `references/engine-seam.md` for who owns what.
-- Create the branch first: `feat/<milestone>-<skill-name>` (see git-pr-flow).
-- **plugin-dev** scaffolds the plugin/skill files in-place (`plugin-structure` +
-  `skill-development`; `create-plugin` only for a brand-new multi-part plugin).
-- **skill-creator** authoring guidance drafts the SKILL.md content in the house
-  style — third-person `description`, progressive disclosure, explain the *why*,
-  no cached template text.
-- QA: run the `plugin-validator` and `skill-reviewer` agents; fix what they flag.
+- Create the branch first: `feat/<skill-name>` (see git-pr-flow).
+- **New plugin or skill only:** **plugin-dev** scaffolds the files in-place
+  (`plugin-structure` + `skill-development`; `create-plugin` only for a
+  brand-new multi-part plugin), and **skill-creator** authoring guidance drafts
+  the SKILL.md content in the house style — third-person `description`,
+  progressive disclosure, explain the *why*, no cached template text.
+- **Edit to an existing skill:** edit in place within its `tests/budgets.json`
+  entry; load neither plugin-dev's skills nor skill-creator.
+- QA, in parallel: dispatch `plugin-dev:plugin-validator` with
+  `model: "haiku"` when a plugin changed and `plugin-dev:skill-reviewer` with
+  `model: "sonnet"` when a SKILL.md changed; fix what they flag.
 - **Bump the touched `plugin.json` version** (semver: a new skill or feature is a
   minor bump, a fix/edit to an existing one is a patch) and keep the marketplace
   entry and manifest descriptions identical — the CI gate fails otherwise.
 
 ### 6 · Verify against the ACs
 Walk every `[AC]` and confirm it is met. Confirm no out-of-scope item entered the
-diff. Run the repo gate locally and require both green:
+diff. Run the repo gate and every contract suite locally:
 ```
 BASE_REF=main bash scripts/validate.sh
-bash tests/validate.test.sh
+for t in tests/*.test.sh; do out=$(bash "$t" 2>&1) || printf 'SUITE FAILED: %s\n%s\n' "$t" "$out"; done
 ```
+`validate.sh` must end on `OK:` and the loop must print nothing. A red suite is
+fixed before the stop, never shown at it.
 
 ### 7 · Close the loop + ship  → the one stop
 Per `references/git-pr-flow.md` and `raftkit-core:rules`: draft the

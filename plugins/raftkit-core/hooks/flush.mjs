@@ -18,6 +18,7 @@
 import { existsSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import {
   acquireLock,
+  clampText,
   config,
   endpointUsable,
   ensureDir,
@@ -32,8 +33,15 @@ import { githubLogin, identity } from "./lib/identity.mjs";
 
 const MAX_EVENTS = 500; // per request
 const MAX_BATCHES = 40; // safety valve: 20k events in one flush, then stop
-const MAX_BYTES = 5 * 1024 * 1024; // Server caps the body at 1MB; fail early, well under it.
+// The server caps a body at 1,000,000 bytes. The old 5 MB cap let a 1-5 MB
+// batch through to a 413 that repeated every session, so it stays well under.
+const MAX_BYTES = 900_000;
 const MIN_INTERVAL_MS = 60 * 1000; // Don't hammer on rapid session restarts.
+
+// The severities the admin schema accepts. Anything else (the one-stop gate is
+// "gate") goes as info with the original kept, because one unknown value used
+// to make the server reject the whole batch.
+const SEVERITIES = new Set(["blocker", "warning", "info"]);
 
 function recentlyFlushed() {
   try {
@@ -55,34 +63,97 @@ function markFlushed() {
   }
 }
 
-function toBatch(lines, who) {
-  const batch = [];
-  for (const line of lines) {
-    const e = parseJson(line, null);
-    if (!e || !e.event) continue;
-    // Back-fill the identity the synchronous path could not resolve: it knows
-    // no GitHub login, so an account with no git email spooled as `anon:`.
-    // Upgrading here keeps the resolution order identical to what a single
-    // synchronous resolve would have produced.
-    let distinctId = e.distinct_id || who.distinct_id;
-    if (who.gh_login && /^anon:/.test(String(distinctId))) distinctId = `gh:${who.gh_login}`;
-    batch.push({
-      // Events spooled before event_id existed still flush — they just cannot
-      // be deduped, so give them a stable-enough id rather than dropping them.
-      event_id: e.event_id || `legacy-${sha(line)}`,
-      event: e.event,
-      timestamp: e.ts,
-      properties: {
-        distinct_id: distinctId,
-        ...(e.props || {}),
-        // Person properties: who this is, refreshed on every event.
-        $set: { name: who.name, email: who.email, gh_login: who.gh_login, os_user: who.os_user },
-      },
-    });
+/** One spooled line as the event the server receives, or null for a junk line. */
+function toEvent(line, who) {
+  const e = parseJson(line, null);
+  if (!e || !e.event) return null;
+  // Back-fill the identity the synchronous path could not resolve: it knows
+  // no GitHub login, so an account with no git email spooled as `anon:`.
+  // Upgrading here keeps the resolution order identical to what a single
+  // synchronous resolve would have produced.
+  let distinctId = e.distinct_id || who.distinct_id;
+  if (who.gh_login && /^anon:/.test(String(distinctId))) distinctId = `gh:${who.gh_login}`;
+  // Clamped here as well as at record time: events spooled by an older
+  // version still carry 2,000-char text.
+  const props = {};
+  for (const [k, v] of Object.entries(e.props || {})) props[k] = clampText(v);
+  if (props.severity !== undefined && !SEVERITIES.has(props.severity)) {
+    props.severity_detail = props.severity;
+    props.severity = "info";
   }
-  return batch;
+  return {
+    // Events spooled before event_id existed still flush — they just cannot
+    // be deduped, so give them a stable-enough id rather than dropping them.
+    event_id: e.event_id || `legacy-${sha(line)}`,
+    event: e.event,
+    timestamp: e.ts,
+    properties: {
+      distinct_id: distinctId,
+      ...props,
+      // Person properties: who this is, refreshed on every event.
+      $set: { name: who.name, email: who.email, gh_login: who.gh_login, os_user: who.os_user },
+    },
+  };
 }
 
+/**
+ * The next request's events, packed to fit both caps, and how many spool lines
+ * they consumed. An event too large to fit any request on its own is consumed
+ * and listed in `oversized` as [line index, event_id], so it can never wedge
+ * the lines behind it.
+ */
+function nextBatch(lines, who) {
+  const batch = [];
+  let bytes = Buffer.byteLength('{"batch":[]}');
+  let used = 0;
+  const oversized = [];
+  for (const [index, line] of lines.entries()) {
+    const event = toEvent(line, who);
+    if (!event) {
+      used++;
+      continue;
+    }
+    const size = Buffer.byteLength(JSON.stringify(event)) + 1; // + the comma
+    if (Buffer.byteLength('{"batch":[]}') + size > MAX_BYTES) {
+      used++;
+      oversized.push([index, event.event_id]);
+      continue;
+    }
+    if (batch.length >= MAX_EVENTS || bytes + size > MAX_BYTES) break;
+    batch.push(event);
+    bytes += size;
+    used++;
+  }
+  return { batch, used, oversized };
+}
+
+/** Why the last flush was refused, kept until one is delivered. */
+function recordFlushError(status, error) {
+  try {
+    const path = stateFile("last-flush-error");
+    const prior = existsSync(path) ? parseJson(readFileSync(path, "utf8")) : {};
+    // `ts` is when delivery first failed, so a repeat keeps it: that is the
+    // date the SessionStart message reports as "not delivered since".
+    const ts = typeof prior.ts === "string" && prior.ts ? prior.ts : new Date().toISOString();
+    ensureDir(spoolDir());
+    writeFileSync(path, JSON.stringify({ status, error: clampText(error, 200), ts }) + "\n");
+  } catch {
+    /* the error file is a courtesy; the spool is what must survive */
+  }
+}
+
+function clearFlushError() {
+  try {
+    unlinkSync(stateFile("last-flush-error"));
+  } catch {
+    /* none recorded */
+  }
+}
+
+/**
+ * POST one body. `status` is 0 when no response arrived (offline, timeout,
+ * refused redirect): that is not a server rejection and is not reported.
+ */
 async function post(endpoint, body) {
   try {
     const res = await fetch(endpoint, {
@@ -95,9 +166,16 @@ async function post(endpoint, body) {
       redirect: "error",
       signal: AbortSignal.timeout(15000),
     });
-    return res.ok;
+    if (res.ok) return { ok: true, status: res.status };
+    let error = "";
+    try {
+      error = (await res.text()).slice(0, 400);
+    } catch {
+      /* the status alone still says what happened */
+    }
+    return { ok: false, status: res.status, error: error || res.statusText || "" };
   } catch {
-    return false;
+    return { ok: false, status: 0 };
   }
 }
 
@@ -163,42 +241,49 @@ async function drain(cfg) {
   let sentAll = true;
 
   for (let i = 0; i < MAX_BATCHES && remaining.length > 0; i++) {
-    const chunk = remaining.slice(0, MAX_EVENTS);
-    const rest = remaining.slice(MAX_EVENTS);
-    const batch = toBatch(chunk, who);
+    const next = nextBatch(remaining, who);
+    const { batch, oversized } = next;
+    let { used } = next;
 
-    if (batch.length === 0) {
-      remaining = rest; // nothing parseable in this chunk
-      continue;
-    }
-
-    const body = JSON.stringify({ batch });
-    if (body.length > MAX_BYTES) {
-      // Oversized payload would 413 forever and wedge the spool. Drop this
-      // chunk and keep going rather than stranding everything behind it —
-      // but say so, because a silent drop reads as "nothing happened".
-      await post(
+    if (oversized.length > 0) {
+      // An event over the cap on its own would 413 forever and wedge the
+      // spool. It is dropped rather than stranding everything behind it —
+      // but said so, because a silent drop reads as "nothing happened".
+      // The notice's id comes from the dropped events' own ids, so a notice
+      // resent after a failed flush is deduped, not counted twice.
+      const note = await post(
         cfg.endpoint,
         JSON.stringify({
           batch: [
             {
-              event_id: `trunc-${sha(`${who.distinct_id}-${Date.now()}-${batch.length}`)}`,
+              event_id: `trunc-${sha(oversized.map(([, id]) => id).join(","))}`,
               event: "raftkit_spool_truncated",
               timestamp: new Date().toISOString(),
-              properties: { distinct_id: who.distinct_id, dropped: batch.length, reason: "oversized_batch" },
+              properties: { distinct_id: who.distinct_id, dropped: oversized.length, reason: "oversized_event" },
             },
           ],
         }),
       );
-      remaining = rest;
+      // Reported, so gone, whatever becomes of the batch after them.
+      if (note.ok) {
+        const gone = new Set(oversized.map(([index]) => index));
+        remaining = remaining.filter((_, index) => !gone.has(index));
+        used -= gone.size;
+      }
+    }
+
+    if (batch.length === 0) {
+      remaining = remaining.slice(used); // nothing sendable in this stretch
       continue;
     }
 
-    if (!(await post(cfg.endpoint, body))) {
+    const res = await post(cfg.endpoint, JSON.stringify({ batch }));
+    if (!res.ok) {
+      if (res.status > 0) recordFlushError(res.status, res.error);
       sentAll = false;
-      break; // leave `remaining` — this chunk included — for the next session
+      break; // leave `remaining` — this batch included — for the next session
     }
-    remaining = rest;
+    remaining = remaining.slice(used);
   }
 
   if (remaining.length > 0) sentAll = false;
@@ -207,6 +292,7 @@ async function drain(cfg) {
     if (sentAll) {
       unlinkSync(claim);
       markFlushed();
+      clearFlushError();
     } else {
       // Put the unsent events back at the front of the queue, preserving order.
       const current = existsSync(spoolFile()) ? readFileSync(spoolFile(), "utf8") : "";

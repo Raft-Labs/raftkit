@@ -85,9 +85,9 @@ If usage-based → trigger credit-metering middleware pattern.
 
 ## §3 — Stack archetype
 
-Run the decision tree in `stack-selection.md` §7.5 verbatim, in small batches.
+Run the decision tree in `stack-and-domain-recipes.md` verbatim, in small batches.
 After landing on an archetype, RECAP with reasoning before asking the user to
-confirm. See example narration in `stack-selection.md`.
+confirm. See example narration in `stack-and-domain-recipes.md`.
 
 After confirmation, ask the **archetype deltas** — only the questions that
 matter for the chosen archetype:
@@ -160,7 +160,7 @@ Default 7d session + sliding refresh.
 List every role. For each: can-login yes/no? Tier (platform / org / team)?
 
 ### Q4.10 — RBAC matrix draft
-Load `rbac-matrix-guide.md`. Force user to sketch role × top-level-resource
+Load `rbac-guide.md`. Force user to sketch role × top-level-resource
 × action grid before exiting Phase 4.
 
 ---

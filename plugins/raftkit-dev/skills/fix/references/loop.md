@@ -24,4 +24,4 @@ A developer with an incomplete QA ticket who omits the link would otherwise land
 
 ## The hand-back carries the docs result
 
-Both paths report the documentation outcome from `raftkit-dev:docs` with its evidence: the updated files, or `Docs: not impacted — <reason>` naming the change set examined. A bug fix never rewrites product documentation by default; it does when the documented contract was wrong or the intended behaviour changed inside the `Done when`.
+Both paths report the `raftkit-dev:docs` outcome verbatim, with its evidence. Inside a fix run it checks parity only and syncs nothing. A bug fix never rewrites product documentation by default; when the documented contract was wrong or the intended behaviour changed inside the `Done when`, the doc edit is part of the fix's own diff.

@@ -1,6 +1,6 @@
 # The estimate Sheet
 
-One estimate, one Sheet, never the source list.
+One estimate, one Sheet, never the source list. Every run creates a new Sheet, `<project> estimate — <date>`, uploaded as CSV and converted in the folder the PM named; Drive cannot edit a Sheet in place, so no run does.
 
 | Row | Holds |
 |---|---|
@@ -10,7 +10,7 @@ One estimate, one Sheet, never the source list.
 | 4… | one row per feature, the feature named exactly as the list names it, ranges as low–high, a stated `0` where none |
 | last | the list total, with the list-level assumptions |
 
-The skill owns rows 1–3 and the column set; the PM owns the content. A re-run proposes new rows and changed numbers, never drops rows 1–2, never reorders columns, and never overwrites a number the PM or developer edited: a changed number on an edited row is shown for the PM to resolve.
+The skill owns rows 1–3 and the column set; the PM owns the content. A re-run reads the latest earlier Sheet, writes a new dated one and never edits the old one. The stop lists every row that differs from it: new, changed, dropped. A number the PM or developer edited there carries over, and a new estimate that differs from it is shown for the PM to resolve.
 
 Name the source Sheet in the estimate so the two stay traceable. Report the link only after the write lands.
 

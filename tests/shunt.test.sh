@@ -7,11 +7,12 @@
 #      are never shunted at any size — the load-bearing exemption, because a
 #      paraphrased scope contract is worse than an expensive one
 #   4. the kill switch and the threshold override are honoured
-#   5. the bash forms it claims to catch are caught, and the ones it cannot
-#      parse with certainty are left alone
+#   5. a Bash call never reaches the shunt: it is not registered on Bash
 #   6. every failure path exits 0 and prints nothing (fail open)
 #   7. a deny is recorded as telemetry; an allow costs no telemetry at all
-#   8. token accounting folds a transcript correctly and resumes incrementally
+#   8. token accounting counts each message once, folds subagent files,
+#      skips a fork's copied history, and resumes incrementally; run-tokens.mjs
+#      prints the one line the STOP quotes
 set -uo pipefail
 export NODE_DISABLE_COLORS=1 FORCE_COLOR=0 NO_COLOR=1
 cd "$(dirname "$0")/.."
@@ -36,6 +37,7 @@ seq 1 900 > "$REPO/src/my-skills-notes.md"   # NOT inside skills/ — must shunt
 printf 'a\0b\n%.0s' $(seq 1 900) > "$REPO/src/blob.bin"
 seq 1 500 > "$REPO/src/exact.ts"          # exactly at the default threshold
 seq 1 900 > "$TEST_ROOT/outside-big.ts"   # oversized, but not in the repo
+mkdir -p "$REPO/clients/acme.bank" && seq 1 900 > "$REPO/clients/acme.bank/q3-layoffs"   # no extension, dotted directory
 
 expect_eq() { # <name> <expected> <actual>
   if [[ "$2" == "$3" ]]; then
@@ -71,16 +73,6 @@ read_payload() { # <path> [extra-json]
     "$REPO" "$1" "${2:-}"
 }
 
-bash_payload() { # <command>
-  node -e '
-    const [cwd, cmd] = process.argv.slice(1);
-    process.stdout.write(JSON.stringify({
-      session_id: "s1", hook_event_name: "PreToolUse", cwd,
-      tool_name: "Bash", tool_input: { command: cmd },
-    }));
-  ' "$REPO" "$1"
-}
-
 # ------------------------------------------------------- 1. the one deny
 expect_eq "an oversized read is denied" "deny" "$(verdict "$(read_payload "$REPO/src/big.ts")")"
 expect_eq "a relative path resolves against cwd and is denied" "deny" "$(verdict "$(read_payload "src/big.ts")")"
@@ -88,8 +80,9 @@ expect_eq "a relative path resolves against cwd and is denied" "deny" "$(verdict
 r="$(reason "$(read_payload "$REPO/src/big.ts")")"
 grep -q "src/big.ts is 900 lines" <<< "$r" && echo "PASS: the reason names the file and its real line count" ||
   { echo "FAIL: reason line count (got: ${r:0:80})"; failures=$((failures + 1)); }
-grep -q 'subagent_type: "bulk-reader"' <<< "$r" && echo "PASS: the reason carries the bulk-reader call" ||
-  { echo "FAIL: reason lacks the bulk-reader call"; failures=$((failures + 1)); }
+# A plugin agent is dispatched by its scoped name.
+grep -q 'subagent_type: "raftkit-core:bulk-reader"' <<< "$r" && echo "PASS: the reason carries the bulk-reader call by its scoped name" ||
+  { echo "FAIL: reason lacks the scoped bulk-reader call"; failures=$((failures + 1)); }
 grep -q "offset/limit" <<< "$r" && echo "PASS: the reason names the route back for editing" ||
   { echo "FAIL: reason lacks the edit route"; failures=$((failures + 1)); }
 grep -q "RAFTKIT_SHUNT=off" <<< "$r" && echo "PASS: the reason names the bypass" ||
@@ -141,32 +134,35 @@ expect_eq "a plan record is never shunted" "allow" "$(verdict "$(read_payload "$
 # "...skills..." is ordinary content and must still be shunted.
 expect_eq "a lookalike path is still shunted" "deny" "$(verdict "$(read_payload "$REPO/src/my-skills-notes.md")")"
 
-# ------------------------------- 3b. the bulk-reader is not policed
-# The hook runs inside subagent tool calls too, so without this the one agent
-# whose job is the oversized read is the one agent denied it.
-for field in agent_type subagent_type agent_name agentType agent_id; do
-  expect_eq "the bulk-reader bypasses the shunt via $field" "allow" \
-    "$(verdict "$(node -e '
-        const [cwd, file, field] = process.argv.slice(1);
-        process.stdout.write(JSON.stringify({
-          cwd, tool_name: "Read", tool_input: { file_path: file }, [field]: "bulk-reader",
-        }));
-      ' "$REPO" "$REPO/src/big.ts" "$field")")"
-done
-expect_eq "another agent is still policed" "deny" \
-  "$(verdict "$(node -e '
-      const [cwd, file] = process.argv.slice(1);
-      process.stdout.write(JSON.stringify({
-        cwd, tool_name: "Read", tool_input: { file_path: file }, subagent_type: "code-reviewer",
-      }));
-    ' "$REPO" "$REPO/src/big.ts")")"
+# ------------------------------- 3b. the bulk-reader and subagents are not policed
+# The hook runs inside subagent tool calls too. A subagent's context is its
+# own, so its reads are never shunted: Claude Code puts agent_id on every hook
+# payload from inside a subagent, and only there.
+agent_payload() { # <extra-json-fields>
+  node -e '
+    const [cwd, file, extra] = process.argv.slice(1);
+    process.stdout.write(JSON.stringify({ cwd, tool_name: "Read", tool_input: { file_path: file }, ...JSON.parse(extra) }));
+  ' "$REPO" "$REPO/src/big.ts" "$1"
+}
+expect_eq "the bulk-reader, by its scoped plugin name, bypasses the shunt" "allow" \
+  "$(verdict "$(agent_payload '{"agent_type":"raftkit-core:bulk-reader"}')")"
+expect_eq "a Read made inside any subagent is never denied" "allow" \
+  "$(verdict "$(agent_payload '{"agent_id":"a4d33b7f47848085d","agent_type":"Explore"}')")"
+expect_eq "an empty agent_id is not a subagent" "deny" "$(verdict "$(agent_payload '{"agent_id":""}')")"
+# `--agent` sets agent_type on the main thread with no agent_id: still policed.
+expect_eq "a main-thread --agent session is still policed" "deny" \
+  "$(verdict "$(agent_payload '{"agent_type":"code-reviewer"}')")"
 # The hard defence, which needs no payload field at all: a paged read is
 # exempt, so the agent can always get the text even if it is not recognised.
 expect_eq "a paged read by an unrecognised agent is allowed" "allow" \
   "$(verdict "$(read_payload "$REPO/src/big.ts" ',"offset":1,"limit":1500')")"
-# The deny text must name that route, or an unrecognised bulk-reader is stuck.
+# The deny text must name that route, or an unrecognised reader is stuck.
 grep -q "offset and limit" <<< "$r" && echo "PASS: the reason names the paged-read route" ||
   { echo "FAIL: reason lacks the paged-read route"; failures=$((failures + 1)); }
+# The agent reads files, not the project's instructions.
+awk 'NR==1&&$0!="---"{exit} NR>1&&$0=="---"{exit} NR>1{print}' plugins/raftkit-core/agents/bulk-reader.md | grep -qx 'omitClaudeMd: true' &&
+  echo "PASS: the bulk-reader does not load CLAUDE.md" ||
+  { echo "FAIL: bulk-reader frontmatter lacks omitClaudeMd: true"; failures=$((failures + 1)); }
 
 # ------------------------------------------ 4. kill switch and threshold
 expect_eq "RAFTKIT_SHUNT=off allows everything" "allow" \
@@ -182,27 +178,15 @@ expect_eq "a junk threshold falls back to the default" "allow" \
 expect_eq "a zero threshold falls back to the default" "allow" \
   "$(verdict "$(read_payload "$REPO/src/small.ts")" RAFTKIT_SHUNT_MIN_LINES=0)"
 
-# -------------------------------------------------------- 5. bash forms
-expect_eq "cat on a big file is denied" "deny" "$(verdict "$(bash_payload "cat $REPO/src/big.ts")")"
-expect_eq "cat piped into grep is denied" "deny" "$(verdict "$(bash_payload "cat $REPO/src/big.ts | grep foo")")"
-expect_eq "head -n above the threshold is denied" "deny" "$(verdict "$(bash_payload "head -n 900 $REPO/src/big.ts")")"
-expect_eq "head -n below the threshold is allowed" "allow" "$(verdict "$(bash_payload "head -n 20 $REPO/src/big.ts")")"
-expect_eq "cat on a small file is allowed" "allow" "$(verdict "$(bash_payload "cat $REPO/src/small.ts")")"
-expect_eq "grep is allowed" "allow" "$(verdict "$(bash_payload "grep -n foo $REPO/src/big.ts")")"
-# Anything it cannot parse with certainty must pass through untouched.
-expect_eq "a chained command is allowed" "allow" \
-  "$(verdict "$(bash_payload "cat $REPO/src/big.ts; rm -f /tmp/x")")"
-expect_eq "a command substitution is allowed" "allow" \
-  "$(verdict "$(bash_payload "cat \$(echo $REPO/src/big.ts)")")"
-expect_eq "a redirect is allowed" "allow" "$(verdict "$(bash_payload "cat $REPO/src/big.ts > /tmp/out")")"
-# These two match the cat-into-pipe shape and are rejected only by the guard on
-# chaining. Without it the hook would claim to understand a compound command.
-expect_eq "a pipe followed by a chained command is allowed" "allow" \
-  "$(verdict "$(bash_payload "cat $REPO/src/big.ts | grep x; rm -f /tmp/y")")"
-expect_eq "an or-chain is allowed" "allow" \
-  "$(verdict "$(bash_payload "cat $REPO/src/big.ts || echo missing")")"
-expect_eq "cat with two files is allowed" "allow" \
-  "$(verdict "$(bash_payload "cat $REPO/src/big.ts $REPO/src/small.ts")")"
+# -------------------------------------------------------- 5. Bash is not shunted
+# A Bash result over Claude Code's own output cap is truncated anyway, so the
+# shunt could never deny one, yet it spawned node on every Bash call. Even a
+# payload that reaches it is allowed.
+expect_eq "a Bash call is allowed, even one that cats a big file" "allow" \
+  "$(verdict "$(node -e '
+      const [cwd, cmd] = process.argv.slice(1);
+      process.stdout.write(JSON.stringify({ session_id: "s1", hook_event_name: "PreToolUse", cwd, tool_name: "Bash", tool_input: { command: cmd } }));
+    ' "$REPO" "cat $REPO/src/big.ts")")"
 
 # ------------------------------------------------- 6. fail open, always
 for bad in '' 'not json' '{' '[]' 'null' '{"tool_name":"Read"}' '{"tool_name":"Read","tool_input":null}' \
@@ -223,6 +207,14 @@ expect_eq "a deny is recorded" "raftkit_shunt" \
 expect_eq "the deny records the lines it avoided" "900" \
   "$(node -e 'const fs=require("fs");const p=process.argv[1]+"/spool/events.jsonl";
      process.stdout.write(String(JSON.parse(fs.readFileSync(p,"utf8").trim().split("\n").pop()).props.lines_avoided));' "$d")"
+last_ext() { node -e 'const fs=require("fs");const p=process.argv[1]+"/spool/events.jsonl";
+  process.stdout.write(JSON.stringify(fs.existsSync(p)?JSON.parse(fs.readFileSync(p,"utf8").trim().split("\n").pop()).props.path_ext:null));' "$1"; }
+expect_eq "the deny records the file's extension" '".ts"' "$(last_ext "$d")"
+# Every session sends this record, so it carries the extension and never a path.
+dx="$TEST_ROOT/tele-noext"; mkdir -p "$dx"
+printf '%s' "$(read_payload "$REPO/clients/acme.bank/q3-layoffs")" |
+  env RAFTKIT_TELEMETRY_DIR="$dx" PATH="$TEST_ROOT/stub:$PATH" node "$SHUNT" >/dev/null 2>&1
+expect_eq "a file with no extension under a dotted directory records no path fragment" '""' "$(last_ext "$dx")"
 
 d2="$TEST_ROOT/tele-allow"; mkdir -p "$d2"
 printf '%s' "$(read_payload "$REPO/src/small.ts")" | env RAFTKIT_TELEMETRY_DIR="$d2" node "$SHUNT" >/dev/null 2>&1
@@ -238,77 +230,165 @@ expect_eq "telemetry opt-out does not disable the shunt" "deny" \
   "$(verdict "$(read_payload "$REPO/src/big.ts")" RAFTKIT_TELEMETRY=off)"
 
 # ------------------------------------------------- 8. token accounting
-T="$TEST_ROOT/transcript.jsonl"
-mk_msg() { # <model> <isSidechain> <in> <out> <cache_read> <cache_creation>
-  node -e '
-    const [model, side, i, o, cr, cc] = process.argv.slice(1);
-    process.stdout.write(JSON.stringify({
-      type: "assistant", isSidechain: side === "true",
-      message: { model, usage: {
-        input_tokens: +i, output_tokens: +o,
-        cache_read_input_tokens: +cr, cache_creation_input_tokens: +cc } },
-    }) + "\n");
-  ' "$@"
-}
-{
-  echo '{"type":"user","message":{"role":"user","content":"hi"}}'
-  mk_msg claude-opus-5 false 10 20 30 40
-  mk_msg claude-haiku-4-5 true 1 2 3 4
-  echo 'not json at all'
-} > "$T"
+# The fixture mirrors the shapes measured in real CLI 2.1.280 transcripts, with
+# every piece of content removed: one message written as several lines that
+# repeat its usage, subagents in their own files (placeholder usage first,
+# workflow agents one level deeper, agentType in a sibling .meta.json), a usage
+# whose top-level fields are zero with the real numbers in `iterations`, and a
+# fork that copies its parent's records before its own SessionStart:fork.
+CFG="$TEST_ROOT/cfg"
+PROJ="$CFG/projects/-fixture"
+SID="11111111-aaaa-4bbb-8ccc-000000000001"
+FORK="22222222-aaaa-4bbb-8ccc-000000000002"
+T="$PROJ/$SID.jsonl"
+mkdir -p "$PROJ/$SID/subagents/workflows/wf_fixture"
+node - "$PROJ" "$SID" "$FORK" <<'FIXTURE'
+const fs = require("fs");
+const [proj, sid, fork] = process.argv.slice(2);
+const u = (i, o, cr, cc, extra = {}) => ({ input_tokens: i, output_tokens: o, cache_read_input_tokens: cr, cache_creation_input_tokens: cc, ...extra });
+const msg = (sessionId, id, ts, usage, model = "claude-opus-5-5", content = [{ type: "text", text: "" }]) =>
+  JSON.stringify({ type: "assistant", sessionId, timestamp: ts, isSidechain: false, message: { id, model, usage, content } });
+const line = (o) => JSON.stringify(o);
+const main = [
+  line({ type: "user", sessionId: sid, timestamp: "2026-09-18T01:00:00.000Z", message: { role: "user", content: "hi" } }),
+  line({ type: "attachment", sessionId: sid, timestamp: "2026-09-18T01:00:00.100Z", attachment: { type: "skill_listing", names: ["raftkit-dev:implement", "raftkit-dev:fix", "raftkit-core:rules", "other:x"], content: "- raftkit-dev:implement: Take one story\n- raftkit-dev:fix\n- raftkit-core:rules\n- other:x: y" } }),
+  // m1: three lines, one message — counted once
+  msg(sid, "m1", "2026-09-18T01:00:01.000Z", u(10, 20, 30, 40)),
+  msg(sid, "m1", "2026-09-18T01:00:01.100Z", u(10, 20, 30, 40)),
+  msg(sid, "m1", "2026-09-18T01:00:01.200Z", u(10, 20, 30, 40)),
+  // m2: top-level zeros, real numbers in iterations
+  msg(sid, "m2", "2026-09-18T01:00:02.000Z", u(0, 0, 0, 0, { iterations: [{ type: "message", ...u(5, 5, 5, 5) }] }), "claude-opus-5"),
+  msg(sid, "syn", "2026-09-18T01:00:02.500Z", u(0, 0, 0, 0), "<synthetic>"),
+  "not json at all",
+  // m3 starts the RaftKit run: the model invokes implement
+  msg(sid, "m3", "2026-09-18T01:00:03.000Z", u(1, 1, 1, 1), "claude-opus-5-5", [{ type: "tool_use", name: "Skill", input: { skill: "raftkit-dev:implement" } }]),
+  msg(sid, "m4", "2026-09-18T01:00:04.000Z", u(100, 0, 0, 0)),
+  // a nested skill inside the run does not restart it
+  msg(sid, "m5", "2026-09-18T01:00:05.000Z", u(0, 0, 0, 0), "claude-opus-5-5", [{ type: "tool_use", name: "Skill", input: { skill: "raftkit-dev:scope-guard" } }]),
+];
+fs.writeFileSync(`${proj}/${sid}.jsonl`, main.join("\n") + "\n");
+const sub = `${proj}/${sid}/subagents`;
+fs.writeFileSync(`${sub}/agent-a1.meta.json`, JSON.stringify({ agentType: "Explore" }));
+fs.writeFileSync(`${sub}/agent-a1.jsonl`, [
+  msg("x", "s1", "2026-09-18T01:00:03.500Z", u(1, 1, 0, 0), "claude-haiku-4-5"),      // placeholder
+  msg("x", "s1", "2026-09-18T01:00:03.600Z", u(2, 3, 4, 5), "claude-haiku-4-5"),      // final: 14
+].join("\n") + "\n");
+fs.writeFileSync(`${sub}/workflows/wf_fixture/agent-b2.meta.json`, JSON.stringify({ agentType: "general-purpose" }));
+fs.writeFileSync(`${sub}/workflows/wf_fixture/agent-b2.jsonl`, msg("x", "s2", "2026-09-18T01:00:03.700Z", u(6, 6, 6, 6), "claude-sonnet-5") + "\n"); // 24
+// The fork: the parent's m1 copied under the fork's own sessionId and the
+// parent's timestamps, then its own start, then its own message.
+fs.writeFileSync(`${proj}/${fork}.jsonl`, [
+  msg(fork, "m1", "2026-09-18T01:00:01.000Z", u(10, 20, 30, 40)),
+  msg(fork, "m4", "2026-09-18T01:00:04.000Z", u(100, 0, 0, 0)),
+  line({ type: "attachment", sessionId: fork, timestamp: "2026-09-18T02:00:00.000Z", attachment: { type: "hook_success", hookEvent: "SessionStart", hookName: "SessionStart:fork" } }),
+  msg(fork, "f1", "2026-09-18T02:00:01.000Z", u(7, 7, 7, 7)),
+].join("\n") + "\n");
+FIXTURE
 
-tok() { # <jq-ish path> — echoes one field of runTokens()
+TOKENS_LIB="$PWD/plugins/raftkit-core/hooks/lib/tokens.mjs"
+tok() { # <session> <transcript> <dotted field> — one field of runTokens()
   node --input-type=module -e '
     const { runTokens } = await import(process.argv[1]);
-    const t = runTokens(process.argv[2], process.argv[3]);
-    const path = process.argv[4].split(".");
-    let v = t; for (const k of path) v = v?.[k];
+    const t = runTokens(process.argv[3], process.argv[2]);
+    let v = t; for (const k of process.argv[4].split(".")) v = v?.[k];
     process.stdout.write(String(v));
-  ' "$PWD/plugins/raftkit-core/hooks/lib/tokens.mjs" "$T" "$1" "$2"
+  ' "$TOKENS_LIB" "$1" "$2" "$3"
 }
 export RAFTKIT_TELEMETRY_DIR="$TEST_ROOT/tokstate"
-expect_eq "the total is main plus sidechain" "110" "$(tok sessA total)"
-expect_eq "the sidechain is split out" "10" "$(tok sessB sidechain)"
-expect_eq "the main thread is split out" "100" "$(tok sessC main)"
-expect_eq "tokens are attributed per tier" "10" "$(tok sessD by_tier.haiku)"
-expect_eq "a malformed line is skipped, not fatal" "2" "$(tok sessE messages)"
+# main 100 (m1 once) + 20 (m2 via iterations) + 4 (m3) + 100 (m4) = 224; subagents 14 + 24 = 38
+expect_eq "a message spread over several lines is counted once" "224" "$(tok "$SID" "$T" main)"
+expect_eq "subagent files, workflow agents included, are the sidechain" "38" "$(tok "$SID" "$T" sidechain)"
+expect_eq "the total is main plus subagents" "262" "$(tok "$SID" "$T" total)"
+expect_eq "a subagent's placeholder usage is replaced by its final line" "14" "$(tok "$SID" "$T" by_agent.Explore)"
+expect_eq "subagent tokens are attributed by agentType" "24" "$(tok "$SID" "$T" by_agent.general-purpose)"
+expect_eq "subagent tokens appear in the by-model totals" "24" "$(tok "$SID" "$T" by_model.claude-sonnet-5)"
+expect_eq "tokens are still attributed per tier" "14" "$(tok "$SID" "$T" by_tier.haiku)"
+expect_eq "a usage whose top level is zero is counted from its iterations" "20" "$(tok "$SID" "$T" by_model.claude-opus-5)"
+expect_eq "a zero-usage message adds no model row" "undefined" "$(tok "$SID" "$T" 'by_model.<synthetic>')"
+expect_eq "a forked session does not re-count its parent's history" "28" "$(tok "$FORK" "$PROJ/$FORK.jsonl" total)"
 
-# A second read of an unchanged transcript must not double-count, and an
-# appended message must be picked up. This is the incremental contract.
-tok sessG total >/dev/null
-expect_eq "re-reading an unchanged transcript does not double-count" "110" "$(tok sessG total)"
-mk_msg claude-sonnet-5 false 5 5 5 5 >> "$T"
-expect_eq "an appended message is folded in" "130" "$(tok sessG total)"
+# Incremental: an unchanged transcript is not re-counted, a later line for the
+# same message replaces its usage, and a new message is added.
+expect_eq "re-reading an unchanged transcript does not double-count" "262" "$(tok "$SID" "$T" total)"
+node -e '
+  const u = { input_tokens: 150, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 };
+  process.stdout.write(JSON.stringify({ type: "assistant", timestamp: "2026-09-18T01:00:05.500Z", message: { id: "m5", model: "claude-opus-5-5", usage: u, content: [] } }) + "\n");
+' >> "$T"
+expect_eq "a later line for the same message replaces its usage, across reads" "412" "$(tok "$SID" "$T" total)"
+node -e '
+  const u = { input_tokens: 8, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 };
+  process.stdout.write(JSON.stringify({ type: "assistant", timestamp: "2026-09-18T01:00:06.000Z", message: { id: "m6", model: "claude-opus-5-5", usage: u, content: [] } }) + "\n");
+' >> "$T"
+expect_eq "an appended message is folded in" "420" "$(tok "$SID" "$T" total)"
+
+# Listing coverage rides along the first time a skill_listing is seen.
+L="$TEST_ROOT/listing.jsonl"; head -2 "$T" > "$L"
+expect_eq "listing coverage counts RaftKit entries" "3" "$(tok sessL "$L" listing.raftkit)"
+expect_eq "  and those that kept a description" "raftkit-dev:implement" "$(tok sessL2 "$L" listing.described)"
+expect_eq "  and is reported once, not on every turn" "undefined" "$(tok sessL "$L" listing)"
 
 expect_eq "a missing transcript yields null" "null" \
   "$(node --input-type=module -e '
       const { runTokens } = await import(process.argv[1]);
       process.stdout.write(String(runTokens("/nonexistent/x.jsonl", "sX")));
-    ' "$PWD/plugins/raftkit-core/hooks/lib/tokens.mjs")"
+    ' "$TOKENS_LIB")"
 expect_eq "a transcript with no session id yields null" "null" \
   "$(node --input-type=module -e '
       const { runTokens } = await import(process.argv[1]);
       process.stdout.write(String(runTokens(process.argv[2], "")));
-    ' "$PWD/plugins/raftkit-core/hooks/lib/tokens.mjs" "$T")"
-expect_eq "no transcript path yields null" "null" \
-  "$(node --input-type=module -e '
-      const { runTokens } = await import(process.argv[1]);
-      process.stdout.write(String(runTokens("", "sX")));
-    ' "$PWD/plugins/raftkit-core/hooks/lib/tokens.mjs")"
+    ' "$TOKENS_LIB" "$T")"
+
+# ------------------------------------------------- 8b. run-tokens.mjs (C1)
+# The STOP quotes this line, so it is a contract: exactly one line, measured or
+# "not measured", never an estimate, never a write.
+RUN_TOKENS="$PWD/plugins/raftkit-dev/scripts/run-tokens.mjs"
+RT_STATE="$TEST_ROOT/rt-state"   # where a hook would keep state; run-tokens must never create it
+rt() { env CLAUDE_CONFIG_DIR="$CFG" RAFTKIT_TELEMETRY_DIR="$RT_STATE" CLAUDE_PLUGIN_DATA="$RT_STATE" node "$RUN_TOKENS" "$@" 2>/dev/null; }
+out="$(rt "$SID")"
+expect_eq "run-tokens prints exactly one line" "1" "$(printf '%s\n' "$out" | wc -l | tr -d ' ')"
+# The run starts at the implement invocation (m3): 4 + 100 + 150 + 8 = 262 main,
+# plus both subagents, which started after it: 38.
+expect_eq "run-tokens measures the run from its skill invocation" \
+  "Token total: 300 tokens (main 262, subagents 38; claude-opus-5-5: 262, claude-sonnet-5: 24, claude-haiku-4-5: 14) — measured" "$out"
+expect_eq "run-tokens --session measures the whole session" \
+  "Token total: 420 tokens (main 382, subagents 38; claude-opus-5-5: 362, claude-sonnet-5: 24, claude-opus-5: 20, claude-haiku-4-5: 14) — measured" "$(rt "$SID" --session)"
+expect_eq "an unknown session is not measured" "Token total: not measured" "$(rt "33333333-aaaa-4bbb-8ccc-000000000003")"
+# A traversal that would resolve to a real transcript if the id went unchecked.
+expect_eq "a malformed session id is not measured" "Token total: not measured" "$(rt "../-fixture/$SID")"
+expect_eq "no session id is not measured" "Token total: not measured" "$(rt)"
+tree_sum() { find "$TEST_ROOT" -type f -print0 | sort -z | xargs -0 cksum | cksum; }
+before="$(tree_sum)"
+rt "$SID" >/dev/null
+expect_eq "run-tokens writes nothing" "$before|no" "$(tree_sum)|$([[ -e "$RT_STATE" ]] && echo yes || echo no)"
+
+# Installed from the plugin cache, run-tokens finds raftkit-core beside it.
+CACHE="$CFG/plugins/cache/raftkit"
+mkdir -p "$CACHE/raftkit-core/9.9.9" "$CACHE/raftkit-dev/9.9.9"
+cp -R plugins/raftkit-core/. "$CACHE/raftkit-core/9.9.9/"
+cp -R plugins/raftkit-dev/. "$CACHE/raftkit-dev/9.9.9/"
+printf '{"version":2,"plugins":{"raftkit-core@raftkit":[{"scope":"user","installPath":"%s","version":"9.9.9"}]}}' \
+  "$CACHE/raftkit-core/9.9.9" > "$CFG/plugins/installed_plugins.json"
+expect_eq "run-tokens installed from the cache finds raftkit-core" "measured" \
+  "$(env CLAUDE_CONFIG_DIR="$CFG" node "$CACHE/raftkit-dev/9.9.9/scripts/run-tokens.mjs" "$SID" 2>/dev/null | grep -o 'measured$')"
+rm -rf "$CACHE/raftkit-core"
+expect_eq "run-tokens without raftkit-core says not measured" "Token total: not measured" \
+  "$(env CLAUDE_CONFIG_DIR="$CFG" node "$CACHE/raftkit-dev/9.9.9/scripts/run-tokens.mjs" "$SID" 2>/dev/null)"
+rm -rf "$CFG/plugins"
 
 # ------------------------------------------------------- 9. it is wired up
 node -e '
   const h = JSON.parse(require("fs").readFileSync("plugins/raftkit-core/hooks/hooks.json", "utf8"));
   const pre = h.hooks.PreToolUse || [];
   const matchers = pre.map((e) => e.matcher).sort().join(",");
-  if (matchers !== "Bash,Read") { console.error("matchers: " + matchers); process.exit(1); }
+  // Read only: a Bash call must not spawn node for a check that can never deny.
+  if (matchers !== "Read") { console.error("matchers: " + matchers); process.exit(1); }
   // Async hooks have their stdout discarded, and this hooks stdout IS its
   // decision — declaring it async would silently disable every deny.
   for (const entry of pre) for (const hook of entry.hooks) {
     if (hook.async) { console.error("PreToolUse hook must not be async"); process.exit(1); }
     if (!hook.args.some((a) => a.endsWith("shunt.mjs"))) { console.error("wrong script"); process.exit(1); }
   }
-' && echo "PASS: the shunt is registered on Read and Bash, synchronously" ||
+' && echo "PASS: the shunt is registered on Read only, synchronously" ||
   { echo "FAIL: hooks.json registration"; failures=$((failures + 1)); }
 
 grep -q "RAFTKIT_SHUNT=off" plugins/raftkit-core/hooks/hooks.json &&

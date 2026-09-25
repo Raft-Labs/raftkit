@@ -8,7 +8,7 @@ Last Updated: YYYY-MM-DD
 # Decisions Index (ADRs)
 
 Architecture Decision Records. Each is a short doc in `adr/<NNNN>-<slug>.md`
-using the template in `_templates/adr.md`.
+using the ADR template `raftkit-docs:docs-product/assets/templates/adr.md`.
 
 ## Active
 
@@ -37,7 +37,8 @@ using the template in `_templates/adr.md`.
 
 ## Adding an ADR
 
-1. Copy `_templates/adr.md` to `adr/NNNN-<slug>.md` (next sequential number)
+1. Copy the ADR template (`raftkit-docs:docs-product/assets/templates/adr.md`)
+   to `adr/NNNN-<slug>.md` (next sequential number)
 2. Fill in Context / Decision / Alternatives / Consequences
 3. Add a row to this index
 4. Reference the ADR from any doc that depends on the decision

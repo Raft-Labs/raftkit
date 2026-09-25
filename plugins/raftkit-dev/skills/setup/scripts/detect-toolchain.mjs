@@ -7,9 +7,10 @@
 //
 // Usage: node detect-toolchain.mjs --root <repo-root> [--json]
 // Exit codes: 0 report produced · 2 bad input.
-import { readFileSync, existsSync, lstatSync, readdirSync } from "node:fs";
+import { readFileSync, existsSync, lstatSync, readdirSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
+import { QUALITY } from "./quality.mjs";
 
 const args = process.argv.slice(2);
 const flag = (n) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : undefined; };
@@ -42,11 +43,10 @@ else if (families.length === 1) {
 // --- workspace + scripts ----------------------------------------------------
 const workspace = has("pnpm-workspace.yaml") || Boolean(pkg?.workspaces) || has("turbo.json") || has("nx.json");
 const rootScripts = pkg?.scripts ?? {};
-const QUALITY = /^(lint|typecheck|test)([:.].*)?$/;
 const rootQuality = Object.keys(rootScripts).filter((k) => QUALITY.test(k));
 const workspaceCandidates = [];
 for (const dir of ["packages", "apps"]) {
-  if (!has(dir)) continue;
+  if (!statSync(path.join(root, dir), { throwIfNoEntry: false })?.isDirectory()) continue;
   for (const sub of readdirSync(path.join(root, dir))) {
     const mf = path.join(dir, sub, "package.json");
     if (!has(mf)) continue;

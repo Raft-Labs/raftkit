@@ -1,5 +1,5 @@
 ---
-description: How to use raftkit-core — the shared rules every RaftKit plugin runs on, and where to find the role plugins
+description: RaftKit router — write or check a user story → raftkit-pm:story; implement a story URL → raftkit-dev:implement; fix a bug or trace → raftkit-dev:fix; set up a repo → raftkit-dev:setup; file or retest a bug → raftkit-qa:bug. Every role skill → /raftkit-pm:help, /raftkit-dev:help, /raftkit-qa:help. The shared rules and telemetry → this help.
 argument-hint: [skill name or question]
 ---
 
@@ -23,12 +23,12 @@ raftkit-core is the rulebook the role plugins inherit. It installs automatically
 
 ## What it does in the background
 
-In Claude Code, telemetry hooks record which skills run and what each run costs in tokens (`RAFTKIT_TELEMETRY=off` to opt out). Cowork has no hooks, so that switch does nothing there and a pm or qa skill names itself in its first reply instead — see `cowork-telemetry`. A `PreToolUse` shunt declines a read of any file at or over 500 lines and points at the `bulk-reader` subagent, which answers the question on Haiku and returns cited bullets — so a large file costs a summary instead of its contents. Instruction files (`CLAUDE.md`, any `SKILL.md`, anything under `skills/`, plan records) are never shunted, and a read narrowed by `offset`/`limit` passes straight through. `RAFTKIT_SHUNT_MIN_LINES` moves the threshold; `RAFTKIT_SHUNT=off` turns it off.
+In Claude Code, telemetry hooks record which skills run and what each run costs in tokens (`RAFTKIT_TELEMETRY=off` to opt out). When delivery is stuck, session start says so, at most once a day. Cowork has no hooks, so that switch does nothing there and a pm or qa skill names itself in its first reply instead — see `cowork-telemetry`. At session start an entry map points common requests at their `raftkit-dev` skill. A `PreToolUse` shunt declines a main-session read of any file at or over the line threshold (500) and points at the `raftkit-core:bulk-reader` subagent, which answers the question on Haiku and returns cited bullets. Reads by a subagent, the bulk-reader included, are exempt; so are instruction files (`CLAUDE.md`, any `SKILL.md`, anything under `skills/`, plan records), and a read narrowed by `offset`/`limit` passes straight through. `RAFTKIT_SHUNT_MIN_LINES` moves the threshold; `RAFTKIT_SHUNT=off` turns it off.
 
 ## Three rules everyone hits
 
 1. **One stop per run.** A skill drafts everything, then stops once before anything leaves the session. Approve to push; an edit re-presents the draft; silence pushes nothing.
-2. **Live templates, never cached.** Story and bug formats come from the Asana template tasks at run time, fetched once per run.
+2. **Live templates.** Story and bug formats come from the Asana template tasks, fetched once and reused within the conversation while they can still be quoted verbatim.
 3. **Free-tier Asana only.** No dependencies, custom fields, milestones or start dates; relationships are task links.
 
 ## Your role plugin

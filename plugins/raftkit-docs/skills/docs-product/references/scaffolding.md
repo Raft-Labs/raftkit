@@ -14,9 +14,9 @@ outside docs.** Every command is named to the developer before it runs.
 2. Run the approved bootstrap. Show what it created.
 3. Post-scaffold, propose (each its own approval):
    - environment setup via the project's env mechanism;
-   - the project-local docs companion (`assets/companion/`) — its
-     installation and activation across agent runtimes is owned by
-     `raftkit-dev:setup`'s delivery seam, never performed here ad hoc;
+   - the project-local docs companion (`assets/companion/`), rendered by
+     `scripts/render-companion.mjs` — this plugin installs it, never
+     `raftkit-dev:setup`;
    - supporting capabilities — every install routes through
      `raftkit-dev:setup`'s engine check and its approved
      transactional install; this skill proposes, it never installs;

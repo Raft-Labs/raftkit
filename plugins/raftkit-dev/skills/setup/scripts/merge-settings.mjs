@@ -1,9 +1,26 @@
 #!/usr/bin/env node
 // Fail-closed merge of raftkit's managed keys into a repo's .claude/settings.json.
+// Usage: merge-settings.mjs <path-to-settings.json> [--node] [opt-ins]
+//   --node  the repo has a Node manifest: worktrees also share node_modules.
+// Opt-ins, each written only when the developer accepted its line at the stop:
+//   --allow-local [--pm <pm> --manifest <package.json> --scripts "<names>"]
+//       allow local git fetch/switch/add/commit, plus `<pm> run <script>` for
+//       each approved script present in the manifest that is a test, lint or
+//       typecheck gate (quality.mjs); any other name is refused. Never push or a PR.
+//   --sg-push-sweep-off   env.SG_PUSH_SWEEP "0": security-guidance stops its
+//       push-time review; the commit-time review stays.
+//   --disable-plugins <id,...>   turn plugins off for this repo (project scope).
 // Exit codes: 0 applied (or no changes) · 1 unreadable input, nothing written ·
 // 2 conflict against an existing value, nothing written.
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
+import { QUALITY } from "./quality.mjs";
+
+// The plugins a RaftKit repo enables: raftkit-dev and exactly what its manifest
+// declares, so this list cannot drift from plugin.json.
+const manifest = JSON.parse(readFileSync(new URL("../../../.claude-plugin/plugin.json", import.meta.url), "utf8"));
+const pluginIds = ["raftkit-dev@raftkit", ...manifest.dependencies.map((d) =>
+  typeof d === "string" ? `${d}@raftkit` : `${d.name}@${d.marketplace ?? "raftkit"}`)];
 
 // House policy, mirrored from the working ~/.claude/settings.json — never invented here.
 const MANAGED = {
@@ -13,17 +30,12 @@ const MANAGED = {
       autoUpdate: true,
     },
   },
-  enabledPlugins: {
-    "raftkit-core@raftkit": true,
-    "raftkit-dev@raftkit": true,
-    "superpowers@claude-plugins-official": true,
-    "code-simplifier@claude-plugins-official": true,
-    "claude-md-management@claude-plugins-official": true,
-    "security-guidance@claude-plugins-official": true,
-    "pr-review-toolkit@claude-plugins-official": true,
-  },
+  enabledPlugins: Object.fromEntries(pluginIds.map((id) => [id, true])),
   model: "opusplan",
   attribution: { commit: "", pr: "" },
+  // Worktrees branch from local HEAD, so a phase sees the run's own commits;
+  // node_modules is shared rather than reinstalled per worktree (Node repos only).
+  worktree: { baseRef: "head", symlinkDirectories: ["node_modules"] },
   permissions: {
     allow: [
       "Bash(git status:*)",
@@ -35,10 +47,47 @@ const MANAGED = {
   },
 };
 
-const target = process.argv[2];
-if (!target) {
-  console.error("usage: merge-settings.mjs <path-to-settings.json>");
-  process.exit(1);
+const USAGE = 'usage: merge-settings.mjs <settings.json> [--node] [--allow-local [--pm <pm> --manifest <package.json> --scripts "<names>"]] [--sg-push-sweep-off] [--disable-plugins <id,...>]';
+const [target, ...rest] = process.argv.slice(2);
+const opts = {};
+const VALUED = new Set(["--pm", "--manifest", "--scripts", "--disable-plugins"]);
+for (let i = 0; i < rest.length; i++) {
+  const f = rest[i];
+  if (VALUED.has(f) && i + 1 < rest.length) opts[f] = rest[++i];
+  else if (["--node", "--allow-local", "--sg-push-sweep-off"].includes(f)) opts[f] = true;
+  else opts.bad = f;
+}
+const refuse = (msg) => { console.error(`reason: ${msg} — nothing written`); process.exit(1); };
+if (!target || target.startsWith("--") || opts.bad !== undefined) { console.error(USAGE); process.exit(1); }
+const nodeRepo = opts["--node"] === true;
+
+// Opt-in allow rules: local git steps, plus the approved gate scripts only.
+const LOCAL_GIT = ["Bash(git fetch *)", "Bash(git switch *)", "Bash(git add *)", "Bash(git commit *)"];
+const gateFlags = ["--pm", "--manifest", "--scripts"].filter((f) => f in opts);
+const optInAllow = [];
+if (gateFlags.length && (!opts["--allow-local"] || gateFlags.length !== 3)) refuse("--pm, --manifest and --scripts go together, with --allow-local");
+if (opts["--allow-local"]) {
+  optInAllow.push(...LOCAL_GIT);
+  if (gateFlags.length === 3) {
+    const pm = opts["--pm"];
+    if (!["npm", "pnpm", "yarn", "bun"].includes(pm)) refuse(`package manager '${pm}' is not npm, pnpm, yarn or bun`);
+    let scripts;
+    try { scripts = JSON.parse(readFileSync(opts["--manifest"], "utf8")).scripts ?? {}; }
+    catch (err) { refuse(`cannot read ${opts["--manifest"]} (${err.message})`); }
+    for (const name of opts["--scripts"].split(/[\s,]+/).filter(Boolean)) {
+      if (!/^[A-Za-z0-9][A-Za-z0-9:_.-]*$/.test(name) || !Object.hasOwn(scripts, name)) refuse(`'${name}' is not a script in ${opts["--manifest"]}`);
+      if (!QUALITY.test(name)) refuse(`'${name}' is not a test, lint or typecheck gate`);
+      optInAllow.push(`Bash(${pm} run ${name} *)`);
+    }
+  }
+}
+
+// Opt-in project-scope disables: never a RaftKit plugin or an engine it needs.
+const managedNames = new Set(Object.keys(MANAGED.enabledPlugins).map((id) => id.split("@")[0]));
+const toDisable = (opts["--disable-plugins"] ?? "").split(",").filter(Boolean);
+for (const id of toDisable) {
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]*@[A-Za-z0-9][A-Za-z0-9._-]*$/.test(id)) refuse(`'${id}' is not a plugin id`);
+  if (id.startsWith("raftkit-") || managedNames.has(id.split("@")[0])) refuse(`${id} is one RaftKit runs on and is never disabled here`);
 }
 
 function isPlainObject(value) {
@@ -117,6 +166,16 @@ if (eEP !== null) {
   for (const [plugin, enabled] of Object.entries(MANAGED.enabledPlugins)) {
     mergeScalar(["enabledPlugins"], result.enabledPlugins, plugin, enabled);
   }
+  for (const id of toDisable) mergeScalar(["enabledPlugins"], result.enabledPlugins, id, false);
+}
+
+// env.SG_PUSH_SWEEP — opt-in only; any existing differing value conflicts.
+if (opts["--sg-push-sweep-off"]) {
+  const eEnv = expectObject([], existing, "env");
+  if (eEnv !== null) {
+    result.env = eEnv;
+    mergeScalar(["env"], result.env, "SG_PUSH_SWEEP", "0");
+  }
 }
 
 // model — plain scalar; any existing differing value conflicts.
@@ -130,18 +189,29 @@ if (eAttr !== null) {
   mergeScalar(["attribution"], result.attribution, "pr", MANAGED.attribution.pr);
 }
 
-// permissions.allow — array union, never a conflict on content; existing order preserved,
-// gaps appended. But the container and the array itself must be shape-checked first.
+// Array union, never a conflict on content; existing order preserved, gaps appended.
+function union(existingArr, managed) {
+  const merged = [...existingArr];
+  for (const item of managed) if (!merged.includes(item)) merged.push(item);
+  return merged;
+}
+
+// worktree — baseRef is a scalar; symlinkDirectories a union, written only for Node repos.
+const eWt = expectObject([], existing, "worktree");
+if (eWt !== null) {
+  result.worktree = eWt;
+  mergeScalar(["worktree"], result.worktree, "baseRef", MANAGED.worktree.baseRef);
+  if (nodeRepo) {
+    const eLinks = expectArray(["worktree"], eWt, "symlinkDirectories");
+    if (eLinks !== null) result.worktree.symlinkDirectories = union(eLinks, MANAGED.worktree.symlinkDirectories);
+  }
+}
+
+// permissions.allow — the container and the array itself are shape-checked first.
 const eParent = expectObject([], existing, "permissions");
 if (eParent !== null) {
   const eAllow = expectArray(["permissions"], eParent, "allow");
-  if (eAllow !== null) {
-    const mergedAllow = [...eAllow];
-    for (const rule of MANAGED.permissions.allow) {
-      if (!mergedAllow.includes(rule)) mergedAllow.push(rule);
-    }
-    result.permissions = { ...eParent, allow: mergedAllow };
-  }
+  if (eAllow !== null) result.permissions = { ...eParent, allow: union(eAllow, [...MANAGED.permissions.allow, ...optInAllow]) };
 }
 
 if (conflicts.length > 0) {

@@ -5,7 +5,7 @@ weight: 1
 
 # Criteria
 
-Score 1 only if ALL hold, else 0:
+The updated comment's content is this case's regex graders. Score 1 only if ALL hold, else 0:
 
 1. The PR's comments were listed via the list endpoint
    (`GET repos/{owner}/{repo}/issues/{pr}/comments` or equivalent), the
@@ -25,6 +25,3 @@ Score 1 only if ALL hold, else 0:
    merely asserts "no duplicates were created" without having actually
    demonstrated criteria 1–2's sequence does not satisfy this criterion on
    its own.
-4. The updated comment reflects this run's findings (still lists
-   `src/old.js:3`, states "No critical issues found." since none were
-   found this run).

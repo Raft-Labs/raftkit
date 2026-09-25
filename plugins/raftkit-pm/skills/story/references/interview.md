@@ -1,6 +1,6 @@
 # Interview — when the sources are thin
 
-Ask in batches of up to eight related questions per turn, recommendation first ("I'd assume X unless you say otherwise"), and skip anything an earlier answer settled. No explain-it-back turn, no recap turn: the draft is the recap. Two answers that contradict are named together and asked once more.
+Ask in batches of up to eight related questions per turn, recommendation first, marked `proposed — confirm`, and skip anything an earlier answer settled. No explain-it-back turn, no recap turn: the draft is the recap. Two answers that contradict are named together and asked once more.
 
 Depth: **quick** covers the headline of each lens; **exhaustive** adds the follow-ups. Default quick unless the idea is going to be built; say which is running. An answer that names money, personal data, auth, deletion or an external service gets the follow-ups even on quick.
 
@@ -18,4 +18,4 @@ Depth: **quick** covers the headline of each lens; **exhaustive** adds the follo
 | Dependencies | What must exist first: features, teams, services, accounts, contracts? Behaviour when it is unavailable. |
 | Scope | What is deliberately not in this? What gets cut if the deadline moves? Now versus later. |
 
-Every answer lands in the draft as a fact with its source: "you said, <date>". Anything still unknown after the interview is a numbered question at the top of the draft, never an assumption inside an `[AC]`.
+Every answer lands in the draft as a fact with its source: "you said, <date>". Anything still unknown after the interview, an unconfirmed proposal included, is a numbered question at the top of the draft and never reaches an `[AC]`, copy or rule.

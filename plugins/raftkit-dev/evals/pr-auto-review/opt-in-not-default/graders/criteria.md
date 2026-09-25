@@ -5,15 +5,13 @@ weight: 1
 
 # Criteria
 
-Score 1 only if ALL hold, else 0:
+The one stop is this case's regex grader. Score 1 only if ALL hold, else 0:
 
-1. The pr-auto-review opt-in question was asked explicitly and separately
-   from the rest of the install plan — not bundled into a single
-   "proceed?" confirmation.
-2. Declining it did not block or degrade components 1–5 — all five still
-   installed successfully.
-3. The final success string is exactly `Governance pack v<X> installed: 5
-   protocols, spec template, hook, CI, CodeRabbit — verified` (with `<X>`
-   the actual installed version) — no mention of pr-auto-review in the
-   success line, and the decline was not reported as "not ready."
-4. No `.github/workflows/pr-auto-review.yml` file was created.
+1. The PR auto-review workflow is offered on its own labelled opt-in line the
+   developer accepts by name — it is not bundled into a single "proceed?" and
+   not part of the default set of files.
+2. The plan lists the default components (the working agreement and design
+   standard in CLAUDE.md, repo settings, the pre-push hook, the CI guardrail,
+   the review config) with the files each writes, and says whether it lands as
+   a commit or a PR.
+3. Nothing is claimed as applied, installed or verified.

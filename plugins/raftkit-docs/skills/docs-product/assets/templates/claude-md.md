@@ -97,24 +97,17 @@ Each module folder contains:
 - Never combine a realtime voice worker with the CRUD API in one process
 - Module Design Standard (MDS-1…MDS-10) — installed as its own CLAUDE.md
   section by `raftkit-dev:setup`; do not restate it here
-- See full list: `docs/project/_templates/08-anti-patterns.md`
 
-## Change protocol
-Any change to features / APIs / schema / roles MUST go through the change
-protocol in `docs/project/_templates/11-change-tracking.md`:
-1. Identify affected docs
-2. Confirm with user
-3. Rewrite affected files (version bump + local changelog row)
-4. Append pointer to `docs/project/changes-log.md`
-5. Re-verify cross-references
+## Keeping docs in step
+The Asana story is the scope contract; its `[AC]`s define done. Docs parity
+is `raftkit-dev:docs`: `implement` and `fix` run it once on the final diff,
+and "sync the docs" runs it on its own. Each rewritten doc gets a version
+bump and a local changelog row, plus a pointer in `docs/project/changes-log.md`.
 
 ## Where to start
 - New feature: read the affected module's `module.md` first
-- New module: see `docs/project/_templates/05-module-decomposition.md`
-- Audit: see `docs/project/_templates/09-verification-checklist.md`
-
-## Supporting skills
-See `skills-lock.json` for installed support skills.
+- New module, or docs for code that has none: `raftkit-docs:docs-product`
+- Docs parity for a change: `raftkit-dev:docs`
 
 ## Open questions
 - [ ] <unresolved decision>

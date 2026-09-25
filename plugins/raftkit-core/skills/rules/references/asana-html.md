@@ -40,8 +40,8 @@ Only two heading levels exist; render a third level as `<strong>Label</strong>` 
 
 ## After the push
 
-Re-fetch once with `html_text` (the default `text` field carries no markup) and compare against the approved draft: headings, lists, rules and links present as tags. Match → success line with the task link. Mismatch → show expected versus rendered and stop; never re-push a "corrected" body over approved content. Literal `**bold**` means the body was not converted; a flat third-level section means `<h3>` was used; a rejected request means an unclosed tag; an unresolved mention means no access, so use a plain link.
+Re-fetch a description once with `html_notes` (plain `notes` carries no markup); a comment's read-back is the `html_text` its create call returned. Compare against the approved draft: headings, lists, rules and links present as tags. Match → success line with the task link. Mismatch → show expected versus rendered and stop; never re-push a "corrected" body over approved content. Literal `**bold**` means the body was not converted; a flat third-level section means `<h3>` was used; a rejected request means an unclosed tag; an unresolved mention means no access, so use a plain link.
 
 ## Multi-write batches
 
-When a run pushes several writes (description + subtasks, tick + comment, N bugs), report exactly what landed and what did not, retry only idempotent writes (a comment, a subtask create keyed by name), and never emit the success line until every approved write is confirmed. On an Asana timeout, look the target up by name before any retry so nothing is created twice.
+Never emit the success line until every approved write is confirmed. A subtask create is retried only when a lookup by name finds it absent; after an Asana timeout, look the target up by name before any retry so nothing is created twice.

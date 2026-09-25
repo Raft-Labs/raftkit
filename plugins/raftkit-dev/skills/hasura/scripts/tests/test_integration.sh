@@ -34,8 +34,8 @@ mkdir -p "$tmp/services/hasura/migrations/default/1900000000000_seed"
 SKILL_DIR="$(cd "$HERE/../.." && pwd)"
 cd "$tmp"
 
-export HASURA_SKILL_AUTOCONFIRM=1 TENANCY_COLUMN=family_id TENANCY_REL=family TENANCY_MEMBER_REL=familyMembers
-"$SKILL_DIR/scripts/new-migration.sh" create-table meal_plans \
+export TENANCY_COLUMN=family_id TENANCY_REL=family TENANCY_MEMBER_REL=familyMembers
+"$SKILL_DIR/scripts/new-migration.sh" --write create-table meal_plans \
   --col "family_id:uuid:not_null:fk=families.id" \
   --col "title:text:not_null" \
   >/dev/null
@@ -104,12 +104,11 @@ Table "meal_plans" {
   "title" text [not null]
 }
 EOF
-out="$(HASURA_SKILL_AUTOCONFIRM=1 "$SKILL_DIR/scripts/new-migration.sh" create-table meal_plans 2>&1 || true)"
+out="$("$SKILL_DIR/scripts/new-migration.sh" --write create-table meal_plans 2>&1 || true)"
 assert_contains "$out" "already exists" "collision detected"
 
 # Enum-with-values smoke (was previously broken by IFS leak — Task 11 fix verifies it)
-HASURA_SKILL_AUTOCONFIRM=1 \
-  "$SKILL_DIR/scripts/new-migration.sh" create-enum-table priority \
+"$SKILL_DIR/scripts/new-migration.sh" --write create-enum-table priority \
     --values "low,medium,high" \
     >/dev/null
 

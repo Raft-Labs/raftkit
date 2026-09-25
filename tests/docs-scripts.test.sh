@@ -222,6 +222,18 @@ grep -qi 'never choose a git range silently\|Never choose a git range silently' 
 grep -qi 'writes no Asana task' "$S" 2>/dev/null;                                check "D19e no-Asana rule stated" ok $?
 grep -qi 'discovered mapping' "$S" 2>/dev/null;                                  check "D19f ownership mapping drives expansion" ok $?
 grep -qi 'raftkit-docs' "$S" 2>/dev/null;                                        check "D19g the design product is named as the other plugin" ok $?
+grep -qF 'Docs: impacted, not synced — ' "$S" 2>/dev/null;                       check "D19h impacted-not-synced line in contract" ok $?
+# D19i · each validate-docs exit code maps to one outcome, and the four outcome
+#        blocks sit in the order the mapping sentence counts them in
+d19i=0
+grep -qF 'exit 0 is the first, or the third after a sync; exit 1 is the second; exit 2 whose stderr names no recognized documentation convention is the fourth' "$S" 2>/dev/null || d19i=1
+outcomes="$(awk '/^4\. \*\*Report one of four outcomes/{on=1; next} on&&/^```output$/{getline; print; if(++n==4) exit}' "$S" 2>/dev/null)"
+i=0
+while IFS= read -r want; do
+  i=$((i + 1))
+  [[ "$(sed -n "${i}p" <<<"$outcomes")" == "$want"* ]] || d19i=1
+done <<<$'Docs: not impacted — \nDocs: impacted, not synced — \nDocs: updated and verified — \nDocs: no recognized documentation convention'
+check "D19i every validate-docs exit code maps to its own outcome, in order" ok $d19i
 
 # D20 · eval bundle: authored, structurally valid, no answer leakage
 n=$(find plugins/raftkit-dev/evals/docs -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')

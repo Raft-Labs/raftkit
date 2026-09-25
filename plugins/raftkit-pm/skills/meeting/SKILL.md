@@ -6,7 +6,7 @@ user-invocable: true
 
 # meeting
 
-One transcript → decisions, scope changes and action items, each cited; then a Profile delta and a task batch. `raftkit-core:rules` apply. Fathom already writes the recap; this skill writes none.
+One transcript → decisions, scope changes and action items, each cited; then a Profile delta and a task batch. Load `raftkit-core:rules` first unless it is already in this conversation. Fathom already writes the recap; this skill writes none.
 
 **No citation, no claim.** An item that cannot be tied to a transcript moment is dropped or raised as a question, never asserted.
 
@@ -25,7 +25,7 @@ Can't extract — no Project Profile for this project. Run raftkit-pm:profile fi
 3. **Draft, in one message**:
    - the three cited lists;
    - the Profile delta: changed / new / now-confirmed facts, cited `<meeting> @ <timestamp>`, dated the meeting date, ⚠️ by default (only an unambiguous on-call decision earns ✅), conflicts with existing facts shown with both citations, the subtasks it overwrites named, and the delta comment;
-   - the task batch: one task per action item with title, citation, suggested assignee (the owner named on the call; unclear → a question in the draft; unresolved → unassigned, never guessed), recording and related-task links in the description, a due date only when the call set one.
+   - the task batch: one task per action item with title, citation, suggested assignee shown as name + email domain, a member outside RaftLabs marked external (the owner named on the call; two matching members or an unclear owner → a question in the draft; unresolved → unassigned, never guessed), recording and related-task links in the description, a due date only when the call set one, and a spoken date resolved against the meeting date with the phrase shown ("by Friday", said Wed 12 Aug → Fri 14 Aug).
 4. **Stop once.** The PM may approve parts: "delta yes, tasks except #3."
 
 ```output
@@ -38,4 +38,4 @@ Profile delta: 3 changed, 2 new, 1 conflict. Tasks: 6 proposed, 1 owner unclear 
 
 Nothing is sent to Slack or email. A decision that touches budget, contract or a client commitment is surfaced for founders, never treated as settled.
 
-- **Announce it** — `Using raftkit-pm:meeting` in the first reply, once (`raftkit-core/cowork-telemetry`).
+- **Announce it** — `Using raftkit-pm:meeting` in the first reply, once (`raftkit-core:rules`).

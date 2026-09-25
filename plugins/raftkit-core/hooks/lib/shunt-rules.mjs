@@ -52,53 +52,22 @@ export function isContractPath(relPath) {
   });
 }
 
-// The hook runs inside a subagent's tool calls as well as the main thread, so
-// the bulk-reader would be denied the very file it exists to read.
+// The hook runs inside subagents' tool calls as well as the main thread's. A
+// subagent's context is its own, which is the whole point of dispatching one,
+// so none of its reads is policed. Claude Code sets agent_id on a hook payload
+// only when the hook fires inside a subagent (hooks reference, "Common input
+// fields"), which makes it the one reliable signal.
 //
-// Two defences, because only one of them is guaranteed. This is the soft one:
-// the payload field naming the calling agent is checked across every spelling
-// Claude Code might use, and a hit bypasses the shunt outright. If none is
-// present the read simply falls through to the hard defence — the agent pages
-// with offset/limit, which is exempt by construction. Nothing here depends on
-// a field being there; it only takes advantage of one when it is.
-const AGENT_FIELDS = ["agent_type", "subagent_type", "agent_name", "agentType", "agent_id"];
-export const EXEMPT_AGENTS = new Set(["bulk-reader"]);
+// agent_type is also set on the main thread of a `claude --agent <name>`
+// session, with no agent_id. There only the bulk-reader itself is exempt, and
+// a plugin agent reports its plugin-scoped name.
+export const EXEMPT_AGENTS = new Set(["raftkit-core:bulk-reader", "bulk-reader"]);
 
-/** True when this tool call comes from an agent the shunt must not police. */
+/** True when this tool call comes from a subagent, or from the bulk-reader. */
 export function isExemptAgent(hook) {
   if (!hook || typeof hook !== "object") return false;
-  return AGENT_FIELDS.some((f) => EXEMPT_AGENTS.has(String(hook[f] ?? "").trim()));
-}
-
-// Read shapes that pull a whole file into the session. Deliberately narrow:
-// anything with a redirect, a command substitution, a chained command or more
-// than one path is left alone, because a wrong guess here blocks real work.
-const BULK_BASH = [
-  /^cat\s+(?<path>[^\s|<>;&]+)\s*(\|.*)?$/,
-  /^head\s+-n\s*(?<n>\d+)\s+(?<path>[^\s|<>;&]+)\s*(\|.*)?$/,
-  /^tail\s+-n\s*(?<n>\d+)\s+(?<path>[^\s|<>;&]+)\s*(\|.*)?$/,
-  /^sed\s+-n\s+'?1,(?<n>\d+)p'?\s+(?<path>[^\s|<>;&]+)\s*(\|.*)?$/,
-];
-
-/**
- * Extract the single file a bash command would page into context, or "".
- *
- * Returns "" for anything it does not recognise with certainty. The count-
- * bearing forms (head/tail/sed) only qualify above the threshold: `head -n 20`
- * is already the narrowed read the shunt is trying to encourage.
- */
-export function bulkBashTarget(command, minLines) {
-  if (typeof command !== "string") return "";
-  const cmd = command.trim();
-  if (cmd.includes("$(") || cmd.includes("`") || /[;&]|\|\|/.test(cmd)) return "";
-  for (const re of BULK_BASH) {
-    const m = re.exec(cmd);
-    if (!m) continue;
-    const n = m.groups.n === undefined ? Infinity : Number.parseInt(m.groups.n, 10);
-    if (n < minLines) return "";
-    return m.groups.path.replace(/^['"]|['"]$/g, "");
-  }
-  return "";
+  if (typeof hook.agent_id === "string" && hook.agent_id.trim() !== "") return true;
+  return EXEMPT_AGENTS.has(String(hook.agent_type ?? "").trim());
 }
 
 /**
@@ -112,9 +81,9 @@ export function denyReason(relPath, lines, minLines) {
   return [
     `${relPath} is ${lines.toLocaleString("en-US")} lines — over the ${minLines}-line shunt threshold.`,
     "Dispatch the bulk-reader subagent with your question instead of reading it here:",
-    `  Agent(subagent_type: "bulk-reader", prompt: "<your question>\\nFiles: ${relPath}")`,
+    `  Agent(subagent_type: "raftkit-core:bulk-reader", prompt: "<your question>\\nFiles: ${relPath}")`,
     "It runs on Haiku and returns cited bullets. To edit, Read with offset/limit on the range it cites.",
-    "Already inside a subagent, or need the text yourself? Read with offset and limit —",
+    "Need the text yourself? Read with offset and limit —",
     "a narrowed read is never shunted, so page it (offset 1 limit 1500, then on).",
     "Bypass for this session: RAFTKIT_SHUNT=off",
   ].join("\n");

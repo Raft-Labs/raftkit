@@ -19,10 +19,18 @@ check() { # <name> <expected: ok|fail> <actual exit code>
   fi
 }
 jsonq() { node -e 'const j=JSON.parse(require("fs").readFileSync("tests/budgets.json","utf8")); const v=eval("j"+process.argv[1]); process.stdout.write(typeof v==="object"?JSON.stringify(v):String(v))' "$1"; }
+# Tokens are ceil(chars/4), a model-agnostic estimate: words undercount them.
+ctoks() { node -e 'let s="";process.stdin.setEncoding("utf8").on("data",d=>s+=d).on("end",()=>process.stdout.write(String(Math.ceil([...s].length/4))))'; }
 words() { cat "$@" 2>/dev/null | wc -w | tr -d ' '; }
-# assets/ holds payloads shipped verbatim (templates, prompts), not instructions
-# the model reads to act — they are excluded from the instruction budget.
-mdwords() { find "$1" -name '*.md' -type f -not -path '*/assets/*' -print0 | xargs -0 cat 2>/dev/null | wc -w | tr -d ' '; }
+tokens() { cat "$@" 2>/dev/null | ctoks; }
+# assets/ holds payloads shipped verbatim into a client repo, outside the skill's
+# own budget; the ones a model reads (all but templates/) are budgeted per file.
+mdcat() { find "$1" -name '*.md' -type f -not -path '*/assets/*' -print0 | xargs -0 cat 2>/dev/null; }
+mdwords() { mdcat "$1" | wc -w | tr -d ' '; }
+mdtokens() { mdcat "$1" | ctoks; }
+plugincat() { find "plugins/$1/skills" -name '*.md' -type f -print0 | xargs -0 cat; }
+cap() { node -e 'const b=+process.argv[1]; process.stdout.write(b>0?String(Math.floor(b*process.argv[2])):"none")' "$1" "$headroom"; }
+fits() { [[ "$1" =~ ^[1-9][0-9]*$ && "$2" =~ ^[0-9]+$ ]] && (( $1 <= $2 )); } # <count> <cap>: a missing count or budget fails
 fm() { awk 'NR==1&&$0!="---"{exit} NR>1&&$0=="---"{exit} NR>1{print}' "$1"; }
 
 node -e 'JSON.parse(require("fs").readFileSync("tests/budgets.json","utf8"))'
@@ -60,13 +68,15 @@ for key in $listed; do
     check "S3 $key description is 1-60 words ($desc_words)" ok $?
   fi
 
-  cap="$(node -e "process.stdout.write(String(Math.floor($(jsonq ".skills[\"$key\"].skill_md")*$headroom)))")"
-  n="$(words "$f")"; [[ "$n" -le "$cap" ]]
-  check "S4 $key SKILL.md within budget ($n <= $cap words)" ok $?
+  c="$(cap "$(jsonq ".skills[\"$key\"].skill_md")")"; n="$(words "$f")"; fits "$n" "$c"
+  check "S4 $key SKILL.md within budget ($n <= $c words)" ok $?
+  c="$(cap "$(jsonq ".skills[\"$key\"].skill_md_tokens")")"; n="$(tokens "$f")"; fits "$n" "$c"
+  check "S4t $key SKILL.md within budget ($n <= $c tokens)" ok $?
 
-  cap="$(node -e "process.stdout.write(String(Math.floor($(jsonq ".skills[\"$key\"].total")*$headroom)))")"
-  n="$(mdwords "$dir")"; [[ "$n" -le "$cap" ]]
-  check "S5 $key directory within budget ($n <= $cap words)" ok $?
+  c="$(cap "$(jsonq ".skills[\"$key\"].total")")"; n="$(mdwords "$dir")"; fits "$n" "$c"
+  check "S5 $key directory within budget ($n <= $c words)" ok $?
+  c="$(cap "$(jsonq ".skills[\"$key\"].total_tokens")")"; n="$(mdtokens "$dir")"; fits "$n" "$c"
+  check "S5t $key directory within budget ($n <= $c tokens)" ok $?
 
   stops="$(grep -rhc '^\*\*STOP\*\*' "$dir" --include='*.md' 2>/dev/null | awk '{s+=$1} END{print s+0}')"
   if [[ "$key" == "raftkit-core/rules" ]]; then
@@ -90,7 +100,9 @@ for key in $listed; do
     check "S8 $key does not restate the plain-language guardrail" ok $?
     ! grep -rqiE 'never from memory or this repo|silence is not (approval|confirmation)|custom fields, milestones' "$dir"
     check "S9 $key does not restate live-fetch, gate or free-tier boilerplate" ok $?
-    ! grep -rqE '1194107417268910|1216778429401199|1215260732424760' "$dir"
+    # Any 16-digit Asana GID, not only the three constants: a decision or task
+    # GID in a skill goes stale the same way.
+    ! grep -rqE '(^|[^0-9])1[0-9]{15}([^0-9]|$)' "$dir"
     check "S10 $key carries no GID (they live only in raftkit-core/rules)" ok $?
   fi
 
@@ -134,15 +146,34 @@ if [[ "$strict" == true ]]; then
   [[ -z "$unlisted" ]]; check "S15 strict: every skill on disk has a budget entry${unlisted:+ (missing:$unlisted)}" ok $?
 
   for plugin in raftkit-core raftkit-pm raftkit-dev raftkit-qa raftkit-docs; do
-    cap="$(node -e "process.stdout.write(String(Math.floor($(jsonq ".plugins[\"$plugin\"]")*$headroom)))")"
-    n="$(find "plugins/$plugin/skills" -name '*.md' -type f -print0 | xargs -0 cat | wc -w | tr -d ' ')"
-    [[ "$n" -le "$cap" ]]; check "S16 strict: $plugin skills total within budget ($n <= $cap words)" ok $?
+    c="$(cap "$(jsonq ".plugins[\"$plugin\"]")")"; n="$(plugincat "$plugin" | wc -w | tr -d ' ')"; fits "$n" "$c"
+    check "S16 strict: $plugin skills total within budget ($n <= $c words)" ok $?
+    c="$(cap "$(jsonq ".plugin_tokens[\"$plugin\"]")")"; n="$(plugincat "$plugin" | ctoks)"; fits "$n" "$c"
+    check "S16t strict: $plugin skills total within budget ($n <= $c tokens)" ok $?
   done
 
   ! grep -rlE '1194107417268910|1216778429401199|1215260732424760' plugins --include='*.md' | grep -v 'raftkit-core/skills/rules/' | grep -q .
   check "S17 strict: GIDs appear only in raftkit-core/skills/rules" ok $?
 fi
 
+# Model-read files outside any skill's budget carry their own entry in `files`:
+# the commands and every assets/ markdown file except the doc templates.
+budgeted="$( { ls plugins/*/commands/*.md 2>/dev/null; find plugins -path '*/assets/*' -name '*.md' -type f -not -path '*/assets/templates/*'; node -e 'console.log(Object.keys(JSON.parse(require("fs").readFileSync("tests/budgets.json","utf8")).files||{}).join("\n"))'; } | grep . | sort -u)"
+nfiles=0
+for f in $budgeted; do
+  nfiles=$((nfiles + 1))
+  [[ -f "$f" ]]; check "S18 budgeted file exists: $f" ok $?
+  c="$(cap "$(jsonq ".files?.[\"$f\"]?.words")")"; n="$(words "$f")"; fits "$n" "$c"
+  check "S19 $f within budget ($n <= $c words)" ok $?
+  c="$(cap "$(jsonq ".files?.[\"$f\"]?.tokens")")"; n="$(tokens "$f")"; fits "$n" "$c"
+  check "S19t $f within budget ($n <= $c tokens)" ok $?
+  if [[ "$f" == */commands/* ]]; then
+    desc_words="$(fm "$f" | sed -n 's/^description: *//p' | head -1 | wc -w | tr -d ' ')"
+    [[ "$desc_words" -ge 1 && "$desc_words" -le 60 ]]
+    check "S20 $f description is 1-60 words ($desc_words)" ok $?
+  fi
+done
+
 echo
-echo "structure: ${#present[@]} skill(s) checked, $failures failure(s)"
+echo "structure: ${#present[@]} skill(s) and $nfiles file(s) checked, $failures failure(s)"
 [[ "$failures" -eq 0 ]]

@@ -2,7 +2,7 @@
 // Hook entry point: keeps bulk file content out of the session by answering an
 // oversized read with an instruction to dispatch the bulk-reader subagent.
 //
-// Usage: shunt.mjs          (PreToolUse, matchers Read and Bash)
+// Usage: shunt.mjs          (PreToolUse, matcher Read)
 //
 // Contract, in priority order:
 //   1. NEVER break the developer's session. Every path exits 0, including the
@@ -10,18 +10,17 @@
 //      status, so this hook keeps the same promise every other RaftKit hook
 //      makes. No throw escapes.
 //   2. Fail OPEN. Every uncertainty — unreadable payload, missing file, binary
-//      content, a path outside the repo, a bash line this cannot parse with
-//      certainty — allows the read. The one deny is the one confirmed case.
+//      content, a path outside the repo — allows the read. The one deny is the
+//      one confirmed case.
 //   3. Be fast on the allow path. It runs before every Read in the session, so
 //      it does no git, no identity resolution and no telemetry unless it denies.
 
 import { appendFileSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import { isAbsolute, relative, resolve, sep } from "node:path";
+import { extname, isAbsolute, relative, resolve, sep } from "node:path";
 import { ensureDir, parseJson, readStdin, repoContext, spoolDir, spoolFile, telemetryDisabled } from "./lib/common.mjs";
 import { identity } from "./lib/identity.mjs";
 import {
-  bulkBashTarget,
   denyReason,
   isContractPath,
   isExemptAgent,
@@ -89,14 +88,11 @@ function repoRelative(rawPath, root) {
  * targeted read that follows a summary, and it is how the developer edits.
  * Portal excludes editing from its shunt for the same reason.
  */
-function targetPath(hook, minLines) {
+function targetPath(hook) {
   const input = hook.tool_input || {};
-  if (hook.tool_name === "Read") {
-    if (input.offset !== undefined || input.limit !== undefined) return "";
-    return typeof input.file_path === "string" ? input.file_path : "";
-  }
-  if (hook.tool_name === "Bash") return bulkBashTarget(input.command, minLines);
-  return "";
+  if (hook.tool_name !== "Read") return "";
+  if (input.offset !== undefined || input.limit !== undefined) return "";
+  return typeof input.file_path === "string" ? input.file_path : "";
 }
 
 /** Record a deny so the saving is a number in the dashboard, not a claim. */
@@ -141,13 +137,13 @@ async function main() {
   if (shuntDisabled()) return;
 
   const hook = parseJson(await readStdin());
-  // The bulk-reader reads what the shunt declined. Policing it would deny the
-  // one agent whose entire job is the oversized read.
+  // A subagent's reads land in its own context, never this one; and the
+  // bulk-reader's whole job is the oversized read.
   if (isExemptAgent(hook)) return;
   const root = hook.cwd || process.cwd();
   const minLines = threshold();
 
-  const rel = repoRelative(targetPath(hook, minLines), root);
+  const rel = repoRelative(targetPath(hook), root);
   if (rel === "" || isContractPath(rel)) return;
 
   const lines = countLines(resolve(root, rel));
@@ -161,7 +157,7 @@ async function main() {
   deny(denyReason(rel.split(sep).join("/"), shown, minLines));
   recordDeny(hook, root, {
     tool: hook.tool_name || "",
-    path_ext: rel.includes(".") ? rel.slice(rel.lastIndexOf(".")) : "",
+    path_ext: extname(rel).slice(0, 16), // the file name's extension only, never a directory
     lines: Number.isFinite(lines) ? lines : -1,
     threshold: minLines,
     lines_avoided: Number.isFinite(lines) ? lines : 0,

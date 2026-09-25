@@ -1,5 +1,5 @@
 ---
-description: How to use the raftkit-dev plugin — the dev workflow, every skill, and what to say to trigger it
+description: RaftKit dev router — implement a story URL, raise the PR or simplify → raftkit-dev:implement; fix a bug, Sentry trace or incident → raftkit-dev:fix; set up or update a repo → raftkit-dev:setup; check a diff against its story → raftkit-dev:scope-guard; build a story's screens → raftkit-dev:ui; Hasura migrations → raftkit-dev:hasura; do the docs still match → raftkit-dev:docs.
 argument-hint: [skill name or question]
 ---
 
@@ -23,7 +23,7 @@ The user ran `/raftkit-dev:help $ARGUMENTS`.
 | `implement` | Takes one story to a review-ready PR: plan in the open, test-first phases, one parallel review pass, one stop with the PR and the Asana close-out | "implement this story", "raise the PR", "check scope", "simplify this" | merging, ticking `[AC]` or `Testing`, or closing the story |
 | `scope-guard` | Audits a branch diff against its story into BEYOND and MISSING lists, fail-closed | "check my diff against the story", "audit scope before the PR" | judging code quality, or removing code |
 | `setup` | Wires a repo in one transaction: working agreement, design standard, settings, hook, CI guardrail, review config, optional PR auto-review | "set up this repo", "install the governance pack", "update the governance pack" | editing GitHub org settings, or clobbering an existing CLAUDE.md |
-| `ui` | Builds a story's screens from its own designs and exact copy, every state it defines, through frontend-design and the project's stack | "build the UI for this story", "create the screens" | inventing copy, designs or tokens; backend work |
+| `ui` | Builds a story's screens from its own designs and exact copy, every state it defines, in the project's stack; frontend-design only when the story links no designs and the Profile sets no visual system | "build the UI for this story", "create the screens" | inventing copy, designs or tokens; backend work |
 
 ## Renamed in v2
 

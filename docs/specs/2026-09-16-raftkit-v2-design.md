@@ -245,3 +245,18 @@ Still to do, and they are yours: push the branch, open the PR, get Ashit's sign-
 4. **ultrathink playbook:** the 12k-word snapshot is SHA-pinned as an external read-only source; confirm its owner agrees to retire it with the skill before step 5 deletes it.
 5. **Telemetry dashboard:** skill renames split historical series; the `legacy_name` map in the skill event mitigates but the dashboard must read it.
 6. **Ashit's sign-off** on the working agreement text gates the release to `main`, not the work on `development`.
+
+## v2.1 amendments (23 Sep 2026)
+
+Where this section and the text above disagree, this section holds. Branch record: `docs/specs/feat-raftkit-v2-1.md`.
+
+- **Principle 2 briefs by slice.** Fetch-once is unchanged, but nothing is pasted into every subagent: each gets only the slice it uses, never the template, and asks through the parent for a missing fact. scope-guard, the reviewers and the simplifier get the merge-base range command, not diff text.
+- **Principle 11's dependency set.** `raftkit-dev` declares `raftkit-core`, superpowers, security-guidance, pr-review-toolkit and frontend-design. claude-md-management is removed because its improver added a second gate; setup splices the working agreement and design standard byte-exact with `setup/scripts/merge-claude-md.mjs` and checks the sha256. The code-simplifier plugin is removed because pr-review-toolkit ships a byte-identical agent, `pr-review-toolkit:code-simplifier`. frontend-design loads only when the story links no designs and the Profile defines no visual system. No semver ranges: upstream has no `<plugin>--v<version>` tags.
+- **setup's managed model is `opusplan`**, written to `.claude/settings.json` by `merge-settings.mjs`. `tiers.md` maps mechanical → `haiku`, standard → `sonnet` (reviewers, the simplifier, the Explore survey), hard → the session model, or `opus` under `opusplan`.
+- **CI review stays full**: `review-pr code errors tests types comments parallel` (every aspect but `simplify`) on every run, including a PR `implement` already reviewed, with no named model.
+- **Telemetry scope.** Prompt text (512 characters) and failed-tool error text (200) are kept only in sessions where a RaftKit skill ran; exit codes always. README and NOTICE match.
+- **raftkit-docs** stays opt-in by design (decision 1), but org sync installs all five plugins, `raftkit-docs` included.
+- **implement's flow.** Intake checks the engines against the session's own skill and agent listings, not `claude plugin list --json`. Each phase runs in its own worktree and makes one commit, which the parent cherry-picks onto the branch in plan order. The parent fetches the squash target once and pins the review range; scope-guard, docs parity, lint, typecheck and the suite run in the `raftkit-dev:verifier` agent, not in the parent's fan-out. The PR description has six sections; the sixth is Review findings.
+- **help budgets.** Each `commands/help.md` has its own budget in `tests/budgets.json` `files` (300 to 570 words), which replaces the 300-word figure in the plugin tables above.
+- **Also changed:** readiness has six gap types (the sixth is the template's open-questions section); bug and retest leave tags for QA to apply by hand; an estimate re-run creates a new dated Sheet and a suite re-sync writes nothing, handing back changed rows as CSV.
+- **Deliberately not done:** TypeSafe Jev in the product; Asana writes; the sandbox benchmark (0.4), which needs an Asana sandbox, so the plan's estimated figures stay unmeasured; edits to `working-agreement.md`; org-admin settings; Wave 3 experiments; any change to security-guidance's default model (setup offers only the opt-in `SG_PUSH_SWEEP=0` line); skipping CI review of an `implement`-reviewed SHA.

@@ -36,31 +36,20 @@ settles them — expect a Project Profile to override per project.
 
 ## Named libraries (the layer below)
 
-The tables above deliberately name no libraries — a form-validation package, a
-data-fetching client, a styling kit. Those choices do exist in writing: the
-`docs` skill's archetype recipes record the stacks RaftLabs' reference
-implementations actually run on, named library by library, in
-the archetype recipes in the opt-in `raftkit-docs` plugin.
-Archetype A additionally pins exact versions in a catalog; the others still name
-major versions. Every version there goes stale — check it before adopting.
+The tables above name no libraries. The archetype recipes in the opt-in
+`raftkit-docs` plugin record, library by library, the stacks RaftLabs' reference
+projects run on; archetype A pins exact versions, the others major versions, and
+every version goes stale, so check it before adopting. The archetype matching the
+project is the starting point for a library this file leaves open; note in the
+plan when the project departs from it.
 
-Treat that file as the **named-library layer**: the starting point when a web
-story needs a library this file leaves open, so the story does not re-argue a
-choice the reference projects already made. Read the archetype that matches the
-project, not the whole file, and note in the plan when the project departs from
-it.
+Two limits, because archetypes describe whole projects:
 
-Two limits on that, because those archetypes describe whole projects rather than
-libraries alone:
+- **House law is not up for archetype override.** An archetype that runs Vite or
+  hosts outside AWS Serverless describes one reference project; departing from
+  House law needs a Project Profile entry.
+- **The resolution order is unchanged.** This layer sits at its bottom; `ui`'s
+  SKILL.md owns it.
 
-- **House law above is not up for archetype override.** Some archetypes there run
-  Vite instead of Next.js, or host somewhere other than AWS Serverless. Those are
-  descriptions of specific reference projects, not permission to change the three
-  House law rows — a departure from House law needs a Project Profile entry, same
-  as any other override.
-- **The resolution order is unchanged.** This layer sits at the bottom of it;
-  `ui`'s own SKILL.md owns that order.
-
-If a decision is covered in neither place and no source states it, decide it for
-the story at hand and, if it looks reusable, **propose it as a default by PR** —
-do not silently bake an invented specific in as house law.
+A decision covered nowhere is decided for the story at hand and, if reusable,
+**proposed as a default by PR**, never baked in as house law.

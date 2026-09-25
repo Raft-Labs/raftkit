@@ -1,5 +1,5 @@
 ---
-description: How to use the raftkit-docs plugin — the documentation design product and when to reach for it
+description: RaftKit docs router — design, generate or reverse-engineer a project's documentation, or scaffold the project → raftkit-docs:docs-product. Whether the docs still match a story's change → raftkit-dev:docs. discovery-interview is the design flow's own interview contract, never run alone.
 argument-hint: [skill name or question]
 ---
 
@@ -11,7 +11,7 @@ The user ran `/raftkit-docs:help $ARGUMENTS`.
 
 ## What this plugin is
 
-The full documentation product, installed only where a team wants it. Day-to-day delivery does not need it: `raftkit-dev:docs` already answers "do the docs still match this change?" on every story. Reach for this plugin when a project needs its documentation designed, generated, or reconstructed from code.
+The full documentation product: opt-in by design, though org sync installs it today. Day-to-day delivery does not need it: `raftkit-dev:docs` already answers "do the docs still match this change?" on every story. Reach for this plugin when a project needs its documentation designed, generated, or reconstructed from code.
 
 ## Skills
 
@@ -22,4 +22,4 @@ The full documentation product, installed only where a team wants it. Day-to-day
 
 ## Boundaries
 
-Parity on a story ("do the docs still match the code?") is `raftkit-dev:docs`, which owns the two deterministic readers this plugin calls. Installing the governance pack is `raftkit-dev:setup`. Asana writes route through `raftkit-pm`.
+Parity on a story ("do the docs still match the code?") is `raftkit-dev:docs`, which owns the two deterministic readers this plugin calls. Installing the governance pack is `raftkit-dev:setup`. Story drafting routes to `raftkit-pm:story`, bug filing to `raftkit-qa:bug`.
