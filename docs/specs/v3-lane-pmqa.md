@@ -53,3 +53,17 @@ Measured on this branch: words by `wc -w`, tokens by the structure suite's `ceil
 - **tests/frontmatter.test.sh FM5a/FM5b** pin `plugins/raftkit-pm/skills/meeting/SKILL.md`; drop it from the six-file list (the fault class is still covered by FM4 over the whole tree).
 - **tests/cowork-telemetry.test.sh CW4** asserts `count -ge 9` pm+qa skills; lower the floor to 6 after story 12 (pm 4 + qa 2).
 - **Eval coverage lost**: `evals/meeting/owner-collision` (SCOPE CHANGE, owner collision, spoken due date) and `evals/routine/meeting-notes-handover` are deleted with their skills. The owner-collision policy case belongs under `raftkit-pm/evals/profile/` in the story 15 eval reset.
+
+### Story 12 — qa
+
+- **budgets.json `skills`**: delete `raftkit-qa/suite` and `raftkit-qa/run-sheet` (S1 fails on both); add `raftkit-qa/test-cases` (S15 fails until then) at `skill_md` 500, `skill_md_tokens` 700, `total` 780, `total_tokens` 1100, `writes` true, `v2` true. Measured 480 / 690 SKILL.md, 772 / 1088 total, one STOP line.
+- `raftkit-qa/bug` measured 547 words / 792 tokens, references deleted; can drop `total` 1300 → 550, `total_tokens` 1920 → 800.
+- `plugins` total for raftkit-qa is now 1,319 words / 1,880 tokens (budget 5000 / 4460); can drop.
+- **skill-aliases.json**: replace `"suite": "test-suite"` and `"run-sheet": "test-run-sheet"` with one entry for `test-cases` (its dashboard series continues `test-suite`; `test-run-sheet` ends). Rename notes: suite + run-sheet → `raftkit-qa:test-cases`.
+- **refusals.json**: unchanged. `retest-blocked` still matches `raftkit-qa/skills/bug/SKILL.md` (S14 passes). The run-sheet's `Can't build a run sheet — …` line moved byte-identical into test-cases; it is not pinned in refusals.json today.
+- **marketplace.json**: the raftkit-qa entry's description must equal the new `plugin.json` description: "QA skills: per-story test cases in a QA-owned Sheet with a manual run sheet, and one bug skill that files from Jam evidence and retests fixes — each with one stop before any write." Version bumped 1.2.0 → 2.0.0.
+- **Help and docs that still name the old skills**: `plugins/raftkit-qa/commands/help.md` (suite, run-sheet), `plugins/raftkit-core/commands/help.md` ("suites, run sheets, bugs"), README.md raftkit-qa row, CLAUDE.md repo layout (`suite, run-sheet, bug`), `docs/specs/2026-09-16-raftkit-v2-design.md`.
+- **tests/frontmatter.test.sh FM5a/FM5b** also pin `plugins/raftkit-qa/skills/run-sheet/SKILL.md`; with meeting gone, the six-file list becomes four.
+- **tests/cowork-telemetry.test.sh CW4**: 6 pm+qa skills remain; lower the floor from 9 to 6.
+- **Evals**: `evals/suite/resync-changed-rows` deleted with its skill. `evals/run-sheet/verbatim-expected-and-gaps` moved to `evals/test-cases/` because plain-language PL17 requires every skill to have a skill-fired case; its stop grader is now `count:1` (test-cases writes after one stop) and the prompt carries `[AC]` GIDs.
+- **Unverified in Cowork** (owner gate): Sheets append/update and Asana tagging. test-cases falls back to a `csv` block for QA to paste; bug already has QA apply every tag by hand.
