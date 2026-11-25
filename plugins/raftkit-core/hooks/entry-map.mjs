@@ -4,8 +4,7 @@
 // Claude Code gives skill-listing descriptions to the most-used skills first,
 // so a RaftKit skill nobody has used yet is listed by name alone and a
 // plain-language request never reaches it. This map names where each common
-// request goes. It says fix runs systematic-debugging itself because that
-// skill's own injection otherwise competes for every bug report.
+// request goes.
 //
 // Not telemetry: it runs whatever RAFTKIT_TELEMETRY says, reads only the plugin
 // layout, and writes nothing.
@@ -18,7 +17,7 @@ import { raftkitPlugins, readStdin } from "./lib/common.mjs";
 
 const MAP =
   "RaftKit entry map: implementing a story URL → raftkit-dev:implement; a bug, failing build or trace → " +
-  "raftkit-dev:fix (it runs systematic-debugging itself); repo setup → raftkit-dev:setup; " +
+  "raftkit-dev:fix; repo setup → raftkit-dev:setup; " +
   "scope audit → raftkit-dev:scope-guard.";
 
 async function main() {

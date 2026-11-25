@@ -15,7 +15,7 @@
       "severity": "blocker",
       "pattern": "^\\*{0,2}Missing:\\*{0,2}\\s*(?<detail>.+?)\\.\\s*Install it with:",
       "source": "raftkit-dev/skills/setup/SKILL.md",
-      "example": "Missing: superpowers. Install it with: claude plugin install superpowers@claude-plugins-official"
+      "example": "Missing: pr-review-toolkit. Install it with: claude plugin install pr-review-toolkit@claude-plugins-official"
     },
     {
       "id": "squash-target-undocumented",

@@ -378,6 +378,22 @@ printf '{"session_id":"s1","hook_event_name":"PostToolUse","tool_name":"Skill","
 expect_eq "a renamed skill records its v2 name" "story" "$(last_event_field "$d/spool/events.jsonl" 'props.skill_name')"
 expect_eq "a renamed skill carries the v1 name it replaced" "user-story" "$(last_event_field "$d/spool/events.jsonl" 'props.legacy_name')"
 
+# v3: test-cases replaced suite and run-sheet and continues the test-suite series.
+d="$(new_sandbox)"
+printf '{"session_id":"s1","hook_event_name":"PostToolUse","tool_name":"Skill","tool_input":{"skill":"raftkit-qa:test-cases"}}' \
+  | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" skill >/dev/null 2>&1
+expect_eq "test-cases continues the test-suite series" "test-suite" "$(last_event_field "$d/spool/events.jsonl" 'props.legacy_name')"
+
+# An alias for a skill no longer on disk can never fire; every key names a live skill.
+node -e '
+  const fs = require("fs");
+  const keys = Object.keys(JSON.parse(fs.readFileSync("plugins/raftkit-core/hooks/lib/skill-aliases.json", "utf8")).aliases);
+  const live = new Set(fs.readdirSync("plugins").flatMap((p) => { try { return fs.readdirSync(`plugins/${p}/skills`); } catch { return []; } }));
+  const dead = keys.filter((k) => !live.has(k));
+  if (dead.length) { console.error("  alias for a removed skill:", dead.join(" ")); process.exit(1); }
+'
+check "every skill alias names a skill on disk" ok $?
+
 # The capability-unavailable pattern keeps its leading `^` anchor — record.mjs
 # scans trimmed lines, and the owned refusal format always starts one, so an
 # unanchored pattern would misclassify any line that merely mentions the
@@ -386,23 +402,23 @@ expect_eq "a renamed skill carries the v1 name it replaced" "user-story" "$(last
 # a bold refusal must still classify, and a line that only contains the
 # phrase without starting with it must not.
 d="$(new_sandbox)"; seed_skill "$d" s1
-printf '{"session_id":"s1","last_assistant_message":"Missing: superpowers. Install it with: claude plugin install superpowers@claude-plugins-official"}' \
+printf '{"session_id":"s1","last_assistant_message":"Missing: pr-review-toolkit. Install it with: claude plugin install pr-review-toolkit@claude-plugins-official"}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "plain capability refusal classifies" "capability-unavailable" \
   "$(last_event_field "$d/spool/events.jsonl" 'props.refusal_id')"
-expect_eq "plain capability refusal captures the detail" "superpowers" \
+expect_eq "plain capability refusal captures the detail" "pr-review-toolkit" \
   "$(last_event_field "$d/spool/events.jsonl" 'props.detail')"
 
 d="$(new_sandbox)"; seed_skill "$d" s1
-printf '{"session_id":"s1","last_assistant_message":"**Missing:** superpowers. Install it with: claude plugin install superpowers@claude-plugins-official"}' \
+printf '{"session_id":"s1","last_assistant_message":"**Missing:** pr-review-toolkit. Install it with: claude plugin install pr-review-toolkit@claude-plugins-official"}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "bold-prefixed capability refusal still classifies" "capability-unavailable" \
   "$(last_event_field "$d/spool/events.jsonl" 'props.refusal_id')"
-expect_eq "bold-prefixed capability refusal captures the detail" "superpowers" \
+expect_eq "bold-prefixed capability refusal captures the detail" "pr-review-toolkit" \
   "$(last_event_field "$d/spool/events.jsonl" 'props.detail')"
 
 d="$(new_sandbox)"; seed_skill "$d" s1
-printf '{"session_id":"s1","last_assistant_message":"The dev said Missing: superpowers. Install it with: something, but that was a quote."}' \
+printf '{"session_id":"s1","last_assistant_message":"The dev said Missing: pr-review-toolkit. Install it with: something, but that was a quote."}' \
   | RAFTKIT_TELEMETRY_DIR="$d" node "$RECORD" stop >/dev/null 2>&1
 expect_eq "a mid-sentence mention is not misclassified as a blocker" "raftkit_turn_completed" \
   "$(last_event_field "$d/spool/events.jsonl" 'event')"
@@ -698,8 +714,8 @@ node -e '
 check "refusals.json carries exactly one gate rule whose example matches its pattern" ok $?
 
 gates="$(grep -m1 'No skill ever auto-sends' CLAUDE.md)"
-grep -qi 'exactly one exception' <<<"$gates" && grep -qi 'pr-auto-review' <<<"$gates"
-check "CLAUDE.md's non-negotiable names exactly one exception" ok $?
+[[ -n "$gates" ]] && ! grep -qiE 'exactly one exception|pr-auto-review' <<<"$gates"
+check "CLAUDE.md's non-negotiable has no exception (pr-auto-review retired, D3)" ok $?
 
 grep -qi 'not.*an exception' <<<"$gates" && grep -qi 'dashboard' <<<"$gates"
 check "CLAUDE.md states blocker telemetry is not an exception" ok $?
@@ -1684,9 +1700,11 @@ check "the entry map is a synchronous SessionStart hook, so its output is read" 
 
 bare="$(new_sandbox)"; git -C "$bare" init -q 2>/dev/null
 ctx="$(map_ctx "$bare")"
-for want in "implementing a story URL → raftkit-dev:implement" "raftkit-dev:fix (it runs systematic-debugging itself)" "→ raftkit-dev:setup" "scope audit → raftkit-dev:scope-guard"; do
+for want in "implementing a story URL → raftkit-dev:implement" "a bug, failing build or trace → raftkit-dev:fix;" "→ raftkit-dev:setup" "scope audit → raftkit-dev:scope-guard"; do
   [[ "$ctx" == *"$want"* ]]; check "the entry map routes: $want" ok $?
 done
+# superpowers is no dependency since v3 (D2), so nothing competes for a bug report.
+[[ "$ctx" != *"systematic-debugging"* ]]; check "the entry map names no superpowers skill" ok $?
 # Checking a story is raftkit-pm:story, which org sync installs here too; only
 # building one goes to implement, which branches and builds.
 [[ "$ctx" != *"map: a story URL"* ]]; check "the entry map does not send every story URL to implement" ok $?
