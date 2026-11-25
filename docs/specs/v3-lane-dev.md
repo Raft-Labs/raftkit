@@ -81,3 +81,21 @@ Filled in per story below; the integration agent owns `tests/budgets.json` and `
 - Body is 310 words, exactly the S13 cap.
 - `raftkit-core/skills/working-agreement/SKILL.md` line 18 says "The two-file limit in rule 2 is Ashit's value": rule 2 no longer states a number. Lane core: "Any per-phase file limit in rule 2 is the open phase-file-limit decision in this repo's CLAUDE.md." Its protocol map ("decomposition and scope reduction → 2") is still accurate enough.
 - Repo `CLAUDE.md` "Open decisions" row: "Rule 2 of the working agreement ships two files as its value" → "Rule 2 leaves the per-phase file limit open; phases are [AC] slices built in the main thread".
+
+## Budgets (for `tests/budgets.json`, measured at the branch tip)
+
+| Key | Now | Budget today | Proposed |
+|---|---|---|---|
+| `raftkit-dev/implement` `skill_md` / `skill_md_tokens` | 895 w / 1,467 t | 600 / 1,100 | 900 / 1,470 |
+| `raftkit-dev/implement` `total` / `total_tokens` | 2,043 w / 3,173 t | 1,600 / 2,790 | 2,050 / 3,180 |
+| `raftkit-dev/fix` `skill_md` / `skill_md_tokens` | 982 w / 1,487 t | 850 / 1,370 | 990 / 1,490 |
+| `raftkit-dev/fix` `total` / `total_tokens` | 982 w / 1,487 t | 1,250 / 1,880 | 990 / 1,490 (lower) |
+| `raftkit-dev/scope-guard` | 500 w / 771 t | 500 / 720 | unchanged (within headroom) |
+| `raftkit-dev/docs` | 546 w / 848 t | 500 / 850 | unchanged (within headroom) |
+| `raftkit-dev` plugin words / tokens | 15,389 / 25,733 | 14,000 / 25,630 | unchanged (within headroom); lower after the merge if other lanes cut |
+
+implement and fix together hold about the same words as before (3,025 vs ~3,000), while the run stops loading five toolkit reviewer prompts, the verifier and a superpowers skill per phase.
+
+## Suites on this branch
+
+All pass except, as expected for the integrator: `structure` (S4/S5 budgets above, S12 sha) and `init-settings` (O10 superpowers example, M3 sha).
