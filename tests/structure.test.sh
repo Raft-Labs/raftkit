@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-# Structural contract for RaftKit v2 skills. Replaces the prose-pin suites:
-# it checks shape, size and the one-stop rule, never wording. Budgets live in
-# tests/budgets.json. While `strict` is false (mid-migration) a listed skill
-# that is not on disk is skipped; once true, every skill directory on disk
-# must be listed and every repo-wide invariant applies to all plugins.
+# Structural contract for RaftKit skills: shape, size and the one-stop rule,
+# never wording. Budgets live in tests/budgets.json as tokens only, one per
+# SKILL.md, one per skill directory, one per plugin and one per model-read
+# file outside a skill. Every skill directory on disk must be listed.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 export NODE_DISABLE_COLORS=1 FORCE_COLOR=0
@@ -19,15 +18,12 @@ check() { # <name> <expected: ok|fail> <actual exit code>
   fi
 }
 jsonq() { node -e 'const j=JSON.parse(require("fs").readFileSync("tests/budgets.json","utf8")); const v=eval("j"+process.argv[1]); process.stdout.write(typeof v==="object"?JSON.stringify(v):String(v))' "$1"; }
-# Tokens are ceil(chars/4), a model-agnostic estimate: words undercount them.
+# Tokens are ceil(chars/4), a model-agnostic estimate.
 ctoks() { node -e 'let s="";process.stdin.setEncoding("utf8").on("data",d=>s+=d).on("end",()=>process.stdout.write(String(Math.ceil([...s].length/4))))'; }
-words() { cat "$@" 2>/dev/null | wc -w | tr -d ' '; }
 tokens() { cat "$@" 2>/dev/null | ctoks; }
 # assets/ holds payloads shipped verbatim into a client repo, outside the skill's
 # own budget; the ones a model reads (all but templates/) are budgeted per file.
-mdcat() { find "$1" -name '*.md' -type f -not -path '*/assets/*' -print0 | xargs -0 cat 2>/dev/null; }
-mdwords() { mdcat "$1" | wc -w | tr -d ' '; }
-mdtokens() { mdcat "$1" | ctoks; }
+mdtokens() { find "$1" -name '*.md' -type f -not -path '*/assets/*' -print0 | xargs -0 cat 2>/dev/null | ctoks; }
 plugincat() { find "plugins/$1/skills" -name '*.md' -type f -print0 | xargs -0 cat; }
 cap() { node -e 'const b=+process.argv[1]; process.stdout.write(b>0?String(Math.floor(b*process.argv[2])):"none")' "$1" "$headroom"; }
 fits() { [[ "$1" =~ ^[1-9][0-9]*$ && "$2" =~ ^[0-9]+$ ]] && (( $1 <= $2 )); } # <count> <cap>: a missing count or budget fails
@@ -36,16 +32,28 @@ fm() { awk 'NR==1&&$0!="---"{exit} NR>1&&$0=="---"{exit} NR>1{print}' "$1"; }
 node -e 'JSON.parse(require("fs").readFileSync("tests/budgets.json","utf8"))'
 check "S0 budgets.json is valid JSON" ok $?
 
-strict="$(jsonq '.strict')"
+node -e '
+  const j = JSON.parse(require("fs").readFileSync("tests/budgets.json", "utf8"));
+  const int = (v) => Number.isInteger(v) && v > 0, bad = [];
+  const top = ["//", "headroom", "working_agreement_sha256", "plugin_tokens", "skills", "files"];
+  for (const k of Object.keys(j)) if (!top.includes(k)) bad.push(`top-level key ${k}`);
+  if (j.headroom !== 1.1) bad.push("headroom is not 1.1");
+  for (const [k, v] of Object.entries(j.plugin_tokens || {})) if (!int(v)) bad.push(`plugin_tokens.${k}`);
+  for (const [k, s] of Object.entries(j.skills || {})) {
+    for (const f of Object.keys(s)) if (!["skill_md_tokens", "total_tokens", "writes"].includes(f)) bad.push(`skills.${k}.${f}`);
+    if (!int(s.skill_md_tokens) || !int(s.total_tokens) || typeof s.writes !== "boolean") bad.push(`skills.${k} needs both token budgets and writes`);
+  }
+  for (const [k, v] of Object.entries(j.files || {})) if (!int(v)) bad.push(`files.${k} is not a token count`);
+  if (bad.length) { console.error("  " + bad.join("\n  ")); process.exit(1); }
+'
+check "S0b budgets.json holds token budgets only: no word budgets and no strict, v2 or as_is flags" ok $?
+
 headroom="$(jsonq '.headroom')"
 listed="$(node -e 'const j=JSON.parse(require("fs").readFileSync("tests/budgets.json","utf8")); console.log(Object.keys(j.skills).join("\n"))')"
 
 present=()
 for key in $listed; do
   dir="plugins/${key%/*}/skills/${key#*/}"
-  if [[ "$strict" != true && "$(jsonq ".skills[\"$key\"].v2")" != true ]]; then
-    continue  # not rewritten yet; the old skill under this name is not held to v2 budgets
-  fi
   if [[ ! -d "$dir" ]]; then
     check "S1 listed skill exists on disk: $key" fail 0
     continue
@@ -57,26 +65,14 @@ for key in $listed; do
   [[ "$(fm "$f" | sed -n 's/^name: *//p' | head -1)" == "$skill" ]]
   check "S2 $key frontmatter name matches its directory" ok $?
 
-  as_is="$(jsonq ".skills[\"$key\"].as_is")"   # moved verbatim from v1; shape checks do not apply
-
   desc_words="$(fm "$f" | sed -n 's/^description: *//p' | head -1 | wc -w | tr -d ' ')"
-  if [[ "$as_is" == true ]]; then
-    [[ "$desc_words" -ge 1 ]]
-    check "S3 $key (moved as is) has a description" ok $?
-  else
-    [[ "$desc_words" -ge 1 && "$desc_words" -le 60 ]]
-    check "S3 $key description is 1-60 words ($desc_words)" ok $?
-  fi
+  [[ "$desc_words" -ge 1 && "$desc_words" -le 60 ]]
+  check "S3 $key description is 1-60 words ($desc_words)" ok $?
 
-  c="$(cap "$(jsonq ".skills[\"$key\"].skill_md")")"; n="$(words "$f")"; fits "$n" "$c"
-  check "S4 $key SKILL.md within budget ($n <= $c words)" ok $?
   c="$(cap "$(jsonq ".skills[\"$key\"].skill_md_tokens")")"; n="$(tokens "$f")"; fits "$n" "$c"
-  check "S4t $key SKILL.md within budget ($n <= $c tokens)" ok $?
-
-  c="$(cap "$(jsonq ".skills[\"$key\"].total")")"; n="$(mdwords "$dir")"; fits "$n" "$c"
-  check "S5 $key directory within budget ($n <= $c words)" ok $?
+  check "S4 $key SKILL.md within budget ($n <= $c tokens)" ok $?
   c="$(cap "$(jsonq ".skills[\"$key\"].total_tokens")")"; n="$(mdtokens "$dir")"; fits "$n" "$c"
-  check "S5t $key directory within budget ($n <= $c tokens)" ok $?
+  check "S5 $key directory within budget ($n <= $c tokens)" ok $?
 
   stops="$(grep -rhc '^\*\*STOP\*\*' "$dir" --include='*.md' 2>/dev/null | awk '{s+=$1} END{print s+0}')"
   if [[ "$key" == "raftkit-core/rules" ]]; then
@@ -90,12 +86,10 @@ for key in $listed; do
     [[ "$stops" -eq 0 ]]; check "S6 $key writes nothing, so shows no STOP line ($stops)" ok $?
   fi
 
-  if [[ "$as_is" != true ]]; then
-    ! grep -qE '^## (Reference files|Asana rendering|Out of scope)' "$f"
-    check "S7 $key carries no index, rendering-footer or out-of-scope section" ok $?
-  fi
+  ! grep -qE '^## (Reference files|Asana rendering|Out of scope)' "$f"
+  check "S7 $key carries no index, rendering-footer or out-of-scope section" ok $?
 
-  if [[ "$key" != "raftkit-core/rules" && "$as_is" != true ]]; then
+  if [[ "$key" != "raftkit-core/rules" ]]; then
     ! grep -rqF 'Plain English out' "$dir"
     check "S8 $key does not restate the plain-language guardrail" ok $?
     ! grep -rqiE 'never from memory or this repo|silence is not (approval|confirmation)|custom fields, milestones' "$dir"
@@ -123,7 +117,6 @@ check "S13 the working agreement body is within 310 words ($body_words)" ok $?
 
 node -e '
   const fs=require("fs"); const j=JSON.parse(fs.readFileSync("plugins/raftkit-core/hooks/lib/refusals.json","utf8"));
-  const strict=JSON.parse(fs.readFileSync("tests/budgets.json","utf8")).strict;
   let bad=0;
   for (const r of j.refusals) {
     if (!new RegExp(r.pattern,"m").test(r.example)) { console.error("example does not match pattern:", r.id); bad++; }
@@ -137,24 +130,21 @@ node -e '
 '
 check "S14 every refusals.json rule matches its example and is still emitted by its source" ok $?
 
-if [[ "$strict" == true ]]; then
-  unlisted=""
-  for d in plugins/raftkit-core/skills/*/ plugins/raftkit-pm/skills/*/ plugins/raftkit-dev/skills/*/ plugins/raftkit-qa/skills/*/ plugins/raftkit-hasura/skills/*/ plugins/raftkit-docs/skills/*/; do
-    key="$(basename "$(dirname "$(dirname "$d")")")/$(basename "$d")"
-    grep -qxF "$key" <<<"$listed" || unlisted="$unlisted $key"
-  done
-  [[ -z "$unlisted" ]]; check "S15 strict: every skill on disk has a budget entry${unlisted:+ (missing:$unlisted)}" ok $?
+unlisted=""
+for d in plugins/*/skills/*/; do
+  key="$(basename "$(dirname "$(dirname "$d")")")/$(basename "$d")"
+  grep -qxF "$key" <<<"$listed" || unlisted="$unlisted $key"
+done
+[[ -z "$unlisted" ]]; check "S15 every skill on disk has a budget entry${unlisted:+ (missing:$unlisted)}" ok $?
 
-  for plugin in raftkit-core raftkit-pm raftkit-dev raftkit-qa raftkit-docs raftkit-hasura; do
-    c="$(cap "$(jsonq ".plugins[\"$plugin\"]")")"; n="$(plugincat "$plugin" | wc -w | tr -d ' ')"; fits "$n" "$c"
-    check "S16 strict: $plugin skills total within budget ($n <= $c words)" ok $?
-    c="$(cap "$(jsonq ".plugin_tokens[\"$plugin\"]")")"; n="$(plugincat "$plugin" | ctoks)"; fits "$n" "$c"
-    check "S16t strict: $plugin skills total within budget ($n <= $c tokens)" ok $?
-  done
+for plugin in $(ls plugins); do
+  [[ -d "plugins/$plugin/skills" ]] || continue
+  c="$(cap "$(jsonq ".plugin_tokens[\"$plugin\"]")")"; n="$(plugincat "$plugin" | ctoks)"; fits "$n" "$c"
+  check "S16 $plugin skills total within budget ($n <= $c tokens)" ok $?
+done
 
-  ! grep -rlE '1194107417268910|1216778429401199|1215260732424760' plugins --include='*.md' | grep -v 'raftkit-core/skills/rules/' | grep -q .
-  check "S17 strict: GIDs appear only in raftkit-core/skills/rules" ok $?
-fi
+! grep -rlE '1194107417268910|1216778429401199|1215260732424760' plugins --include='*.md' | grep -v 'raftkit-core/skills/rules/' | grep -q .
+check "S17 GIDs appear only in raftkit-core/skills/rules" ok $?
 
 # Model-read files outside any skill's budget carry their own entry in `files`:
 # the commands and every assets/ markdown file except the doc templates.
@@ -163,17 +153,14 @@ nfiles=0
 for f in $budgeted; do
   nfiles=$((nfiles + 1))
   [[ -f "$f" ]]; check "S18 budgeted file exists: $f" ok $?
-  c="$(cap "$(jsonq ".files?.[\"$f\"]?.words")")"; n="$(words "$f")"; fits "$n" "$c"
-  check "S19 $f within budget ($n <= $c words)" ok $?
-  c="$(cap "$(jsonq ".files?.[\"$f\"]?.tokens")")"; n="$(tokens "$f")"; fits "$n" "$c"
-  check "S19t $f within budget ($n <= $c tokens)" ok $?
+  c="$(cap "$(jsonq ".files?.[\"$f\"]")")"; n="$(tokens "$f")"; fits "$n" "$c"
+  check "S19 $f within budget ($n <= $c tokens)" ok $?
   if [[ "$f" == */commands/* ]]; then
     desc_words="$(fm "$f" | sed -n 's/^description: *//p' | head -1 | wc -w | tr -d ' ')"
     [[ "$desc_words" -ge 1 && "$desc_words" -le 60 ]]
     check "S20 $f description is 1-60 words ($desc_words)" ok $?
   fi
 done
-
 
 # --- eval bundle: policy cases plus one trigger case per skill ---
 # `claude plugin eval <plugin>` loads only that plugin, so a case sits with the

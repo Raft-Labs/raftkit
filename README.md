@@ -136,4 +136,4 @@ Run `/raftkit-dev:setup` inside a project repo the first time you open it with r
 - Flow: bump `version` in the plugin's `plugin.json` → PR → squash-merge to `main` → clients pick it up on refresh.
 - Future work: version-constrained dependencies require git tags named `{plugin-name}--v{version}` (`claude plugin tag --push`). Do not add version constraints to `dependencies` before that tagging convention is adopted.
 
-CI runs `scripts/validate.sh` on every PR (marketplace + manifest validation, version-bump gate); `tests/validate.test.sh` keeps the gate honest.
+CI runs `scripts/validate.sh` on every PR (marketplace + manifest validation, version-bump gate); `tests/validate.test.sh` keeps the gate honest. `bash tests/run-all.sh` runs every contract suite in parallel, locally and in CI.

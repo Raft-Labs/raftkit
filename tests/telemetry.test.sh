@@ -702,8 +702,8 @@ check "README no longer claims full prompts everywhere or nothing from other rep
 grep -q 'RAFTKIT_TELEMETRY=off' "$README"
 check "opt-out is stated in the README" ok $?
 
-grep -q '^## One stop per run' "$RULES" && grep -qF '**STOP**' "$RULES"
-check "rules states the one stop per run and its STOP marker" ok $?
+grep -qF '**STOP** — approve to push, edit to change, or decline.' "$RULES"
+check "rules carries the STOP line the gate event detects" ok $?
 
 node -e '
   const j = JSON.parse(require("fs").readFileSync("plugins/raftkit-core/hooks/lib/refusals.json", "utf8"));

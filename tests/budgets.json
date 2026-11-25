@@ -1,16 +1,7 @@
 {
-  "//": "Word budgets for RaftKit v2 skills, enforced by tests/structure.test.sh with `headroom` (1.1 = 10%). `skill_md` is SKILL.md alone; `total` is every .md in the skill directory (scripts and templates excluded). Each word budget has a `*_tokens` twin (`plugin_tokens` for `plugins`) counting ceil(chars/4), set at the size when it was introduced, rounded up to 10. `files` budgets, by path, the model-read files outside any skill's markdown: every commands/*.md (design cap 300 words; a help over it is budgeted at its size, rounded up to 10), whose description must be 1-60 words, and every assets/*.md outside assets/templates/. `writes: false` means the skill never writes outward and must show no STOP line. `v2: true` marks a skill as rewritten; `as_is: true` marks one moved verbatim from v1 (shape and boilerplate checks do not apply, budgets still do); while `strict` is false only those are checked. Step 6 flips `strict` to true, after which every listed skill is checked and every skill directory on disk must be listed here. v3 sets each rewritten skill to its measured size rounded up to 10, never above its v2.1 value (a skill over its v2.1 value keeps that value and fits inside the headroom). One exception: raftkit-pm/profile total_tokens, because profile absorbed meeting (the two were 2,250 tokens in v2.1).",
-  "strict": true,
+  "//": "Token budgets for RaftKit skills, enforced by tests/structure.test.sh with `headroom` (1.1 = 10%). Tokens are ceil(chars/4). `skill_md_tokens` is SKILL.md alone; `total_tokens` is every .md in the skill directory outside assets/; `plugin_tokens` is every .md under a plugin's skills/. `files` budgets, by path, the model-read files outside any skill's markdown: every commands/*.md and every assets/*.md outside assets/templates/. `writes: false` means the skill never writes outward and shows no STOP line. Every skill on disk is listed. v3 set each budget to its measured size rounded up to 10, never above its v2.1 value, with one exception: raftkit-pm/profile total_tokens, because profile absorbed meeting (the two were 2,250 tokens in v2.1). Raising a budget is a deliberate edit a reviewer sees.",
   "headroom": 1.1,
   "working_agreement_sha256": "1db69ecfdcef78c823ee85cafc0392b73758fa4bcce1fefeb7b397e496a4eb30",
-  "plugins": {
-    "raftkit-core": 3310,
-    "raftkit-pm": 2880,
-    "raftkit-dev": 7940,
-    "raftkit-qa": 1360,
-    "raftkit-docs": 8920,
-    "raftkit-hasura": 3870
-  },
   "plugin_tokens": {
     "raftkit-core": 5160,
     "raftkit-pm": 4200,
@@ -21,146 +12,89 @@
   },
   "skills": {
     "raftkit-core/rules": {
-      "skill_md": 590,
       "skill_md_tokens": 900,
-      "total": 1330,
       "total_tokens": 1970,
-      "writes": false,
-      "v2": true
+      "writes": false
     },
     "raftkit-core/working-agreement": {
-      "skill_md": 210,
       "skill_md_tokens": 340,
-      "total": 1980,
       "total_tokens": 3190,
-      "writes": false,
-      "v2": true
+      "writes": false
     },
     "raftkit-pm/profile": {
-      "skill_md": 490,
       "skill_md_tokens": 660,
-      "total": 900,
       "total_tokens": 1430,
-      "writes": true,
-      "v2": true
+      "writes": true
     },
     "raftkit-pm/story": {
-      "skill_md": 470,
       "skill_md_tokens": 740,
-      "total": 690,
       "total_tokens": 1090,
-      "writes": true,
-      "v2": true
+      "writes": true
     },
     "raftkit-pm/estimate": {
-      "skill_md": 570,
       "skill_md_tokens": 850,
-      "total": 900,
       "total_tokens": 1230,
-      "writes": true,
-      "v2": true
+      "writes": true
     },
     "raftkit-pm/status": {
-      "skill_md": 310,
       "skill_md_tokens": 460,
-      "total": 310,
       "total_tokens": 460,
-      "writes": false,
-      "v2": true
+      "writes": false
     },
     "raftkit-dev/implement": {
-      "skill_md": 600,
       "skill_md_tokens": 1100,
-      "total": 1560,
       "total_tokens": 2510,
-      "writes": true,
-      "v2": true
+      "writes": true
     },
     "raftkit-dev/fix": {
-      "skill_md": 850,
       "skill_md_tokens": 1370,
-      "total": 940,
       "total_tokens": 1430,
-      "writes": true,
-      "v2": true
+      "writes": true
     },
     "raftkit-dev/scope-guard": {
-      "skill_md": 500,
       "skill_md_tokens": 720,
-      "total": 500,
       "total_tokens": 720,
-      "writes": false,
-      "v2": true
+      "writes": false
     },
     "raftkit-dev/setup": {
-      "skill_md": 550,
       "skill_md_tokens": 1000,
-      "total": 1720,
       "total_tokens": 3000,
-      "writes": true,
-      "v2": true
+      "writes": true
     },
     "raftkit-dev/ui": {
-      "skill_md": 500,
       "skill_md_tokens": 850,
-      "total": 2600,
       "total_tokens": 3830,
-      "writes": false,
-      "v2": true
+      "writes": false
     },
     "raftkit-dev/docs": {
-      "skill_md": 500,
       "skill_md_tokens": 850,
-      "total": 800,
       "total_tokens": 1330,
-      "writes": false,
-      "v2": true
+      "writes": false
     },
     "raftkit-hasura/hasura": {
-      "skill_md": 500,
       "skill_md_tokens": 960,
-      "total": 3870,
       "total_tokens": 7380,
-      "writes": true,
-      "v2": true
+      "writes": true
     },
     "raftkit-qa/test-cases": {
-      "skill_md": 520,
       "skill_md_tokens": 740,
-      "total": 820,
       "total_tokens": 1140,
-      "writes": true,
-      "v2": true
+      "writes": true
     },
     "raftkit-qa/bug": {
-      "skill_md": 520,
       "skill_md_tokens": 800,
-      "total": 550,
       "total_tokens": 800,
-      "writes": true,
-      "v2": true
+      "writes": true
     },
     "raftkit-docs/docs-product": {
-      "skill_md": 720,
       "skill_md_tokens": 1320,
-      "total": 2930,
       "total_tokens": 4870,
-      "writes": true,
-      "v2": true
+      "writes": true
     }
   },
   "files": {
-    "plugins/raftkit-core/commands/help.md": {
-      "words": 180,
-      "tokens": 350
-    },
-    "plugins/raftkit-pm/assets/deprecation-sweep-prompt.md": {
-      "words": 350,
-      "tokens": 550
-    },
-    "plugins/raftkit-docs/skills/docs-product/assets/companion/SKILL.md": {
-      "words": 350,
-      "tokens": 520
-    }
+    "plugins/raftkit-core/commands/help.md": 350,
+    "plugins/raftkit-pm/assets/deprecation-sweep-prompt.md": 550,
+    "plugins/raftkit-docs/skills/docs-product/assets/companion/SKILL.md": 520
   }
 }

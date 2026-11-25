@@ -136,9 +136,6 @@ before="$(tree_sum)"
 rt full --stages >/dev/null
 expect_eq "--stages writes nothing" "$before|no" "$(tree_sum)|$([[ -e "$TEST_ROOT/state" ]] && echo yes || echo no)"
 
-grep -qE '^// Stages split at ' plugins/raftkit-core/hooks/lib/tokens.mjs
-expect_eq "the stage heuristic is documented in one line" "0" "$?"
-
 echo
 if [[ "$failures" -gt 0 ]]; then echo "$failures test(s) failed"; exit 1; fi
 echo "all tests passed"

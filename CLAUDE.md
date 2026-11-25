@@ -36,7 +36,7 @@ Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Veri
 2. **Plan in the open.** Write the plan in working-agreement rule 3's shape — the scope contract (in scope = the acceptance criteria; everything else = out), the phases with their files and tier, and the tests — to `docs/specs/<branch>.md`, and show it. It is a record, not a gate.
 3. **Test first for anything executable** — CI checks, hooks, scripts, validation tooling. Skills are markdown; their tests are the story's acceptance criteria and `tests/structure.test.sh`.
 4. **Scope is a hard line.** Nothing beyond the story, nothing missing from it. Improvements go to the board as proposals, not into the diff.
-5. **Keep it lean.** Every skill has a word budget in `tests/budgets.json`; raising one is a deliberate edit a reviewer sees. No speculative abstractions, no restated rules, no rationale prose in an instruction file.
+5. **Keep it lean.** Every skill has a token budget in `tests/budgets.json`; raising one is a deliberate edit a reviewer sees. No speculative abstractions, no restated rules, no rationale prose in an instruction file.
 6. **Commits and PRs:** small logical commits, conventional-commit titles, one story = one branch = one squash PR whose title reads as a changelog line.
 7. **Close the loop in Asana:** tick the story's `Development` subtask and comment the PR link, in the same stop as the PR.
 

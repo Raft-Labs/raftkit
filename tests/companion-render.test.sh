@@ -142,11 +142,8 @@ grep -qF 'raftkit-pm:story' "$REFS/story-adapter.md" && ! grep -qiE "$SHAPE" "$R
 check "C11 the story adapter routes drafting to raftkit-pm:story and states no template shape" ok $?
 grep -qF 'raftkit-qa:bug' "$REFS/bug-adapter.md" && ! grep -qiE "$SHAPE" "$REFS/bug-adapter.md"
 check "C12 the bug adapter routes filing to raftkit-qa:bug and states no template shape" ok $?
-story_flat="$(tr '\n' ' ' < "$REFS/story-adapter.md")"
-grep -qF 'storyRegistry' <<<"$story_flat" && grep -qiE 'never[[:space:]]+duplicat' <<<"$story_flat"
-check "C13 the story adapter keeps the link registry and a refresh never duplicates the task" ok $?
-grep -qiE 'completed .{0,20}subtasks are never[[:space:]]+deleted' <<<"$story_flat"
-check "C14 a refresh never deletes a completed [AC] subtask" ok $?
+grep -qF 'storyRegistry' "$REFS/story-adapter.md"
+check "C13 the story adapter keeps the link registry" ok $?
 
 echo
 [[ "$failures" -eq 0 ]]

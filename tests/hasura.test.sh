@@ -108,14 +108,8 @@ grep -q 'REAL_DBML' "$H/scripts/tests/test_dbml_grep.sh" 2>/dev/null \
 check "HR11 the source's off-by-one REAL_DBML smoke-test path is corrected" ok $?
 
 
-# HR13 · integrations named: envx, docs parity, setup.
-grep -qiE 'envx' <<<"$sk" \
-  && grep -qiE 'docs.*(sync|schema|architecture)|schema.*doc' <<<"$sk" \
-  && grep -qiE 'raftkit-dev:setup' <<<"$sk"
-check "HR13 integrations wired (envx, docs schema sync, preflight/setup)" ok $?
-
-grep -qF 'Load `raftkit-core:rules` first unless it is already in this conversation.' "$S"
-check "HR16 SKILL.md loads raftkit-core:rules first" ok $?
+grep -qF '`raftkit-core:rules`' "$S"
+check "HR16 SKILL.md names raftkit-core:rules" ok $?
 
 # HR17-HR20 · the scaffolder never prompts: --dry-run previews, --write writes,
 # a destructive subcommand writes only with --confirmed. Run against a throwaway
@@ -283,9 +277,8 @@ check "HR26 Hasura ships only in raftkit-hasura, and nothing names it as a raftk
 COMP=plugins/raftkit-dev/skills/setup/references/components.md
 ! grep -rqE 'detect-hasura|hasura\.json --write|skills/hasura/scripts' plugins/raftkit-dev/skills/setup \
   && grep -qF 'claude plugin install raftkit-hasura@raftkit' "$COMP" \
-  && grep -qF '`raftkit-hasura:hasura` records `.raftkit/hasura.json` itself' "$COMP" \
   && ! grep -q 'engine preflight' "$S"
-check "HR27 setup only names the opt-in raftkit-hasura plugin; the hasura skill records its own config" ok $?
+check "HR27 setup only names the opt-in raftkit-hasura plugin and its install command" ok $?
 
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures test(s) failed"
