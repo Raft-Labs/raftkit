@@ -6,7 +6,7 @@ Resolved from the repo's own docs before the first reply (`implement` step 1, `f
 
 ## Before the raise
 
-The raise is blocked while scope is open. Inside a full run the review pass has already produced the verdict; a standalone raise runs `raftkit-dev:scope-guard` first and proceeds only on its clean line. Any BEYOND or MISSING item names the open flags and stops.
+The raise is blocked while scope is open. Inside a full run the gate batch has already produced the verdict; a standalone raise runs `raftkit-dev:scope-guard` first and proceeds only on its clean line. Any BEYOND or MISSING item names the open flags and stops.
 
 ## Title
 
@@ -19,7 +19,7 @@ The repo's own PR template, when it has one, sets the headings and their order; 
 1. **Story link**, plus the permalink of any clarification logged this run.
 2. **Acceptance criteria** as a checklist, taken from the live story.
 3. **Out of scope**, each item confirmed not built.
-4. **Tests** — what ran, the result, and `[AC]s with tests n/m`.
+4. **Tests** — generated from the plan table: each `[AC]` with its test file and result, then what else ran, and `[AC]s with tests n/m`.
 5. **Docs** — the result from `raftkit-dev:docs`, verbatim, with the change set it inspected. Never fabricated to fill the section. `Docs: not evaluated` blocks the raise the same way an empty section does: run the check with the real change set first.
 6. **Review findings** — one line per finding, `fixed in <sha>` or `answered — <reason>`, or `none`.
 

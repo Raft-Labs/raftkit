@@ -59,3 +59,10 @@ Filled in per story below; the integration agent owns `tests/budgets.json` and `
 - `plugins/raftkit-dev/commands/help.md` lines 14 and 23 say "one parallel review pass" and "test-first phases": after stories 6–7 it is "inline simplify, one gate batch (one reviewer + verify, scope-check, docs scripts)" and "[AC] slices in the main thread".
 - `tokens.mjs` `runStages` still recognises `raftkit-dev:verifier` as a review marker on purpose: it measures v2.1 transcripts for the baseline.
 - `dev-flow` DF5, DF11 and DF19 are rewritten for one reviewer, the three gate scripts and the range pinned at intake.
+
+### Story 7
+- `refusals.json` gains `story-too-large` (source `raftkit-dev/skills/implement/SKILL.md`), placed ahead of `generic-cant`; S14 passes.
+- Budget: implement `SKILL.md` is ~895 words, the size the proposal sets (§3 step 0, "~900 words") for a skill that now carries intake, plan, the main-thread build, the pair path and the method. Final numbers are under "Budgets" below.
+- `raftkit-core:rules` "Fetch once" says to read the Project Profile and "read all" sections (Constants table). implement now reads only the stack, environments and conventions sections; lane core should let a role skill read the sections it uses.
+- `raftkit-core:rules` "Fetch once" also says "Subagents inherit nothing: brief each with only the slice it uses". Still true on the pair path; no change needed.
+- `dev-flow` DF5, DF12 and DF18 are rewritten for the main-thread build and the pair path; DF23 is new.

@@ -90,6 +90,14 @@
       "example": "Can't reproduce in the stated environment."
     },
     {
+      "id": "story-too-large",
+      "skill": "implement",
+      "severity": "blocker",
+      "pattern": "^Can['’]t build this in one run — (?<detail>.+)$",
+      "source": "raftkit-dev/skills/implement/SKILL.md",
+      "example": "Can't build this in one run — 31 files planned, over 25. Split the story through raftkit-pm:story, then re-run."
+    },
+    {
       "id": "generic-cant",
       "skill": "*",
       "severity": "blocker",

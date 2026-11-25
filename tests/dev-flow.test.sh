@@ -71,7 +71,7 @@ others="$(grep -rhoE 'pr-review-toolkit:[a-z-]+' "$IMPL" "$FIX" | grep -vx 'pr-r
 while IFS= read -r hit; do
   grep -qE 'model: "(haiku|sonnet|opus)"' <<<"$hit" || { echo "  dispatch without a model: $hit"; ok=1; }
 done < <(grep -rnE 'pr-review-toolkit:[a-z-]+|raftkit-dev:verifier' "$IMPL" "$FIX" --include='*.md')
-grep -qF "each a subagent at its tier's model" "$IMPL/SKILL.md" || { echo "  implement's phase dispatch names no tier"; ok=1; }
+grep -qF "two subagents at their tier's model" "$IMPL/SKILL.md" || { echo "  implement's pair dispatch names no tier"; ok=1; }
 grep -qF "one subagent at the defect's tier" "$FIX/SKILL.md" || { echo "  fix's loop dispatch names no tier"; ok=1; }
 check "DF5 every agent dispatch in implement and fix passes a model or its tier's" ok $ok
 
@@ -138,16 +138,16 @@ done
 grep -qF 'signed off by a named human' "$R" || { echo "  BEYOND clears without a named human"; ok=1; }
 check "DF11 one reviewer and three scripts make the review tail; the verifier agent is gone" ok $ok
 
-# DF12 · the plan record has one writer. Parallel phases committing the same
-#        file race on the index or conflict on merge-back, and a third file
-#        breaks working-agreement rule 2, so no phase edits it; the parent
-#        marks phases done (resume after /clear reads it) and commits it once,
-#        with the last phase, so the review pass runs on a committed record
+# DF12 · the plan record has one writer and is committed alone before the
+#        first test: scope-check takes the table as first committed for the
+#        plan, so a record committed later, or by a pair subagent, would hide
+#        rows added mid-build. Progress lives in git, never in the table.
 ok=0
-grep -qF 'only the parent marks phases done in the record, and commits it with the last phase' "$IMPL/SKILL.md" \
-  || { echo "  the parent is not the record's only writer"; ok=1; }
-grep -qF 'marking it done in the record' "$IMPL/SKILL.md" && { echo "  a phase still marks the record"; ok=1; }
-check "DF12 only the parent writes implement's plan record" ok $ok
+grep -qF 'commit the record alone and show it without waiting' "$IMPL/SKILL.md" || { echo "  implement does not commit the record alone"; ok=1; }
+grep -qF 'Commit the record alone, before the first test.' "$IMPL/references/plan.md" || { echo "  plan.md does not commit the record before the first test"; ok=1; }
+grep -qF 'never edits the plan record' "$IMPL/SKILL.md" || { echo "  a pair subagent may edit the record"; ok=1; }
+grep -qF 'Progress lives in git, not in the table' "$IMPL/references/plan.md" || { echo "  progress is written into the hashed table"; ok=1; }
+check "DF12 implement's plan record is committed alone, first, and only the main thread writes it" ok $ok
 
 # DF13 · a run started in plan mode writes nothing, and is told so before
 #        intake's git fetch, branch, baseline build and verify cache, which all
@@ -195,17 +195,21 @@ bug_c3="$(grep -oE '`Fixed in build: pending[^`]*` counts as empty' "$BUG" | hea
 [[ "$fix_c3" == "$c3" && "$bug_c3" == "$c3" ]]
 check "DF17 fix and qa retest carry the identical pending-build string" ok $?
 
-# DF18 · parallel phases never share one checkout (cross-group C6): each runs in
-#        its own worktree, which setup's worktree.baseRef "head" branches from
-#        the run's HEAD, and the parent lands each phase's one commit on the
-#        branch. In one checkout, parallel commits race on index.lock and carry
-#        each other's files.
+# DF18 · the build is the main thread's; the FE/BE pair is the only parallel
+#        path, and its subagents never share one checkout (cross-group C6):
+#        each runs in its own worktree, which setup's worktree.baseRef "head"
+#        branches from the run's HEAD, bootstraps its dependencies, and the
+#        parent lands its commits on the branch. In one checkout, parallel
+#        commits race on index.lock and carry each other's files.
 ok=0
-build="$(grep -m1 '^4\. \*\*Build' "$IMPL/SKILL.md")"
-grep -qF 'isolation: "worktree"' <<<"$build" || { echo "  implement's phases are not dispatched with worktree isolation"; ok=1; }
-grep -qF 'the parent cherry-picks' <<<"$build" || { echo "  no step lands a phase's worktree commit on the branch"; ok=1; }
+grep -m1 '^4\. \*\*Build' "$IMPL/SKILL.md" | grep -qF 'Build in the main thread, one `[AC]` at a time' || { echo "  implement does not build in the main thread by [AC]"; ok=1; }
+pair="$(grep -m1 '^   \*\*Pair path\*\*' "$IMPL/SKILL.md")"
+grep -qF 'only when the plan marks the FE and BE halves independent behind a frozen contract' <<<"$pair" || { echo "  the pair path is not limited to independent halves"; ok=1; }
+grep -qF 'isolation: "worktree"' <<<"$pair" || { echo "  the pair is not dispatched with worktree isolation"; ok=1; }
+grep -qF 'bootstraps with the repo'"'"'s detected package manager' <<<"$pair" || { echo "  a pair worktree starts without its dependencies"; ok=1; }
+grep -qF 'the parent cherry-picks' <<<"$pair" || { echo "  no step lands the pair's worktree commits on the branch"; ok=1; }
 grep -qF 'baseRef: "head"' "$DEV/skills/setup/scripts/merge-settings.mjs" || { echo "  setup no longer branches worktrees from HEAD"; ok=1; }
-check "DF18 implement runs each phase in a worktree and cherry-picks its commit onto the branch" ok $ok
+check "DF18 implement builds in the main thread; only the FE/BE pair runs in worktrees and is cherry-picked" ok $ok
 
 # DF19 · the review range is pinned once, at intake. The reviewer and the
 #        scripts start together; a range that fetches makes them race on
@@ -240,6 +244,25 @@ grep -qF 'plan-table sha256:' "$DEV/scripts/scope-check.mjs" || { echo "  scope-
 grep -qF 'node ${CLAUDE_PLUGIN_ROOT}/scripts/scope-check.mjs --base <base-sha>' "$SG/SKILL.md" || { echo "  scope-guard does not pre-filter with scope-check"; ok=1; }
 grep -qF 'With an injected base-sha, the diff is `git diff <base-sha> HEAD`; never fetch.' "$SG/SKILL.md" || { echo "  scope-guard fetches despite an injected base-sha"; ok=1; }
 check "DF22 implement's plan record is the table scope-check parses, and scope-guard runs it" ok $ok
+
+# DF23 · the lines a long main-thread build must not lose sit in the first
+#        lines of implement, where compaction keeps them; a story too large
+#        for one context refuses with a string the telemetry registry knows;
+#        each [AC]'s test is committed alone before its code
+ok=0
+head12="$(awk 'NR>1&&/^---$/{f=1; next} f' "$IMPL/SKILL.md" | head -12)"
+for want in '**One stop**' 'Never merge; never tick `[AC]` or `Testing`.' '`Do NOT build:`' '**Red first**'; do
+  grep -qF "$want" <<<"$head12" || { echo "  not in implement's first lines: $want"; ok=1; }
+done
+big="$(grep -m1 "^Can't build this in one run — " "$IMPL/SKILL.md")"
+[[ -n "$big" ]] || { echo "  implement has no too-large refusal"; ok=1; }
+node -e '
+  const r = require("./plugins/raftkit-core/hooks/lib/refusals.json").refusals;
+  const i = r.findIndex((x) => x.id === "story-too-large"), g = r.findIndex((x) => x.id === "generic-cant");
+  process.exit(i >= 0 && i < g && new RegExp(r[i].pattern, "m").test(process.argv[1]) && r[i].source === "raftkit-dev/skills/implement/SKILL.md" ? 0 : 1);
+' "$big" || { echo "  refusals.json does not register the too-large refusal ahead of generic-cant"; ok=1; }
+grep -qF 'Commit it alone: `test: <the [AC]>`.' "$IMPL/SKILL.md" || { echo "  the failing test is not committed alone"; ok=1; }
+check "DF23 implement's first lines hold the stop, merge and scope rules; too-large stories refuse; tests commit first" ok $ok
 
 echo
 echo "dev-flow: $failures failure(s)"
