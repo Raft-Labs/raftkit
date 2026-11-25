@@ -16,5 +16,4 @@ You are running raftkit-qa:test-cases for the story "Checkout — declined card"
 - The project's QA Sheet, "Riverside QA", holds no rows for this story.
 
 Eval harness: this session has no connector tools. Every read the run needs is
-given above, the run ends at its stop and nothing is pushed, so the write-tool
-check passes. Build the test cases and the run sheet.
+given above. Build the test cases and the run sheet.

@@ -1,6 +1,6 @@
 # RaftKit v3: thinning proposal
 
-Status: proposal for founders and the kit owner. Nothing here is built.
+Status: built on branch `v3/integration` except stories 1 (the replay), 9 (pilot), 10 (release) and 15's eval scoring; gated on D1–D5 and the PM/QA owner decisions. Nothing is released.
 Basis: a read-only audit of `main` @ 785913b. Five parallel audits, three competing designs, one judge panel and one adversarial critique.
 
 > **Every time and token figure in this document is an estimate built from reading the skills. None is a measurement.** Story 1 replaces them with measured numbers before anything is cut.
@@ -89,15 +89,15 @@ The `fix` skill follows the same flow, with the bug's `Done when` as the contrac
 
 | | v2.1 today | v3 |
 |---|---|---|
-| Default plugins | 5 (all via org sync) | 4 (core, pm, dev, qa); raftkit-docs and Hasura become opt-in |
-| Third-party dependencies | 4 (superpowers, pr-review-toolkit, security-guidance, frontend-design) | 1 required (security-guidance); frontend-design optional |
+| Default plugins | 5 (all via org sync) | 4 (core, pm, dev, qa); raftkit-docs and Hasura become opt-in once the org admin excludes them (D4) |
+| Third-party dependencies | 4 (superpowers, pr-review-toolkit, security-guidance, frontend-design) | 1 required (security-guidance), plus pr-review-toolkit as the D2 interim reviewer; frontend-design optional |
 | RaftKit agents | 2 (verifier, bulk-reader) | 1 spec-aware reviewer, or `/code-review` |
 | Subagents per implement run | 14–17 | 1–3 |
 | Hot-path words loaded | ~3,700 + ~4,500 toolkit prompts + a TDD skill load per phase | ~2,300 |
-| Core rules + references | 2,257 words | ~1,000 |
+| Core rules + references | 2,257 words | ~1,350 (rules SKILL.md ~590, not ~400; a D5 exception for the founders to accept or cut) |
 | Help routers | 5 (2,296 words) | 1 (~150) |
 | PM / QA skills | 6 / 3 | 5 (routine deleted; size folds into estimate) / 2 (test-cases replaces suite + run-sheet; bug) |
-| Hooks | Read shunt + bulk-reader, entry-map nag, telemetry | Telemetry only; shunt and nag removed |
+| Hooks | Read shunt + bulk-reader, entry-map nag, telemetry | Telemetry + the entry map; shunt and nag removed |
 | Evals | 79 cases, 313 files, never scored | ~12 policy cases + 1 trigger case per skill, scored against a no-plugin baseline with mocks |
 | Gate runs per story | suite 4, typecheck ~12, fetch 3 | suite 1–2, typecheck ~6–9, fetch 1 |
 
@@ -133,7 +133,7 @@ What follows from that:
 | PM and QA skills | Portable wherever an Asana connector exists (Claude, Cowork, ChatGPT) |
 | Dev runs on client code | Claude-only until the founders decide whether client code may go to non-Claude agents (D6) |
 
-This proposal makes the format portable: spec-only frontmatter and skill-relative script paths. It does **not** ship a cross-vendor bundle. That bundle is a board proposal gated on D6.
+This proposal does **not** change the format or ship a cross-vendor bundle. Spec-only frontmatter, skill-relative script paths and the bundle are one board proposal gated on D6.
 
 ## 7. Decisions needed
 
@@ -171,7 +171,7 @@ The scheduled-routine unattended-write decision stays pending. `routine` is dele
    - The reviewer brief carries the `[AC]`s, the `Do NOT build:` line and the plan table, and returns scope-guard's exact block.
 7. `feat(dev): implement builds in the main thread by [AC] slice` (D1)
    - One-turn intake, codebase map, red-first commits, an FE/BE pair path with the cherry-pick kept.
-   - Lower budgets.
+   - Lower budgets. Built: the directory budget drops (2790 to 2510 tokens); implement and fix SKILL.md stay at their v2.1 budgets and use the 10% headroom.
 8. `feat(dev): thin fix` — same flow, with `Done when` as the contract.
 9. `chore(dev): pilot` on one client repo, replaying story 1's scenarios.
    - Done when: ≥35% faster, identical `[AC]` and scope outcomes, no policy eval regression, and a fixed reference review of each diff is no worse.
@@ -198,7 +198,7 @@ The scheduled-routine unattended-write decision stays pending. `routine` is dele
 **Board proposals, not in this scope:**
 
 - AGENTS.md relocation of the governance pack;
-- the `.agents/skills` export (D6);
+- the `.agents/skills` export, with spec-only frontmatter and skill-relative script paths (D6);
 - the `gh pr merge` deny rule;
 - per-stage dashboards.
 

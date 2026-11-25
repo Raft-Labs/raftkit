@@ -1,6 +1,6 @@
 # RaftKit — Project Context
 
-RaftKit is RaftLabs' private Claude plugin **marketplace**: one repo shipping six plugins that package the RaftLabs way of delivering software. The plugins use native Claude Code first and **orchestrate** proven third-party plugins for what native lacks — security-guidance, pr-review-toolkit and frontend-design, the three `raftkit-dev` declares, plus the Asana connector. Asana is the workflow spine: work enters as a templated user story and exits as a squash-merged PR with QA-verified acceptance criteria.
+RaftKit is RaftLabs' private Claude plugin **marketplace**: one repo shipping six plugins that package the RaftLabs way of delivering software. The plugins use native Claude Code first and **orchestrate** proven third-party plugins for what native lacks — security-guidance and pr-review-toolkit, the two `raftkit-dev` declares, frontend-design as an optional install, plus the Asana connector. Asana is the workflow spine: work enters as a templated user story and exits as a squash-merged PR with QA-verified acceptance criteria.
 
 Methodology, for what RaftKit produces and for RaftKit itself: **the story is the spec, its acceptance criteria become failing tests, and code exists to turn them green.** Plans are written down and shown, not gated. A run stops exactly once, before anything leaves the session.
 
@@ -24,8 +24,8 @@ plugins/
   raftkit-pm/     # profile, story, estimate, status                       (Cowork)
   raftkit-dev/    # setup, implement, fix, scope-guard, ui, docs           (Claude Code)
   raftkit-qa/     # test-cases, bug                                        (Cowork)
-  raftkit-docs/   # docs-product                                           (opt-in; Claude Code)
-  raftkit-hasura/ # hasura                                                 (opt-in; Claude Code)
+  raftkit-docs/   # docs-product                                           (opt-in by design; org sync installs it until D4)
+  raftkit-hasura/ # hasura                                                 (opt-in by design; org sync installs it until D4)
 ```
 
 Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Verify manifest and marketplace schema against the current Claude Code plugin docs before scaffolding — do not trust memory.
@@ -33,7 +33,7 @@ Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Veri
 ## How work happens in this repo
 
 1. **One story at a time.** Read the story task and all its `[AC]` subtasks through the Asana connector before touching anything.
-2. **Plan in the open.** Write the plan in working-agreement rule 3's shape — the scope contract (in scope = the acceptance criteria; everything else = out), the phases with their files and tier, and the tests — to `docs/specs/<branch>.md`, and show it. It is a record, not a gate.
+2. **Plan in the open.** Write the plan in working-agreement rule 3's shape — the scope contract (in scope = the acceptance criteria; everything else = out), and each criterion's test and files — to `docs/specs/<branch>.md`, and show it. It is a record, not a gate.
 3. **Test first for anything executable** — CI checks, hooks, scripts, validation tooling. Skills are markdown; their tests are the story's acceptance criteria and `tests/structure.test.sh`.
 4. **Scope is a hard line.** Nothing beyond the story, nothing missing from it. Improvements go to the board as proposals, not into the diff.
 5. **Keep it lean.** Every skill has a token budget in `tests/budgets.json`; raising one is a deliberate edit a reviewer sees. No speculative abstractions, no restated rules, no rationale prose in an instruction file.
@@ -54,7 +54,7 @@ Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Veri
 
 | Decision (Asana task) | Impact here |
 |---|---|
-| Phase file limit (`1216550892331152`) | Rule 2 of the working agreement leaves the per-phase file limit open; phases are `[AC]` slices built in the main thread |
+| Phase file limit (`1216550892331152`), folded into D1 of the v3 proposal, awaiting Ashit | The branch's rule 2 makes phases `[AC]` slices built in the main thread. Gated: no release to `main` until Ashit signs off; declined → sequential phase subagents without worktrees |
 
 Closed, and now facts:
 

@@ -3,9 +3,11 @@
 # deterministic scope pre-filter (not the gate). Each case builds a throwaway
 # git history around the fixture plan record in tests/fixtures/scope-check/ and
 # checks one flag: an unplanned file (BEYOND candidate), an [AC] with no test
-# in the diff (MISSING), a table row added after the plan hash (ADDED AFTER
-# PLAN), and a test commit that does not precede its implementation (ORDER).
-# The plan record itself is always in scope. Exit 0 clean, 1 flags, 2 not run.
+# in the diff (MISSING), a table row added after the plan hash or a plan record
+# committed after the build began (ADDED AFTER PLAN), and a test commit that
+# does not precede its implementation (ORDER). A file a directory row covers is
+# listed as unnamed, for the reviewer to judge. The plan record itself is always
+# in scope. Exit 0 clean, 1 flags, 2 not run (an uncommitted record included).
 set -uo pipefail
 export NODE_DISABLE_COLORS=1 FORCE_COLOR=0 NO_COLOR=1
 cd "$(dirname "$0")/.." || exit 2
@@ -62,11 +64,32 @@ good_build() {
 }
 sc() { (cd "$R" && node "$SC" "$@" 2>&1); echo "exit $?"; }
 
-# A · a red-first build of every planned file, record included, is clean
+# A · a red-first build of every planned file, record included, is clean; a file
+#     only a directory row covers is listed as unnamed, never silently planned
 newrepo; good_build
 expect_eq "a red-first build of the plan is clean, the plan record included" \
   "scope-check: clean — 0 flags
+unnamed under src/shared/: src/shared/util.ts
 exit 0" "$(sc --base "$BASE")"
+
+# P · a plan record committed after the build began is not the plan
+R="$(mktemp -d "$TEST_ROOT/repo.XXXX")"
+g init -q -b main; touchf README.md; g add -A; g commit -qm init; BASE="$(g rev-parse HEAD)"
+g checkout -qb feat/42-badge; good_build; FIRST="$(g rev-list --reverse "$BASE..HEAD" | head -1)"
+render; g add -A; g commit -qm "docs: plan record"
+expect_eq "a plan record committed after the first build commit is flagged" \
+  "scope-check: 1 flag(s)
+ADDED AFTER PLAN: plan record committed after $(g rev-parse --short "$FIRST")
+unnamed under src/shared/: src/shared/util.ts
+exit 1" "$(sc --base "$BASE")"
+
+# Q · a plan record with no commit on the branch anchors nothing
+R="$(mktemp -d "$TEST_ROOT/repo.XXXX")"
+g init -q -b main; touchf README.md; g add -A; g commit -qm init; BASE="$(g rev-parse HEAD)"
+g checkout -qb feat/42-badge; good_build; render
+expect_eq "an uncommitted plan record is not run" \
+  "scope-check: plan record docs/specs/feat/42-badge.md has no commit on this branch; nothing was checked
+exit 2" "$(sc --base "$BASE")"
 
 # B · a changed file no row plans, committed or not, is a BEYOND candidate
 newrepo; good_build; cm "feat: extra" src/extra.ts; touchf notes/scratch.md
@@ -74,6 +97,7 @@ expect_eq "an unplanned file is a BEYOND candidate, uncommitted ones included" \
   "scope-check: 2 flag(s)
 BEYOND candidate: notes/scratch.md
 BEYOND candidate: src/extra.ts
+unnamed under src/shared/: src/shared/util.ts
 exit 1" "$(sc --base "$BASE")"
 
 # C · an [AC] whose test file is not in the diff is MISSING
@@ -94,6 +118,7 @@ expect_eq "a row added after the plan hash is flagged, rehash or not" \
 BEYOND candidate: src/admin.test.ts
 BEYOND candidate: src/admin.ts
 ADDED AFTER PLAN: [AC] Admins see every badge
+unnamed under src/shared/: src/shared/util.ts
 exit 1" "$(sc --base "$BASE")"
 
 # L · widening a row's source files after the plan does not plan the file
@@ -104,6 +129,7 @@ expect_eq "a row widened after the plan is flagged and its new file stays a BEYO
   "scope-check: 2 flag(s)
 BEYOND candidate: src/extra.ts
 ADDED AFTER PLAN: changed — [AC] A member sees their tier badge
+unnamed under src/shared/: src/shared/util.ts
 exit 1" "$(sc --base "$BASE")"
 
 # M · deleting a row after the plan does not clear its MISSING flag
@@ -141,6 +167,7 @@ good_build; cm "test: admin" src/admin.test.ts; cm "feat: admin" src/admin.ts
 expect_eq "a table changed between hashing and its first commit is flagged" \
   "scope-check: 1 flag(s)
 ADDED AFTER PLAN: the table does not match the hash recorded when it was planned
+unnamed under src/shared/: src/shared/util.ts
 exit 1" "$(sc --base "$BASE")"
 
 # F · implementation committed before its test

@@ -21,9 +21,9 @@ Marketplace added — now install your role plugin: raftkit-pm, raftkit-dev, or 
 claude plugin install raftkit-dev@raftkit   # or raftkit-pm / raftkit-qa
 ```
 
-Installing any role plugin automatically installs `raftkit-core` alongside it. `raftkit-dev` additionally auto-installs three declared dependencies from the official Claude marketplace — `security-guidance`, `pr-review-toolkit`, `frontend-design` — the engines its skills call by name. Inside a Claude Code session, the same commands work as `/plugin marketplace add` and `/plugin install`. Verify with `claude plugin list` — you should see your role plugin, `raftkit-core`, and (for `raftkit-dev`) the three auto-installed engines.
+Installing any role plugin automatically installs `raftkit-core` alongside it. `raftkit-dev` additionally auto-installs two declared dependencies from the official Claude marketplace — `security-guidance` and `pr-review-toolkit` — the engines its skills call by name. `frontend-design` is optional: `raftkit-dev:ui` names its install command when a story has no designs and it is absent. Inside a Claude Code session, the same commands work as `/plugin marketplace add` and `/plugin install`. Verify with `claude plugin list` — you should see your role plugin, `raftkit-core`, and (for `raftkit-dev`) the two auto-installed engines.
 
-`raftkit-docs` and `raftkit-hasura` are opt-in: day-to-day delivery does not need them. Install one only when a project uses it:
+`raftkit-docs` and `raftkit-hasura` are opt-in by design: day-to-day delivery does not need them. Org sync still installs them for everyone until the org-admin change that excludes them (D4, pending founder sign-off). Outside org sync, install one only when a project uses it:
 
 ```bash
 claude plugin install raftkit-hasura@raftkit   # Hasura projects
@@ -41,7 +41,7 @@ claude plugin install raftkit-docs@raftkit     # the documentation design produc
 | `raftkit-docs` | optional | The documentation design product: co-authoring flow, templates, diagrams, reverse-engineering |
 | `raftkit-hasura` | optional | Hasura migrations, metadata and permissions for Hasura projects |
 
-The marketplace ships these six plugins. PM and QA plugins target the Claude apps/Cowork runtime. The org-wide install is verified in Claude Code and Cowork: org sync installs `raftkit-core`, `raftkit-pm`, `raftkit-dev` and `raftkit-qa`, but not the two opt-in plugins or `raftkit-dev`'s engines, and `/raftkit-dev:setup` names any missing engine with its install command. The org install auto-updates, so anything merged to `main` reaches every user.
+The marketplace ships these six plugins. PM and QA plugins target the Claude apps/Cowork runtime. The org-wide install is verified in Claude Code and Cowork: org sync installs all six RaftKit plugins today (the two opt-in ones drop out only once the org admin excludes them under D4), but not `raftkit-dev`'s engines, and `/raftkit-dev:setup` names any missing engine with its install command. The org install auto-updates, so anything merged to `main` reaches every user.
 
 ## Getting help
 
@@ -51,7 +51,7 @@ One help command routes every role — run it inside a Claude Code session:
 /raftkit-core:help      # PM, dev and QA skills, the opt-in plugins, the shared rules
 ```
 
-Pass a skill name or question for a focused answer, e.g. `/raftkit-core:help scope-guard` or `/raftkit-core:help how do I onboard a project`. The deprecation sweep is a hand-run prompt, `plugins/raftkit-pm/assets/deprecation-sweep-prompt.md`; no skill runs it.
+Pass a skill name or question for a focused answer, e.g. `/raftkit-core:help scope-guard` or `/raftkit-core:help how do I onboard a project`.
 
 ## Renamed
 
@@ -61,7 +61,7 @@ Old names are gone; every skill's description carries the old trigger phrases, s
 | --- | --- |
 | `raftkit-pm:meeting` | `raftkit-pm:profile` (from a call) |
 | `raftkit-pm:story` size mode | `raftkit-pm:estimate` (one story) |
-| `raftkit-pm:routine` | retired; the deprecation-sweep prompt is a hand-run asset |
+| `raftkit-pm:routine` | retired |
 | `raftkit-qa:suite` · `run-sheet` | `raftkit-qa:test-cases` |
 | `raftkit-dev:hasura` | the opt-in `raftkit-hasura:hasura` |
 | `raftkit-docs:discovery-interview` | folded into `raftkit-docs:docs-product` |

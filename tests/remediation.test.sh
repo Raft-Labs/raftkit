@@ -44,6 +44,11 @@ c2=$(mktemp -d); mkdir -p "$c2/repo"; echo "outside" > "$c2/evil.json"
 ( cd "$c2/repo" && git init -q . && node "$OLDPWD/$VALDOCS" --root . --convention "../evil.json" ) >/dev/null 2>&1
 [[ $? -eq 2 ]]
 check "F2a an out-of-root --convention descriptor is rejected (bad input)" ok $?
+# The same call through a symlinked path still runs the script, never a silent exit 0.
+ln -s "$PWD" "$c2/kit"
+( cd "$c2/repo" && node "$c2/kit/$VALDOCS" --root . --convention "../evil.json" ) >/dev/null 2>&1
+[[ $? -eq 2 ]]
+check "F2a a symlinked script path still runs the check (bad input)" ok $?
 rm -rf "$c2"
 
 vj=$(joined "plugins/raftkit-dev/skills/docs/references/scripts.md" "$VALDOCS")

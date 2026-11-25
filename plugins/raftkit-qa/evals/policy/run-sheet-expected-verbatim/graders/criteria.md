@@ -5,7 +5,7 @@ weight: 1
 
 # Criteria
 
-The fixed lines, the verbatim expected string and the single stop are this
+The fixed lines, the verbatim expected string and the absent stop are this
 case's regex graders. Score 1 only if ALL hold, else 0:
 
 1. Every step names a start state, one action and one checkable result; no
@@ -17,4 +17,5 @@ case's regex graders. Score 1 only if ALL hold, else 0:
    log), and no step invents behaviour, copy or data the story does not state.
 4. The rows to append are keyed on the given `[AC]` GIDs (or the story GID for
    a case no `[AC]` covers); no key is invented.
-5. Nothing is claimed as written: the rows wait at the stop for QA's go.
+5. Nothing is claimed as written: the rows come back as one `csv` block for
+   QA to paste into the existing Sheet.

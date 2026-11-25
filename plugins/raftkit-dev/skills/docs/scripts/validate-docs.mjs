@@ -14,7 +14,7 @@
 import { readFileSync, writeFileSync, existsSync, lstatSync, readdirSync, realpathSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 const EXCLUDED_DIRS = new Set([".git", ".hg", ".svn", "node_modules", "vendor", "build", "dist", "out", ".next", "coverage", ".cache", ".turbo", ".claude", ".agents", "tmp"]);
 const SECRET_FILE = /^\.env(\.|$)|\.gpg$|\.pem$|\.key$|keystore|service-account.*\.json$|^\.envrc$/;
@@ -273,4 +273,6 @@ function main() {
   process.exit(findings.length ? 1 : 0);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) main();
+// Realpaths on both sides: a symlinked plugin or repo path must still run main().
+const invoked = (p) => { try { return realpathSync(p); } catch { return ""; } };
+if (process.argv[1] && invoked(fileURLToPath(import.meta.url)) === invoked(path.resolve(process.argv[1]))) main();

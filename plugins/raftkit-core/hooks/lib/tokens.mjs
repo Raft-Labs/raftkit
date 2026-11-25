@@ -49,10 +49,13 @@ export function tierOf(model) {
 
 const num = (v) => (Number.isFinite(v) ? v : 0);
 const emptySums = () => ({ input: 0, output: 0, cache_read: 0, cache_creation: 0, billed: 0, side_billed: 0, list_usd: 0, unpriced: 0, messages: 0, by_model: {} });
-// First-party list prices, USD per million tokens: [input, output, cache read],
-// base rates as published on 2026-11-03. Cache writes cost 1.25x input; a
-// cache read with no listed price is 0.1x input. A model not listed here is
-// counted in `unpriced`, never priced as another.
+// First-party list prices, USD per million tokens: [input, output, cache read].
+// Source: https://platform.claude.com/docs/en/about-claude/pricing (rows checked
+// 2026-11-25 against the 2026-11-03 table). A listed cache read is the published
+// rate (opus-5-5 and the 5.2 models are below 0.1x input); an unlisted one is
+// 0.1x input. Cache writes cost 1.25x input. haiku-5-5 is its <=100K-prompt rate.
+// A model not listed here is counted in `unpriced`, never priced as another.
+// Token counts are the primary metric; list-price USD is secondary.
 const PRICES = {
   "fable-5-2": [8, 40, 0.2], "mythos-5-2": [8, 40, 0.2], "fable-5-1": [10, 50], "mythos-5-1": [10, 50], "fable-5": [10, 50],
   "opus-5-5": [4, 20, 0.2], "opus-5": [5, 25], "opus-4-8": [5, 25], "opus-4-7": [5, 25], "opus-4-6": [5, 25],
@@ -404,6 +407,7 @@ export function runStart(transcriptPath) {
 // Stages split at markers v2.1 and v3 runs both leave: plan at the first Read/Grep/Glob or Explore dispatch after the last MCP call before the docs/specs/ write, build at that write, review at the first reviewer (not the simplifier), full verify.mjs or scope-check.mjs (not --hash) after it, stop after the last full verify.mjs (else at run-tokens.mjs), end at the STOP line (else the last record, so an in-run call never measures the STOP message).
 
 const STAGES = ["intake", "plan", "build", "review", "stop"];
+// raftkit-dev:verifier matches v2.1 baseline transcripts only; v3 has no verifier.
 const REVIEWER = /^(pr-review-toolkit:(?!code-simplifier$)|raftkit-dev:verifier$)/;
 const cmdOf = (b) => (b.name === "Bash" ? String(b.input?.command || "") : "");
 const agentOf = (b) => (/^(Agent|Task)$/.test(b.name) ? String(b.input?.subagent_type || "") : "");

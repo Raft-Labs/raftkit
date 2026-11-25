@@ -8,6 +8,8 @@ user-invocable: true
 
 One project's board → a client-ready update the PM sends. Load `raftkit-core:rules` first unless it is already in this conversation. Writes nothing, never sends, has no stop.
 
+- **Announce it** — `Using raftkit-pm:status` in the first reply, once (`raftkit-core:rules`).
+
 ## Run
 
 1. **Inputs**: one project (none → ask) and a range: since the last update, else 7 days, capped at 4 weeks with the clamp stated.
@@ -30,5 +32,3 @@ Quiet period — no shipped items this week.
 ```
 
 Budget, contract or a client commitment is surfaced for the PM, never committed in the draft.
-
-- **Announce it** — `Using raftkit-pm:status` in the first reply, once (`raftkit-core:rules`).

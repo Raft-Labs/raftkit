@@ -1,7 +1,7 @@
 {
   "//": "Token budgets for RaftKit skills, enforced by tests/structure.test.sh with `headroom` (1.1 = 10%). Tokens are ceil(chars/4). `skill_md_tokens` is SKILL.md alone; `total_tokens` is every .md in the skill directory outside assets/; `plugin_tokens` is every .md under a plugin's skills/. `files` budgets, by path, the model-read files outside any skill's markdown: every commands/*.md and every assets/*.md outside assets/templates/. `writes: false` means the skill never writes outward and shows no STOP line. Every skill on disk is listed. v3 set each budget to its measured size rounded up to 10, never above its v2.1 value, with one exception: raftkit-pm/profile total_tokens, because profile absorbed meeting (the two were 2,250 tokens in v2.1). Raising a budget is a deliberate edit a reviewer sees.",
   "headroom": 1.1,
-  "working_agreement_sha256": "1db69ecfdcef78c823ee85cafc0392b73758fa4bcce1fefeb7b397e496a4eb30",
+  "working_agreement_sha256": "df104e8fac8347a8e01785fb3f16a810214d6452ec72bc71c35ed31371b4ae90",
   "plugin_tokens": {
     "raftkit-core": 5160,
     "raftkit-pm": 4200,
@@ -94,7 +94,6 @@
   },
   "files": {
     "plugins/raftkit-core/commands/help.md": 350,
-    "plugins/raftkit-pm/assets/deprecation-sweep-prompt.md": 550,
     "plugins/raftkit-docs/skills/docs-product/assets/companion/SKILL.md": 520
   }
 }

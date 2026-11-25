@@ -8,6 +8,8 @@ user-invocable: true
 
 One skill for a story's life: author, amend, check. Load `raftkit-core:rules` first unless it is already in this conversation.
 
+- **Announce it** — `Using raftkit-pm:story` in the first reply, once (`raftkit-core:rules`).
+
 **Mode**: the request decides first. An amend request → **amend**; "is it ready?" → **check**. Otherwise the target decides: an empty description or an untouched template copy → **author**, in place; a description that holds a story → **amend**.
 
 **The rule:** never proceed without a source of truth. Every sentence traces to the Profile or a source the PM named. A gap becomes a question in the draft, never a plausible fill.
@@ -35,5 +37,3 @@ Additive only, never a rewrite: `references/amend.md`.
 ## Check
 
 Fetch the story and its subtasks, judge against the template, print the readiness verdict. Read-only.
-
-- **Announce it** — `Using raftkit-pm:story` in the first reply, once (`raftkit-core:rules`).

@@ -14,10 +14,6 @@
     {
       "name": "pr-review-toolkit",
       "marketplace": "claude-plugins-official"
-    },
-    {
-      "name": "frontend-design",
-      "marketplace": "claude-plugins-official"
     }
   ]
 }

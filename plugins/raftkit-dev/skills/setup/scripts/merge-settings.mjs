@@ -33,7 +33,7 @@ const MANAGED = {
   enabledPlugins: Object.fromEntries(pluginIds.map((id) => [id, true])),
   model: "opusplan",
   attribution: { commit: "", pr: "" },
-  // Worktrees branch from local HEAD, so a phase sees the run's own commits;
+  // Worktrees branch from local HEAD, so an implement pair subagent sees the run's own commits;
   // node_modules is shared rather than reinstalled per worktree (Node repos only).
   worktree: { baseRef: "head", symlinkDirectories: ["node_modules"] },
   permissions: {

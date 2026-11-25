@@ -7,7 +7,7 @@ argument-hint: [skill name or question]
 
 The user ran `/raftkit-core:help $ARGUMENTS`. If it names a core skill or asks about the rules, answer from `${CLAUDE_PLUGIN_ROOT}/skills/<skill>/SKILL.md`. If it names a role skill, answer from that skill's listing description and name the skill to invoke. Otherwise show this.
 
-- **PM:** `raftkit-pm:profile`, `raftkit-pm:story`, `raftkit-pm:estimate`, `raftkit-pm:status`. A call's decisions and tasks → `raftkit-pm:profile`. The deprecation sweep is a hand-run prompt: `raftkit-pm/assets/deprecation-sweep-prompt.md`.
+- **PM:** `raftkit-pm:profile`, `raftkit-pm:story`, `raftkit-pm:estimate`, `raftkit-pm:status`. A call's decisions and tasks → `raftkit-pm:profile`.
 - **QA:** `raftkit-qa:test-cases`, `raftkit-qa:bug`.
 - **Dev:** `raftkit-dev:setup` once per repo, then `raftkit-dev:implement` per story, `raftkit-dev:fix` per bug; `raftkit-dev:scope-guard`, `raftkit-dev:ui`, `raftkit-dev:docs` on request.
 - **Opt-in:** `raftkit-hasura:hasura`, `raftkit-docs:docs-product`.

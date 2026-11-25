@@ -40,12 +40,14 @@ A run works without waiting, then stops once before anything leaves the session:
 Can't write to <surface> from this session — connect <connector>, then re-run.
 ```
 
-- An explicit go pushes exactly what was shown; choosing among options the draft listed is a go. An edit re-presents only the changed sections, ending on the STOP line. Silence pushes nothing.
+- An explicit go pushes exactly what was shown; choosing among options the draft listed is a go. An edit is not a go: re-present the changed draft in full, ending on the STOP line. Silence pushes nothing.
 - A run that writes nothing has no stop.
 - Merging a PR, ticking `[AC]` or `Testing`, and closing a bug stay human.
 - Comments by default; overwrite a description only on explicit instruction.
-- Read the result back once into the success line. The write response is the read-back when it returns the rendered body.
+- Read the result back once into the success line; a write response that returns the rendered body is the read-back.
 - On partial failure, report what landed; retry only idempotent writes.
+- Subagents inherit nothing: brief each with only the slice it uses, never the template.
+- A new skill or plugin is suggested with its provenance; a human approves before any install.
 
 Asana HTML: `references/asana-html.md` — one `<body>`, no `<p>`, no named entities.
 

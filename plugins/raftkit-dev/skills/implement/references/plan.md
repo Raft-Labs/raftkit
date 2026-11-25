@@ -24,4 +24,4 @@ Do NOT build: <the story's line, verbatim>
 - Never change a row after that commit: the first-committed table is the plan, and any change is flagged `ADDED AFTER PLAN`. Amend the story, or name the sign-off.
 - Progress lives in git, not in the table.
 - Readiness answers and clarifications go under `## Clarifications`.
-- On `fix`, the first column is `Done when`, and the map is one paragraph.
+- On `fix`, the first column is `Done when`, the `Do NOT build:` line reads `anything outside the Done when items`, and the map is one paragraph.

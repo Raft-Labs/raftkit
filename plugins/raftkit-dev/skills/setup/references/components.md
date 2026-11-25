@@ -47,7 +47,7 @@ Rendered assets carry the literal marker `raftkit-governance-pack` in their head
 
 `core.hooksPath` is per-clone state: every fresh clone runs `git config core.hooksPath .githooks` once, or re-runs setup. Print that line in the summary.
 
-The hook skips its gates only when `raftkit-dev`'s `verify.mjs` cached every pushed tree green for the same gates and commands within the hour; anything else runs them in full. It reads that cache, never writes it, and needs no plugin installed.
+The hook skips its gates only when `raftkit-dev`'s `verify.mjs` cached every pushed tree green for the same gates and commands within the hour; anything else runs them in full. It reads that cache, never writes it, and needs no plugin installed. The cache is advisory: any local process can write it, so only `verify.mjs` writes it and no skill edits it by hand.
 
 ## Managed settings keys
 
@@ -95,4 +95,4 @@ Hasura is detected, not installed: when the repository has a Hasura config with 
 }
 ```
 
-`optional_components` lists only accepted opt-ins (`review-only-ci`, `allow-rules`, `sg-push-sweep-off`, `disable-plugins`); a declined one goes in `optional_components_declined` so the ask is not repeated. A marker listing `pr-auto-review` makes the re-run draft a labelled removal of `.github/workflows/pr-auto-review.yml` (retired: it auto-commits) and offer `review-only-ci` in its place; on go the id leaves `optional_components`. `pack_version` is the raftkit-core version, so a repo carrying an older pack is detected on the next run.
+`optional_components` lists only accepted opt-ins (`review-only-ci`, `allow-rules`, `sg-push-sweep-off`, `disable-plugins`); a declined one goes in `optional_components_declined` so the ask is not repeated. `pack_version` is the raftkit-core version, so a repo carrying an older pack is detected on the next run.

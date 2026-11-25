@@ -8,17 +8,20 @@
 // Flags, one line each:
 //   BEYOND candidate: <file>   changed since --base (commits, edits, untracked) and in no planned row
 //   MISSING: [AC] …            a planned row's test file is not in the diff
-//   ADDED AFTER PLAN: …        a row added, changed or removed since the plan, or a
-//                              first-committed table that does not match its recorded hash
+//   ADDED AFTER PLAN: …        a row added, changed or removed since the plan, a
+//                              first-committed table that does not match its recorded hash,
+//                              or a record first committed after another branch commit
 //   ORDER: [AC] …              its test commit does not precede its implementation
-// The plan record is always in scope. A row's test commit is the first touching a
+// A changed file only a directory row covers prints `unnamed under <dir>: <file>`,
+// a note for the reviewer, not a flag. The plan record is always in scope. A row's test commit is the first touching a
 // test file only it plans, else the commit titled `test: <the [AC]>`; when neither
 // exists the row prints `ORDER not checked`, which is not a flag. A source file
 // several rows plan is not attributed to any one of them.
 //
 // Usage: node scope-check.mjs --base <sha> [--record <path>] [--root <repo>]
 //        node scope-check.mjs --hash [--record <path>]
-// Exit codes: 0 clean · 1 flags · 2 not checked (bad input, no record, no table).
+// Exit codes: 0 clean · 1 flags · 2 not checked (bad input, no record, no table,
+// a record with no commit on the branch).
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeSync } from "node:fs";
@@ -78,9 +81,11 @@ const covers = (entry, file) => (entry.endsWith("/") ? file.startsWith(entry) : 
 const flags = { beyond: [], missing: [], added: [], order: [] };
 
 // The plan: the table as first committed on this branch.
-const recordCommits = lines(git("rev-list", "--reverse", `${base}..HEAD`, "--", record));
-const first = recordCommits.length ? parseTable(git("show", `${recordCommits[0]}:${record}`)) : table;
+const recordCommits = lines(git("rev-list", "--reverse", "--topo-order", `${base}..HEAD`, "--", record));
+if (!recordCommits.length) stop(`plan record ${record} has no commit on this branch`);
+const first = parseTable(git("show", `${recordCommits[0]}:${record}`));
 const plan = first?.rows ?? table.rows;
+const notes = [];
 
 // BEYOND candidates: everything that differs from the base, committed or not.
 const changed = new Set([
@@ -89,11 +94,16 @@ const changed = new Set([
 ]);
 const planned = plan.flatMap((r) => [...r.tests, ...r.srcs]);
 for (const f of [...changed].sort()) {
-  if (f !== record && !planned.some((p) => covers(p, f))) flags.beyond.push(`BEYOND candidate: ${f}`);
+  if (f === record || planned.includes(f)) continue;
+  const dir = planned.find((p) => p.endsWith("/") && covers(p, f));
+  if (dir) notes.push(`unnamed under ${dir}: ${f}`);
+  else flags.beyond.push(`BEYOND candidate: ${f}`);
 }
 
 // ADDED AFTER PLAN: any row that is not, line for line, in the plan.
 if (!first || first.hash !== first.digest) flags.added.push("ADDED AFTER PLAN: the table does not match the hash recorded when it was planned");
+const before = lines(git("rev-list", "--reverse", "--topo-order", `${base}..${recordCommits[0]}~1`));
+if (before.length) flags.added.push(`ADDED AFTER PLAN: plan record committed after ${git("rev-parse", "--short", before[0]).trim()}`);
 for (const r of table.rows) {
   if (plan.some((p) => p.line === r.line)) continue;
   flags.added.push(plan.some((p) => p.ac === r.ac) ? `ADDED AFTER PLAN: changed — ${r.ac}` : `ADDED AFTER PLAN: ${r.ac}`);
@@ -110,7 +120,6 @@ const commits = lines(git("log", "--reverse", "--topo-order", "--no-merges", "--
 const touches = (c, entries) => c.files.some((f) => entries.some((e) => covers(e, f)));
 const owners = (key, entry) => plan.filter((r) => r[key].includes(entry)).length;
 const titled = (c, ac) => [`test: ${ac}`, `test: ${ac.replace(/^\[AC\]\s*/, "")}`].includes(c.subject);
-const notes = [];
 for (const r of plan) {
   const tested = r.tests.filter((t) => [...changed].some((f) => covers(t, f)));
   if (tested.length === 0) {

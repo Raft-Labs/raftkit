@@ -6,7 +6,7 @@ user-invocable: true
 
 # scope-guard
 
-One branch, one story, two lists. Load `raftkit-core:rules` first unless it is already in this conversation. `implement` and `fix` inject the `[AC]`s, the out-of-scope list, the plan record path, the `scope-check` output and a pinned base-sha into their reviewer's brief; a standalone run fetches them itself.
+One branch, one story, two lists. `implement` and `fix` inject the inputs below, the `scope-check` output and a pinned base-sha, and skip the rules load; a standalone run loads `raftkit-core:rules` first, unless it is already in this conversation, and fetches them itself.
 
 **Fail-closed and report-only.** Every changed hunk maps to an acceptance criterion or it lands in BEYOND. The audit lists and blocks; a human removes flagged code or signs it off.
 

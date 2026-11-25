@@ -1,6 +1,6 @@
 # The PR
 
-Target the squash target resolved at intake, never `main`; one PR per story, never stacked. A standalone raise runs `raftkit-dev:scope-guard` first and proceeds only on its clean line.
+Target the squash target resolved at intake, never `main`; one PR per story, never stacked. A standalone raise first runs `raftkit-dev:scope-guard`, `verify.mjs` and `validate-docs.mjs` on the pinned base, and proceeds only when scope-guard is clean or lists only signed-off items.
 
 **Title**: `type(scope): summary`, imperative, no trailing period, within the repo's commitlint header length or 100 characters. Never raise a failing draft: propose a compliant one and say why.
 

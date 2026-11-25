@@ -220,6 +220,9 @@ grep -qF '`raftkit-core:rules`' "$SETUP/SKILL.md" && grep -qF '`raftkit-core:rul
 check "S47 setup and ui name raftkit-core:rules" ok $?
 [[ "$(grep -r 'frontend-design' "$UI" | wc -l | tr -d ' ')" -eq 1 ]]
 check "S48 ui names frontend-design in one place only" ok $?
+! grep -q '"frontend-design"' plugins/raftkit-dev/.claude-plugin/plugin.json \
+  && grep -qF 'Optional: frontend-design. Install it with: claude plugin install frontend-design@claude-plugins-official' "$UI/SKILL.md"
+check "S48b frontend-design is optional: not a declared engine, and ui names its install line when absent" ok $?
 
 # ---- E1–E12 · check-engines.mjs: engines, blocking Stop hooks, unused plugins --
 ENG=$SETUP/scripts/check-engines.mjs
@@ -268,7 +271,9 @@ eng "$EW/repo" "$EW/plugins.json" --json; EJ="$EOUT"
 check "E1 raftkit-core present: exit 0 and its install path is reported for the CLAUDE.md sources" ok $?
 grep -qxF 'Missing: pr-review-toolkit. Install it with: claude plugin install pr-review-toolkit@claude-plugins-official' <<<"$ETXT"
 check "E2 a missing engine is named with its install command" ok $?
-grep -qxF 'Disabled: frontend-design. Enable it with: claude plugin enable frontend-design@claude-plugins-official' <<<"$ETXT"
+node -e 'const fs=require("fs"); const a=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); a.push({id:"pr-review-toolkit@claude-plugins-official",version:"1.0.0",scope:"user",enabled:false,installPath:process.argv[3]}); fs.writeFileSync(process.argv[2], JSON.stringify(a))' "$EW/plugins.json" "$EW/prt-off.json" "$EW/p/fd"
+eng "$EW/repo" "$EW/prt-off.json"
+grep -qxF 'Disabled: pr-review-toolkit. Enable it with: claude plugin enable pr-review-toolkit@claude-plugins-official' <<<"$EOUT"
 check "E3 a disabled engine is named with its enable command" ok $?
 [[ "$(ejson engines)" == "$(node -e 'const p=require("./plugins/raftkit-dev/.claude-plugin/plugin.json"); console.log(JSON.stringify(p.dependencies.map((d)=>typeof d==="string"?d:d.name).filter((n)=>n!=="raftkit-core")))')" ]]
 check "E4 the engines checked are exactly raftkit-dev's declared dependencies" ok $?
@@ -393,8 +398,7 @@ for f in "$SETUP/assets/fix-loop-prompt.md" "$SETUP/assets/pr-auto-review.yml" "
   "$SETUP/references/pr-auto-review.md" plugins/raftkit-dev/evals/pr-auto-review tests/pr-auto-review-loop-guard.test.sh tests/pr-auto-review-render.test.sh; do
   [[ -e "$f" ]] && retired+=" $f"
 done
-MIG='A marker listing `pr-auto-review`'
-[[ -z "$retired" ]] && ! grep -rhiE 'pr-auto-review|fix-loop|auto-review' "$SETUP" | grep -qvF "$MIG"
+[[ -z "$retired" ]] && ! grep -rqiE 'pr-auto-review|fix-loop|auto-review' "$SETUP"
 check "R1 the auto-commit workflow, its prompt, renderer, reference, tests and evals are gone${retired:+ (still:$retired)}" ok $?
 RO="$SETUP/assets/review-only.yml"
 [[ -f "$RO" && "$(wc -l < "$RO" | tr -d ' ')" -le 40 ]] && grep -q 'raftkit-governance-pack' "$RO" \
@@ -403,6 +407,8 @@ RO="$SETUP/assets/review-only.yml"
   && grep -q 'anthropics/claude-code-action@' "$RO" && grep -q 'github_token: \${{ secrets.GITHUB_TOKEN }}' "$RO" \
   && { [[ "$PYYAML_OK" -eq 0 ]] || python3 -c "import yaml; yaml.safe_load(open('$RO'))"; }
 check "R2 review-only.yml: at most 40 lines, pull_request only, a read-only contents token" ok $?
+[[ "$(grep -cE 'uses: [^ ]+@[0-9a-f]{40} # v[0-9.]+$' "$RO")" -eq "$(grep -c 'uses: ' "$RO")" ]]
+check "R2b every action in review-only.yml is pinned to a full commit SHA with its version in a comment" ok $?
 tools="$(grep -oE -- '--allowedTools "[^"]*"' "$RO" 2>/dev/null)"
 [[ -n "$tools" ]] && ! grep -qE '(^|[",])(Edit|Write|MultiEdit|NotebookEdit|Bash)([",]|$)' <<<"$tools" \
   && ! grep -qE 'Bash\((git|gh pr (merge|review|edit))' <<<"$tools" && grep -qF 'Bash(gh pr comment:*)' <<<"$tools" \
@@ -412,9 +418,6 @@ nn="$(grep -m1 'No skill ever auto-sends' CLAUDE.md)"
 [[ -n "$nn" ]] && ! grep -qiE 'exactly one exception|pr-auto-review' <<<"$nn" && ! grep -q 'pr-auto-review' CLAUDE.md \
   && grep -qF 'assets/review-only.yml' "$SETUP/references/components.md"
 check "R4 CLAUDE.md's never-auto rule has no exception; setup offers review-only CI instead" ok $?
-mig="$(grep -F "$MIG" "$SETUP/references/components.md")"
-[[ -n "$mig" ]] && grep -qF '.github/workflows/pr-auto-review.yml' <<<"$mig" && grep -qF '`review-only-ci`' <<<"$mig"
-check "R5 a re-run on a marker listing pr-auto-review drafts the old workflow's removal and offers review-only CI" ok $?
 
 # ---- S41–S43 · allowlist + version ------------------------------------------
 # Persistent suite tests the allowlist ALGORITHM synthetically (no branch SHAs —

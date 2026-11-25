@@ -8,6 +8,8 @@ user-invocable: true
 
 Load `raftkit-core:rules` first unless it is already in this conversation. The watermark opens every output, no request or flag disables it, and the approval chain follows whenever numbers appear.
 
+- **Announce it** — `Using raftkit-pm:estimate` in the first reply, once (`raftkit-core:rules`).
+
 **The unit is a feature**: one line of the list, one row; never an invented task.
 
 ## Inputs, in one ask
@@ -43,5 +45,3 @@ Assumptions: no migration of live rate cards. No Profile, so every range is wide
 ```
 
 Never a single number, never days, never a feature the list did not name, never a price or a date.
-
-- **Announce it** — `Using raftkit-pm:estimate` in the first reply, once (`raftkit-core:rules`).

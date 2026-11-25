@@ -8,6 +8,8 @@ user-invocable: true
 
 Load `raftkit-core:rules` first unless it is already in this conversation. A recording or a failing step → **file**; a bug handed back with a fix → **retest**.
 
+- **Announce it** — `Using raftkit-qa:bug` in the first reply, once (`raftkit-core:rules`).
+
 ## File
 
 1. **Read at once**, once a target story is named: the Bugs Template, the story with its `Bugs` subtask, and the Jam (events, console, network; frames only for a visual defect). No Jam → the template's next evidence tier, marked, every environment field asked of QA. No `Bugs` subtask → propose it in the same go.
@@ -49,5 +51,3 @@ The skill never closes a bug. Asana tagging is unverified in Cowork: QA applies 
 ```output
 **STOP** — approve to push, edit to change, or decline.
 ```
-
-- **Announce it** — `Using raftkit-qa:bug` in the first reply, once (`raftkit-core:rules`).

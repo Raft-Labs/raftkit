@@ -145,6 +145,10 @@ done
 
 ! grep -rlE '1194107417268910|1216778429401199|1215260732424760' plugins --include='*.md' | grep -v 'raftkit-core/skills/rules/' | grep -q .
 check "S17 GIDs appear only in raftkit-core/skills/rules" ok $?
+rules=plugins/raftkit-core/skills/rules/SKILL.md
+grep -qF 'An edit is not a go: re-present the changed draft in full, ending on the STOP line.' "$rules" \
+  && ! grep -qF 'only the changed sections' "$rules"
+check "S21 the one-stop contract keeps its edit loop: an edit is not a go, and re-presents the whole draft" ok $?
 
 # Model-read files outside any skill's budget carry their own entry in `files`:
 # the commands and every assets/ markdown file except the doc templates.

@@ -8,7 +8,9 @@ user-invocable: true
 
 Load `raftkit-core:rules` first unless it is already in this conversation.
 
-**Mode**: decisions or tasks from one call, with a Profile in place → **from a call**; anything else, a call included → **sources**.
+- **Announce it** — `Using raftkit-pm:profile` in the first reply, once (`raftkit-core:rules`).
+
+**Mode**: decisions or tasks from one call, with a Profile in place → **from a call**; anything else → **sources**, and a call with no Profile yet is a source like any other.
 
 ## Inputs, in one ask
 
@@ -24,13 +26,7 @@ Resolve the project against Asana: one match → show `<name> (gid)`; several �
 
 ## From a call
 
-One meeting (a Fathom link or name, or an uploaded transcript). Asked for decisions or tasks with no Profile → say this and stop:
-
-```output
-Can't extract — no Project Profile for this project. Run raftkit-pm:profile first, then re-run.
-```
-
-Read at once the whole transcript, the Profile and the workspace members, then draft per `references/call.md`: cited decisions, SCOPE CHANGE flags, action items, the Profile delta (⚠️ unless decided unambiguously on the call) and a task batch. Nothing found → say so and create nothing.
+One meeting (a Fathom link or name, or an uploaded transcript). Read at once the whole transcript, the Profile and the workspace members, then draft per `references/call.md`: cited decisions, SCOPE CHANGE flags, action items, the Profile delta (⚠️ unless decided unambiguously on the call) and a task batch. Nothing found → say so and create nothing.
 
 ## Stop once
 
@@ -49,5 +45,3 @@ Profile lives at: <link>
 ```
 
 A call run also lists each created task's link and anything left unassigned.
-
-- **Announce it** — `Using raftkit-pm:profile` in the first reply, once (`raftkit-core:rules`).

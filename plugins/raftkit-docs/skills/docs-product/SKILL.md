@@ -6,7 +6,7 @@ user-invocable: true
 
 # docs-product
 
-Design, generate and reverse-engineer a repo's living docs, in the repo's own documentation system.
+Design, generate and reverse-engineer a repo's living docs, in the repo's own documentation system. Load `raftkit-core:rules` first unless it is already in this conversation.
 
 **Discover, then write.** Every structural opinion is a proposal. Existing conventions win. No doc is written before the human signs off on the full plan. Never write to Asana: stories are `raftkit-pm:story`, bugs are `raftkit-qa:bug`. Consume confirmed PM outputs (Project Profile, decisions, stories, approved planning); never re-ask them.
 
@@ -57,7 +57,7 @@ Sync and verify outcome lines are `raftkit-dev:docs`'s own.
 
 ## Guardrails
 
-- **Plain language** — every line a human reads follows `raftkit-core:rules`' plain-language rules; a house term gets its one-line gloss on first use.
+- **Plain language** — every line a human reads follows `raftkit-core:rules` → Plain output; a house term gets its one-line gloss on first use.
 
 ## Never
 
