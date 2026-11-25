@@ -26,3 +26,4 @@ Do NOT build: <the story's line, verbatim>
 - Never change a row after that commit. A row added later is flagged `ADDED AFTER PLAN`: amend the story, or name the sign-off.
 - Progress lives in git, not in the table: resume from the first `[AC]` with no implementation commit.
 - Readiness answers and clarifications go under `## Clarifications`.
+- On `fix`, the first column is `Done when`, one row per item verbatim, and the map is one paragraph.

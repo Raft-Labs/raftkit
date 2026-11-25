@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Deterministic scope pre-filter for implement and fix: a list of candidates
 // for the reviewer's hunk-level judgment, never the verdict. Reads the plan
-// record's [AC] table (implement/references/plan.md) and git; writes nothing.
+// record's [AC] table, or fix's Done when table (implement/references/plan.md),
+// and git; writes nothing.
 //
 // Flags, one line each:
 //   BEYOND candidate: <file>   changed since --base (commits, edits, untracked) and in no row
@@ -42,14 +43,15 @@ if (!record) {
 record = path.relative(root, path.resolve(root, record)).split(path.sep).join("/");
 if (!existsSync(path.join(root, record))) stop(`no plan record at ${record}`);
 
-/** The [AC] table: its data rows, each split into the [AC], test files and source files. */
+/** The [AC] (or Done when) table: its data rows, each split into the item, test files and source files. */
 function parseTable(text) {
   const L = text.split("\n");
-  const h = L.findIndex((l) => l.trim().startsWith("|") && l.includes("[AC]"));
+  const key = (c) => c.includes("[ac]") || c.includes("done when");
+  const h = L.findIndex((l) => l.trim().startsWith("|") && key(l.toLowerCase()));
   if (h < 0) return null;
   const cells = (l) => l.trim().replace(/^\||\|$/g, "").split(/(?<!\\)\|/).map((c) => c.trim());
   const head = cells(L[h]).map((c) => c.toLowerCase());
-  const col = { ac: head.findIndex((c) => c.includes("[ac]")), test: head.findIndex((c) => c.startsWith("test")), src: head.findIndex((c) => c.startsWith("source")) };
+  const col = { ac: head.findIndex(key), test: head.findIndex((c) => c.startsWith("test")), src: head.findIndex((c) => c.startsWith("source")) };
   if (col.ac < 0 || col.test < 0 || col.src < 0) return null;
   const files = (c) => (/`/.test(c || "") ? [...c.matchAll(/`([^`]+)`/g)].map((m) => m[1]) : String(c || "").split(",")).map((f) => f.trim()).filter(Boolean);
   const rows = [];

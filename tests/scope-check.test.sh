@@ -31,7 +31,7 @@ REC=docs/specs/feat/42-badge.md
 # rows, each trimmed, joined by newlines, sha256 hex.
 table_hash() { node -e '
   const L = require("fs").readFileSync(0, "utf8").split("\n");
-  const h = L.findIndex((l) => l.trim().startsWith("|") && l.includes("[AC]"));
+  const h = L.findIndex((l) => l.trim().startsWith("|") && (l.includes("[AC]") || l.includes("Done when")));
   const rows = [];
   for (let i = h + 2; i < L.length && L[i].trim().startsWith("|"); i++) rows.push(L[i].trim());
   process.stdout.write(require("crypto").createHash("sha256").update(rows.join("\n")).digest("hex"));
@@ -131,6 +131,20 @@ newrepo
 expect_eq "--hash prints the plan-table hash" \
   "plan-table sha256: $(table_hash < "$FIX/record.md")
 exit 0" "$(sc --hash)"
+
+# K · fix's record keys its table on the bug's Done when items
+R="$(mktemp -d "$TEST_ROOT/repo.XXXX")"
+g init -q -b main; touchf README.md; g add -A; g commit -qm init; BASE="$(g rev-parse HEAD)"
+g checkout -qb fix/7-decline; mkdir -p "$R/docs/specs/fix"
+body="$(cat "$FIX/fix-record.md")"; printf '%s\n' "${body//\{\{HASH\}\}/$(table_hash <<<"$body")}" > "$R/docs/specs/fix/7-decline.md"
+g add -A; g commit -qm "docs: plan record"
+expect_eq "a Done when item with no repro test in the diff is MISSING" \
+  'scope-check: 1 flag(s)
+MISSING: A declined card shows "Payment declined — try another card." — no test file in the diff (src/decline.test.ts)
+exit 1' "$(sc --base "$BASE")"
+cm "test: decline repro" src/decline.test.ts; cm "fix: decline message" src/checkout.ts
+expect_eq "a red repro commit before its fix is clean" "scope-check: clean — 0 flags
+exit 0" "$(sc --base "$BASE")"
 
 # J · inputs that make a check impossible are exit 2, never a pass
 newrepo; good_build

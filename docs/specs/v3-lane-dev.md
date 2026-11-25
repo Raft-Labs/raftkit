@@ -66,3 +66,9 @@ Filled in per story below; the integration agent owns `tests/budgets.json` and `
 - `raftkit-core:rules` "Fetch once" says to read the Project Profile and "read all" sections (Constants table). implement now reads only the stack, environments and conventions sections; lane core should let a role skill read the sections it uses.
 - `raftkit-core:rules` "Fetch once" also says "Subagents inherit nothing: brief each with only the slice it uses". Still true on the pair path; no change needed.
 - `dev-flow` DF5, DF12 and DF18 are rewritten for the main-thread build and the pair path; DF23 is new.
+
+### Story 8
+- `fix/references/loop.md` is deleted (rationale prose, read by nothing); its two live rules (a task binds in full, linked or not; separate repro and fix commits) are in `fix/SKILL.md`.
+- `scope-check.mjs` accepts a `Done when` key column so fix's record is checked the same way (`tests/scope-check.test.sh` case K).
+- `dev-flow` DF5 and DF14 drop fix's subagent; DF24 is new.
+- `evals/fix/pending-build-marker/prompt.md` now states steps 2 and 3 ran in the session, not in a subagent.

@@ -72,7 +72,6 @@ while IFS= read -r hit; do
   grep -qE 'model: "(haiku|sonnet|opus)"' <<<"$hit" || { echo "  dispatch without a model: $hit"; ok=1; }
 done < <(grep -rnE 'pr-review-toolkit:[a-z-]+|raftkit-dev:verifier' "$IMPL" "$FIX" --include='*.md')
 grep -qF "two subagents at their tier's model" "$IMPL/SKILL.md" || { echo "  implement's pair dispatch names no tier"; ok=1; }
-grep -qF "one subagent at the defect's tier" "$FIX/SKILL.md" || { echo "  fix's loop dispatch names no tier"; ok=1; }
 check "DF5 every agent dispatch in implement and fix passes a model or its tier's" ok $ok
 
 # DF6 · tiers.md maps each tier to an Agent model value a dispatch can pass
@@ -158,11 +157,10 @@ intake_line="$(grep -n '^1\. \*\*Intake' "$IMPL/SKILL.md" | head -1 | cut -d: -f
 [[ -n "$pm_line" && -n "$intake_line" && "$pm_line" -lt "$intake_line" ]]
 check "DF13 plan mode reads only, stated before implement's intake" ok $?
 
-# DF14 · every phase prompt carries the base SHA and checks it before editing
-#        (cross-group C6: setup's worktree.baseRef only helps if the phase checks)
-grep -qF 'the branch SHA, which it confirms with `git merge-base --is-ancestor <sha> HEAD` before its first edit' "$IMPL/SKILL.md" \
-  && grep -qF 'the branch SHA to confirm before its first edit' "$FIX/SKILL.md"
-check "DF14 implement and fix phase prompts carry and check the branch SHA" ok $?
+# DF14 · every pair subagent carries the base SHA and checks it before editing
+#        (cross-group C6: setup's worktree.baseRef only helps if the subagent checks)
+grep -qF 'the branch SHA, which it confirms with `git merge-base --is-ancestor <sha> HEAD` before its first edit' "$IMPL/SKILL.md"
+check "DF14 implement's pair subagents carry and check the branch SHA" ok $?
 
 # DF15 · the plan is written inline: no planning skill and no Plan subagent;
 #        superpowers is no dependency and no dev skill loads it, so the TDD
@@ -221,9 +219,8 @@ grep -qF 'Every check reads `git diff <base-sha> HEAD`, the base pinned at intak
 grep -q 'git fetch' "$R" && { echo "  the review tail still fetches"; ok=1; }
 check "DF19 every check in the review tail reads the range pinned at intake" ok $ok
 
-# DF20 · fix keeps separate repro and fix commits (1.11). Steps 2 and 3 run in
-#        a subagent handed only those steps verbatim, so the rule has to live in
-#        step 3 itself; references/loop.md never reaches it.
+# DF20 · fix keeps separate repro and fix commits (1.11); scope-check's ORDER
+#        flag reads that order from git, so the rule lives in step 3 itself.
 grep -m1 '^3\. \*\*Smallest fix to green' "$FIX/SKILL.md" | grep -qF 'the fix is a separate `fix:` commit'
 check "DF20 fix's step 3 commits the repro test alone and the fix as a separate fix: commit" ok $?
 
@@ -263,6 +260,21 @@ node -e '
 ' "$big" || { echo "  refusals.json does not register the too-large refusal ahead of generic-cant"; ok=1; }
 grep -qF 'Commit it alone: `test: <the [AC]>`.' "$IMPL/SKILL.md" || { echo "  the failing test is not committed alone"; ok=1; }
 check "DF23 implement's first lines hold the stop, merge and scope rules; too-large stories refuse; tests commit first" ok $ok
+
+# DF24 · fix runs implement's flow in its own thread: the Done when items are
+#        the plan table scope-check reads, steps 2 and 3 dispatch nothing, and
+#        the review is implement's tail with the same three scripts
+ok=0
+grep -qF 'one row per `Done when` item' "$FIX/SKILL.md" || { echo "  fix writes no Done when plan table"; ok=1; }
+grep -qF 'the first column is `Done when`' "$IMPL/references/plan.md" || { echo "  plan.md has no Done when table for fix"; ok=1; }
+grep -qF 'Steps 2 and 3 run in this thread' "$FIX/SKILL.md" || { echo "  fix's repro and fix are dispatched"; ok=1; }
+grep -qiE 'subagent|isolation:' "$FIX/SKILL.md" && { echo "  fix still dispatches a subagent"; ok=1; }
+for s in verify.mjs scope-check.mjs validate-docs.mjs; do
+  grep -qF "\${CLAUDE_PLUGIN_ROOT}/" "$FIX/SKILL.md" && grep -qF "$s" "$FIX/SKILL.md" || { echo "  fix does not run $s"; ok=1; }
+done
+grep -qF 'by `implement/references/review.md`' "$FIX/SKILL.md" || { echo "  fix does not run implement's review tail"; ok=1; }
+[[ -e "$FIX/references/loop.md" ]] && { echo "  fix still carries loop.md"; ok=1; }
+check "DF24 fix builds in its own thread against a Done when table and runs implement's review tail" ok $ok
 
 echo
 echo "dev-flow: $failures failure(s)"
