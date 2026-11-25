@@ -62,12 +62,6 @@ grep -qiE 'multi-?value|multiple.*value|more than one.*value' <<<"$dj" \
   && grep -qiE 'conflict|stop.*ask|ask' <<<"$dj"
 check "F3b multiple core.hooksPath values are a conflict that stops and asks with full evidence" ok $?
 
-# ---- evals + version ------------------------------------------------------
-eval_count=$(find plugins/raftkit-dev/evals/remediation -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-[[ "${eval_count:-0}" -ge 5 ]] \
-  && ! find plugins/raftkit-dev/evals/remediation -mindepth 1 -maxdepth 1 -type d '!' -exec test -f '{}/prompt.md' ';' -print 2>/dev/null | grep -q . \
-  && ! find plugins/raftkit-dev/evals/remediation -mindepth 1 -maxdepth 1 -type d '!' -exec sh -c 'ls "$1"/graders/*.md >/dev/null 2>&1' _ '{}' ';' -print 2>/dev/null | grep -q .
-check "F8 every surviving remediation eval case includes a prompt and grader" ok $?
 
 node - <<'NODE'
 const fs = require("fs");

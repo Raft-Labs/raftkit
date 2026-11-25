@@ -263,11 +263,6 @@ cenv=$(node -e 'const j=JSON.parse(require("fs").readFileSync(process.argv[1],"u
 check "HR25 several candidate roots are reported, --write needs the chosen one, and the cache's env.HASURA_ROOT steers the scaffolder from any directory" ok $?
 rm -rf "$ax"
 
-eval_count=$(find $HP/evals/hasura -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-[[ "${eval_count:-0}" -ge 8 ]] \
-  && ! find $HP/evals/hasura -mindepth 1 -maxdepth 1 -type d '!' -exec test -f '{}/prompt.md' ';' -print 2>/dev/null | grep -q . \
-  && ! find $HP/evals/hasura -mindepth 1 -maxdepth 1 -type d '!' -exec sh -c 'ls "$1"/graders/*.md >/dev/null 2>&1' _ '{}' ';' -print 2>/dev/null | grep -q .
-check "HR14 at least eight hasura eval cases each include a prompt and grader" ok $?
 
 node - <<'NODE'
 const fs = require("fs");

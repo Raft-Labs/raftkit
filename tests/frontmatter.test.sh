@@ -190,9 +190,11 @@ check "FM4a no frontmatter block in plugins/ carries a fault this checker detect
 grep -qE '^checked [0-9]+ frontmatter block' <<<"$real_out"
 check "FM4b the checker actually scanned blocks, not a silent zero-match pass" ok $?
 
+# Every .md under plugins/ that opens with a frontmatter fence is one block.
 scanned="$(sed -nE 's/^checked ([0-9]+) frontmatter block.*/\1/p' <<<"$real_out")"
-[[ -n "$scanned" && "$scanned" -ge 150 ]]
-check "FM4c scanned the whole tree, not a subset ($scanned blocks, floor 150)" ok $?
+expected="$(find plugins -name '*.md' -type f -exec head -1 {} \; | grep -cx -- '---')"
+[[ -n "$scanned" && "$scanned" -eq "$expected" && "$expected" -gt 0 ]]
+check "FM4c scanned the whole tree, not a subset ($scanned of $expected blocks)" ok $?
 
 # --- REGRESSION PIN: the files that carried the defect and still exist ---
 # (v3 deleted meeting and run-sheet; FM4 still covers the fault tree-wide.)

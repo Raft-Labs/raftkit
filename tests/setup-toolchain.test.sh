@@ -325,7 +325,7 @@ eng "$EW/repo-files" "$EW/plugins.json"
 check "E14 a file named packages or apps is skipped, never a crash" ok $?
 node "$DETECT" --root "$EW/repo-files" --json >/dev/null 2>&1
 check "S46 detect-toolchain skips a file named packages or apps too" ok $?
-! grep -rqi 'superpowers' "$SETUP" plugins/raftkit-dev/evals/setup-toolchain tests/fixtures/toolchain
+! grep -rqi 'superpowers' "$SETUP" plugins/raftkit-dev/evals tests/fixtures/toolchain
 check "E15 no setup file, eval or fixture names superpowers: engines come only from raftkit-dev's plugin.json" ok $?
 
 # ---- P1–P11 · pre-push reuses verify.mjs's green cache for the pushed tree ----
@@ -434,7 +434,7 @@ check "R5 a re-run on a marker listing pr-auto-review drafts the old workflow's 
 #   bash tests/setup-toolchain.test.sh --scope-check <base> <head>
 # tests/workflow-integration.test.sh is allowed solely for the separately
 # approved squash-safe scope-check refactor (cross-story test maintenance).
-allow='^(tests/setup-toolchain\.test\.sh|tests/workflow-integration\.test\.sh|tests/fixtures/toolchain/|plugins/raftkit-dev/evals/setup-toolchain/|plugins/raftkit-dev/\.claude-plugin/plugin\.json|\.claude-plugin/marketplace\.json|plugins/raftkit-dev/skills/setup/(SKILL\.md|references/components\.md|assets/(pre-push|quality-guardrail\.yml)|scripts/(detect-toolchain|render-assets)\.mjs))'
+allow='^(tests/setup-toolchain\.test\.sh|tests/workflow-integration\.test\.sh|tests/fixtures/toolchain/|plugins/raftkit-dev/\.claude-plugin/plugin\.json|\.claude-plugin/marketplace\.json|plugins/raftkit-dev/skills/setup/(SKILL\.md|references/components\.md|assets/(pre-push|quality-guardrail\.yml)|scripts/(detect-toolchain|render-assets)\.mjs))'
 syn_ok=$'tests/setup-toolchain.test.sh\ntests/workflow-integration.test.sh\ntests/fixtures/toolchain/npm/package.json\nplugins/raftkit-dev/skills/setup/scripts/render-assets.mjs\nplugins/raftkit-dev/.claude-plugin/plugin.json'
 [[ -z "$(grep -Ev "$allow" <<<"$syn_ok" || true)" ]]
 check "S41a allowlist admits approved Story D paths (synthetic)" ok $?
@@ -455,14 +455,6 @@ node -e '
 '
 check "S43 description lockstep holds" ok $?
 
-# ---- S44–S45 · eval bundle ---------------------------------------------------
-n=$(find plugins/raftkit-dev/evals/setup-toolchain -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-[[ "${n:-0}" -ge 8 ]] \
-  && ! find plugins/raftkit-dev/evals/setup-toolchain -mindepth 1 -maxdepth 1 -type d '!' -exec test -f '{}/prompt.md' ';' -print | grep -q . \
-  && ! find plugins/raftkit-dev/evals/setup-toolchain -mindepth 1 -maxdepth 1 -type d '!' -exec sh -c 'ls "$1"/graders/*.md >/dev/null 2>&1' _ '{}' ';' -print | grep -q .
-check "S44 >=8 eval cases each with prompt.md + graders" ok $?
-! grep -lE 'render nothing|byte-identical' plugins/raftkit-dev/evals/setup-toolchain/*/prompt.md 2>/dev/null | grep -q .
-check "S45 prompts do not leak expected contract wording" ok $?
 
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures test(s) failed"

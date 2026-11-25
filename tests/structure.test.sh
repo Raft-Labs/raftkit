@@ -174,6 +174,150 @@ for f in $budgeted; do
   fi
 done
 
+
+# --- eval bundle: policy cases plus one trigger case per skill ---
+# `claude plugin eval <plugin>` loads only that plugin, so a case sits with the
+# plugin whose skill it exercises. Groups are `policy` (a guarantee) and
+# `trigger` (the right skill fires for a typical request); nothing else.
+cases="$(find plugins -mindepth 4 -maxdepth 4 -type d -path 'plugins/*/evals/*' -not -path '*/evals/results/*' -not -path '*/evals/mocks/*' | sort)"
+npolicy=0; bad=""; fired=""
+while IFS= read -r d; do
+  [[ -n "$d" ]] || continue
+  plugin="$(cut -d/ -f2 <<<"$d")"; group="$(cut -d/ -f4 <<<"$d")"; name="$(cut -d/ -f5 <<<"$d")"
+  case "$group" in
+    policy) npolicy=$((npolicy + 1)) ;;
+    trigger)
+      g="$d/graders/skill-fired.md"
+      skill="$(sed -n "s/^input_match: .*)?\([a-z][a-z-]*\)\"'\$/\1/p" "$g" 2>/dev/null | head -1)"
+      if grep -qx 'type: tool_used' "$g" 2>/dev/null && grep -qx 'tool: Skill' "$g" && [[ "$skill" == "$name" && -d "plugins/$plugin/skills/$skill" ]]; then
+        fired="$fired $plugin/$skill"
+      else
+        bad="$bad $d(trigger-grader)"
+      fi ;;
+    *) bad="$bad $d(group)" ;;
+  esac
+  [[ -f "$d/prompt.md" ]] || bad="$bad $d(no-prompt)"
+  ls "$d"/graders/*.md >/dev/null 2>&1 || bad="$bad $d(no-grader)"
+  owner="$(sed -n 's/.*\(raftkit-[a-z]*\):[a-z-]*.*/\1/p' "$d/prompt.md" 2>/dev/null | head -1)"
+  [[ -z "$owner" || "$owner" == "$plugin" ]] || bad="$bad $d(names-$owner)"
+done <<<"$cases"
+[[ -z "$bad" ]]; check "E1 every eval case is policy/ or trigger/, has a prompt and a grader, and sits with its plugin${bad:+ (bad:$bad)}" ok $?
+[[ "$npolicy" -ge 10 && "$npolicy" -le 14 ]]; check "E2 about twelve policy cases ($npolicy)" ok $?
+
+uncovered=""
+for s in plugins/*/skills/*/; do
+  key="$(basename "$(dirname "$(dirname "$s")")")/$(basename "$s")"
+  [[ " $fired " == *" $key "* ]] || uncovered="$uncovered $key"
+done
+[[ -z "$uncovered" ]]; check "E3 every skill has one trigger case whose skill-fired grader names it${uncovered:+ (uncovered:$uncovered)}" ok $?
+
+# Mocks only: a case gets no tool that writes or reaches a network, and a
+# prompt without frontmatter gets no tools at all, so its skill never loads.
+nofm=""
+for p in plugins/*/evals/*/*/prompt.md; do
+  fmp="$(fm "$p")"
+  grep -qE '^max_turns: [1-9][0-9]*$' <<<"$fmp" && grep -qE '^allowed_tools: \[.*\bSkill\b.*\]$' <<<"$fmp" \
+    && ! grep -qE '^allowed_tools: .*\b(Bash|Write|Edit|NotebookEdit|WebFetch|WebSearch)\b' <<<"$fmp" || nofm="$nofm $p"
+done
+[[ -z "$nofm" ]]; check "E4 every eval prompt declares max_turns and read-only allowed_tools with Skill${nofm:+ (bad:$nofm)}" ok $?
+
+# The harness schema (`claude plugin eval` validates keys strictly and compiles
+# regex with JS RegExp), so a typo fails here, not in a paid run.
+node - <<'NODE'
+const fs = require("fs"), path = require("path");
+const PROMPT = new Set(["schema_version","name","description","tags","plugins","runs","expected_outcome","model","max_turns","timeout_seconds","allowed_tools","artifact_publish","growthbook_overrides","append_system_prompt","env"]);
+const KEYS = {
+  regex: ["target","pattern","flags","match"], tool_order: ["before","after"],
+  tool_used: ["tool","input_match","min","max"], file_exists: ["path","exists"],
+  llm: ["criteria","focus"], baseline: ["baseline_file","criteria"],
+};
+const TARGETS = new Set(["last_message","trace","files","mock_calls"]);
+function scalar(v) {
+  if (/^'.*'$/.test(v)) {
+    const inner = v.slice(1, -1);
+    if (inner.replace(/''/g, "").includes("'")) throw new Error(`single-quoted value holds a bare ' (YAML needs ''): ${v}`);
+    return inner.replace(/''/g, "'");
+  }
+  if (/^".*"$/.test(v)) return JSON.parse(v);
+  if (/^\[.*\]$/.test(v)) return v.slice(1, -1).split(",").map((s) => scalar(s.trim())).filter((s) => s !== "");
+  if (/^-?\d+(\.\d+)?$/.test(v)) return Number(v);
+  if (v === "true" || v === "false") return v === "true";
+  return v;
+}
+function parse(file) {
+  const src = fs.readFileSync(file, "utf8");
+  if (/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(src)) throw new Error(`${path.basename(file)}: control character`);
+  const m = src.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+  if (!m) return null;
+  const fm = {};
+  for (const line of m[1].split("\n")) {
+    const kv = line.match(/^([a-z_]+): (.*)$/);
+    if (!kv) throw new Error(`unparseable frontmatter line: ${line}`);
+    fm[kv[1]] = scalar(kv[2].trim());
+  }
+  return { fm, body: m[2].trim() };
+}
+const bad = [];
+for (const plugin of fs.readdirSync("plugins")) {
+  const evals = path.join("plugins", plugin, "evals");
+  if (!fs.existsSync(evals)) continue;
+  for (const group of fs.readdirSync(evals)) {
+    if (group === "results" || group === "mocks" || !fs.statSync(path.join(evals, group)).isDirectory()) continue;
+    for (const c of fs.readdirSync(path.join(evals, group))) {
+      const dir = path.join(evals, group, c);
+      try {
+        const p = parse(path.join(dir, "prompt.md"));
+        if (!p) throw new Error("prompt.md has no frontmatter");
+        for (const k of Object.keys(p.fm)) if (!PROMPT.has(k)) throw new Error(`prompt.md: unknown key ${k}`);
+        if (!Number.isInteger(p.fm.max_turns) || p.fm.max_turns < 1 || p.fm.max_turns > 200) throw new Error("prompt.md: max_turns out of range");
+        if (!p.body) throw new Error("prompt.md: empty prompt");
+        for (const g of fs.readdirSync(path.join(dir, "graders"))) {
+          const r = parse(path.join(dir, "graders", g));
+          if (!r) throw new Error(`${g}: no frontmatter, so the harness skips it`);
+          const { fm, body } = r, keys = KEYS[fm.type];
+          if (!keys) throw new Error(`${g}: type must be one of ${Object.keys(KEYS).join(" | ")}`);
+          for (const k of Object.keys(fm)) if (!["type","name","weight","arm",...keys].includes(k)) throw new Error(`${g}: unknown key ${k} for type ${fm.type}`);
+          if (fm.weight !== undefined && !(fm.weight > 0)) throw new Error(`${g}: weight must be positive`);
+          if (fm.arm !== undefined && !["with-only","both"].includes(fm.arm)) throw new Error(`${g}: bad arm`);
+          if (fm.type === "regex") {
+            const pattern = fm.pattern ?? body, flags = fm.flags ?? "", match = fm.match ?? "contains";
+            if (!pattern) throw new Error(`${g}: no pattern`);
+            if (!/^[dgimsuvy]*$/.test(flags)) throw new Error(`${g}: bad flags ${flags}`);
+            new RegExp(pattern, flags);
+            if (!/^(contains|not_contains|count:\d+)$/.test(match)) throw new Error(`${g}: bad match ${match}`);
+            if (fm.target !== undefined && !TARGETS.has(fm.target)) throw new Error(`${g}: bad target ${fm.target}`);
+          }
+          if (fm.type === "tool_used") {
+            if (typeof fm.tool !== "string" || !fm.tool) throw new Error(`${g}: no tool`);
+            if (fm.input_match !== undefined) new RegExp(fm.input_match);
+            for (const k of ["min","max"]) if (fm[k] !== undefined && !(Number.isInteger(fm[k]) && fm[k] >= 0)) throw new Error(`${g}: bad ${k}`);
+          }
+          if ((fm.type === "llm" || fm.type === "baseline") && !(fm.criteria ?? body)) throw new Error(`${g}: no criteria`);
+          if (/TODO: describe/.test(fm.criteria ?? fm.pattern ?? body)) throw new Error(`${g}: still the blank init template`);
+        }
+      } catch (e) { bad.push(`${dir}: ${e.message}`); }
+    }
+  }
+}
+if (bad.length) { console.error(bad.join("\n")); process.exit(1); }
+NODE
+check "E5 every eval prompt and grader parses under the harness schema, and every regex compiles" ok $?
+
+# scripts/check-plain-language.mjs owns banned phrases, sentence length, the
+# output fence and the internal label; a grader repeating it is a second copy.
+# Countable criteria go to native regex graders, not a paid llm judge.
+dup=""; counted=""
+for g in plugins/*/evals/*/*/graders/*.md; do
+  [[ -f "$g" ]] || continue
+  grep -qiE 'utilize|leverage|WEESLD|```output|\{25\}|25 words|glossary' "$g" && dup="$dup $g"
+  grep -qx 'type: llm' "$g" && grep -qE 'Requires founder review|\*\*STOP\*\*' "$g" && counted="$counted $g"
+done
+[[ -z "$dup" ]]; check "E6 no eval grader duplicates check-plain-language.mjs${dup:+ (dup:$dup)}" ok $?
+[[ -z "$counted" ]]; check "E7 no llm grader carries a countable criterion${counted:+ (countable:$counted)}" ok $?
+
+grep -qF 'claude plugin eval' docs/maintainers/evals.md 2>/dev/null && grep -qF -- '--allow-real-servers' docs/maintainers/evals.md
+check "E8 docs/maintainers/evals.md says how to run the evals, and never with real servers" ok $?
+
 echo
 echo "structure: ${#present[@]} skill(s) and $nfiles file(s) checked, $failures failure(s)"
 [[ "$failures" -eq 0 ]]
