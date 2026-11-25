@@ -1,6 +1,6 @@
 ---
 name: estimate
-description: Estimate a whole feature list into FE, BE and QA hour ranges for a proposal — "estimate this feature list", "hours for the proposal", "break this scope into FE/BE/QA hours". Takes the list as pasted, a document or a Sheet, widens where knowledge is thin, writes one Sheet after one stop. Hours only. One story — raftkit-pm:story size.
+description: Estimate a feature list or one story into FE, BE and QA hour ranges — "estimate this feature list", "hours for the proposal", "break this scope into FE/BE/QA hours", "how long will this story take?". Takes the list as pasted, a document or a Sheet, widens where knowledge is thin, writes one Sheet after one stop. Hours only.
 user-invocable: true
 ---
 
@@ -8,16 +8,20 @@ user-invocable: true
 
 A feature list → FE, BE and QA hour ranges per feature, totalled, in one Google Sheet. Load `raftkit-core:rules` first unless it is already in this conversation. The watermark opens every output, no request or flag disables it, and the approval chain follows whenever numbers appear.
 
-**The unit is a feature**: one line of the list, one row; never a criterion or a task invented while reading. One story is `raftkit-pm:story` sizing: redirect and stop.
+**The unit is a feature**: one line of the list, one row; never an invented task.
 
 ## Inputs, in one ask
 
-The feature list: pasted, a document, or a read-only source Sheet whose feature column is found from the header and named back. A genuinely ambiguous header is asked about, and the PM naming a column always wins. Also the **implementing developer or team lead** who vets the numbers (no name, no numbers), and the Drive folder for the estimate Sheet — always a new Sheet of its own. The Profile is read for ⚠️ Partial areas; none → say so and widen.
+The feature list: pasted, a document, or a read-only source Sheet whose feature column is found from the header and named back. An ambiguous header is asked about; the PM naming a column wins. Also the **implementing developer or team lead** who vets the numbers (no name, no numbers), and the Drive folder for the estimate Sheet — always a new Sheet of its own. The Profile is read for ⚠️ Partial areas; none → say so and widen.
+
+## One story
+
+One story is a one-feature list: read it live, let its gaps widen the range (no readiness check), and reply in chat in the shape below without the Sheet name or the STOP line. Ask for no Drive folder. Cite any earlier estimate of the same work. A Sheet only if the PM asks, then run step 4.
 
 ## Run
 
-1. **Read at once**: the list, the Profile, and any story a feature names (its gaps widen, never block). Blank, struck-through or out-of-scope rows are skipped and counted.
-2. **Estimate every feature**: FE, BE and QA as low–high hour ranges; no work on a discipline is a stated `0`; one named assumption each; widen where the Profile is ⚠️ Partial, silent or absent, or the feature is one thin line. The range absorbs its drivers; nothing hangs beneath it as `+8 h`. Cross-cutting work attaches to the features needing it, or becomes its own agreed line.
+1. **Read at once**: the list, the Profile, and any story a feature names (gaps widen, never block). Blank, struck-through or out-of-scope rows are skipped and counted.
+2. **Estimate every feature**: FE, BE and QA as low–high hour ranges; no work on a discipline is a stated `0`; one named assumption each; widen where the Profile is ⚠️ Partial, silent or absent, or the feature is one thin line. The range absorbs its drivers; nothing hangs beneath it as `+8 h`. Cross-cutting work attaches to the features needing it.
 3. **Total** each feature and the list, lows to lows and highs to highs, never a midpoint. Deduplicate the assumptions, state the feature count, and check the arithmetic before showing it.
 4. **Stop once** with the draft below and the new Sheet's name; a re-run adds the rows that changed (`references/sheet.md`).
 5. **On go**, create the Sheet per `references/sheet.md` and report the link. Sheet unreachable → the estimate stands in chat and the access fix is named.

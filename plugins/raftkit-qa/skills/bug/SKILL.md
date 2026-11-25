@@ -6,41 +6,45 @@ user-invocable: true
 
 # bug
 
-Two modes, one bug lifecycle. Load `raftkit-core:rules` first unless it is already in this conversation. A recording or a failing step → **file**; a bug handed back with a fix → **retest**.
+Load `raftkit-core:rules` first unless it is already in this conversation. A recording or a failing step → **file**; a bug handed back with a fix → **retest**.
 
 ## File
 
-1. **Validate, then read at once.** No target story → ask; a bug never floats free. Then in one turn: the Bugs Template (skip if already in this chat), the story with its `Bugs` subtask, and the Jam recording (metadata, user events, console, network; frames only for a visual defect; the rules' `references/asana-calls.md`). No Jam → the next tier the template lists, marked, with the manual environment block required. No `Bugs` subtask → propose creating it in the same go.
-2. **Pre-fill from evidence** per `references/filing.md`: environment, steps from a clean start, actual result with console and network errors verbatim. Two unrelated defects in one recording → two drafts in one message.
-3. **Propose the judgment fields** instead of asking them one at a time: severity, priority, reproducibility, expected result, `Done when`, each `proposed — edit inline`; one the evidence does not support is `⚠️ assumed until confirmed` and blocks the write. An odd severity/priority pair is flagged, not blocked.
-4. **Self-check** against the template and the checklist in `references/filing.md`; the title is `[Platform][Severity] what + where`.
-5. **Stop once** with the full draft, its target (a new subtask under the story's `Bugs` subtask) and the priority tag's exact name (`references/filing.md`). Every `⚠️` field and open checklist question sits directly above the stop line; a go that does not answer them is an edit.
+1. **Read at once**, once a target story is named: the Bugs Template, the story with its `Bugs` subtask, and the Jam (events, console, network; frames only for a visual defect). No Jam → the template's next evidence tier, marked, every environment field asked of QA. No `Bugs` subtask → propose it in the same go.
+2. **Pre-fill from evidence**: environment, steps from a clean start, actual result with console and network errors **verbatim** (a redacted secret is marked). Never invent device or console data. Two defects → two drafts.
+3. **Propose the judgment fields**, each `proposed — edit inline`: severity, priority, reproducibility, expected result (quoted from the story), `Done when` (one checkable line per item). A field the evidence does not support, and always `Done when`, is `⚠️ assumed until confirmed` and blocks the write.
+4. **Title**: `[Platform][Severity] what + where`.
+5. **Stop once** with the draft, its target (a subtask under the story's `Bugs` subtask) and the priority tag's exact name, looked up, never created. Open `⚠️` fields sit above the stop line; a go that leaves one open is an edit.
 6. **On go**: create, read back once, then:
 
 ```output
-Filed under <story> · Bugs — <bug link>, tier <tier>, checklist complete — apply tag <name> by hand.
+Filed under <story> · Bugs — <bug link>, tier <tier> — apply tag <name> by hand.
 ```
-
 
 ## Retest
 
-1. **One bug per run**; none named → ask, never guess. Read the bug once (no template needed; it carries its own labels). Before any other fetch, check its two gates (`Fixed in build: pending — first build containing PR #<n>` counts as empty); either failing ends the run:
+1. **One bug per run**; none named → ask. Read it once and check its two gates first (`Fixed in build: pending — first build containing PR #<n>` counts as empty); either failing ends the run:
 
 ```output
 Can't retest — no build to test against. Fill "Fixed in build ___" or name it in the hand-back, then hand it back.
 Can't retest — this bug has no "Done when" checklist. Add it in file mode, then retest.
 ```
 
-2. **Build the pass list** per `references/retest.md`: every `Done when` item plus every adjacent flow the bug names. The stated build, the stated environment, never a substitute.
+2. **Pass list**: every `Done when` item plus every adjacent flow the bug names, on the stated build and environment only:
 
 ```output
 Can't retest — build <build> isn't available in <environment>.
 ```
 
-3. **Show the pass list as one table.** QA returns pass/fail and evidence for every item in one reply, or a retest Jam link the skill reads.
-4. **Stop once** with the pass comment, or the fail comment (fresh evidence verbatim, failures itemised) plus the retest-failed tag's exact name (`references/retest.md`). The skill never marks a bug complete; QA does.
+3. **Show it as one table.** QA returns pass or fail with evidence per item, or a retest Jam.
+4. **Stop once** with the pass comment, or the fail comment (fresh evidence verbatim, each failure tied to it) and the retest-failed tag's name. After it lands:
 
-The stop line for both modes:
+```output
+Retest passed — all N done-when items + M regression checks green on build X. Close the bug.
+Retest Failed — K of N+M items red on build X, returned to dev — apply tag <name> by hand.
+```
+
+The skill never closes a bug. Asana tagging is unverified in Cowork: QA applies every tag by hand. The stop line for both modes:
 
 ```output
 **STOP** — approve to push, edit to change, or decline.
