@@ -677,10 +677,9 @@ check "README states blockers go to the dashboard" ok $?
 grep -qi 'only in a session where a RaftKit skill ran' "$README" \
   && grep -qi 'first 512 characters' "$README" && grep -qi 'first 200 characters' "$README"
 check "README states prompt and error text is collected only where a RaftKit skill ran, and how much" ok $?
-# Sent from every session too: the shunt's deny record and listing coverage.
-grep -qi 'when the read shunt declines a file, its extension and line count' "$README" \
-  && grep -qi 'which RaftKit skills the skill listing described' "$README"
-check "README lists the shunt's deny record and the listing coverage among what every session sends" ok $?
+# Sent from every session too: listing coverage.
+grep -qi 'which RaftKit skills the skill listing described' "$README"
+check "README lists the listing coverage among what every session sends" ok $?
 ! grep -qiE 'every prompt you submit, in full|anything from a repo you didn.t run RaftKit in' "$README"
 check "README no longer claims full prompts everywhere or nothing from other repos" ok $?
 
@@ -1691,24 +1690,18 @@ done
 # Checking a story is raftkit-pm:story, which org sync installs here too; only
 # building one goes to implement, which branches and builds.
 [[ "$ctx" != *"map: a story URL"* ]]; check "the entry map does not send every story URL to implement" ok $?
-[[ "$ctx" == *"RaftKit is not set up in this repo — run raftkit-dev:setup"* ]]
-check "a repo without setup's marker gets the not-set-up line" ok $?
+[[ "$ctx" != *"not set up"* ]]
+check "a repo without setup's marker gets no not-set-up nag" ok $?
 words="$(printf '%s' "$ctx" | wc -w | tr -d ' ')"
 [[ "$words" -ge 20 && "$words" -le 60 ]]
-check "the entry map, not-set-up line included, is at most 60 words ($words)" ok $?
+check "the entry map is at most 60 words ($words)" ok $?
 for var in "RAFTKIT_TELEMETRY=off" "DO_NOT_TRACK=1"; do
   [[ "$(map_ctx "$bare" "$var")" == "$ctx" ]]
   check "the entry map still prints with $var" ok $?
 done
-setup_done="$(new_sandbox)"; git -C "$setup_done" init -q 2>/dev/null; mkdir -p "$setup_done/.raftkit" "$setup_done/src"
-echo '{}' > "$setup_done/.raftkit/governance-pack.json"
-ctx2="$(map_ctx "$setup_done/src")"
-[[ "$ctx2" == *"raftkit-dev:implement"* && "$ctx2" != *"not set up"* ]]
-check "a repo with setup's marker (checked at the git root) gets the map alone" ok $?
 not_git="$(new_sandbox)"
-ctx3="$(map_ctx "$not_git")"
-[[ "$ctx3" == *"raftkit-dev:implement"* && "$ctx3" != *"not set up"* ]]
-check "outside a git repo there is no not-set-up line" ok $?
+[[ "$(map_ctx "$not_git")" == "$ctx" ]]
+check "the map is the same in or out of a git repo, set up or not" ok $?
 # The map names raftkit-dev's skills, so without raftkit-dev it says nothing.
 alone="$(new_sandbox)"; mkdir -p "$alone/plugins"; cp -R plugins/raftkit-core "$alone/plugins/"
 out="$(printf '{"cwd":"%s"}' "$bare" | node "$alone/plugins/raftkit-core/hooks/entry-map.mjs" 2>/dev/null)"
@@ -1718,6 +1711,169 @@ map_ctx "$bare" RAFTKIT_TELEMETRY_DIR="$d" >/dev/null
 expect_eq "the entry map writes nothing" "no" "$([[ -e "$d" ]] && echo yes || echo no)"
 echo 'not json {{' | node "$MAP" >/dev/null 2>&1
 check "the entry map exits 0 on malformed input" ok $?
+
+# ================================================================ 15. no shunt
+# v3 removed the PreToolUse Read shunt, its bulk-reader agent and its event.
+node -e '
+  const h = JSON.parse(require("fs").readFileSync("plugins/raftkit-core/hooks/hooks.json", "utf8"));
+  const args = Object.values(h.hooks).flat().flatMap((m) => m.hooks || []).flatMap((x) => x.args || []);
+  process.exit(!h.hooks.PreToolUse && !args.some((a) => /shunt/.test(a)) ? 0 : 1);
+'
+check "hooks.json registers no PreToolUse hook and no shunt" ok $?
+for f in hooks/shunt.mjs hooks/lib/shunt-rules.mjs agents/bulk-reader.md; do
+  [[ ! -e "plugins/raftkit-core/$f" ]]; check "raftkit-core/$f is gone" ok $?
+done
+! grep -rqiE 'shunt|bulk-reader|raftkit_shunt' plugins/raftkit-core/hooks plugins/raftkit-core/skills plugins/raftkit-core/commands
+check "no core hook, skill or command mentions the shunt or the bulk-reader" ok $?
+
+# ================================================================ 16. token accounting
+# Moved from the deleted shunt suite. Its own root, so no stub server under
+# TEST_ROOT can change the tree run-tokens is proven not to write to.
+TOK_ROOT="$TEST_ROOT/tokens"; mkdir -p "$TOK_ROOT"
+# The fixture mirrors the shapes measured in real CLI 2.1.280 transcripts, with
+# every piece of content removed: one message written as several lines that
+# repeat its usage, subagents in their own files (placeholder usage first,
+# workflow agents one level deeper, agentType in a sibling .meta.json), a usage
+# whose top-level fields are zero with the real numbers in `iterations`, and a
+# fork that copies its parent's records before its own SessionStart:fork.
+CFG="$TOK_ROOT/cfg"
+PROJ="$CFG/projects/-fixture"
+SID="11111111-aaaa-4bbb-8ccc-000000000001"
+FORK="22222222-aaaa-4bbb-8ccc-000000000002"
+T="$PROJ/$SID.jsonl"
+mkdir -p "$PROJ/$SID/subagents/workflows/wf_fixture"
+node - "$PROJ" "$SID" "$FORK" <<'FIXTURE'
+const fs = require("fs");
+const [proj, sid, fork] = process.argv.slice(2);
+const u = (i, o, cr, cc, extra = {}) => ({ input_tokens: i, output_tokens: o, cache_read_input_tokens: cr, cache_creation_input_tokens: cc, ...extra });
+const msg = (sessionId, id, ts, usage, model = "claude-opus-5-5", content = [{ type: "text", text: "" }]) =>
+  JSON.stringify({ type: "assistant", sessionId, timestamp: ts, isSidechain: false, message: { id, model, usage, content } });
+const line = (o) => JSON.stringify(o);
+const main = [
+  line({ type: "user", sessionId: sid, timestamp: "2026-09-18T01:00:00.000Z", message: { role: "user", content: "hi" } }),
+  line({ type: "attachment", sessionId: sid, timestamp: "2026-09-18T01:00:00.100Z", attachment: { type: "skill_listing", names: ["raftkit-dev:implement", "raftkit-dev:fix", "raftkit-core:rules", "other:x"], content: "- raftkit-dev:implement: Take one story\n- raftkit-dev:fix\n- raftkit-core:rules\n- other:x: y" } }),
+  // m1: three lines, one message — counted once
+  msg(sid, "m1", "2026-09-18T01:00:01.000Z", u(10, 20, 30, 40)),
+  msg(sid, "m1", "2026-09-18T01:00:01.100Z", u(10, 20, 30, 40)),
+  msg(sid, "m1", "2026-09-18T01:00:01.200Z", u(10, 20, 30, 40)),
+  // m2: top-level zeros, real numbers in iterations
+  msg(sid, "m2", "2026-09-18T01:00:02.000Z", u(0, 0, 0, 0, { iterations: [{ type: "message", ...u(5, 5, 5, 5) }] }), "claude-opus-5"),
+  msg(sid, "syn", "2026-09-18T01:00:02.500Z", u(0, 0, 0, 0), "<synthetic>"),
+  "not json at all",
+  // m3 starts the RaftKit run: the model invokes implement
+  msg(sid, "m3", "2026-09-18T01:00:03.000Z", u(1, 1, 1, 1), "claude-opus-5-5", [{ type: "tool_use", name: "Skill", input: { skill: "raftkit-dev:implement" } }]),
+  msg(sid, "m4", "2026-09-18T01:00:04.000Z", u(100, 0, 0, 0)),
+  // a nested skill inside the run does not restart it
+  msg(sid, "m5", "2026-09-18T01:00:05.000Z", u(0, 0, 0, 0), "claude-opus-5-5", [{ type: "tool_use", name: "Skill", input: { skill: "raftkit-dev:scope-guard" } }]),
+];
+fs.writeFileSync(`${proj}/${sid}.jsonl`, main.join("\n") + "\n");
+const sub = `${proj}/${sid}/subagents`;
+fs.writeFileSync(`${sub}/agent-a1.meta.json`, JSON.stringify({ agentType: "Explore" }));
+fs.writeFileSync(`${sub}/agent-a1.jsonl`, [
+  msg("x", "s1", "2026-09-18T01:00:03.500Z", u(1, 1, 0, 0), "claude-haiku-4-5"),      // placeholder
+  msg("x", "s1", "2026-09-18T01:00:03.600Z", u(2, 3, 4, 5), "claude-haiku-4-5"),      // final: 14
+].join("\n") + "\n");
+fs.writeFileSync(`${sub}/workflows/wf_fixture/agent-b2.meta.json`, JSON.stringify({ agentType: "general-purpose" }));
+fs.writeFileSync(`${sub}/workflows/wf_fixture/agent-b2.jsonl`, msg("x", "s2", "2026-09-18T01:00:03.700Z", u(6, 6, 6, 6), "claude-sonnet-5") + "\n"); // 24
+// The fork: the parent's m1 copied under the fork's own sessionId and the
+// parent's timestamps, then its own start, then its own message.
+fs.writeFileSync(`${proj}/${fork}.jsonl`, [
+  msg(fork, "m1", "2026-09-18T01:00:01.000Z", u(10, 20, 30, 40)),
+  msg(fork, "m4", "2026-09-18T01:00:04.000Z", u(100, 0, 0, 0)),
+  line({ type: "attachment", sessionId: fork, timestamp: "2026-09-18T02:00:00.000Z", attachment: { type: "hook_success", hookEvent: "SessionStart", hookName: "SessionStart:fork" } }),
+  msg(fork, "f1", "2026-09-18T02:00:01.000Z", u(7, 7, 7, 7)),
+].join("\n") + "\n");
+FIXTURE
+
+TOKENS_LIB="$PWD/plugins/raftkit-core/hooks/lib/tokens.mjs"
+tok() { # <session> <transcript> <dotted field> — one field of runTokens()
+  node --input-type=module -e '
+    const { runTokens } = await import(process.argv[1]);
+    const t = runTokens(process.argv[3], process.argv[2]);
+    let v = t; for (const k of process.argv[4].split(".")) v = v?.[k];
+    process.stdout.write(String(v));
+  ' "$TOKENS_LIB" "$1" "$2" "$3"
+}
+export RAFTKIT_TELEMETRY_DIR="$TOK_ROOT/tokstate"
+# main 100 (m1 once) + 20 (m2 via iterations) + 4 (m3) + 100 (m4) = 224; subagents 14 + 24 = 38
+expect_eq "a message spread over several lines is counted once" "224" "$(tok "$SID" "$T" main)"
+expect_eq "subagent files, workflow agents included, are the sidechain" "38" "$(tok "$SID" "$T" sidechain)"
+expect_eq "the total is main plus subagents" "262" "$(tok "$SID" "$T" total)"
+expect_eq "a subagent's placeholder usage is replaced by its final line" "14" "$(tok "$SID" "$T" by_agent.Explore)"
+expect_eq "subagent tokens are attributed by agentType" "24" "$(tok "$SID" "$T" by_agent.general-purpose)"
+expect_eq "subagent tokens appear in the by-model totals" "24" "$(tok "$SID" "$T" by_model.claude-sonnet-5)"
+expect_eq "tokens are still attributed per tier" "14" "$(tok "$SID" "$T" by_tier.haiku)"
+expect_eq "a usage whose top level is zero is counted from its iterations" "20" "$(tok "$SID" "$T" by_model.claude-opus-5)"
+expect_eq "a zero-usage message adds no model row" "undefined" "$(tok "$SID" "$T" 'by_model.<synthetic>')"
+expect_eq "a forked session does not re-count its parent's history" "28" "$(tok "$FORK" "$PROJ/$FORK.jsonl" total)"
+
+# Incremental: an unchanged transcript is not re-counted, a later line for the
+# same message replaces its usage, and a new message is added.
+expect_eq "re-reading an unchanged transcript does not double-count" "262" "$(tok "$SID" "$T" total)"
+node -e '
+  const u = { input_tokens: 150, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 };
+  process.stdout.write(JSON.stringify({ type: "assistant", timestamp: "2026-09-18T01:00:05.500Z", message: { id: "m5", model: "claude-opus-5-5", usage: u, content: [] } }) + "\n");
+' >> "$T"
+expect_eq "a later line for the same message replaces its usage, across reads" "412" "$(tok "$SID" "$T" total)"
+node -e '
+  const u = { input_tokens: 8, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 };
+  process.stdout.write(JSON.stringify({ type: "assistant", timestamp: "2026-09-18T01:00:06.000Z", message: { id: "m6", model: "claude-opus-5-5", usage: u, content: [] } }) + "\n");
+' >> "$T"
+expect_eq "an appended message is folded in" "420" "$(tok "$SID" "$T" total)"
+
+# Listing coverage rides along the first time a skill_listing is seen.
+L="$TOK_ROOT/listing.jsonl"; head -2 "$T" > "$L"
+expect_eq "listing coverage counts RaftKit entries" "3" "$(tok sessL "$L" listing.raftkit)"
+expect_eq "  and those that kept a description" "raftkit-dev:implement" "$(tok sessL2 "$L" listing.described)"
+expect_eq "  and is reported once, not on every turn" "undefined" "$(tok sessL "$L" listing)"
+
+expect_eq "a missing transcript yields null" "null" \
+  "$(node --input-type=module -e '
+      const { runTokens } = await import(process.argv[1]);
+      process.stdout.write(String(runTokens("/nonexistent/x.jsonl", "sX")));
+    ' "$TOKENS_LIB")"
+expect_eq "a transcript with no session id yields null" "null" \
+  "$(node --input-type=module -e '
+      const { runTokens } = await import(process.argv[1]);
+      process.stdout.write(String(runTokens(process.argv[2], "")));
+    ' "$TOKENS_LIB" "$T")"
+
+# --- run-tokens.mjs (C1)
+# The STOP quotes this line, so it is a contract: exactly one line, measured or
+# "not measured", never an estimate, never a write.
+RUN_TOKENS="$PWD/plugins/raftkit-dev/scripts/run-tokens.mjs"
+RT_STATE="$TOK_ROOT/rt-state"   # where a hook would keep state; run-tokens must never create it
+rt() { env CLAUDE_CONFIG_DIR="$CFG" RAFTKIT_TELEMETRY_DIR="$RT_STATE" CLAUDE_PLUGIN_DATA="$RT_STATE" node "$RUN_TOKENS" "$@" 2>/dev/null; }
+out="$(rt "$SID")"
+expect_eq "run-tokens prints exactly one line" "1" "$(printf '%s\n' "$out" | wc -l | tr -d ' ')"
+# The run starts at the implement invocation (m3): 4 + 100 + 150 + 8 = 262 main,
+# plus both subagents, which started after it: 38.
+expect_eq "run-tokens measures the run from its skill invocation" \
+  "Token total: 300 tokens (main 262, subagents 38; claude-opus-5-5: 262, claude-sonnet-5: 24, claude-haiku-4-5: 14) — measured" "$out"
+expect_eq "run-tokens --session measures the whole session" \
+  "Token total: 420 tokens (main 382, subagents 38; claude-opus-5-5: 362, claude-sonnet-5: 24, claude-opus-5: 20, claude-haiku-4-5: 14) — measured" "$(rt "$SID" --session)"
+expect_eq "an unknown session is not measured" "Token total: not measured" "$(rt "33333333-aaaa-4bbb-8ccc-000000000003")"
+# A traversal that would resolve to a real transcript if the id went unchecked.
+expect_eq "a malformed session id is not measured" "Token total: not measured" "$(rt "../-fixture/$SID")"
+expect_eq "no session id is not measured" "Token total: not measured" "$(rt)"
+tree_sum() { find "$TOK_ROOT" -type f -print0 | sort -z | xargs -0 cksum | cksum; }
+before="$(tree_sum)"
+rt "$SID" >/dev/null
+expect_eq "run-tokens writes nothing" "$before|no" "$(tree_sum)|$([[ -e "$RT_STATE" ]] && echo yes || echo no)"
+
+# Installed from the plugin cache, run-tokens finds raftkit-core beside it.
+CACHE="$CFG/plugins/cache/raftkit"
+mkdir -p "$CACHE/raftkit-core/9.9.9" "$CACHE/raftkit-dev/9.9.9"
+cp -R plugins/raftkit-core/. "$CACHE/raftkit-core/9.9.9/"
+cp -R plugins/raftkit-dev/. "$CACHE/raftkit-dev/9.9.9/"
+printf '{"version":2,"plugins":{"raftkit-core@raftkit":[{"scope":"user","installPath":"%s","version":"9.9.9"}]}}' \
+  "$CACHE/raftkit-core/9.9.9" > "$CFG/plugins/installed_plugins.json"
+expect_eq "run-tokens installed from the cache finds raftkit-core" "measured" \
+  "$(env CLAUDE_CONFIG_DIR="$CFG" node "$CACHE/raftkit-dev/9.9.9/scripts/run-tokens.mjs" "$SID" 2>/dev/null | grep -o 'measured$')"
+rm -rf "$CACHE/raftkit-core"
+expect_eq "run-tokens without raftkit-core says not measured" "Token total: not measured" \
+  "$(env CLAUDE_CONFIG_DIR="$CFG" node "$CACHE/raftkit-dev/9.9.9/scripts/run-tokens.mjs" "$SID" 2>/dev/null)"
+rm -rf "$CFG/plugins"
 
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures test(s) failed"
