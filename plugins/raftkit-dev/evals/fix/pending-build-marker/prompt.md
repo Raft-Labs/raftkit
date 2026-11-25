@@ -12,11 +12,14 @@ What the run has already done in this session, given here:
 - The bug task: environment (Staging, build 214, Chrome on macOS), steps,
   expected "Payment declined — try another card.", actual (blank screen), a
   `Done when` checklist of two items, and an empty `Fixed in build`.
-- Branch `fix/1216770000000123-payment-decline-blank`, cut from `development`.
-- The repro subagent returned: the red test `checkout/decline.test.ts > shows
-  the decline message` failed for the reason the bug describes, the smallest
-  fix turned it green, and the whole suite is green (212 tests).
-- The review pass returned no findings; scope-guard: clean; docs: not impacted.
+- Branch `fix/1216770000000123-payment-decline-blank`, cut from `development`,
+  with its plan record committed.
+- Steps 2 and 3 ran in this session: the red test `checkout/decline.test.ts >
+  shows the decline message` failed for the reason the bug describes and was
+  committed alone, the smallest fix turned it green in a separate `fix:`
+  commit, and the whole suite is green (212 tests).
+- The gate batch returned no findings; scope-check and the reviewer: clean;
+  docs: not impacted.
 
 Eval harness: this session has no connector or shell tools. Every read and
 result the run needs is given above, the run ends at its stop and nothing is
