@@ -71,7 +71,7 @@ others="$(grep -rhoE 'pr-review-toolkit:[a-z-]+' "$IMPL" "$FIX" | grep -vx 'pr-r
 while IFS= read -r hit; do
   grep -qE 'model: "(haiku|sonnet|opus)"' <<<"$hit" || { echo "  dispatch without a model: $hit"; ok=1; }
 done < <(grep -rnE 'pr-review-toolkit:[a-z-]+|raftkit-dev:verifier' "$IMPL" "$FIX" --include='*.md')
-grep -qF "two subagents at their tier's model" "$IMPL/SKILL.md" || { echo "  implement's pair dispatch names no tier"; ok=1; }
+grep -qF "two subagents at their tier's model" "$IMPL/references/pair.md" || { echo "  implement's pair dispatch names no tier"; ok=1; }
 check "DF5 every agent dispatch in implement and fix passes a model or its tier's" ok $ok
 
 # DF6 · tiers.md maps each tier to an Agent model value a dispatch can pass
@@ -121,15 +121,23 @@ bad="$(grep -rhoE 'verify\.mjs --only [a-z]+' "$IMPL" "$FIX" "$DEV/agents" 2>/de
 check "DF10 implement and fix run their gates through verify.mjs" ok $ok
 
 # DF11 · the review tail is one reviewer plus scripts, no wrapper agent: the
-#        reviewer's brief carries the [AC]s, the Do NOT build line and the plan
-#        table and returns scope-guard's block; the gate batch runs the three
-#        scripts beside it; BEYOND clears only by a named human
+#        [AC]s are re-fetched and scope-check runs first, so the reviewer's
+#        brief carries the fetched [AC]s, the Do NOT build line, the plan table,
+#        the record path and the flags, and returns scope-guard's block; verify
+#        and validate-docs run beside it; BEYOND clears only by a named human
 R=$IMPL/references/review.md
 ok=0
 [[ -e "$DEV/agents/verifier.md" ]] && { echo "  the verifier agent still exists"; ok=1; }
 grep -rqF 'raftkit-dev:verifier' "$IMPL" "$FIX" "$SG" "$DOCS" && { echo "  a dev-flow skill still names the verifier"; ok=1; }
-grep -qF 'the `[AC]`s verbatim, the `Do NOT build:` line, the plan table' "$R" || { echo "  the reviewer brief lacks the [AC]s, Do NOT build or plan table"; ok=1; }
+grep -qF 'the re-fetched `[AC]`s verbatim, the `Do NOT build:` line, the plan table, the plan record path, the `scope-check` output' "$R" || { echo "  the reviewer brief lacks the fetched [AC]s, Do NOT build, plan table, record path or scope-check flags"; ok=1; }
 grep -qF "It returns scope-guard's output block exactly." "$R" || { echo "  the reviewer does not return scope-guard's block"; ok=1; }
+# the audit follows the core re-fetch rule and stays fail-closed through a
+# reviewer whose own prompt filters low-confidence findings
+refetch="$(grep -n '^First, together: re-fetch the `\[AC\]`s' "$R" | head -1 | cut -d: -f1)"
+reviewer="$(grep -n '^- \*\*One reviewer\*\*' "$R" | head -1 | cut -d: -f1)"
+[[ -n "$refetch" && -n "$reviewer" && "$refetch" -lt "$reviewer" ]] || { echo "  the reviewer is briefed before the [AC] re-fetch and scope-check return"; ok=1; }
+grep -qF '"The scope audit is exempt from your confidence threshold' "$R" || { echo "  the reviewer's confidence filter can drop a BEYOND hunk"; ok=1; }
+grep -qF 'A scope-check BEYOND candidate the reviewer'"'"'s block does not explicitly map to an `[AC]` stays BEYOND.' "$R" || { echo "  an unmapped scope-check candidate can clear"; ok=1; }
 for s in verify.mjs scope-check.mjs validate-docs.mjs; do
   grep -qF "**\`$s\`**" "$R" || { echo "  the gate batch does not run $s"; ok=1; }
   grep -qF "$s" "$IMPL/SKILL.md" || { echo "  implement does not invoke $s"; ok=1; }
@@ -144,7 +152,7 @@ check "DF11 one reviewer and three scripts make the review tail; the verifier ag
 ok=0
 grep -qF 'commit the record alone and show it without waiting' "$IMPL/SKILL.md" || { echo "  implement does not commit the record alone"; ok=1; }
 grep -qF 'Commit the record alone, before the first test.' "$IMPL/references/plan.md" || { echo "  plan.md does not commit the record before the first test"; ok=1; }
-grep -qF 'never edits the plan record' "$IMPL/SKILL.md" || { echo "  a pair subagent may edit the record"; ok=1; }
+grep -qF 'never edits the plan record' "$IMPL/references/pair.md" || { echo "  a pair subagent may edit the record"; ok=1; }
 grep -qF 'Progress lives in git, not in the table' "$IMPL/references/plan.md" || { echo "  progress is written into the hashed table"; ok=1; }
 check "DF12 implement's plan record is committed alone, first, and only the main thread writes it" ok $ok
 
@@ -159,7 +167,7 @@ check "DF13 plan mode reads only, stated before implement's intake" ok $?
 
 # DF14 · every pair subagent carries the base SHA and checks it before editing
 #        (cross-group C6: setup's worktree.baseRef only helps if the subagent checks)
-grep -qF 'the branch SHA, which it confirms with `git merge-base --is-ancestor <sha> HEAD` before its first edit' "$IMPL/SKILL.md"
+grep -qF 'the branch SHA, which it confirms with `git merge-base --is-ancestor <sha> HEAD` before its first edit' "$IMPL/references/pair.md"
 check "DF14 implement's pair subagents carry and check the branch SHA" ok $?
 
 # DF15 · the plan is written inline: no planning skill and no Plan subagent;
@@ -201,8 +209,9 @@ check "DF17 fix and qa retest carry the identical pending-build string" ok $?
 #        commits race on index.lock and carry each other's files.
 ok=0
 grep -m1 '^4\. \*\*Build' "$IMPL/SKILL.md" | grep -qF 'Build in the main thread, one `[AC]` at a time' || { echo "  implement does not build in the main thread by [AC]"; ok=1; }
-pair="$(grep -m1 '^   \*\*Pair path\*\*' "$IMPL/SKILL.md")"
-grep -qF 'only when the plan marks the FE and BE halves independent behind a frozen contract' <<<"$pair" || { echo "  the pair path is not limited to independent halves"; ok=1; }
+grep -m1 '^4\. \*\*Build' "$IMPL/SKILL.md" | grep -qF 'by `references/pair.md` only when the plan marks FE and BE independent' || { echo "  implement does not limit the pair path"; ok=1; }
+pair="$(cat "$IMPL/references/pair.md" 2>/dev/null)"
+grep -qF 'when the plan marks the FE and BE halves independent behind a frozen contract' <<<"$pair" || { echo "  the pair path is not limited to independent halves"; ok=1; }
 grep -qF 'isolation: "worktree"' <<<"$pair" || { echo "  the pair is not dispatched with worktree isolation"; ok=1; }
 grep -qF 'bootstraps with the repo'"'"'s detected package manager' <<<"$pair" || { echo "  a pair worktree starts without its dependencies"; ok=1; }
 grep -qF 'the parent cherry-picks' <<<"$pair" || { echo "  no step lands the pair's worktree commits on the branch"; ok=1; }

@@ -40,7 +40,7 @@ table_hash() { node -e '
 # appended to the table after hashing, or before it when rehash is given.
 render() {
   local body extra="${1:-}" rehash="${2:-}"
-  body="$(cat "$FIX/record.md")"
+  body="$(cat "$FIX/${RECFIX:-record.md}")"
   [[ -n "$extra" ]] && body="$(awk -v row="$(cat "$extra")" '{print} /^\| 2 \|/{print row}' <<<"$body")"
   local hashed="$body"
   [[ -n "$extra" && -z "$rehash" ]] && hashed="$(cat "$FIX/record.md")"
@@ -84,14 +84,54 @@ MISSING: [AC] A guest sees no badge — no test file in the diff (src/guest.test
 exit 1" "$(sc --base "$BASE")"
 
 # D · a row added after the plan was hashed is flagged even when the hash line
-#     is rewritten to match: the plan is the table as first committed
+#     is rewritten to match: the plan is the table as first committed, so its
+#     files stay BEYOND candidates
 newrepo; good_build
 render "$FIX/added-row.md" rehash; g add -A; g commit -qm "docs: widen plan"
 cm "test: admin" src/admin.test.ts; cm "feat: admin" src/admin.ts
 expect_eq "a row added after the plan hash is flagged, rehash or not" \
-  "scope-check: 1 flag(s)
+  "scope-check: 3 flag(s)
+BEYOND candidate: src/admin.test.ts
+BEYOND candidate: src/admin.ts
 ADDED AFTER PLAN: [AC] Admins see every badge
 exit 1" "$(sc --base "$BASE")"
+
+# L · widening a row's source files after the plan does not plan the file
+newrepo; good_build
+perl -pi -e 's/`src\/badge.ts` \|$/`src\/badge.ts`, `src\/extra.ts` |/' "$R/$REC"
+g add -A; g commit -qm "docs: widen row"; cm "feat: extra" src/extra.ts
+expect_eq "a row widened after the plan is flagged and its new file stays a BEYOND candidate" \
+  "scope-check: 2 flag(s)
+BEYOND candidate: src/extra.ts
+ADDED AFTER PLAN: changed — [AC] A member sees their tier badge
+exit 1" "$(sc --base "$BASE")"
+
+# M · deleting a row after the plan does not clear its MISSING flag
+newrepo; cm "test: badge" src/badge.test.ts; cm "feat: badge" src/badge.ts
+perl -ni -e 'print unless /^\| 2 \|/' "$R/$REC"; g add -A; g commit -qm "docs: drop row"
+expect_eq "a row deleted after the plan is flagged and stays MISSING" \
+  "scope-check: 2 flag(s)
+MISSING: [AC] A guest sees no badge — no test file in the diff (src/guest.test.ts)
+ADDED AFTER PLAN: removed — [AC] A guest sees no badge
+exit 1" "$(sc --base "$BASE")"
+
+# N · rows sharing one test file: the test commit is found by its subject
+RECFIX=shared-test.md newrepo
+cm "test: [AC] One" src/checkout.test.ts; cm "feat: one" src/one.ts
+cm "test: [AC] Two" src/checkout.test.ts src/two.ts
+expect_eq "a shared test file committed with the second row's code is an ORDER flag" \
+  "scope-check: 1 flag(s)
+ORDER: [AC] Two — its test and implementation share a commit
+exit 1" "$(sc --base "$BASE")"
+
+# O · rows sharing one test file whose test commit no subject names: reported, never a silent pass
+RECFIX=shared-test.md newrepo
+cm "add checkout tests" src/checkout.test.ts; cm "feat: one" src/one.ts; cm "feat: two" src/two.ts
+expect_eq "an unattributable shared test file is reported as not checked" \
+  "scope-check: clean — 0 flags
+ORDER not checked: [AC] One — shared test file
+ORDER not checked: [AC] Two — shared test file
+exit 0" "$(sc --base "$BASE")"
 
 # E · a table that already differs from its hash when first committed
 R="$(mktemp -d "$TEST_ROOT/repo.XXXX")"

@@ -1,7 +1,5 @@
 # The plan record
 
-`docs/specs/<branch>.md`, written after one exploration and before the first test. It is the resume point after `/clear` or compaction, and `scope-check.mjs` reads it.
-
 ```markdown
 # <branch> — plan record
 
@@ -18,12 +16,12 @@ Do NOT build: <the story's line, verbatim>
 
 ## Codebase map
 
-<300–500 words: the modules the story touches, their entry points, the patterns to copy, the commands that test and typecheck one package.>
+<300–500 words: the modules touched, their entry points, the patterns to copy, the commands that test and typecheck one package.>
 ```
 
-- One row per `[AC]`, its text verbatim. Every file the build will touch sits in a row; a path ending in `/` covers a directory of generated names.
-- Hash the table with `scope-check.mjs --hash` and put the printed hash in the comment line. Commit the record alone, before the first test.
-- Never change a row after that commit. A row added later is flagged `ADDED AFTER PLAN`: amend the story, or name the sign-off.
-- Progress lives in git, not in the table: resume from the first `[AC]` with no implementation commit.
+- One row per `[AC]`, verbatim. Every file the build touches sits in a row; a path ending in `/` covers a directory.
+- Put the `scope-check.mjs --hash` output in the comment line. Commit the record alone, before the first test.
+- Never change a row after that commit: the first-committed table is the plan, and any change is flagged `ADDED AFTER PLAN`. Amend the story, or name the sign-off.
+- Progress lives in git, not in the table.
 - Readiness answers and clarifications go under `## Clarifications`.
-- On `fix`, the first column is `Done when`, one row per item verbatim, and the map is one paragraph.
+- On `fix`, the first column is `Done when`, and the map is one paragraph.
