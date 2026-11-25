@@ -1,6 +1,6 @@
 # Plain language — how skills talk to humans
 
-This governs what a skill says to a person, not how its instructions are written.
+Maintainer reference for `scripts/check-plain-language.mjs`. No run loads this file; `raftkit-core:rules` carries the runtime rule. This governs what a skill says to a person, not how its instructions are written.
 
 ## Rules
 

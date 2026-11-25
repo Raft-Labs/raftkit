@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Scans markdown files for ```output fenced blocks — the fence convention
-// raftkit-core/rules/references/plain-language.md defines for any
+// docs/maintainers/plain-language.md defines for any
 // literal text a human reads — and checks each block against that contract:
 // no banned filler (word-boundary matched, case-insensitive, so
 // "uncertainly" doesn't trip on "certainly"), no sentence over 25 words

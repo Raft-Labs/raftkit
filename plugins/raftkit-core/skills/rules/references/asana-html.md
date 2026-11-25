@@ -1,47 +1,31 @@
-# Asana HTML — render, mention, verify
+# Asana HTML
 
-Draft in markdown, convert to this HTML subset at push time, render to the surface you are writing to.
+Draft in markdown; convert to this subset at push time for the surface you write to.
 
-## Tag matrix
+## Tags
 
 | Tag | Description | Comment | Project brief |
 |---|---|---|---|
 | `<h1>` `<h2>` | yes | **no** | yes |
-| `<strong>` `<em>` `<u>` `<s>` | yes | yes | yes |
-| `<code>` `<pre>` | yes | yes | yes |
-| `<blockquote>` | yes | yes | yes |
-| `<ol>` `<ul>` `<li>` | yes | yes | yes |
-| `<a href>` / `<a data-asana-gid>` | yes | yes | yes |
-| `<hr/>` | yes | **no** | yes |
-| `<img src>` | yes | **no** | yes |
+| `<strong>` `<em>` `<u>` `<s>` `<code>` `<pre>` `<blockquote>` | yes | yes | yes |
+| `<ol>` `<ul>` `<li>` `<a href>` `<a data-asana-gid>` | yes | yes | yes |
+| `<hr/>` `<img src>` | yes | **no** | yes |
 | `<table>` `<tr>` `<td>` | **no** | **no** | yes |
 | `<br/>` `<p>` `<h3>`+ | never | never | never |
 
-Only two heading levels exist; render a third level as `<strong>Label</strong>` plus a list. Comments take no headings, rules, images or tables: use `<strong>` lines and lists. `<br/>` rejects the write (400). Named entities (`&rarr;`, `&mdash;`, `&nbsp;`) render literally: use the character (→, —, a space) or ASCII. Escape `&` `<` `>` in prose before assembling the body. Wrap the whole body in one `<body>…</body>`. Close and balance every tag.
-
-## Markdown → HTML
-
-| Markdown | Asana HTML |
-|---|---|
-| `# H` / `## H` | `<h1>` / `<h2>` (description and brief only) |
-| `### H` | `<strong>H</strong>` followed by a list |
-| `**b**` / `*i*` / `` `c` `` | `<strong>` / `<em>` / `<code>` |
-| fenced code | `<pre>…</pre>` |
-| `[t](url)` | `<a href="url">t</a>` |
-| `- item` / `1. item` | `<ul><li>` / `<ol><li>` |
-| `---` | `<hr/>` (description and brief only) |
-| `> q` | `<blockquote>` |
-
-`<li>` only inside `<ul>`/`<ol>`; keep blockquotes shallow; when a structure would be invalid, flatten to bold-label-plus-list.
+- Wrap the body in one `<body>…</body>`; close and balance every tag; `<li>` only inside a list.
+- A third heading level, or anything a comment cannot hold, becomes `<strong>Label</strong>` plus a list.
+- `<br/>` rejects the write. Named entities render literally: use the character. Escape `&` `<` `>` in prose.
+- Markdown maps directly: `#`/`##` → `<h1>`/`<h2>`, `**b**` → `<strong>`, fenced code → `<pre>`, `[t](url)` → `<a href>`, `---` → `<hr/>`, `>` → `<blockquote>`.
 
 ## Mentions
 
-`<a data-asana-gid="GID"/>` expands to the object's display name; add `data-asana-dynamic="false"` to keep your own anchor text. A mention to an object you cannot access rejects the whole write, so when in doubt send a plain `<a href="…">text</a>`: it always renders.
+`<a data-asana-gid="GID"/>` expands to the object's name; `data-asana-dynamic="false"` keeps your own text. A mention you cannot access rejects the whole write; when in doubt, use a plain `<a href="…">text</a>`.
 
-## After the push
+## Read-back
 
-Re-fetch a description once with `html_notes` (plain `notes` carries no markup); a comment's read-back is the `html_text` its create call returned. Compare against the approved draft: headings, lists, rules and links present as tags. Match → success line with the task link. Mismatch → show expected versus rendered and stop; never re-push a "corrected" body over approved content. Literal `**bold**` means the body was not converted; a flat third-level section means `<h3>` was used; a rejected request means an unclosed tag; an unresolved mention means no access, so use a plain link.
+A description is read back once with `html_notes`; a comment's read-back is the `html_text` its create call returned. Compare against the approved draft. Match → success line with the task link. Mismatch → show expected versus rendered and stop; never re-push over approved content.
 
-## Multi-write batches
+## Batches
 
-Never emit the success line until every approved write is confirmed. A subtask create is retried only when a lookup by name finds it absent; after an Asana timeout, look the target up by name before any retry so nothing is created twice.
+Emit the success line only when every approved write is confirmed. After a timeout, look the target up by name before any retry, so nothing is created twice.

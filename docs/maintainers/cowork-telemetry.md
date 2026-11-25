@@ -1,17 +1,13 @@
----
-name: cowork-telemetry
-description: Why a pm or qa skill names itself once in Cowork, and why RAFTKIT_TELEMETRY=off does nothing there. Read before changing a skill's first reply.
-user-invocable: false
----
+# Cowork telemetry
 
-# Cowork Telemetry
+Maintainer reference. No run loads this file; `raftkit-core:rules` carries the one-line contract.
 
 RaftKit measures its own use so the team can see who has adopted it and where
 people get stuck. In Claude Code that is automatic — the hooks under
 `raftkit-core/hooks/` do all of it, and no skill takes part
-([rules](../rules/SKILL.md)).
+([rules](../../plugins/raftkit-core/skills/rules/SKILL.md)).
 
-Cowork cannot work that way, and this skill is the whole of the difference.
+Cowork cannot work that way, and this page is the whole of the difference.
 
 ## Why a skill has to do anything at all
 
