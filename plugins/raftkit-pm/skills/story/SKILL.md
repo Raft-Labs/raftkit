@@ -8,7 +8,7 @@ user-invocable: true
 
 One skill for a story's life: author, amend, check. Load `raftkit-core:rules` first unless it is already in this conversation.
 
-**Mode**: the request decides first. An amend request → **amend**; "is it ready?" → **check**. Otherwise the target decides: an empty description or an untouched template copy → **author**, in place; a description that holds a story → **amend**. Readiness is judged by `raftkit-core:rules` → `references/readiness.md`.
+**Mode**: the request decides first. An amend request → **amend**; "is it ready?" → **check**. Otherwise the target decides: an empty description or an untouched template copy → **author**, in place; a description that holds a story → **amend**.
 
 **The rule:** never proceed without a source of truth. Every sentence traces to the Profile or a source the PM named. A gap becomes a question in the draft, never a plausible fill.
 
@@ -30,7 +30,7 @@ Open: 2 questions above — the go is refused while either is blank.
 
 ## Amend
 
-Additive only, never a rewrite: `references/amend.md`. One stop covers the diff, the new `[AC]`s, the follower comment and any mid-build warning.
+Additive only, never a rewrite: `references/amend.md`.
 
 ## Check
 

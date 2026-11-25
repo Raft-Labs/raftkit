@@ -12,7 +12,9 @@ One story → its test cases appended to the project's QA Sheet, and a run sheet
 
 ## Inputs
 
-The story, and the Sheet the project's cases live in (QA names it once; one project per Sheet). None named → ask.
+The story, and the Sheet the project's cases live in (QA names it once; one project per Sheet). None named → ask. No QA Sheet yet → the first run creates `<project> QA` from a CSV upload in the folder QA names, under the same stop.
+
+Sheets append and update are unverified in Cowork: no tool for either → say so in the first reply, then hand back the run sheet and the rows and proposed updates as one `csv` block, with no stop.
 
 ## Run
 
@@ -35,7 +37,7 @@ Sheet "Riverside QA": 9 rows to append, 1 update proposed.
 **STOP** — approve to write, edit to change, or decline.
 ```
 
-6. **On go**: append the rows and apply the named updates; read back once and report the counts. Sheet unreachable → name which account needs edit access; write nothing. Sheets append unverified in Cowork: if no tool can append, hand the rows back as one `csv` block for QA to paste.
+6. **On go**: append the rows and apply the named updates; read back once and report the counts. Sheet unreachable → name which account needs edit access; write nothing.
 
 A failing step routes to `raftkit-qa:bug` with its number, action and expected result. This skill never files.
 

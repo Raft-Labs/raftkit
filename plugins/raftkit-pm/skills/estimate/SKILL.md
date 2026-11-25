@@ -16,7 +16,7 @@ The feature list: pasted, a document, or a read-only source Sheet whose feature 
 
 ## One story
 
-One story is a one-feature list: read it live, let its gaps widen the range (no readiness check), and reply in the same shape in chat, with no Sheet and no stop unless the PM asks for one. Cite any earlier estimate of the same work.
+One story is a one-feature list: read it live, let its gaps widen the range (no readiness check), and reply in chat in the shape below without the Sheet name or the STOP line. Ask for no Drive folder. Cite any earlier estimate of the same work. A Sheet only if the PM asks, then run step 4.
 
 ## Run
 

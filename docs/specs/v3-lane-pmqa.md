@@ -35,15 +35,15 @@ No executable code changes in this lane: the skills are markdown, so their tests
 
 ## Integration notes
 
-Measured on this branch: words by `wc -w`, tokens by the structure suite's `ceil(chars/4)`.
+Measured on this branch after the review fixes, by `tests/structure.test.sh` (words `wc -w`, tokens its `ctoks`). The suite allows ×1.1 over each budget.
 
 ### Story 11 — pm
 
 - **budgets.json `skills`**: delete `raftkit-pm/meeting` and `raftkit-pm/routine` (S1 fails on both until then).
-- **budget `raftkit-pm/profile` `total_tokens` 1020 → 1430** (measured 1426; meeting's 1230 folded in, net −824 across the two). `skill_md` 488 words / 724 tokens and `total` 983 words fit today's caps.
-- `raftkit-pm/status` measured 300 words / 443 tokens; can drop to `skill_md` 300, `skill_md_tokens` 450, `total` 300, `total_tokens` 450.
-- `raftkit-pm/story` measured 484 / 772 SKILL.md, 707 words / 1126 tokens total; can drop `total` 1400 → 710, `total_tokens` 2340 → 1130.
-- `raftkit-pm/estimate` measured 627 words / 871 tokens SKILL.md (cap 627 exactly), 904 / 1238 total; raise `skill_md` 570 → 600 for headroom if wanted.
+- **budget `raftkit-pm/profile`**: measured SKILL.md 515 words / 759 tokens, directory 1010 words / 1461 tokens (meeting's 1230 tokens folded in). Raise `skill_md_tokens` 660 → 700, `total` 900 → 920, `total_tokens` 1020 → 1330. S4t/S5/S5t fail until then.
+- `raftkit-pm/status` measured 309 words / 455 tokens (the review restored the send-decline line); can drop to `skill_md` 300, `skill_md_tokens` 420, `total` 300, `total_tokens` 420.
+- `raftkit-pm/story` measured SKILL.md 462 words / 731 tokens, directory 685 words / 1085 tokens (inside the ~530–700 target); can drop `total` 1400 → 650, `total_tokens` 2340 → 1000.
+- **budget `raftkit-pm/estimate` `skill_md` 570 → 590**: measured SKILL.md 639 words / 886 tokens, directory 916 / 1252. S4 fails until then (the one-story mode now states no STOP and no Drive folder).
 - **budgets.json `files`**: add `plugins/raftkit-pm/assets/deprecation-sweep-prompt.md` at `words` 350, `tokens` 550 (measured 344 / 545). S18/S19 fail until then.
 - `plugins` total for raftkit-pm is now 2,894 words (budget 9500); can drop.
 - **skill-aliases.json**: `meeting` and `routine` no longer exist as skills. `profile` keeps `project-onboarding`; record `meeting → profile` (call mode) and `routine → deleted` in the dashboard's rename notes.
@@ -56,7 +56,7 @@ Measured on this branch: words by `wc -w`, tokens by the structure suite's `ceil
 
 ### Story 12 — qa
 
-- **budgets.json `skills`**: delete `raftkit-qa/suite` and `raftkit-qa/run-sheet` (S1 fails on both); add `raftkit-qa/test-cases` (S15 fails until then) at `skill_md` 500, `skill_md_tokens` 700, `total` 780, `total_tokens` 1100, `writes` true, `v2` true. Measured 480 / 690 SKILL.md, 772 / 1088 total, one STOP line.
+- **budgets.json `skills`**: delete `raftkit-qa/suite` and `raftkit-qa/run-sheet` (S1 fails on both); add `raftkit-qa/test-cases` (S15 fails until then) at `skill_md` 480, `skill_md_tokens` 680, `total` 750, `total_tokens` 1050, `writes` true, `v2` true. Measured SKILL.md 520 words / 740 tokens, directory 812 / 1139, one STOP line.
 - `raftkit-qa/bug` measured 547 words / 792 tokens, references deleted; can drop `total` 1300 → 550, `total_tokens` 1920 → 800.
 - `plugins` total for raftkit-qa is now 1,319 words / 1,880 tokens (budget 5000 / 4460); can drop.
 - **skill-aliases.json**: replace `"suite": "test-suite"` and `"run-sheet": "test-run-sheet"` with one entry for `test-cases` (its dashboard series continues `test-suite`; `test-run-sheet` ends). Rename notes: suite + run-sheet → `raftkit-qa:test-cases`.
@@ -66,4 +66,10 @@ Measured on this branch: words by `wc -w`, tokens by the structure suite's `ceil
 - **tests/frontmatter.test.sh FM5a/FM5b** also pin `plugins/raftkit-qa/skills/run-sheet/SKILL.md`; with meeting gone, the six-file list becomes four.
 - **tests/cowork-telemetry.test.sh CW4**: 6 pm+qa skills remain; lower the floor from 9 to 6.
 - **Evals**: `evals/suite/resync-changed-rows` deleted with its skill. `evals/run-sheet/verbatim-expected-and-gaps` moved to `evals/test-cases/` because plain-language PL17 requires every skill to have a skill-fired case; its stop grader is now `count:1` (test-cases writes after one stop) and the prompt carries `[AC]` GIDs.
-- **Unverified in Cowork** (owner gate): Sheets append/update and Asana tagging. test-cases falls back to a `csv` block for QA to paste; bug already has QA apply every tag by hand.
+- **Unverified in Cowork** (owner gate): Sheets append/update and Asana tagging. test-cases checks for an append or update tool before reading; none → it says so in the first reply and hands back the run sheet and rows as one `csv` block with no stop, consistent with the rules' write-tool gate. A project with no QA Sheet gets `<project> QA` from a CSV upload under the same stop. bug already has QA apply every tag by hand.
+
+### Cross-lane
+
+- **Discoverability of the hand-run prompt**: the README raftkit-pm row and the merged pm help text should name `plugins/raftkit-pm/assets/deprecation-sweep-prompt.md` as a hand-run prompt (no skill runs it).
+- **Version collision with lane core**: raftkit-pm and raftkit-qa `plugin.json` are at 2.0.0 on this branch. Lane core's `commands/` deletion touches the same plugin dirs; it must not re-bump, and the merge keeps 2.0.0.
+- **PM owner decision: profile call-mode routing.** Fixed on this branch: a call is a valid source for a first build; call mode runs only when the PM asks for decisions or tasks and a Profile exists. Asked for decisions or tasks with no Profile, the byte-identical `Can't extract — no Project Profile for this project. Run raftkit-pm:profile first, then re-run.` still shows and points back at profile itself. The owner decides whether that line is reworded (it is not pinned in refusals.json).

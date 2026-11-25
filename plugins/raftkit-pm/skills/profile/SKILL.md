@@ -8,11 +8,11 @@ user-invocable: true
 
 Turn what the PM has into one Project Profile: the tagged, cited source of truth every other skill reads. Load `raftkit-core:rules` first unless it is already in this conversation.
 
-**Mode**: a meeting, recording or transcript → **from a call**; anything else → **sources**.
+**Mode**: decisions or tasks from one call, with a Profile in place → **from a call**; anything else, a call included → **sources**.
 
 ## Inputs, in one ask
 
-At least one **named source** and the **Asana project** the profile belongs to. Never infer the project from a source and never read a source the PM did not name. Missing either → ask for exactly that; create nothing.
+At least one **named source** (Drive, Gmail, Fathom, Asana, an upload, a pasted link) and the **Asana project** the profile belongs to. Never infer the project from a source and never read a source the PM did not name. Missing either → ask for exactly that; create nothing.
 
 Resolve the project against Asana: one match → show `<name> (gid)`; several → ask which; none → say so.
 
@@ -24,7 +24,7 @@ Resolve the project against Asana: one match → show `<name> (gid)`; several �
 
 ## From a call
 
-One meeting (a Fathom link or name, or an uploaded transcript). The Profile must exist:
+One meeting (a Fathom link or name, or an uploaded transcript). Asked for decisions or tasks with no Profile → say this and stop:
 
 ```output
 Can't extract — no Project Profile for this project. Run raftkit-pm:profile first, then re-run.

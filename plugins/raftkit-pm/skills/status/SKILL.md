@@ -21,6 +21,8 @@ One project's board → a client-ready update the PM sends. Load `raftkit-core:r
 Review, edit, send — I don't send.
 ```
 
+Asked to send it, decline and repeat that line.
+
 A thin week is reported as thin, never padded. No activity → open with the line below, then the standing ask; no open decision either → ask the PM what the client owes.
 
 ```output
