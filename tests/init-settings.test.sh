@@ -270,7 +270,7 @@ do9="$(newtmp)"; to9="$do9/settings.json"; node "$SCRIPT" "$to9" --disable-plugi
 [[ "$(node -e 'const s=require(process.argv[1]); console.log(s.enabledPlugins["expo@claude-plugins-official"]===false && s.enabledPlugins["pyright-lsp@claude-plugins-official"]===false)' "$to9" 2>/dev/null)" == true ]]
 check "O9 --disable-plugins turns each named plugin off at project scope" ok $?
 accepted=0
-for managed in raftkit-dev@raftkit superpowers@claude-plugins-official 'x;y@z'; do
+for managed in raftkit-dev@raftkit security-guidance@claude-plugins-official 'x;y@z'; do
   d="$(newtmp)"; node "$SCRIPT" "$d/s.json" --disable-plugins "$managed" >/dev/null 2>&1
   [[ $? -eq 1 && ! -e "$d/s.json" ]] || { echo "  accepted: $managed"; accepted=1; }
 done

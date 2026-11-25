@@ -12,17 +12,48 @@ ABSENT_ROLES="__ABSENT_ROLES__"
 
 fail() { printf '\npre-push blocked: %s\n' "$1" >&2; exit 1; }
 
+# The trees being pushed, from git's stdin. A deleted ref has no tree.
+trees="" miss=""
+while read -r _lref lsha _rref _rsha; do
+  case "$lsha" in *[!0]*) ;; *) continue ;; esac
+  tree="$(git rev-parse --verify --quiet "$lsha^{tree}")" || miss=1
+  trees="$trees $tree"
+done
+
+# Verify cache: written green-only by raftkit's verify.mjs, read here, never
+# written. A hit needs every pushed tree green for every gate below, run with
+# the same command, under an hour ago. Anything else runs the full gates.
+cache_covers() {
+  [ -z "$miss" ] && [ -n "$trees" ] || return 1
+  command -v node >/dev/null 2>&1 || return 1
+  cache="$(git rev-parse --git-common-dir 2>/dev/null)/raftkit/verify.json"
+  [ -f "$cache" ] || return 1
+  # shellcheck disable=SC2086
+  node -e '
+    const [file, pm, gates, ...trees] = process.argv.slice(1);
+    const cache = JSON.parse(require("fs").readFileSync(file, "utf8"));
+    const now = Date.now();
+    const green = (r, g) => r && r.command === pm + " run " + g && Date.parse(r.at) <= now && now - Date.parse(r.at) < 3600000;
+    const hit = (t) => { const e = cache.find((x) => x && x.tree === t); return e && gates.split(" ").filter(Boolean).every((g) => green(e.results && e.results[g], g)); };
+    process.exit(trees.every(hit) ? 0 : 1);
+  ' "$cache" "$PM" "$QUALITY_SCRIPTS" $trees 2>/dev/null
+}
+
 # Quality gates — the repo's own approved scripts via the detected manager.
 # Absent roles are reported by name, never silently skipped, never invented.
 if [ -n "$QUALITY_SCRIPTS" ]; then
-  command -v "$PM" >/dev/null 2>&1 || fail "$PM not found on PATH — cannot run the quality gates."
   for role in $ABSENT_ROLES; do
     [ "$role" = "none" ] || printf 'pre-push: role %s has no script in this repo — reported, not run.\n' "$role"
   done
-  for gate in $QUALITY_SCRIPTS; do
-    printf 'pre-push: running %s...\n' "$gate"
-    __PM__ run "$gate" || fail "$gate failed."
-  done
+  if cache_covers; then
+    printf 'pre-push: %s green in the verify cache for the pushed tree — not re-run.\n' "$QUALITY_SCRIPTS"
+  else
+    command -v "$PM" >/dev/null 2>&1 || fail "$PM not found on PATH — cannot run the quality gates."
+    for gate in $QUALITY_SCRIPTS; do
+      printf 'pre-push: running %s...\n' "$gate"
+      __PM__ run "$gate" || fail "$gate failed."
+    done
+  fi
 fi
 
 exit 0

@@ -39,5 +39,5 @@ its own.
   skill drafts the write and stops once before it.
 - The docs tree's own conventions always win over any structure this skill
   would prefer.
-- **Plain English out** — every line a human reads is short, active-voice,
+- **Plain language** — every line a human reads is short, active-voice,
   and free of filler; a house term gets its one-line gloss on first use.

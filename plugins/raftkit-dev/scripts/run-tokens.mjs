@@ -6,10 +6,14 @@
 //
 // The run starts at the RaftKit skill invocation that opened it. --session
 // counts the whole session instead, to compare against Claude Code's own cost
-// ledger.
+// ledger. --stages appends cache reads, the run's cost at each model's list
+// price, and per-stage wall-clock minutes (tokens.mjs runStages names the
+// markers). Called in-run, the STOP message is not written yet: the baseline
+// replay re-runs `run-tokens.mjs <session> --stages` after declining the STOP.
 //
 // Contract: exactly one line on stdout, always exit 0, writes nothing.
 //   Token total: <N> tokens (main <a>, subagents <b>; <model>: <n>, ...) — measured
+//   ... — measured; cache-read <c>, cost-weighted $<usd> at list price[ (unpriced: <n> tokens)]; minutes: intake <m>, ...
 //   Token total: not measured
 // Never an estimate. Never the <subagent_tokens> of a task notification, which
 // reports an agent's final context size, not what it was billed.
@@ -90,7 +94,12 @@ async function main() {
     .sort((a, b) => b[1] - a[1])
     .map(([m, n]) => `${m}: ${fmt(n)}`)
     .join(", ");
-  say(`Token total: ${fmt(t.total)} tokens (main ${fmt(t.main)}, subagents ${fmt(t.sidechain)}${models ? `; ${models}` : ""}) — measured`);
+  const line = `Token total: ${fmt(t.total)} tokens (main ${fmt(t.main)}, subagents ${fmt(t.sidechain)}${models ? `; ${models}` : ""}) — measured`;
+  if (!flags.includes("--stages")) return say(line);
+  const stages = typeof lib.runStages === "function" ? lib.runStages(transcript, sinceMs) : null;
+  const minutes = stages?.length ? stages.map((s) => `${s.name} ${(s.ms / 60000).toFixed(1)}`).join(", ") : "not measured";
+  const unpriced = t.unpriced > 0 ? ` (unpriced: ${fmt(t.unpriced)} tokens)` : "";
+  say(`${line}; cache-read ${fmt(t.cache_read)}, cost-weighted $${(t.list_usd || 0).toFixed(2)} at list price${unpriced}; minutes: ${minutes}`);
 }
 
 main()

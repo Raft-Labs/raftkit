@@ -1,5 +1,5 @@
 {
-  "//": "v2 skill name -> the v1 name it replaced, for dashboard continuity. Only real renames appear here: a skill that kept its name (implement, scope-guard, hasura, docs) needs no entry, and legacy_name never carries a move between plugins (discovery-interview moved raftkit-core -> raftkit-docs; record.mjs reports skill_plugin separately, so that series splits deliberately).",
+  "//": "Current skill name -> the v1 name whose dashboard series it continues. Only live skills appear here: a skill that kept its name (implement, scope-guard, hasura, docs) needs no entry, and legacy_name never carries a move between plugins (record.mjs reports skill_plugin separately, so those series split deliberately: discovery-interview raftkit-core -> raftkit-docs in v2, folded into docs-product in v3; hasura raftkit-dev -> raftkit-hasura in v3). v3 renames for the dashboard notes: suite + run-sheet -> test-cases (continues test-suite; test-run-sheet ends); meeting -> profile (call mode; meeting-decisions ends); story size -> estimate (one story); routine deleted (deprecation-sweep ends).",
   "aliases": {
     "rules": "house-rules",
     "working-agreement": "governance-protocols",
@@ -7,13 +7,10 @@
     "profile": "project-onboarding",
     "estimate": "estimation",
     "status": "status-update",
-    "meeting": "meeting-decisions",
-    "routine": "deprecation-sweep",
     "fix": "fix-bug",
     "setup": "setup-project",
     "ui": "ui-creation",
-    "suite": "test-suite",
-    "run-sheet": "test-run-sheet",
+    "test-cases": "test-suite",
     "bug": "file-bug"
   }
 }

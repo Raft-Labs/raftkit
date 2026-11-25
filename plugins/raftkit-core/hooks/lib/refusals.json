@@ -15,7 +15,7 @@
       "severity": "blocker",
       "pattern": "^\\*{0,2}Missing:\\*{0,2}\\s*(?<detail>.+?)\\.\\s*Install it with:",
       "source": "raftkit-dev/skills/setup/SKILL.md",
-      "example": "Missing: superpowers. Install it with: claude plugin install superpowers@claude-plugins-official"
+      "example": "Missing: pr-review-toolkit. Install it with: claude plugin install pr-review-toolkit@claude-plugins-official"
     },
     {
       "id": "squash-target-undocumented",
@@ -88,6 +88,14 @@
       "pattern": "^Can['\u2019]t reproduce in the stated environment",
       "source": "raftkit-dev/skills/fix/SKILL.md",
       "example": "Can't reproduce in the stated environment."
+    },
+    {
+      "id": "story-too-large",
+      "skill": "implement",
+      "severity": "blocker",
+      "pattern": "^Can['’]t build this in one run — (?<detail>.+)$",
+      "source": "raftkit-dev/skills/implement/SKILL.md",
+      "example": "Can't build this in one run — 31 files planned, over 25. Split the story through raftkit-pm:story, then re-run."
     },
     {
       "id": "generic-cant",

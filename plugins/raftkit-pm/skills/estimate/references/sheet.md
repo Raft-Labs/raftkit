@@ -14,15 +14,9 @@ The skill owns rows 1–3 and the column set; the PM owns the content. A re-run 
 
 Name the source Sheet in the estimate so the two stay traceable. Report the link only after the write lands.
 
-## Shapes without numbers
+## The shape without numbers
 
-The watermark still opens them; the chain line is omitted.
-
-```output
-Requires founder review — not a client commitment.
-
-One story is raftkit-pm:story's job — ask it to size the story. This skill estimates a whole feature list.
-```
+The watermark still opens it; the chain line is omitted.
 
 ```output
 Requires founder review — not a client commitment.

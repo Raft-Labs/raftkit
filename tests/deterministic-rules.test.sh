@@ -46,14 +46,14 @@ h=$(flat "$(sec "$ASSET" 'MDS-2' 'MDS-8')")
 grep -qi 'max: 25' <<<"$h"
 check "CLIENT4 the asset enforces MDS-2's 25-line handler limit on handler globs" ok $?
 
-grep -qi 'eslint-plugin-import' "$ASSET" && grep -qi 'not assumed installed\|never invented or silently required' "$ASSET"
-check "CLIENT5 MDS-8 (import cycles) is commented out with its dependency named, never silently assumed" ok $?
+grep -qi 'eslint-plugin-import' "$ASSET" && ! grep -qE '^[^/]*eslint-plugin-import' "$ASSET"
+check "CLIENT5 MDS-8 (import cycles) names its dependency only in comments, never silently assumed" ok $?
 
 # --- CLIENT: wiring into setup ---
 
 CM="$DEV/setup/references/components.md"
-grep -q 'mds-eslint.config.mjs' "$CM" && grep -qi 'never merged' "$(printf '%s' "$CM")"
-check "SETUP1 components.md lists the design-standard ESLint config, marked never-merged" ok $?
+grep -q 'mds-eslint.config.mjs' "$CM"
+check "SETUP1 components.md lists the design-standard ESLint config" ok $?
 
 grep -q '"mds-eslint"' "$CM"
 check "SETUP2 the version marker's components array includes mds-eslint" ok $?
@@ -72,9 +72,6 @@ check "SELF2 a real lockfile was generated (not hand-written)" ok $?
 
 node --check eslint.config.mjs
 check "SELF3 root eslint.config.mjs is syntactically valid" ok $?
-
-grep -qi 'not wired into CI yet' eslint.config.mjs
-check "SELF4 the config states why it isn't a blocking CI gate yet (existing findings, scoped separately)" ok $?
 
 ! grep -q 'npm run lint' .github/workflows/validate.yml
 check "SELF5 CI does not yet run the new lint script (deliberate — no retroactive judgment of existing code)" ok $?

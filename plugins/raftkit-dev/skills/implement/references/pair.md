@@ -1,0 +1,3 @@
+# The pair path
+
+Only when the plan marks the FE and BE halves independent behind a frozen contract. Dispatch two subagents, each at `model: "sonnet"` unless the plan record names its half `hard` (`raftkit-core:working-agreement` → `references/tiers.md`), each with `isolation: "worktree"`, its rows, the contract file and the branch SHA, which it confirms with `git merge-base --is-ancestor <sha> HEAD` before its first edit. Each bootstraps with the repo's detected package manager, builds its rows by implement's method, never edits the plan record, and returns its commits; the parent cherry-picks them onto the branch in plan order. A failed check means no pair.

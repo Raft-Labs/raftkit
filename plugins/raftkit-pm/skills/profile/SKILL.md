@@ -1,36 +1,47 @@
 ---
 name: profile
-description: Build or update a project's Project Profile in Asana from the sources the PM names — "onboard this project", "build the project profile", "set up the source of truth for project X", or a re-run with a new source. Every fact tagged ✅/⚠️/❓ and cited; conflicts shown, never resolved; one stop before the write.
+description: Build or update a project's Project Profile in Asana from named sources or one client call — "onboard this project", "build the project profile", "turn this call into decisions and tasks", "what did we decide". Every fact tagged ✅/⚠️/❓ and cited; a call adds decisions, SCOPE CHANGE flags and a task batch; one stop before the write.
 user-invocable: true
 ---
 
 # profile
 
-Turn what the PM has (PRD, SOW, master doc, emails, meeting notes) into one Project Profile: the tagged, cited source of truth every other skill reads. Load `raftkit-core:rules` first unless it is already in this conversation.
+Load `raftkit-core:rules` first unless it is already in this conversation.
+
+- **Announce it** — `Using raftkit-pm:profile` in the first reply, once (`raftkit-core:rules`).
+
+**Mode**: decisions or tasks from one call, with a Profile in place → **from a call**; anything else → **sources**, and a call with no Profile yet is a source like any other.
 
 ## Inputs, in one ask
 
-At least one **named source** (Drive, Gmail, Fathom, Asana, an upload, a pasted link, a synced file) and the **Asana project** the profile belongs to. Never infer the project from a source and never read a source the PM did not name. Missing either → stop and ask for exactly that; create nothing.
+At least one **named source** (Drive, Gmail, Fathom, Asana, an upload, a pasted link) and the **Asana project** the profile belongs to. Never infer the project from a source and never read a source the PM did not name. Missing either → ask for exactly that; create nothing.
 
-Resolve the project name against Asana: one match → carry on and show it as `<name> (gid)`; several → ask which, listing them; none → say so.
+Resolve the project against Asana: one match → show `<name> (gid)`; several → ask which; none → say so.
 
-## Run
+## Sources
 
-1. **Read at once**: every named source, and the existing `Project Profile - <project name>` task if there is one (its presence decides first build vs delta). An unreadable source is named with the access that is missing and listed as skipped; the rest are read.
-2. **Draft facts** per `references/format.md`: one sentence each, one tag, one citation, an as-of date; anything not clearly confirmed is ⚠️ Partial; a gap is ❓ Missing, never a guess; two sources that disagree become a conflict with both citations for the PM to settle.
-3. **Re-run** → a delta, never a rewrite: changed / new / now-confirmed facts, touching only the subtasks whose sections changed. Untouched facts stay exactly as they were.
-4. **Stop once.** Show the profile or the delta in the shape it will be written (lists, never tables), the project as `<name> (gid)`, and the subtasks that will be created or overwritten. A corrected project re-targets the same draft; the sources are not re-read.
+1. **Read at once**: every named source, and the existing `Project Profile - <project name>` task if there is one (first build vs delta). An unreadable source is named with the missing access and skipped.
+2. **Draft facts** per `references/format.md`: one sentence, one tag, one citation, an as-of date. Unclear → ⚠️ Partial; a gap → ❓ Missing; two sources that disagree → a conflict with both citations for the PM to settle.
+3. **Re-run** → a delta, never a rewrite: changed / new / now-confirmed facts, touching only the subtasks whose sections changed.
+
+## From a call
+
+One meeting (a Fathom link or name, or an uploaded transcript). Read at once the whole transcript, the Profile and the workspace members, then draft per `references/call.md`: cited decisions, SCOPE CHANGE flags, action items, the Profile delta (⚠️ unless decided unambiguously on the call) and a task batch. Nothing found → say so and create nothing.
+
+## Stop once
+
+Show the draft as it will be written, the project as `<name> (gid)`, and every subtask or task to be created or overwritten. The PM may approve parts: "delta yes, tasks except #3."
 
 ```output
 Profile draft for Riverside Bookings (1216…). 4 subtasks, 38 facts: ✅ 21 / ⚠️ 12 / ❓ 5. 2 conflicts.
 **STOP** — approve to write, edit to change, or decline.
 ```
 
-5. **On go**, write the parent task and its subtasks; read back once. A timed-out write is looked up by name before any retry so a second profile task is never created. Report:
+**On go**, write the approved parts. A timed-out write is looked up by name before any retry. Report:
 
 ```output
 38 facts — ✅ 21 / ⚠️ 12 / ❓ 5. Top gaps: payment provider, refund window.
 Profile lives at: <link>
 ```
 
-- **Announce it** — `Using raftkit-pm:profile` in the first reply, once (`raftkit-core:rules`).
+A call run also lists each created task's link and anything left unassigned.

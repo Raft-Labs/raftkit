@@ -115,8 +115,7 @@ See [state-machines/status-<entity>.md](../state-machines/status-<entity>.md)
 
 ## Edge Cases
 
-Walk through every category of the edge-case walk
-(`raftkit-docs:discovery-interview` → `references/edge-cases.md`) and either
+Walk through every category of the edge-case walk and either
 fill or mark `N/A — <reason>`. The categories are mandatory; the answers
 are project-specific.
 

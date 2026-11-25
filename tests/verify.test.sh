@@ -3,7 +3,7 @@
 # gate commands come from setup's detect-toolchain.mjs; one line on green;
 # failing names plus at most 20 lines each on red; green results cached under
 # the git common dir keyed by tree hash, never reused on a dirty tree; red never
-# cached. The pre-push hook keeps running its gates in full.
+# cached. The pre-push hook keeps its own full gates as the fallback.
 set -uo pipefail
 export NODE_DISABLE_COLORS=1 FORCE_COLOR=0 NO_COLOR=1
 cd "$(dirname "$0")/.." || exit 2
@@ -156,6 +156,13 @@ node -e 'const fs=require("fs"); const c=JSON.parse(fs.readFileSync(process.argv
 : > "$COUNT"; v "$F"
 [[ $RC -eq 0 && "$(runs)" == tlc ]]
 check "V23 a cached green older than an hour is not reused" ok $?
+# A reuse must not re-stamp the entry, or a green from hours ago would stay
+# "under an hour old" for every later verify and for the pre-push hook.
+stamp="$(node -e 'const fs=require("fs"); const c=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); const at=new Date(Date.now()-50*60e3).toISOString(); for (const e of c) for (const r of Object.values(e.results)) r.at=at; fs.writeFileSync(process.argv[1], JSON.stringify(c)); console.log(at)' "$fcache")"
+: > "$COUNT"; v "$F"
+[[ $RC -eq 0 && -z "$(runs)" ]] \
+  && node -e 'const c=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); process.exit(c.every((e)=>Object.values(e.results).every((r)=>r.at===process.argv[2]))?0:1)' "$fcache" "$stamp"
+check "V23b a reused green keeps its original time: reuse never extends the hour" ok $?
 
 # ---- the plan record is not a gate input -------------------------------------
 # implement keeps docs/specs/<branch>.md uncommitted while it builds and reviews;
@@ -177,9 +184,11 @@ v "$L"
 check "V25 a 300,000-char failing line is capped and the next failing gate is still reported" ok $?
 
 # ---- the pre-push hook keeps its full gates ---------------------------------
+# A cache lookup in the hook is setup's to render and test; whatever it reuses,
+# the hook still carries every approved gate to fall back on.
 HOOK="$REPO_ROOT/plugins/raftkit-dev/skills/setup/assets/pre-push"
-! grep -qE 'verify\.mjs|verify\.json|raftkit/verify' "$HOOK" && grep -q '__QUALITY_SCRIPTS__' "$HOOK"
-check "V18 the pre-push hook still runs every approved gate itself, with no cache" ok $?
+grep -q '__QUALITY_SCRIPTS__' "$HOOK"
+check "V18 the pre-push hook still runs every approved gate itself as the fallback" ok $?
 
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures test(s) failed"

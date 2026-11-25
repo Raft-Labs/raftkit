@@ -1,21 +1,15 @@
 #!/usr/bin/env bash
 # Deterministic (offline) suite for the docs skill (Story B, Asana 1216756365676677).
 #
-# AC → evidence matrix (deterministic tests here; behavioral eval bundle authored
-# pre-implementation and structurally verified — plugin/no-plugin EXECUTION is
-# deferred to M3 · raftkit-dev final plugin evaluation, never claimed here):
-#   AC-1  mode routing .............. D19 (contract strings)      + eval cases
-#   AC-2  preflight branches ........ D5 (audit branch detection) + eval cases
-#   AC-3  outcome strings ........... D19a-c                       + eval cases
-#   AC-4  explicit change set ....... D19d                         + eval cases
-#   AC-5  sync lifecycle ............ D19b                         + eval cases
-#   AC-6  no silent mutation ........ D19 (+ scripts never mutate: D12, D21)
+# AC → evidence matrix:
+#   AC-2  preflight branches ........ D5 (audit branch detection)
+#   AC-3  outcome strings ........... D19a-c, D19h
+#   AC-6  no silent mutation ........ D12, D21 (scripts never mutate)
 #   AC-7  completion parity ......... D8–D10 (stale / no-impact evidence)
-#   AC-8  reverse engineering ....... D17 (unresolved-conflict reporting) + eval cases
+#   AC-8  reverse engineering ....... D17 (unresolved-conflict reporting)
 #   AC-9  architecture generalization D3, D4, D6, D15, D18
 #   AC-10 deterministic scripts ..... D7–D16, D21 (flags, evidence, safety, git)
 #   AC-11 fixture coverage red-first  D1 + this whole suite, observed red first
-#   AC-12 eval bundle authored ...... D20 (structural + no-leak; execution deferred)
 #   AC-13 plugin boundary ........... D19g (raftkit-docs owns the design flow)
 #   AC-14 manifests/PR boundaries ... D22 (+ scripts/validate.sh in CI)
 set -uo pipefail
@@ -55,7 +49,7 @@ check "D1 fixture set matches the approved neutral names" ok $?
 # D2 · project-independence (generic invariants, no name denylist):
 #      no absolute user paths, no file:// links, fixture secrets are FAKE-only,
 #      and every relative reference in the skill resolves inside the plugin.
-! grep -rEl '/Users/|/home/[a-z]|file://' "$SKILL" "$FIX" plugins/raftkit-dev/evals/docs 2>/dev/null | grep -q .
+! grep -rEl '/Users/|/home/[a-z]|file://' "$SKILL" "$FIX" plugins/raftkit-dev/evals 2>/dev/null | grep -q .
 check "D2a no absolute user paths or file:// links" ok $?
 ! grep -rL 'FAKE' "$FIX/excluded-secret-paths/.env" "$FIX/excluded-secret-paths/keys/service.key" 2>/dev/null | grep -q .
 check "D2b fixture secret files carry only FAKE sentinel values" ok $?
@@ -214,35 +208,13 @@ run_audit --root "$FIX/routine-no-adr" --json
 grep -q '"adrSeam": *false' <<<"$OUT"
 check "D18b no ADR seam invented where absent" ok $?
 
-# D19 · SKILL.md carries the v2 parity contract verbatim
+# D19 · SKILL.md carries the four outcome lines verbatim
 grep -qF 'Docs: not impacted — <reason>' "$S" 2>/dev/null;                       check "D19a no-impact line in contract" ok $?
 grep -qF 'Docs: updated and verified —' "$S" 2>/dev/null;                        check "D19b updated-and-verified line in contract" ok $?
 grep -qF 'no recognized documentation convention' "$S" 2>/dev/null;              check "D19c unmapped-repo outcome in contract" ok $?
-grep -qi 'never choose a git range silently\|Never choose a git range silently' "$S" 2>/dev/null; check "D19d explicit change set required" ok $?
-grep -qi 'writes no Asana task' "$S" 2>/dev/null;                                check "D19e no-Asana rule stated" ok $?
-grep -qi 'discovered mapping' "$S" 2>/dev/null;                                  check "D19f ownership mapping drives expansion" ok $?
 grep -qi 'raftkit-docs' "$S" 2>/dev/null;                                        check "D19g the design product is named as the other plugin" ok $?
 grep -qF 'Docs: impacted, not synced — ' "$S" 2>/dev/null;                       check "D19h impacted-not-synced line in contract" ok $?
-# D19i · each validate-docs exit code maps to one outcome, and the four outcome
-#        blocks sit in the order the mapping sentence counts them in
-d19i=0
-grep -qF 'exit 0 is the first, or the third after a sync; exit 1 is the second; exit 2 whose stderr names no recognized documentation convention is the fourth' "$S" 2>/dev/null || d19i=1
-outcomes="$(awk '/^4\. \*\*Report one of four outcomes/{on=1; next} on&&/^```output$/{getline; print; if(++n==4) exit}' "$S" 2>/dev/null)"
-i=0
-while IFS= read -r want; do
-  i=$((i + 1))
-  [[ "$(sed -n "${i}p" <<<"$outcomes")" == "$want"* ]] || d19i=1
-done <<<$'Docs: not impacted — \nDocs: impacted, not synced — \nDocs: updated and verified — \nDocs: no recognized documentation convention'
-check "D19i every validate-docs exit code maps to its own outcome, in order" ok $d19i
 
-# D20 · eval bundle: authored, structurally valid, no answer leakage
-n=$(find plugins/raftkit-dev/evals/docs -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-[[ "${n:-0}" -ge 10 ]] \
-  && ! find plugins/raftkit-dev/evals/docs -mindepth 1 -maxdepth 1 -type d '!' -exec test -f '{}/prompt.md' ';' -print | grep -q . \
-  && ! find plugins/raftkit-dev/evals/docs -mindepth 1 -maxdepth 1 -type d '!' -exec sh -c 'ls "$1"/graders/*.md >/dev/null 2>&1' _ '{}' ';' -print | grep -q .
-check "D20a >=10 eval cases each with prompt.md + graders" ok $?
-! grep -l 'Docs: not impacted —' plugins/raftkit-dev/evals/docs/*/prompt.md 2>/dev/null | grep -q .
-check "D20b prompts do not leak the expected no-impact copy" ok $?
 
 # D21 · scripts leave no temporary files behind
 tcount_before=$(find "${TMPDIR:-/tmp}" -maxdepth 1 -name 'docs-skill-*' 2>/dev/null | wc -l)

@@ -7,8 +7,9 @@
 // A green result is cached under <git common dir>/raftkit/verify.json, keyed
 // by the tree hash of HEAD and the exact command. It is reused only while the
 // working tree is clean (docs/specs aside) and for at most an hour; a dirty tree or --fresh
-// always runs, and a red result is never cached. The pre-push hook does not
-// use this script and keeps its full gates.
+// always runs, and a red result is never cached. The pre-push hook may reuse
+// a green entry for the pushed tree (setup renders that lookup); otherwise it
+// runs its own full gates.
 //
 // Only the root scripts named exactly test, lint and typecheck run. A gate
 // that exists only under another name (test:unit, lint:ci) is named and not
@@ -103,8 +104,9 @@ const after = treeState();
 if (before.tree && !before.dirty && after.tree === before.tree && !after.dirty) {
   const entry = cache.find((e) => e?.tree === before.tree) ?? { tree: before.tree, results: {} };
   for (const r of results) {
-    if (r.code === 0) entry.results[r.role] = { command: commandOf(r.role), at: new Date().toISOString() };
-    else delete entry.results[r.role];
+    // A reused green keeps its first stamp, so reuse never extends the hour.
+    if (r.code === 0 && !r.cached) entry.results[r.role] = { command: commandOf(r.role), at: new Date().toISOString() };
+    else if (r.code !== 0) delete entry.results[r.role];
   }
   cache = [...cache.filter((e) => e?.tree !== before.tree), entry].slice(-KEEP_TREES);
   try {

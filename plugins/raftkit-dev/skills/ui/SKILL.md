@@ -1,12 +1,12 @@
 ---
 name: ui
-description: Build a story's UI from its own designs and its exact copy — "build the UI for this story", "create the screens", "implement the UI phase", or a UI phase inside implement. Platform-correct through the project's stack, every state the story defines, nothing invented. Missing copy or an unreachable design stops that element, never the build.
+description: Build a story's UI from its own designs and its exact copy — "build the UI for this story", "create the screens", "implement the UI slice", or an [AC] slice with UI inside implement. Platform-correct through the project's stack, every state the story defines, nothing invented. Missing copy or an unreachable design stops that element, never the build.
 user-invocable: true
 ---
 
 # ui
 
-One story's screens, built to what the story actually says. Load `raftkit-core:rules` first unless it is already in this conversation. Called from an `implement` phase it takes the story, the phase and the engine check already in hand; standalone it fetches the story once.
+One story's screens, built to what the story actually says. Load `raftkit-core:rules` first unless it is already in this conversation. Called from an `implement` slice it takes the story and the slice already in hand; standalone it fetches the story once.
 
 **Nothing user-facing is invented.** Copy is used verbatim, designs are consumed, breakpoints and tokens come from the project. When the story is silent, ask; never fill the gap.
 
@@ -14,7 +14,7 @@ One story's screens, built to what the story actually says. Load `raftkit-core:r
 
 1. **Confirm there is UI to build.** No design and no copy in the story, or an explicit no-UI-scope note, means generate nothing and say so. That is a correct outcome.
 2. **Pick the stack**: web goes to React and Next.js with the defaults in `references/web-defaults.md`; mobile goes to Expo with `references/recipe-native-ui-structure.md`. A story covering both reads its own parity note and builds each surface to its own conventions. Solved problems come from the recipes rather than being redesigned: `references/recipe-in-app-auto-update.md` and `references/recipe-review-at-happy-moment.md`.
-3. **Build screen by screen**; `frontend-design:frontend-design` loads only when the story links no designs and the Project Profile defines no visual system. Every screen gets:
+3. **Build screen by screen**; `frontend-design:frontend-design` loads only when the story links no designs and the Project Profile defines no visual system, and when it is not installed, say `Optional: frontend-design. Install it with: claude plugin install frontend-design@claude-plugins-official` and build without it. Every screen gets:
    - **Designs** — build to the linked frames. A layout described only in words is a constraint, not licence to embellish.
    - **Copy** — the story's exact strings, verbatim. No rewording, no tone edits, no placeholder.
    - **States** — every edge-case row the story fills for that screen: waiting, empty, error with its exact message and recovery, success, limits, defaults. A row marked not applicable is reported as considered, not built.
@@ -32,4 +32,4 @@ One story's screens, built to what the story actually says. Load `raftkit-core:r
 
 Project Profile beats the story, the story beats a recipe, a recipe beats a library default. The story is the ceiling: a recipe never adds behaviour the story did not ask for, and an optional polish pass never overrides the story's designs, its copy or the scope contract.
 
-Design tokens are applied, never defined here. Backend and API work belong to the story's other phases.
+Design tokens are applied, never defined here. Backend and API work belong to the story's other slices.

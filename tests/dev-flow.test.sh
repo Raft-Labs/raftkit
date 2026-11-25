@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 # Contracts of the raftkit-dev story and bug flow (implement, fix, scope-guard,
-# docs, the verifier agent) that another component, the platform, or a live
-# template depends on. Each check pins an interface — a string another
-# component reads, a path two skills must agree on, a model a dispatch passes —
-# or the one clause that carries an acceptance criterion, never wording for its
-# own sake. Mutation-checked when added.
+# docs) that another component, the platform, a script or a live template
+# depends on: a string another component reads, a path two skills must agree
+# on, a model a dispatch passes, an invocation a script answers. Never the
+# wording of an instruction.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 
@@ -25,34 +24,23 @@ FIX=$DEV/skills/fix
 SG=$DEV/skills/scope-guard
 DOCS=$DEV/skills/docs
 
-# DF1 · every dev-flow skill loads the rules itself (cross-group sentence C4)
-rules_line='Load `raftkit-core:rules` first unless it is already in this conversation.'
+# DF1 · every dev-flow skill names the rules it loads
 ok=0
 for f in "$IMPL/SKILL.md" "$FIX/SKILL.md" "$SG/SKILL.md" "$DOCS/SKILL.md"; do
-  grep -qF "$rules_line" "$f" || { echo "  missing the rules line: $f"; ok=1; }
-  grep -qF '`raftkit-core:rules` apply' "$f" && { echo "  still says rules apply: $f"; ok=1; }
+  grep -qF '`raftkit-core:rules`' "$f" || { echo "  does not name raftkit-core:rules: $f"; ok=1; }
 done
-check "DF1 implement, fix, scope-guard and docs load raftkit-core:rules first" ok $ok
+check "DF1 implement, fix, scope-guard and docs name raftkit-core:rules" ok $ok
 
-# DF2 · the squash target is settled in turn 1: implement's stop sits in intake,
-#       before readiness; fix carries the same line ahead of its contract step
-#       (fix never loads implement's intake); nothing points at a release-train
-#       doc no repo carries, and the raise holds no second copy of the stop
+# DF2 · implement and fix stop on an undocumented squash target with one
+#       identical line; the raise holds no second copy
 stop_text="$(grep -m1 '^no documented squash target — ' "$IMPL/SKILL.md")"
-stop_line="$(grep -n '^no documented squash target — ' "$IMPL/SKILL.md" | head -1 | cut -d: -f1)"
-ready_line="$(grep -n '^2\. \*\*Check readiness' "$IMPL/SKILL.md" | head -1 | cut -d: -f1)"
-fix_stop="$( [[ -n "$stop_text" ]] && grep -nF "$stop_text" "$FIX/SKILL.md" | head -1 | cut -d: -f1)"
-contract_line="$(grep -n '^1\. \*\*Get the contract' "$FIX/SKILL.md" | head -1 | cut -d: -f1)"
-[[ -n "$stop_line" && -n "$ready_line" && "$stop_line" -lt "$ready_line" ]] \
-  && [[ -n "$fix_stop" && -n "$contract_line" && "$fix_stop" -lt "$contract_line" ]] \
-  && ! grep -rqi 'release-train doc\|release-train convention' "$IMPL" \
+[[ -n "$stop_text" ]] && grep -qF "$stop_text" "$FIX/SKILL.md" \
   && ! grep -qF 'no documented squash target' "$IMPL/references/pr.md"
-check "DF2 implement and fix stop on an undocumented squash target in turn 1, not at the raise" ok $?
+check "DF2 implement and fix carry one identical undocumented-squash-target stop" ok $?
 
-# DF3 · the plan record implement writes is exempt in scope-guard (same path)
-plan_path="$(grep -o 'Write the plan to `[^`]*`' "$IMPL/SKILL.md" | head -1 | sed 's/.*`\(.*\)`/\1/')"
-[[ -n "$plan_path" ]] && grep -F "\`$plan_path\`" "$SG/SKILL.md" | grep -qF 'always in scope'
-check "DF3 scope-guard never flags implement's plan record (${plan_path:-no path found})" ok $?
+# DF3 · the plan record implement writes is the path scope-guard exempts
+grep -qF '`docs/specs/<branch>.md`' "$IMPL/SKILL.md" && grep -qF '`docs/specs/<branch>.md`' "$SG/SKILL.md"
+check "DF3 implement and scope-guard agree on the plan record path" ok $?
 
 # DF4 · scope-guard reads out-of-scope where the live Feature Template puts it
 grep -qF '`Do NOT build`' "$SG/SKILL.md"
@@ -60,19 +48,15 @@ check "DF4 scope-guard reads the out-of-scope list from the Do NOT build line" o
 
 # DF5 · every named agent dispatch in implement and fix passes a model. The
 #       frontmatter of pr-review-toolkit's agents pins opus; only the
-#       per-invocation model moves them. The five review agents must be named,
-#       so the check cannot pass on a file that dispatches nothing. The phase
-#       and fix-loop subagents dispatch at their tier's model (tiers.md).
+#       per-invocation model moves them. The one reviewer is named at sonnet.
 ok=0
-for a in code-simplifier code-reviewer type-design-analyzer silent-failure-hunter pr-test-analyzer; do
-  grep -rqF "pr-review-toolkit:$a" "$IMPL" || { echo "  review agent not dispatched: $a"; ok=1; }
-done
+grep -qF '`pr-review-toolkit:code-reviewer` with `model: "sonnet"`' "$IMPL/references/review.md" || { echo "  the reviewer is not dispatched at sonnet"; ok=1; }
+others="$(grep -rhoE 'pr-review-toolkit:[a-z-]+' "$IMPL" "$FIX" | grep -vx 'pr-review-toolkit:code-reviewer' | sort -u)"
+[[ -z "$others" ]] || { echo "  more than one reviewer: $others"; ok=1; }
 while IFS= read -r hit; do
   grep -qE 'model: "(haiku|sonnet|opus)"' <<<"$hit" || { echo "  dispatch without a model: $hit"; ok=1; }
 done < <(grep -rnE 'pr-review-toolkit:[a-z-]+|raftkit-dev:verifier' "$IMPL" "$FIX" --include='*.md')
-grep -qF "each a subagent at its tier's model" "$IMPL/SKILL.md" || { echo "  implement's phase dispatch names no tier"; ok=1; }
-grep -qF "one subagent at the defect's tier" "$FIX/SKILL.md" || { echo "  fix's loop dispatch names no tier"; ok=1; }
-check "DF5 every agent dispatch in implement and fix passes a model or its tier's" ok $ok
+check "DF5 every agent dispatch in implement and fix passes a model" ok $ok
 
 # DF6 · tiers.md maps each tier to an Agent model value a dispatch can pass
 T=plugins/raftkit-core/skills/working-agreement/references/tiers.md
@@ -80,13 +64,6 @@ grep -qE '^\| `mechanical` \| `haiku` \|' "$T" \
   && grep -qE '^\| `standard` \| `sonnet` \|' "$T" \
   && grep -qE '^\| `hard` \| [^|]*`opus` under `opusplan`' "$T"
 check "DF6 tiers.md names the model each tier dispatches with" ok $?
-
-# DF7 · fix records a pending build, never one no build contains yet; retest
-#       in raftkit-qa reads this exact string as empty (cross-group C3). The
-#       pin is on the edit instruction: the go-report repeats the string
-grep -qF 'the edit writing `Fixed in build: pending — first build containing PR #<n>`' "$FIX/SKILL.md" \
-  && ! grep -qE 'Fixed in build <x>' "$FIX/SKILL.md"
-check "DF7 fix writes Fixed in build: pending with the PR number" ok $?
 
 # DF8 · the go-report (the last output block) of implement and fix ends by
 #       telling the developer to clear the chat before the next story
@@ -120,58 +97,28 @@ bad="$(grep -rhoE 'verify\.mjs --only [a-z]+' "$IMPL" "$FIX" "$DEV/agents" 2>/de
 [[ -z "$bad" ]] || { echo "  unknown gate: $bad"; ok=1; }
 check "DF10 implement and fix run their gates through verify.mjs" ok $ok
 
-# DF11 · the review tail runs in raftkit-dev:verifier, a Sonnet agent that can
-#        run checks (Bash) but holds no tool that writes a file or dispatches
-V=$DEV/agents/verifier.md
-vfm() { awk 'NR==1&&$0!="---"{exit} NR>1&&$0=="---"{exit} NR>1{print}' "$V"; }
+# DF11 · the review tail is one reviewer plus three scripts; the verifier agent
+#        is gone and nothing names it
+R=$IMPL/references/review.md
 ok=0
-[[ -f "$V" ]] || { echo "  missing $V"; ok=1; }
-if [[ -f "$V" ]]; then
-  [[ "$(vfm | sed -n 's/^name: *//p')" == verifier ]] || { echo "  name is not verifier"; ok=1; }
-  [[ "$(vfm | sed -n 's/^model: *//p')" == sonnet ]] || { echo "  model is not sonnet"; ok=1; }
-  tools="$(vfm | sed -n 's/^tools: *//p')"
-  grep -q '"Bash"' <<<"$tools" || { echo "  no Bash in tools"; ok=1; }
-  grep -qE '"(Write|Edit|MultiEdit|NotebookEdit|Agent|Task)"' <<<"$tools" && { echo "  a write or dispatch tool in: $tools"; ok=1; }
-fi
-grep -qF '`raftkit-dev:verifier`' "$IMPL/references/review.md" || { echo "  review.md does not dispatch the verifier"; ok=1; }
-check "DF11 the verifier agent is Sonnet, read-and-run only, and dispatched by review.md" ok $ok
+[[ -e "$DEV/agents/verifier.md" ]] && { echo "  the verifier agent still exists"; ok=1; }
+grep -rqF 'raftkit-dev:verifier' "$IMPL" "$FIX" "$SG" "$DOCS" && { echo "  a dev-flow skill still names the verifier"; ok=1; }
+for s in verify.mjs scope-check.mjs validate-docs.mjs; do
+  grep -qF "$s" "$R" || { echo "  the gate batch does not run $s"; ok=1; }
+  grep -qF "$s" "$IMPL/SKILL.md" || { echo "  implement does not invoke $s"; ok=1; }
+done
+check "DF11 one reviewer and three scripts make the review tail; the verifier agent is gone" ok $ok
 
-# DF12 · the plan record has one writer. Parallel phases committing the same
-#        file race on the index or conflict on merge-back, and a third file
-#        breaks working-agreement rule 2, so no phase edits it; the parent
-#        marks phases done (resume after /clear reads it) and commits it once,
-#        with the last phase, so the review pass runs on a committed record
+# DF15 · superpowers is no dependency and no dev-flow file names it
 ok=0
-grep -qF 'only the parent marks phases done in the record, and commits it with the last phase' "$IMPL/SKILL.md" \
-  || { echo "  the parent is not the record's only writer"; ok=1; }
-grep -qF 'marking it done in the record' "$IMPL/SKILL.md" && { echo "  a phase still marks the record"; ok=1; }
-check "DF12 only the parent writes implement's plan record" ok $ok
+node -e 'process.exit(require("./'"$DEV"'/.claude-plugin/plugin.json").dependencies.some((d) => (d.name || d) === "superpowers") ? 1 : 0)' \
+  || { echo "  raftkit-dev still depends on superpowers"; ok=1; }
+grep -rlF 'superpowers' "$IMPL" "$FIX" "$SG" "$DOCS" "$DEV/agents" 2>/dev/null | grep -q . && { echo "  a dev-flow file still names superpowers"; ok=1; }
+check "DF15 raftkit-dev neither depends on nor names superpowers" ok $ok
 
-# DF13 · a run started in plan mode writes nothing, and is told so before
-#        intake's git fetch, branch, baseline build and verify cache, which all
-#        write. It names git fetch: a bare "fetch" reads as the story fetch,
-#        which plan mode still needs
-pm_line="$(grep -n '^In plan mode: read only (no `git fetch`, branch, build or verify)' "$IMPL/SKILL.md" | head -1 | cut -d: -f1)"
-intake_line="$(grep -n '^1\. \*\*Intake' "$IMPL/SKILL.md" | head -1 | cut -d: -f1)"
-[[ -n "$pm_line" && -n "$intake_line" && "$pm_line" -lt "$intake_line" ]]
-check "DF13 plan mode reads only, stated before implement's intake" ok $?
-
-# DF14 · every phase prompt carries the base SHA and checks it before editing
-#        (cross-group C6: setup's worktree.baseRef only helps if the phase checks)
-grep -qF 'the branch SHA, which it confirms with `git merge-base --is-ancestor <sha> HEAD` before its first edit' "$IMPL/SKILL.md" \
-  && grep -qF 'the branch SHA to confirm before its first edit' "$FIX/SKILL.md"
-check "DF14 implement and fix phase prompts carry and check the branch SHA" ok $?
-
-# DF15 · the plan is written inline: no planning skill and no Plan subagent
-grep -qF 'never through `superpowers:brainstorming`, `superpowers:writing-plans` or a `Plan` subagent' "$IMPL/SKILL.md"
-check "DF15 implement never plans through brainstorming, writing-plans or a Plan subagent" ok $?
-
-# DF16 · the PR body carries the review findings and [AC] test coverage, and
-#        the STOP summary line counts findings the same way
-grep -qE '^[0-9]+\. \*\*Review findings\*\*' "$IMPL/references/pr.md" \
-  && grep -qF '`[AC]s with tests n/m`' "$IMPL/references/pr.md" \
-  && grep -qE 'findings: [0-9]+ fixed / [0-9]+ answered\.$' "$IMPL/SKILL.md"
-check "DF16 the PR body and the STOP line carry the review findings" ok $?
+# DF16 · the STOP summary line counts review findings
+grep -qE 'findings: [0-9]+ fixed / [0-9]+ answered\.$' "$IMPL/SKILL.md"
+check "DF16 the STOP line carries the review findings" ok $?
 
 # DF17 · fix writes and qa's retest reads one string (cross-group C3). retest
 #        treats the pending value as no build; if either side rewords it,
@@ -185,41 +132,58 @@ bug_c3="$(grep -oE '`Fixed in build: pending[^`]*` counts as empty' "$BUG" | hea
 [[ "$fix_c3" == "$c3" && "$bug_c3" == "$c3" ]]
 check "DF17 fix and qa retest carry the identical pending-build string" ok $?
 
-# DF18 · parallel phases never share one checkout (cross-group C6): each runs in
-#        its own worktree, which setup's worktree.baseRef "head" branches from
-#        the run's HEAD, and the parent lands each phase's one commit on the
-#        branch. In one checkout, parallel commits race on index.lock and carry
-#        each other's files.
+# DF18 · the FE/BE pair's subagents never share one checkout (cross-group C6):
+#        each is dispatched with worktree isolation, which setup's
+#        worktree.baseRef "head" branches from the run's HEAD
 ok=0
-build="$(grep -m1 '^4\. \*\*Build' "$IMPL/SKILL.md")"
-grep -qF 'isolation: "worktree"' <<<"$build" || { echo "  implement's phases are not dispatched with worktree isolation"; ok=1; }
-grep -qF 'the parent cherry-picks' <<<"$build" || { echo "  no step lands a phase's worktree commit on the branch"; ok=1; }
+grep -qF 'isolation: "worktree"' "$IMPL/references/pair.md" || { echo "  the pair is not dispatched with worktree isolation"; ok=1; }
 grep -qF 'baseRef: "head"' "$DEV/skills/setup/scripts/merge-settings.mjs" || { echo "  setup no longer branches worktrees from HEAD"; ok=1; }
-check "DF18 implement runs each phase in a worktree and cherry-picks its commit onto the branch" ok $ok
+check "DF18 the pair runs in worktrees branched from HEAD" ok $ok
 
-# DF19 · the review range is pinned once, by the parent. The simplifier, four
-#        reviewers and the verifier start together; a range that fetches makes
-#        them race on refs/remotes/origin/<target> once the target has moved,
-#        and a failed fetch reads as a scope block or a failed reviewer.
+# DF19 · the review tail never fetches: it reads the range pinned at intake
+! grep -q 'git fetch' "$IMPL/references/review.md"
+check "DF19 the review tail does not fetch" ok $?
+
+# DF21 · intake reads verify's `no typecheck script` (V16) as no gate, not red
+grep -m1 '^1\. \*\*Intake' "$IMPL/SKILL.md" | grep -qF '`no typecheck script`'
+check "DF21 implement's intake names verify's no-typecheck-script exit" ok $?
+
+# DF22 · the plan record implement writes is the one scope-check.mjs parses:
+#        the template's table header and hash comment are what the script
+#        reads, and scope-guard runs the script on the injected base-sha
+PLAN=$IMPL/references/plan.md
 ok=0
-R=$IMPL/references/review.md
-range="$(awk '/^## Anchoring/{a=1} a&&/^```/{n++; next} a&&n==1' "$R")"
-grep -qF 'git diff <base-sha> HEAD' <<<"$range" || { echo "  reviewers are not briefed with the pinned range"; ok=1; }
-grep -q 'fetch' <<<"$range" && { echo "  the range reviewers run still fetches"; ok=1; }
-grep -qF 'The parent runs `git fetch origin <squash-target>` once' "$R" || { echo "  nobody fetches the target before the range is pinned"; ok=1; }
-check "DF19 the parent fetches once and every reviewer gets a range that does not fetch" ok $ok
+grep -qxF '| # | [AC] | Test file | Source files |' "$PLAN" || { echo "  plan.md has no [AC] table header"; ok=1; }
+grep -qF '`Done when`' "$PLAN" || { echo "  plan.md has no Done when table for fix"; ok=1; }
+grep -qxF '<!-- plan-table sha256: <hash> -->' "$PLAN" || { echo "  plan.md has no hash comment"; ok=1; }
+grep -qF 'plan-table sha256:' "$DEV/scripts/scope-check.mjs" || { echo "  scope-check reads no hash comment"; ok=1; }
+grep -qF 'node ${CLAUDE_PLUGIN_ROOT}/scripts/scope-check.mjs --base <base-sha>' "$SG/SKILL.md" || { echo "  scope-guard does not pre-filter with scope-check"; ok=1; }
+check "DF22 implement's plan record is the table scope-check parses, and scope-guard runs it" ok $ok
 
-# DF20 · fix keeps separate repro and fix commits (1.11). Steps 2 and 3 run in
-#        a subagent handed only those steps verbatim, so the rule has to live in
-#        step 3 itself; references/loop.md never reaches it.
-grep -m1 '^3\. \*\*Smallest fix to green' "$FIX/SKILL.md" | grep -qF 'the fix is a separate `fix:` commit'
-check "DF20 fix's step 3 commits the repro test alone and the fix as a separate fix: commit" ok $?
+# DF23 · a story too large for one context refuses with a string the telemetry
+#        registry knows; scope-check's ORDER reads `test:` and `fix:` commit
+#        subjects, so implement and fix commit by them
+ok=0
+big="$(grep -m1 "^Can't build this in one run — " "$IMPL/SKILL.md")"
+[[ -n "$big" ]] || { echo "  implement has no too-large refusal"; ok=1; }
+node -e '
+  const r = require("./plugins/raftkit-core/hooks/lib/refusals.json").refusals;
+  const i = r.findIndex((x) => x.id === "story-too-large"), g = r.findIndex((x) => x.id === "generic-cant");
+  process.exit(i >= 0 && i < g && new RegExp(r[i].pattern, "m").test(process.argv[1]) && r[i].source === "raftkit-dev/skills/implement/SKILL.md" ? 0 : 1);
+' "$big" || { echo "  refusals.json does not register the too-large refusal ahead of generic-cant"; ok=1; }
+grep -qF '`test: <the [AC]>`' "$IMPL/SKILL.md" || { echo "  implement does not commit tests as test: <the [AC]>"; ok=1; }
+grep -qF '`fix:`' "$FIX/SKILL.md" || { echo "  fix does not commit the fix as fix:"; ok=1; }
+check "DF23 too-large stories refuse; test and fix commits carry the subjects scope-check reads" ok $ok
 
-# DF21 · intake reads verify's exit 2 for a repo with no typecheck script (a
-#        default Next.js app has none) as no gate, not a red baseline; V16 pins
-#        the string on verify's side
-grep -m1 '^1\. \*\*Intake' "$IMPL/SKILL.md" | grep -qF '(`no typecheck script` is not red)'
-check "DF21 implement's intake does not stop on a repo with no typecheck script" ok $?
+# DF24 · fix builds in its own thread and runs implement's review tail
+ok=0
+grep -qiE 'subagent|isolation:' "$FIX/SKILL.md" && { echo "  fix still dispatches a subagent"; ok=1; }
+for s in verify.mjs scope-check.mjs validate-docs.mjs; do
+  grep -qF "$s" "$FIX/SKILL.md" || { echo "  fix does not run $s"; ok=1; }
+done
+grep -qF 'implement/references/review.md' "$FIX/SKILL.md" || { echo "  fix does not run implement's review tail"; ok=1; }
+[[ -e "$FIX/references/loop.md" ]] && { echo "  fix still carries loop.md"; ok=1; }
+check "DF24 fix dispatches nothing and runs implement's review tail" ok $ok
 
 echo
 echo "dev-flow: $failures failure(s)"

@@ -1,114 +1,45 @@
 ---
 name: docs-product
-description: Design a project's documentation from scratch, document an existing codebase, or scaffold a project — "help me design this project", "document this codebase for me", "set up the project docs", "reverse-engineer the docs", "scaffold the project". The full co-authoring design flow with 29 templates and diagrams. Parity checks on a story are raftkit-dev:docs.
+description: Design a project's documentation from scratch, document an existing codebase, or scaffold a project — "help me design this project", "document this codebase for me", "set up the project docs", "reverse-engineer the docs", "scaffold the project". Runs the co-authoring design interview and generates docs and diagrams in the repo's own conventions. Parity checks on a story are raftkit-dev:docs.
 user-invocable: true
 ---
 
-# docs
+# docs-product
 
-Design, generate, and keep a repository's living documentation in lockstep
-with the approved story, the spec, and the code — in that repository's **own**
-documentation system, never a forced one. Two real architectures (a
-module-indexed tree; a flat tree with an ownership-index table) proved the
-same lifecycle runs over very different structures: the lifecycle is the
-contract, the architecture is discovered input.
+Design, generate and reverse-engineer a repo's living docs, in the repo's own documentation system. Load `raftkit-core:rules` first unless it is already in this conversation.
 
-## The one rule that governs everything
-
-**Discover, then write — never the reverse.** Every structural opinion is a
-proposal; existing conventions are preserved by default; no doc file is ever
-generated before the human signs off on the full plan. Sync and verify are
-`raftkit-dev:docs` and add no stop of their own. This skill never
-writes to Asana: story drafting is `raftkit-pm:story`, bug filing is
-`raftkit-qa:bug`.
-
-## Ownership — one product, two surfaces
-
-PM (Cowork) can originate Project Profiles, decisions, stories, and approved
-planning. This skill consumes those outputs when they exist, and it runs the
-full design/generation workflow when invoked directly by a developer.
-Confirmed facts are consumed, never re-asked; neither surface loses a
-capability because the other also provides it. Asana remains the workflow
-spine; project facts live in Project Profiles, never in this plugin.
+**Discover, then write.** Every structural opinion is a proposal. Existing conventions win. No doc is written before the human signs off on the full plan. Never write to Asana: stories are `raftkit-pm:story`, bugs are `raftkit-qa:bug`. Consume confirmed PM outputs (Project Profile, decisions, stories, approved planning); never re-ask them.
 
 ## Modes
 
-Mode may be inferred from the developer's intent, but the selection is always
-stated as `docs mode: <design|init|audit|sync|verify|scaffold> · branch:
-<branch>` before work begins. Preflight is always-on internal behavior, never
-a seventh command.
+State `docs mode: <design|init|audit|sync|verify|scaffold> · branch: <branch>` before any work, even when the mode was inferred. Preflight always runs first; it is not a mode.
 
-- **design** — the full co-authoring flow (`references/orchestration.md`):
-  classify the project, discover business context, select the stack, design
-  auth/tenancy/RBAC, inventory modules, run the 20+1-step per-module deep
-  dive, capture cross-cuts, confirm — then generate. The interview itself runs
-  under `raftkit-docs:discovery-interview` — a few related questions at a time,
-  recommendation-first, push-back on vague answers, its proactive and
-  edge-case catalogs. Nothing is written before sign-off.
-- **init** — materialize a documentation foundation from **approved planning
-  outputs** (story, Project Profile, spec, or a completed design session).
-  With no approved planning, offer design mode; if the developer declines,
-  refuse with `No approved planning output covers this — route it through the
-  story/PM flow before docs init.` Never invent product decisions.
-- **audit** — compare docs (or their absence) with the code. Read-only until a
-  change plan is approved. On existing code without docs, reverse-engineer per
-  `references/reverse-engineer.md`.
-- **sync** — invoke `raftkit-dev:docs` on the explicit change set; it maps,
-  updates and re-verifies the owned docs in the repo's own history
-  convention. This plugin never re-implements it.
-- **verify** — delegated to `raftkit-dev:docs`, which owns the parity check
-  and the two deterministic scripts. This plugin never re-implements it.
-- **scaffold** — optional project bootstrap after design
-  (`references/scaffolding.md`): archetype-matched CLI, always asks before
-  touching anything outside docs, installs route through `raftkit-dev:setup` — never improvised here.
+- **design** — the twelve-phase co-authoring flow (`references/design-flow.md`) under the interview contract (`references/interview.md`). Nothing is written before sign-off.
+- **init** — build the docs foundation from approved planning: a story, the Project Profile, a spec, or a finished design session. With none, offer design; if declined, refuse with the exact line below. Never invent product decisions.
+- **audit** — compare docs, or their absence, with the code. Read-only until a change plan is approved. Code without docs is reverse-engineered (`references/existing-docs.md`).
+- **sync** — invoke `raftkit-dev:docs` on the explicit change set. Never re-implemented here.
+- **verify** — delegated to `raftkit-dev:docs`, which owns the parity check and its two scripts. Never re-implemented here.
+- **scaffold** — optional bootstrap after design (`references/scaffolding.md`). Asks before touching anything outside docs; installs route through `raftkit-dev:setup`.
 
-## Preflight — three branches
+## Preflight
 
-Always runs first (`references/lifecycle-and-handoff.md` +
-`references/discovery-and-routing.md`):
+Route per `references/existing-docs.md`:
 
-1. **greenfield** — no code/docs yet. With approved planning → init; without →
-   offer the full design flow.
-2. **existing code, no living docs** — real code, no documentation system →
-   audit/reverse-engineer path (recommended), fresh design, or hybrid.
-3. **living docs** — a documentation system exists → discovered conventions
-   are the yardstick for everything that follows; missing capabilities are
-   added only through an approved proposal (hybrid).
+1. **greenfield** — no code or docs: init with approved planning, otherwise offer design.
+2. **existing code, no living docs** — reverse-engineer (Recommended), fresh design, or hybrid.
+3. **living docs** — discovered conventions are the yardstick; a missing capability lands only through an approved proposal.
 
-All three converge on the same sync/verify contract: `raftkit-dev:docs`.
+All three end on the same sync and verify contract: `raftkit-dev:docs`.
 
-## The handoff (read, never re-asked)
+## Handoff
 
-The approved Asana story (live), the Project Profile (the
-`Project Profile - <project name>` task in the project — see
-`raftkit-core:rules`), any implementation spec the story links (a record,
-not a gate — this skill never authors a competing one), discovered docs roots
-and conventions, the ownership/change map, open unknowns, and the repository's
-own verification commands. Questions go to the developer **only** for what
-repository evidence cannot establish. Before init writes anything, work is
-classified **complete / partial / missing** against the story and any spec it
-links; partial or missing routes to the owning approval path — or, when the
-developer chooses, into design mode.
+Read the approved story (live), the Project Profile, any spec the story links, the discovered conventions, the ownership map, open unknowns and the repo's own verification commands. Ask the developer only what repo evidence cannot answer. Before init writes, classify the work complete, partial or missing against the story and spec.
 
-## Templates and diagrams
+## Templates, diagrams, discovery
 
-`assets/templates/` ships 29 adaptable doc templates (progressive disclosure:
-recommended for greenfield generation, mapped onto existing conventions
-otherwise — never forced). Story drafting and bug filing from the docs route
-to `raftkit-pm:story` and `raftkit-qa:bug`; this plugin keeps only their link
-registry. Diagrams follow `references/diagram-catalog.md`: generate
-when applicable, record `N/A — <reason>` when not, regenerate on change.
+`assets/templates/` ships nine adaptable templates: recommended for greenfield, mapped onto existing conventions otherwise, never forced. Generation, diagrams and the graded check are `references/generation.md`.
 
-## Discovery
-
-`raftkit-dev:docs`'s `scripts/audit-docs.mjs` produces the **in-memory** discovery result — roots,
-convention, indexes, ownership mapping, history convention, ADR seam,
-confidence, unresolved conflicts. It is not persisted automatically. If
-persisting would help, propose a **project-owned** descriptor with its exact
-path and content; the human approves both before creation, and existing
-conventions stay authoritative over the descriptor. Conflicting signals or a
-descriptor-vs-discovery clash: report both, mutate nothing, ask the human which
-convention is authoritative.
+`raftkit-dev:docs`'s `scripts/audit-docs.mjs` returns the in-memory discovery result. Persist it only as a project-owned descriptor the human approves. On conflicting signals, report both, change nothing, and ask which convention is authoritative.
 
 ## Exact strings (owned here)
 
@@ -116,59 +47,30 @@ convention is authoritative.
 
 Sync and verify outcome lines are `raftkit-dev:docs`'s own.
 
-## Safety boundaries
+## Safety
 
-Everything stays inside the resolved repository root — no out-of-root symlink
-is ever followed; VCS metadata, dependency/vendor dirs, build output, caches,
-auth state, and secret/env files are excluded from scans; secret values are
-never printed (envx presence is metadata only — nothing decrypted, nothing
-read); scripts write only to an explicit output path inside the root; temporary
-files are cleaned after verification. Change sets are explicit — a selected
-base/ref/diff or the user-confirmed working diff — never a silently chosen Git
-range. Capability needs route through `raftkit-dev:setup`; this skill never improvises an install.
+- Stay inside the repo root. Never follow an out-of-root symlink.
+- Skip VCS metadata, dependencies, build output, caches, auth state and secret or env files. Never print a secret; envx presence is metadata only.
+- Scripts write only to an explicit output path inside the root. Clean temporary files after verification.
+- Use an explicit change set: a selected base, ref or diff, or the confirmed working diff. Never pick a git range silently.
+- Capability needs route through `raftkit-dev:setup`. Never improvise an install.
 
 ## Guardrails
 
-- **Plain English out** — every line a human reads follows `raftkit-core:rules`' plain-language rules; a house term gets its one-line gloss on first use.
+- **Plain language** — every line a human reads follows `raftkit-core:rules` → Plain output; a house term gets its one-line gloss on first use.
 
-## Out of scope
+## Never
 
-- Asana writes of any kind from this skill directly; ticking ACs or Testing.
-  (Story drafting is `raftkit-pm:story`; bug filing is `raftkit-qa:bug`.)
-- Package-manager and hook-manager work, and executing installs
-  (`raftkit-dev:setup` owns those).
+- Any Asana write; ticking `[AC]` or `Testing`.
+- Package-manager and hook work, and running installs (`raftkit-dev:setup`).
 - Editing read-only source projects; merging PRs; deploying.
 
-## Reference files
+## References
 
-- `references/orchestration.md` — the 12-phase design flow, entry branches,
-  mutual-agreement and confirmation gates, refinement loop.
-- `references/discovery-questions.md` — the stack question scripts, §1-§13.
-- `references/stack-and-domain-recipes.md` — archetype decision tree,
-  bootstrap recipes, domain recipes, anti-recipes.
-- `references/module-decomposition.md` — module inventory + the 20+1-step
-  per-module loop with the always-on compliance/PII/tests cross-cut.
-- `references/stack-anti-patterns.md` — the stack half of the proactive scan
-  (ORM, hosting, SDK, provider picks to steer away from).
-- `references/rbac-guide.md` — the three nested matrices; the auth phase
-  cannot exit without a drafted matrix.
-- `references/generation.md` — adaptive generation: greenfield default tree,
-  convention preservation, hybrid via approved proposal.
-- `references/diagram-catalog.md` — diagram types, N/A reasoning, regen rule.
-- `references/verification-checklist.md` — the graded P0/P1/P2 gap report
-  after generation.
-- `references/scaffolding.md` — bootstrap CLIs, ask-before-touch,
-  never-auto-run list.
-- `references/lifecycle-and-handoff.md` — modes, branches, handoff inputs,
-  the planning check before init, mode announcement.
-- `references/discovery-and-routing.md` — convention discovery, descriptor
-  proposal, conflict handling.
-- `references/reverse-engineer.md` — the full code-first restoration flow.
-- `references/story-adapter.md` · `references/bug-adapter.md` — the link
-  registry and refresh rule; drafting routes to `raftkit-pm:story`, filing to
-  `raftkit-qa:bug`.
-- `assets/companion/` — the project-local companion capability, rendered by
-  `scripts/render-companion.mjs` and installed by this plugin, never by
-  `raftkit-dev:setup`.
-- `raftkit-dev:docs/scripts/audit-docs.mjs` · `validate-docs.mjs` — the
-  deterministic readers, owned by `raftkit-dev:docs` and called from here.
+- `references/design-flow.md` — the twelve phases, the per-module loop, the RBAC matrix.
+- `references/interview.md` — how questions are asked, push-backs, what to volunteer, the edge-case walk.
+- `references/generation.md` — postures, templates, diagrams, graded verification.
+- `references/existing-docs.md` — handoff inputs, planning check, discovery, descriptor, reverse-engineering.
+- `references/scaffolding.md` — bootstrap, ask-before-touch, never-auto-run.
+- `references/story-adapter.md` · `references/bug-adapter.md` — the link registry; drafting routes to `raftkit-pm:story`, filing to `raftkit-qa:bug`.
+- `assets/companion/` — the project-local companion, rendered by `scripts/render-companion.mjs`, installed by this plugin, never by `raftkit-dev:setup`.

@@ -1,39 +1,41 @@
-# Generation — adaptive, never forced
+# Generation and verification
 
-Generation materializes the confirmed design into documentation using the
-adaptable templates in `assets/templates/` through progressive disclosure:
-the structure is recommended, never imposed. The repository's own conventions
-always win.
+## Postures
 
-## The three postures
+- **Greenfield** — recommend and generate the full tree: the root CLAUDE.md and README; foundation docs (tech stack, architecture overview with its diagrams, decisions, glossary, design guidelines, NFRs, RBAC matrix, changes-log); one folder per module (overview, features, APIs, schemas, test plan; workflows, state machines, async jobs, observability and compliance where they apply); index registries.
+- **Living docs** — the discovered convention is the yardstick. Map each capability onto its structure, naming and history convention. Generate only what the design produced and the convention fits. Restructure nothing.
+- **Hybrid** — additions land only through an approved proposal showing exact paths and content.
 
-- **Greenfield** — no docs exist: recommend and generate the complete default
-  structure — foundation docs (tech stack, architecture overview with its
-  diagrams, decisions/ADR seam, glossary, design guidelines, NFR, RBAC
-  matrix, changelog + changes-log), one folder per module (module overview,
-  features, APIs, schemas, workflows, state machines and async jobs where
-  applicable, observability, compliance where applicable, test plan), shared
-  cross-cuts, index registries, and the root CLAUDE.md and README. Every file
-  comes from its template, filled from the confirmed design — placeholders
-  are completed or explicitly marked, never silently dropped.
-- **Existing living docs** — the discovered convention is the yardstick: map
-  each applicable document capability onto the repository's own structure,
-  naming, and history convention; generate only what the design session
-  produced and the convention accommodates; restructure nothing.
-- **Hybrid** — existing docs plus missing capabilities: additions land only
-  through an approved proposal (exact paths + content shown first); a hybrid
-  never silently reshapes what already exists.
+## Templates
+
+`assets/templates/` ships nine: readme, CLAUDE.md, architecture overview, module, feature, REST API, DBML schema, ADR, test plan. Fill each from the confirmed design; complete or explicitly mark every placeholder. A doc with no template follows the nearest one and the tree in the CLAUDE.md template.
 
 ## Rules
 
-- Nothing is generated before the Phase-8 sign-off; ambiguity in where a
-  capability should land is asked, never guessed.
-- Code samples always match the chosen archetype — never mixed.
-- Diagrams follow `diagram-catalog.md`: generated when applicable, recorded as
-  `N/A — <reason>` when not.
-- Generated docs carry the repository's own history convention (frontmatter
-  version tables or verification footers — whichever the convention uses).
-- Stories and bugs are not generated here: drafting routes to
-  `raftkit-pm:story`, filing to `raftkit-qa:bug`.
-- After generation, verification (Phase 10) runs before the set is called
-  done, and `raftkit-dev:docs` owns every later sync.
+- Generate nothing before the phase-8 sign-off. Ask where a capability lands; never guess.
+- Match code samples to the chosen archetype. Never mix archetypes.
+- Carry the repo's history convention: version tables or verification footers.
+- Never generate stories or bugs: drafting is `raftkit-pm:story`, filing is `raftkit-qa:bug`.
+
+## Diagrams
+
+Mermaid only. One caption line above each. Identical node names across diagrams. Split past ~30 nodes. Walk the inventory; generate what applies and write `N/A — <reason>` for the rest. Never skip one silently.
+
+- Project-wide, in the architecture overview: system architecture, request lifecycle, data flow, deployment topology, auth flow, tenancy model, module map, async architecture, permission flow.
+- Per module: components and page navigation. Per feature: a sequence. Per stateful entity: a state diagram. Per async job: its execution. Per workflow: a swimlane.
+
+A change that affects a diagram regenerates it and bumps its version.
+
+## Verification (phase 10)
+
+Grade every gap: P0 blocks done, P1 should be fixed, P2 is cosmetic. `raftkit-dev:docs`'s `scripts/validate-docs.mjs --graded` emits the same grading. Check:
+
+- the foundation docs the convention expects;
+- each module's docs, and the conditional ones its design needs;
+- every edge-case category answered or N/A;
+- cross-references resolve and every index lists every doc;
+- one code archetype throughout;
+- diagram coverage;
+- docs against code, where code exists.
+
+The graded report goes to refinement (phase 11).

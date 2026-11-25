@@ -1,24 +1,22 @@
 ---
 name: rules
-description: The RaftKit rules every role skill loads first — Asana constants, one stop per run, fetch-once reads, free tier, scope line, founder escalation, estimate watermark.
+description: The rules every RaftKit role skill loads first — Asana constants, one stop per run, fetch once, free tier, scope line, founders and the estimate watermark.
 user-invocable: false
 ---
 
 # RaftKit rules
 
-Every pm, dev and qa skill inherits these and never restates them.
+Every role skill inherits these; none restates them.
 
 ## Constants — the only place GIDs live
 
-| Constant | Value |
-|---|---|
-| Asana workspace | `1194107417268910` |
-| Feature Template (stories) | `1216778429401199` |
-| Bugs Template (bugs) | `1215260732424760` |
-| Subtasks | `[AC] …` criteria, plus `Development` / `Testing` / `Bugs` |
-| Project Profile | task `Project Profile - <project name>` in that project, one subtask per section; read all |
+- Asana workspace: `1194107417268910`
+- Feature Template (stories): `1216778429401199`
+- Bugs Template (bugs): `1215260732424760`
+- Subtasks: `[AC] …` criteria, plus `Development` / `Testing` / `Bugs`
+- Project Profile: task `Project Profile - <project name>` in that project, one subtask per section
 
-Templates are read live by GID; this repo holds no template text. If one cannot be read, stop with this line and never use a remembered shape.
+Read templates live by GID; never use a remembered shape. One unreadable → stop:
 
 ```output
 Can't read the live template — check your Asana connector, then retry.
@@ -26,55 +24,49 @@ Can't read the live template — check your Asana connector, then retry.
 
 ## Fetch once per run
 
-Fetch the story, its `[AC]`s, the template and the Profile once at the start. Subagents inherit nothing: brief each with only the slice it uses, never the template. A subagent missing a fact stops and asks through the parent. Reuse anything fetched earlier in this conversation unless you can no longer quote it verbatim. Re-read a task right before overwriting its description. Re-fetch a story's `[AC]`s once before auditing a diff. Which fields to ask for, which reads go out together: `references/asana-calls.md`.
+Fetch the story, its `[AC]`s, the template and the Profile sections the run uses once, at the start; reuse a fetch while you can still quote it verbatim. Re-read a task right before overwriting its description. Re-fetch a story's `[AC]`s once before a scope audit. Fields and batching: `references/asana-calls.md`.
 
 ## One stop per run
 
-A run fetches, plans, builds and checks without waiting, then stops exactly once, before anything leaves the session: an Asana write, a PR, a Sheet write, a message. The stop shows the complete content, names every target, and ends on this line:
+A run works without waiting, then stops once before anything leaves the session: an Asana write, a PR, a Sheet write, a message. The stop shows the complete content and every target, and ends on:
 
 ```output
 **STOP** — approve to push, edit to change, or decline.
 ```
 
-- Before any read, confirm this session has a tool for every write the run cannot finish without. One missing → the first reply says so and nothing is read:
+- Before any read, confirm a tool exists for every write the run needs. One missing → the first reply is this, and nothing is read:
 
 ```output
 Can't write to <surface> from this session — connect <connector>, then re-run.
 ```
 
-- An explicit go pushes exactly what was shown. An edit is not a go: re-present the changed draft. A reply that only chooses among options the draft itself listed is a go, and pushes with those choices. Silence pushes nothing.
+- An explicit go pushes exactly what was shown; choosing among options the draft listed is a go. An edit is not a go: re-present the changed draft in full, ending on the STOP line. Silence pushes nothing.
 - A run that writes nothing has no stop.
 - Merging a PR, ticking `[AC]` or `Testing`, and closing a bug stay human.
-- Comments by default; overwrite a description only on explicit instruction. Read the result back once and fold it into the success line. On partial failure, report what landed; retry only idempotent writes.
+- Comments by default; overwrite a description only on explicit instruction.
+- Read the result back once into the success line; a write response that returns the rendered body is the read-back.
+- On partial failure, report what landed; retry only idempotent writes.
+- Subagents inherit nothing: brief each with only the slice it uses, never the template.
+- A new skill or plugin is suggested with its provenance; a human approves before any install.
 
-## Asana HTML floor
-
-One `<body>` root; no `<p>`; attributes only on `<a>`; escape `&` `<` `>`; no named entities. Details: `references/asana-html.md`.
-
-## Free tier only
-
-No dependencies, custom fields, milestones, start dates or approval tasks. Relationships are task links.
+Asana HTML: `references/asana-html.md` — one `<body>`, no `<p>`, no named entities.
 
 ## Scope is a hard line
 
-The story's `[AC]`s define done. A diff beyond them is flagged, never quietly kept; improvements become board proposals. A missing requirement goes back through `raftkit-pm:story` amend mode, whose comment CCs every follower; a dev-answerable gap is cleared by the dev and logged on the story in the same run. Project facts live in the Project Profile, never in a plugin.
+Free tier only: no dependencies, custom fields, milestones, start dates or approval tasks; relationships are task links. The story's `[AC]`s define done. Flag any diff beyond them; improvements become board proposals. A missing requirement goes back through `raftkit-pm:story` amend; the dev clears a dev-answerable gap and logs it on the story. Project facts live in the Project Profile, never in a plugin.
 
 ## Never invent
 
-Every claim traces to a supplied source or a live fetch. A gap is asked in one batched question, never guessed. Profile beats other sources; any other conflict stops and is named. Readiness: `references/readiness.md`.
+Every claim traces to a supplied source or a live fetch. Ask gaps in one batched question; never guess. The Profile wins; name any other conflict and stop. Readiness: `references/readiness.md`.
 
 ## Founders decide money and commitments
 
-Budget, contracts, relationship risk and anything a client could read as a commitment go to Nirav or Ashit. Every numbered estimate opens with `Requires founder review — not a client commitment.` and travels AI → the developer who will build it → a founder → the client.
-
-## New skills
-
-Suggest with provenance → human approves → install.
+Budget, contracts, relationship risk and anything a client could read as a commitment go to Nirav or Ashit. Every numbered estimate opens with `Requires founder review — not a client commitment.` and travels AI → the developer who builds it → a founder → the client.
 
 ## Plain output
 
-Short sentences, active voice, numbers not adjectives, end on the next action: `references/plain-language.md`.
+Short sentences, active voice, numbers not adjectives, no filler; end on the next action. Never write `WEESLD` in prose; name the edge-case row.
 
 ## Telemetry
 
-Claude Code reports itself through hooks; no skill does anything. Cowork has no hooks and emits no event when a skill runs, so a pm or qa skill names itself once in its first reply — `Using <plugin>:<skill>`. That line is the whole difference — no skill calls an endpoint, spools a file, or reports anything itself. `RAFTKIT_TELEMETRY=off` is a Claude Code switch and does nothing in Cowork; there is no per-session equivalent. Contract — `skills/cowork-telemetry/SKILL.md`.
+In Cowork a pm or qa skill names itself once in its first reply: `Using <plugin>:<skill>`. No skill reports anything else; Claude Code uses hooks.

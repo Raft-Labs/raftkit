@@ -5,7 +5,8 @@
 #   3. a plugin change without a version bump fails; with a bump it passes
 #   4. a bump that landed on the base branch does not mask a missing bump here
 #   5. a help.md with a bare $CLAUDE_PLUGIN_ROOT fails
-#   6. a skill dir missing from its help.md table fails
+#   6. a role skill missing from the core help's routes fails
+#   7. a core help route naming no skill on disk fails
 set -uo pipefail
 export NODE_DISABLE_COLORS=1 FORCE_COLOR=0 NO_COLOR=1
 cd "$(dirname "$0")/.."
@@ -106,7 +107,7 @@ sed -i.bak 's/\${CLAUDE_PLUGIN_ROOT}/\$CLAUDE_PLUGIN_ROOT/g' "$bare/plugins/raft
 bash "$bare/scripts/validate.sh" >/dev/null 2>&1
 check "bare \$CLAUDE_PLUGIN_ROOT in help.md fails" fail $?
 
-# 6. A skill dir absent from its plugin's help.md table is rejected
+# 6. A role skill absent from the core help's routes is rejected
 undocumented="$(mktemp -d)"
 tmpdirs+=("$undocumented")
 copy_repo_into "$undocumented" || { echo "FATAL: repo copy failed"; exit 1; }
@@ -118,7 +119,16 @@ description: test fixture, not a real skill
 test
 EOF
 bash "$undocumented/scripts/validate.sh" >/dev/null 2>&1
-check "skill missing from help.md table fails" fail $?
+check "role skill missing from the core help routes fails" fail $?
+
+# 7. A core help route to a skill that is not on disk is rejected
+stale="$(mktemp -d)"
+tmpdirs+=("$stale")
+copy_repo_into "$stale" || { echo "FATAL: repo copy failed"; exit 1; }
+sed -i.bak 's/`raftkit-qa:bug`/`raftkit-qa:bug`, `raftkit-qa:no-such-skill`/' "$stale/plugins/raftkit-core/commands/help.md"
+grep -qF 'raftkit-qa:no-such-skill' "$stale/plugins/raftkit-core/commands/help.md" || { echo "FATAL: fixture edit did not apply"; exit 1; }
+bash "$stale/scripts/validate.sh" >/dev/null 2>&1
+check "core help route to a missing skill fails" fail $?
 
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures test(s) failed"

@@ -48,7 +48,28 @@ export function tierOf(model) {
 }
 
 const num = (v) => (Number.isFinite(v) ? v : 0);
-const emptySums = () => ({ input: 0, output: 0, cache_read: 0, cache_creation: 0, billed: 0, side_billed: 0, messages: 0, by_model: {} });
+const emptySums = () => ({ input: 0, output: 0, cache_read: 0, cache_creation: 0, billed: 0, side_billed: 0, list_usd: 0, unpriced: 0, messages: 0, by_model: {} });
+// First-party list prices, USD per million tokens: [input, output, cache read].
+// Source: https://platform.claude.com/docs/en/about-claude/pricing (rows checked
+// 2026-11-25 against the 2026-11-03 table). A listed cache read is the published
+// rate (opus-5-5 and the 5.2 models are below 0.1x input); an unlisted one is
+// 0.1x input. Cache writes cost 1.25x input. haiku-5-5 is its <=100K-prompt rate.
+// A model not listed here is counted in `unpriced`, never priced as another.
+// Token counts are the primary metric; list-price USD is secondary.
+const PRICES = {
+  "fable-5-2": [8, 40, 0.2], "mythos-5-2": [8, 40, 0.2], "fable-5-1": [10, 50], "mythos-5-1": [10, 50], "fable-5": [10, 50],
+  "opus-5-5": [4, 20, 0.2], "opus-5": [5, 25], "opus-4-8": [5, 25], "opus-4-7": [5, 25], "opus-4-6": [5, 25],
+  "sonnet-5-5": [2, 10, 0.1], "sonnet-5": [2, 10], "sonnet-4-6": [3, 15],
+  "haiku-5-5": [0.1, 0.5], "haiku-4-5": [1, 5],
+};
+const PRICE_KEYS = Object.keys(PRICES).sort((a, b) => b.length - a.length);
+/** List-price USD for one message, or null when its model has no listed price. */
+function usdOf(p) {
+  const key = PRICE_KEYS.find((k) => String(p.model).includes(k));
+  if (!key) return null;
+  const [i, o, cr = i / 10] = PRICES[key];
+  return (p.i * i + p.o * o + p.cr * cr + p.cc * 1.25 * i) / 1e6;
+}
 const newPart = (side, agent = "") => ({ offset: 0, side, agent, since: 0, pending: null, sums: emptySums() });
 
 function usageOf(usage) {
@@ -85,6 +106,9 @@ function add(sums, p) {
   sums.cache_read += p.cr;
   sums.cache_creation += p.cc;
   sums.billed += billed;
+  const usd = usdOf(p);
+  if (usd === null) sums.unpriced = (sums.unpriced || 0) + billed;
+  else sums.list_usd = (sums.list_usd || 0) + usd;
   if (p.side) sums.side_billed += billed;
   sums.messages += 1;
   if (billed > 0) sums.by_model[p.model] = (sums.by_model[p.model] || 0) + billed;
@@ -212,7 +236,7 @@ function foldSubagents(files, transcriptPath, sessionId, opts) {
 /** Totals over the parts, the open message of each included. */
 function report(main, files) {
   const out = {
-    input: 0, output: 0, cache_read: 0, cache_creation: 0,
+    input: 0, output: 0, cache_read: 0, cache_creation: 0, list_usd: 0, unpriced: 0,
     main: 0, sidechain: 0, total: 0, messages: 0,
     by_model: {}, by_tier: {}, by_agent: {},
   };
@@ -223,6 +247,8 @@ function report(main, files) {
     out.output += s.output;
     out.cache_read += s.cache_read;
     out.cache_creation += s.cache_creation;
+    out.list_usd += s.list_usd || 0;
+    out.unpriced += s.unpriced || 0;
     out.messages += s.messages;
     if (part.side) {
       out.sidechain += s.billed;
@@ -375,6 +401,83 @@ export function runStart(transcriptPath) {
     }
   }
   return start;
+}
+
+// ------------------------------------------------------------------ stages
+// Stages split at markers v2.1 and v3 runs both leave: plan at the first Read/Grep/Glob or Explore dispatch after the last MCP call before the docs/specs/ write, build at that write, review at the first reviewer (not the simplifier), full verify.mjs or scope-check.mjs (not --hash) after it, stop after the last full verify.mjs (else at run-tokens.mjs), end at the STOP line (else the last record, so an in-run call never measures the STOP message).
+
+const STAGES = ["intake", "plan", "build", "review", "stop"];
+// raftkit-dev:verifier matches v2.1 baseline transcripts only; v3 has no verifier.
+const REVIEWER = /^(pr-review-toolkit:(?!code-simplifier$)|raftkit-dev:verifier$)/;
+const cmdOf = (b) => (b.name === "Bash" ? String(b.input?.command || "") : "");
+const agentOf = (b) => (/^(Agent|Task)$/.test(b.name) ? String(b.input?.subagent_type || "") : "");
+const isPlanWrite = (b) => /^(Write|Edit|MultiEdit)$/.test(b.name) && /(^|\/)docs\/specs\/[^/]+\.md$/.test(String(b.input?.file_path || ""));
+const isExplore = (b) => /^(Read|Grep|Glob)$/.test(b.name) || /^(Explore|Plan)$/.test(agentOf(b));
+const isFullVerify = (b) => /verify\.mjs\b/.test(cmdOf(b)) && !/--only\b/.test(cmdOf(b));
+const isGate = (b) => isFullVerify(b) || (/scope-check\.mjs\b/.test(cmdOf(b)) && !/--hash\b/.test(cmdOf(b))) || REVIEWER.test(agentOf(b));
+
+/**
+ * Wall-clock minutes per stage of the run from `sinceMs` (0: the session),
+ * main thread only. A stage whose marker never appears folds into the one
+ * before it ("intake+plan"). null when the transcript has no timestamps.
+ */
+export function runStages(transcriptPath, sinceMs = 0) {
+  let text;
+  try {
+    text = readFileSync(transcriptPath, "utf8");
+  } catch {
+    return null;
+  }
+  const calls = []; // every assistant block in order: { at, id, b }
+  let first = 0;
+  let last = 0;
+  let stopAt = 0;
+  for (const line of text.split("\n")) {
+    const rec = parseJson(line, null);
+    const at = Date.parse(rec?.timestamp);
+    if (!rec || !Number.isFinite(at) || at < sinceMs) continue;
+    if (stopAt) break;
+    if (!first) first = at;
+    last = at;
+    const content = rec.type === "assistant" ? rec.message?.content : null;
+    const id = String(rec.message?.id || rec.uuid || at);
+    for (const block of Array.isArray(content) ? content : []) {
+      if (block?.type === "text") {
+        calls.push({ at, id, b: { name: "text" } });
+        if (/^\*\*STOP\*\*/m.test(block.text || "")) stopAt = at;
+      } else if (block?.type === "tool_use") calls.push({ at, id, b: block });
+    }
+  }
+  if (!first) return null;
+  const after = (from, pred) => calls.findIndex((c, i) => i > from && pred(c));
+  const lastOf = (from, to, pred) => calls.reduce((m, c, i) => (i >= from && i < to && pred(c.b) ? i : m), -1);
+  const opened = { intake: first };
+  const w = after(-1, (c) => isPlanWrite(c.b));
+  if (w >= 0) {
+    const m = lastOf(0, w, (b) => String(b.name).startsWith("mcp__"));
+    const p = m < 0 ? -1 : after(m, (c) => c.id !== calls[m].id && isExplore(c.b));
+    if (p >= 0 && p < w) opened.plan = calls[p].at;
+    opened.build = calls[w].at;
+  }
+  const r = after(w, (c) => isGate(c.b));
+  if (r >= 0) {
+    opened.review = calls[r].at;
+    const v = lastOf(r, calls.length, isFullVerify);
+    let s = v >= 0 && calls[v].id !== calls[r].id ? after(v, (c) => c.id !== calls[v].id) : -1;
+    if (s < 0) s = after(r, (c) => /run-tokens\.mjs\b/.test(cmdOf(c.b)));
+    if (s >= 0) opened.stop = calls[s].at;
+  }
+  const end = stopAt || last;
+  const out = [];
+  for (const [i, name] of STAGES.entries()) {
+    if (opened[name] === undefined) {
+      if (out.length) out.at(-1).name += `+${name}`;
+      continue;
+    }
+    const next = STAGES.slice(i + 1).map((s) => opened[s]).find((v) => v !== undefined) ?? end;
+    out.push({ name, ms: Math.max(0, next - opened[name]) });
+  }
+  return out;
 }
 
 /** The newest transcript for a session id under Claude Code's projects dir, or "". */
