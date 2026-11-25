@@ -35,5 +35,5 @@ Name the section as the live template does, plus the concrete missing thing: `Se
 
 - An `[AC]` is a subtask named `[AC] …`, in any order; one still holding `{…}` is a gap.
 - `Development`, `Testing`, `Bugs` are containers, not criteria.
-- Match sections by number and meaning, not punctuation.
+- Match sections by number and meaning, not punctuation; take numbering from the live template — an intentional gap is not a missing section.
 - Anything unreadable is a gap: say it could not be assessed.

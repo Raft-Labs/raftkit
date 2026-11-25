@@ -34,14 +34,15 @@ Test first for the hooks: §14 and §15 of `telemetry.test.sh` fail before the d
 
 Budgets (`tests/budgets.json`, owned by integration):
 
-- `raftkit-core/rules`: `skill_md` 589 words / 908 tokens (was 700 / 1,130); `total` (SKILL.md + 3 references) 1,301 words / 1,926 tokens (was 2,200 / 3,300).
+- `raftkit-core/rules`: `skill_md` 584 words / 899 tokens (was 700 / 1,130); `total` (SKILL.md + 3 references) 1,326 words / 1,966 tokens (was 2,200 / 3,300). The SKILL.md is above the proposal's ~400–500 target: every remaining line is a cross-role invariant the lane was told to keep. The final number is for integration and the founders under D5.
 - Delete the `raftkit-core/cowork-telemetry` skill entry (S1 fails until then). It is now `docs/maintainers/cowork-telemetry.md`.
-- `files`: `plugins/raftkit-core/commands/help.md` → 148 words / 291 tokens (was 490 / 790). Delete the pm, dev, qa and docs `commands/help.md` entries (S18–S20 fail until then).
+- `files`: `plugins/raftkit-core/commands/help.md` → 161 words / 311 tokens (was 490 / 790). Delete the pm, dev, qa and docs `commands/help.md` entries (S18–S20 fail until then).
 - `plugins.raftkit-core` drops by roughly 1,700 words (rules −470, references −900, cowork-telemetry −784); lower it and `plugin_tokens` to the measured size.
 
 Structure and other suites:
 
-- `tests/validate.test.sh` check 6 adds its undocumented-skill fixture under `raftkit-qa`, which no longer has a `help.md`, so `scripts/validate.sh` skips it and the check fails. Move the fixture to `plugins/raftkit-core/skills/`: core help is now the only help with a skills table, and lists `rules` and `working-agreement`.
+- `scripts/validate.sh` checks skill-to-help sync only through each plugin's own help Skills table, and four plugins lost their `help.md`. Nothing now checks that the core help's role routes match the skills on disk. Extend `validate.sh`: every `plugins/raftkit-{pm,dev,qa}/skills/*/SKILL.md` appears as `raftkit-<plugin>:<skill>` in `plugins/raftkit-core/commands/help.md`, and every such route in the help resolves to a skill on disk (the opt-in `raftkit-hasura` and `raftkit-docs` routes included once those plugins exist).
+- `tests/validate.test.sh` check 6 adds its undocumented-skill fixture under `raftkit-qa`, which no longer has a `help.md`, so `scripts/validate.sh` skips it and the check fails. Move the fixture to the new core-help route check above.
 - `tests/shunt.test.sh` is deleted. Its §8 (token accounting) and §8b (`run-tokens.mjs`) moved verbatim into `tests/telemetry.test.sh` §16, under their own `TOK_ROOT`. If lane dev's story 1 changed `run-tokens.mjs` output or edited `shunt.test.sh`, port that change into §16.
 - `tests/telemetry.test.sh` showed flush/stuck-delivery failures once under parallel machine load (stub-server timing); two re-runs passed with no change.
 
@@ -49,7 +50,9 @@ Manifests, README and docs (not this lane's files):
 
 - `plugins/raftkit-core/.claude-plugin/plugin.json` and its `.claude-plugin/marketplace.json` entry still say "the bulk-read shunt with its bulk-reader subagent". Change both, in one edit, since telemetry.test.sh and `validate.sh` require them equal: `RaftKit rules (Asana constants, the one human stop per run, fetch-once live reads, Asana HTML, free tier, scope line, escalation, readiness, plain output), the RaftLabs working agreement and Module Design Standard, and usage and token telemetry hooks.`
 - Version bumps: raftkit-core, raftkit-pm, raftkit-dev, raftkit-qa and raftkit-docs all changed (the last four lost `commands/help.md`).
-- `README.md`: line 108 lists "when the read shunt declines a file, its extension and line count" — remove; lines 45–52 list five `/raftkit-*:help` commands — only `/raftkit-core:help` remains; line 56 says core "added `cowork-telemetry`" — it is a maintainer doc now; line 94 troubleshoots `/raftkit-dev:help` — point at `/raftkit-core:help`.
+- `README.md`: line 130 says "See `raftkit-core/skills/cowork-telemetry`" — point it at `docs/maintainers/cowork-telemetry.md`. Line 54 "## Renamed in v2" and its table — delete or shrink it to match the deleted router tables. Line 108 lists "when the read shunt declines a file, its extension and line count" — remove; lines 45–52 list five `/raftkit-*:help` commands — only `/raftkit-core:help` remains; line 56 says core "added `cowork-telemetry`" — it is a maintainer doc now; line 94 troubleshoots `/raftkit-dev:help` — point at `/raftkit-core:help`.
 - `skill-aliases.json` has no shunt or bulk-reader entry; nothing removed. The core help routes to the v3 names `raftkit-qa:test-cases` and `raftkit-hasura:hasura`; those exist only once the qa and opt-in lanes land.
 - The entry map keeps "raftkit-dev:fix (it runs systematic-debugging itself)", the counter-routing the critique (I9) asks to keep while superpowers is installed. Drop that parenthetical when story 5 (D2) removes superpowers.
 - `rules` now reads "the Profile sections the run uses" (was "read all"), matching the proposal's step 1 intake. The Telemetry section is one line; its rationale is `docs/maintainers/cowork-telemetry.md`.
+- `plugins/raftkit-dev/evals/plain-language/*/graders/banned-phrases.md` cite "raftkit-core's plain-language reference", now `docs/maintainers/plain-language.md`. Re-point or delete them when the story-15 eval reset lands.
+- The core help answers a role-skill question from the skill's listing description, since `${CLAUDE_PLUGIN_ROOT}` is raftkit-core's root. README examples such as `/raftkit-dev:help scope-guard` become `/raftkit-core:help scope-guard`.

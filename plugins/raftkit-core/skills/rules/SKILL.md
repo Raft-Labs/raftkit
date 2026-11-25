@@ -40,24 +40,18 @@ A run works without waiting, then stops once before anything leaves the session:
 Can't write to <surface> from this session — connect <connector>, then re-run.
 ```
 
-- An explicit go pushes exactly what was shown; choosing among options the draft listed is a go. An edit re-presents only the changed sections. Silence pushes nothing.
+- An explicit go pushes exactly what was shown; choosing among options the draft listed is a go. An edit re-presents only the changed sections, ending on the STOP line. Silence pushes nothing.
 - A run that writes nothing has no stop.
 - Merging a PR, ticking `[AC]` or `Testing`, and closing a bug stay human.
 - Comments by default; overwrite a description only on explicit instruction.
 - Read the result back once into the success line. The write response is the read-back when it returns the rendered body.
 - On partial failure, report what landed; retry only idempotent writes.
 
-## Asana HTML floor
-
-One `<body>` root; no `<p>`; attributes only on `<a>`; escape `&` `<` `>`; no named entities. Details: `references/asana-html.md`.
-
-## Free tier only
-
-No dependencies, custom fields, milestones, start dates or approval tasks. Relationships are task links.
+Asana HTML: `references/asana-html.md` — one `<body>`, no `<p>`, no named entities.
 
 ## Scope is a hard line
 
-The story's `[AC]`s define done. Flag any diff beyond them; improvements become board proposals. A missing requirement goes back through `raftkit-pm:story` amend; the dev clears a dev-answerable gap and logs it on the story. Project facts live in the Project Profile, never in a plugin.
+Free tier only: no dependencies, custom fields, milestones, start dates or approval tasks; relationships are task links. The story's `[AC]`s define done. Flag any diff beyond them; improvements become board proposals. A missing requirement goes back through `raftkit-pm:story` amend; the dev clears a dev-answerable gap and logs it on the story. Project facts live in the Project Profile, never in a plugin.
 
 ## Never invent
 
@@ -69,7 +63,7 @@ Budget, contracts, relationship risk and anything a client could read as a commi
 
 ## Plain output
 
-Short sentences, active voice, numbers not adjectives, no filler; end on the next action. Never show `WEESLD`; name the edge-case row.
+Short sentences, active voice, numbers not adjectives, no filler; end on the next action. Never write `WEESLD` in prose; name the edge-case row.
 
 ## Telemetry
 

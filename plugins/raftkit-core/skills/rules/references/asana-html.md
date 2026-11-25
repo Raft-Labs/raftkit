@@ -24,7 +24,7 @@ Draft in markdown; convert to this subset at push time for the surface you write
 
 ## Read-back
 
-A description is read back once with `html_notes`; a comment's read-back is the `html_text` its create call returned. Compare against the approved draft. Match → success line with the task link. Mismatch → show expected versus rendered and stop; never re-push over approved content.
+A description's read-back is the `html_notes` the update returned; if it returned none, re-fetch once with `html_notes`. A comment's read-back is the `html_text` its create call returned. Compare against the approved draft. Match → success line with the task link. Mismatch → show expected versus rendered and stop; never re-push over approved content.
 
 ## Batches
 

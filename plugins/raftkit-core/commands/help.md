@@ -5,7 +5,7 @@ argument-hint: [skill name or question]
 
 # RaftKit help
 
-The user ran `/raftkit-core:help $ARGUMENTS`. If it names a skill or asks a question, answer from that skill's `SKILL.md`; core skills live under `${CLAUDE_PLUGIN_ROOT}/skills/`. Otherwise show this.
+The user ran `/raftkit-core:help $ARGUMENTS`. If it names a core skill or asks about the rules, answer from `${CLAUDE_PLUGIN_ROOT}/skills/<skill>/SKILL.md`. If it names a role skill, answer from that skill's listing description and name the skill to invoke. Otherwise show this.
 
 - **PM:** `raftkit-pm:profile`, `raftkit-pm:story`, `raftkit-pm:estimate`, `raftkit-pm:status`, `raftkit-pm:meeting`.
 - **QA:** `raftkit-qa:test-cases`, `raftkit-qa:bug`.
