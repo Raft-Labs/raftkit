@@ -14,11 +14,11 @@ A conflict is not a tag: the fact, then each competing value with its own citati
 
 ## Sections
 
-Start from glossary · roles and permissions · business rules and limits · source index (every source with link and as-of date). Add sections the sources support; never invent one to fill. Split a section past about 15 facts, or whenever it needs headings inside it.
+Start from glossary · roles and permissions · business rules and limits · source index (every source with link and as-of date). Add only sections the sources support. Split a section past about 15 facts.
 
 ## Where it lives
 
-One task `Project Profile - <project name>` in the project it describes. The parent description carries only the project, the as-of date, the source index headline and the tag legend once. One subtask per section, named with a plain gloss after a dash, opening with one line saying what it holds and how many facts:
+One task `Project Profile - <project name>` in its project. The parent description holds the project, the as-of date, the source index headline and the tag legend. One subtask per section, named with a plain gloss after a dash, opening with one line on what it holds:
 
 ```output
 Roles and permissions — who is allowed to do what

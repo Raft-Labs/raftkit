@@ -1,6 +1,10 @@
 # Deprecation-sweep routine prompt
 
-Fill the four `<ALL-CAPS>` blanks. Email needs no blank: the routine reads whatever inbox its own account can reach, so schedule it under the right account.
+A read-only cloud routine. Nothing in RaftKit runs it; a PM sets it up by hand.
+
+1. Create it under `Code → Routines → Cloud` with a blank environment, never Local.
+2. Connect Asana, Slack and email for the account the routine runs under. The routine reads whatever inbox that account can reach.
+3. Fill the four `<ALL-CAPS>` blanks with names read live from Asana and Slack, then paste the block unedited.
 
 ```text
 Read, do not write. Create nothing, edit nothing, send nothing, file nothing —
