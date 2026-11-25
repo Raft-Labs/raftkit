@@ -104,8 +104,9 @@ const after = treeState();
 if (before.tree && !before.dirty && after.tree === before.tree && !after.dirty) {
   const entry = cache.find((e) => e?.tree === before.tree) ?? { tree: before.tree, results: {} };
   for (const r of results) {
-    if (r.code === 0) entry.results[r.role] = { command: commandOf(r.role), at: new Date().toISOString() };
-    else delete entry.results[r.role];
+    // A reused green keeps its first stamp, so reuse never extends the hour.
+    if (r.code === 0 && !r.cached) entry.results[r.role] = { command: commandOf(r.role), at: new Date().toISOString() };
+    else if (r.code !== 0) delete entry.results[r.role];
   }
   cache = [...cache.filter((e) => e?.tree !== before.tree), entry].slice(-KEEP_TREES);
   try {

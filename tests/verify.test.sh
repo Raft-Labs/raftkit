@@ -156,6 +156,13 @@ node -e 'const fs=require("fs"); const c=JSON.parse(fs.readFileSync(process.argv
 : > "$COUNT"; v "$F"
 [[ $RC -eq 0 && "$(runs)" == tlc ]]
 check "V23 a cached green older than an hour is not reused" ok $?
+# A reuse must not re-stamp the entry, or a green from hours ago would stay
+# "under an hour old" for every later verify and for the pre-push hook.
+stamp="$(node -e 'const fs=require("fs"); const c=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); const at=new Date(Date.now()-50*60e3).toISOString(); for (const e of c) for (const r of Object.values(e.results)) r.at=at; fs.writeFileSync(process.argv[1], JSON.stringify(c)); console.log(at)' "$fcache")"
+: > "$COUNT"; v "$F"
+[[ $RC -eq 0 && -z "$(runs)" ]] \
+  && node -e 'const c=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); process.exit(c.every((e)=>Object.values(e.results).every((r)=>r.at===process.argv[2]))?0:1)' "$fcache" "$stamp"
+check "V23b a reused green keeps its original time: reuse never extends the hour" ok $?
 
 # ---- the plan record is not a gate input -------------------------------------
 # implement keeps docs/specs/<branch>.md uncommitted while it builds and reviews;
