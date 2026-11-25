@@ -328,6 +328,76 @@ check "E14 a file named packages or apps is skipped, never a crash" ok $?
 node "$DETECT" --root "$EW/repo-files" --json >/dev/null 2>&1
 check "S46 detect-toolchain skips a file named packages or apps too" ok $?
 
+# ---- P1–P11 · pre-push reuses verify.mjs's green cache for the pushed tree ----
+# A real verify.mjs run writes the cache; the rendered hook reads it. A fake npm
+# logs each gate it runs, and fails while $PP/red exists.
+VERIFY="$PWD/plugins/raftkit-dev/scripts/verify.mjs"
+PP="$(mktemp -d)"; tmpdirs+=("$PP"); mkdir -p "$PP/bin" "$PP/repo"
+printf '#!/bin/sh\necho "$*" >> "$PP_LOG"\n[ -f "$PP_RED" ] && exit 1\nexit 0\n' > "$PP/bin/npm"; chmod +x "$PP/bin/npm"
+PR="$PP/repo"
+printf '{"name":"pp","scripts":{"lint":"x","test":"y"}}' > "$PR/package.json"; echo '{}' > "$PR/package-lock.json"
+( cd "$PR" && giso git init -q -b main && giso git add -A && giso git -c user.email=t@t -c user.name=t commit -qm init )
+rnd npm "" none "lint test" none "$PR/package.json"; HOOK_R="$ODIR/pre-push"
+CACHE_F="$PR/.git/raftkit/verify.json"
+ZERO=0000000000000000000000000000000000000000
+ppenv() { giso env PATH="${PPPATH:-$PP/bin:$PATH}" PP_LOG="$PP/log" PP_RED="$PP/red" "$@"; }
+pv() { ( cd "$PR" && ppenv node "$VERIFY" ) >/dev/null 2>&1; }
+pp() { # <pre-push stdin>: runs the rendered hook in the repo
+  : > "$PP/log"
+  PPOUT=$(cd "$PR" && printf '%s\n' "$1" | ppenv sh "$HOOK_R" origin git@example.invalid:x.git 2>&1); PPRC=$?
+}
+gates_ran() { grep -c 'run ' "$PP/log" | tr -d ' '; }
+line() { printf 'refs/heads/main %s refs/heads/main %s' "$1" "$ZERO"; }
+pcommit() { ( cd "$PR" && echo "$1" > "$1.txt" && giso git add -A && giso git -c user.email=t@t -c user.name=t commit -qm "$1" ); git -C "$PR" rev-parse HEAD; }
+recache() { node -e 'const fs=require("fs"); const c=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); new Function("c", process.argv[2])(c); fs.writeFileSync(process.argv[1], JSON.stringify(c))' "$CACHE_F" "$1"; }
+
+H1=$(git -C "$PR" rev-parse HEAD); pv
+pp "$(line "$H1")"
+[[ $PPRC -eq 0 && "$(gates_ran)" -eq 0 ]] && grep -q 'verify cache' <<<"$PPOUT"
+check "P1 a green verify of the pushed tree, under an hour old, for the same gates skips the re-run" ok $?
+cp "$CACHE_F" "$PP/cache.bak"
+H2=$(pcommit second)
+pp "$(line "$H2")"
+[[ $PPRC -eq 0 && "$(gates_ran)" -eq 2 ]]
+check "P2 a pushed tree the cache has not seen runs the full gates" ok $?
+recache 'for (const e of c) for (const r of Object.values(e.results)) r.at = new Date(Date.now() - 2*3600*1000).toISOString()'
+pp "$(line "$H1")"
+[[ "$(gates_ran)" -eq 2 ]]
+check "P3 a cache entry older than an hour runs the full gates" ok $?
+cp "$PP/cache.bak" "$CACHE_F"; recache 'for (const e of c) delete e.results.test'
+pp "$(line "$H1")"
+[[ "$(gates_ran)" -eq 2 ]]
+check "P4 a cache missing one of the hook's gates runs the full gates" ok $?
+cp "$PP/cache.bak" "$CACHE_F"; recache 'for (const e of c) e.results.lint.command = "pnpm run lint"'
+pp "$(line "$H1")"
+[[ "$(gates_ran)" -eq 2 ]]
+check "P5 a cached gate run with another command runs the full gates" ok $?
+cp "$PP/cache.bak" "$CACHE_F"
+pp "$(line "$H1")"$'\n'"refs/heads/other $H2 refs/heads/other $ZERO"
+[[ "$(gates_ran)" -eq 2 ]]
+check "P6 every pushed tree must be cached: one miss runs the full gates" ok $?
+pp "(delete) $ZERO refs/heads/gone $H1"
+[[ $PPRC -eq 0 && "$(gates_ran)" -eq 2 ]]
+check "P7 a push with no tree to check runs the full gates, as before" ok $?
+touch "$PP/red"; H3=$(pcommit third); pv
+pp "$(line "$H3")"
+[[ $PPRC -ne 0 && "$(gates_ran)" -ge 1 ]] && grep -q 'pre-push blocked' <<<"$PPOUT"
+check "P8 a red verify is never cached: the hook runs the gates and blocks the push" ok $?
+rm -f "$PP/red"; echo 'not json' > "$CACHE_F"
+pp "$(line "$H1")"
+[[ $PPRC -eq 0 && "$(gates_ran)" -eq 2 ]]
+check "P9 an unreadable cache runs the full gates" ok $?
+cp "$PP/cache.bak" "$CACHE_F"; before_cache="$(shasum "$CACHE_F")"; pp "$(line "$H1")"; pp "$(line "$H2")"
+[[ "$before_cache" == "$(shasum "$CACHE_F")" ]] && sh -n "$HOOK_R" \
+  && ! grep -qE 'CLAUDE_PLUGIN_ROOT|no-verify' "$SETUP/assets/pre-push" "$HOOK_R"
+check "P10 the hook reads the cache, never writes it, and needs no plugin install" ok $?
+nodir="$(dirname "$(command -v node)")"
+if [[ "$nodir" != /usr/bin && "$nodir" != /bin ]] && PATH="$PP/bin:/usr/bin:/bin" command -v git >/dev/null && ! PATH="$PP/bin:/usr/bin:/bin" command -v node >/dev/null; then
+  PPPATH="$PP/bin:/usr/bin:/bin" pp "$(line "$H1")"
+  [[ $PPRC -eq 0 && "$(gates_ran)" -eq 2 ]]
+  check "P11 without node on PATH the hook runs the full gates" ok $?
+else echo "PASS: P11 without node on PATH the hook runs the full gates (node shares /usr/bin here; covered by P9's fallback)"; fi
+
 # ---- S41–S43 · allowlist + version ------------------------------------------
 # Persistent suite tests the allowlist ALGORITHM synthetically (no branch SHAs —
 # squash-safe); the real PR range audit is explicit:

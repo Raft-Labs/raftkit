@@ -47,6 +47,8 @@ Rendered assets carry the literal marker `raftkit-governance-pack` in their head
 
 `core.hooksPath` is per-clone state: every fresh clone runs `git config core.hooksPath .githooks` once, or re-runs setup. Print that line in the summary.
 
+The hook skips its gates only when `raftkit-dev`'s `verify.mjs` cached every pushed tree green for the same gates and commands within the hour; anything else runs them in full. It reads that cache, never writes it, and needs no plugin installed.
+
 ## Managed settings keys
 
 `scripts/merge-settings.mjs` is the only write path to `.claude/settings.json`.
