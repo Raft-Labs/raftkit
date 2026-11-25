@@ -72,3 +72,6 @@ Filled in per story below; the integration agent owns `tests/budgets.json` and `
 - `scope-check.mjs` accepts a `Done when` key column so fix's record is checked the same way (`tests/scope-check.test.sh` case K).
 - `dev-flow` DF5 and DF14 drop fix's subagent; DF24 is new.
 - `evals/fix/pending-build-marker/prompt.md` now states steps 2 and 3 ran in the session, not in a subagent.
+
+### verify.mjs comment
+- The header no longer claims the pre-push hook ignores the cache. `tests/verify.test.sh` V18 now pins only that the hook keeps `__QUALITY_SCRIPTS__` as its fallback, so lane setup's cache lookup in the hook does not break it; lane setup owns the test for the lookup itself.
