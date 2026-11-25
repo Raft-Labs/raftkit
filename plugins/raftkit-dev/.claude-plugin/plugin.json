@@ -8,10 +8,6 @@
   "dependencies": [
     "raftkit-core",
     {
-      "name": "superpowers",
-      "marketplace": "claude-plugins-official"
-    },
-    {
       "name": "security-guidance",
       "marketplace": "claude-plugins-official"
     },

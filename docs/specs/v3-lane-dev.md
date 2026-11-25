@@ -46,3 +46,9 @@ Filled in per story below; the integration agent owns `tests/budgets.json` and `
 - New suite `tests/scope-check.test.sh` with fixtures in `tests/fixtures/scope-check/`; new script `plugins/raftkit-dev/scripts/scope-check.mjs` (exit 0 clean, 1 flags, 2 not checked).
 - New reference `implement/references/plan.md` (the plan-record template) counts toward the implement `total` budget; final numbers are under "Budgets" below.
 - `dev-flow` DF22 pins the plan template's table header and hash comment to what `scope-check.mjs` parses.
+
+### Story 5
+- `tests/init-settings.test.sh` O10 uses `superpowers@claude-plugins-official` as the example of an engine `merge-settings.mjs --disable-plugins` must refuse. `merge-settings.mjs` reads the engines from raftkit-dev's `plugin.json`, so superpowers is no longer one and O10 fails on this branch: swap the example for `security-guidance@claude-plugins-official`.
+- Lane setup: drop superpowers from `setup/scripts/check-engines.mjs`, from the `Missing: superpowers …` example in `setup/SKILL.md` line 24, and from `evals/plain-language/setup-missing-engine/prompt.md` if it should list only current engines.
+- `refusals.json` `capability-unavailable` example names superpowers; the pattern is engine-agnostic, so it still passes S14. Change the example to `security-guidance` when setup's line changes (that entry is not an addition, so this lane leaves it).
+- `README.md` line 24 and `CLAUDE.md` line 3 name superpowers among raftkit-dev's declared dependencies: now three (security-guidance, pr-review-toolkit, frontend-design).

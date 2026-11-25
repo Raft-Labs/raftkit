@@ -162,9 +162,17 @@ grep -qF 'the branch SHA, which it confirms with `git merge-base --is-ancestor <
   && grep -qF 'the branch SHA to confirm before its first edit' "$FIX/SKILL.md"
 check "DF14 implement and fix phase prompts carry and check the branch SHA" ok $?
 
-# DF15 · the plan is written inline: no planning skill and no Plan subagent
-grep -qF 'never through `superpowers:brainstorming`, `superpowers:writing-plans` or a `Plan` subagent' "$IMPL/SKILL.md"
-check "DF15 implement never plans through brainstorming, writing-plans or a Plan subagent" ok $?
+# DF15 · the plan is written inline: no planning skill and no Plan subagent;
+#        superpowers is no dependency and no dev skill loads it, so the TDD
+#        and debugging methods are carried inline where they are used
+ok=0
+grep -qF 'never through a planning skill or a `Plan` subagent' "$IMPL/SKILL.md" || { echo "  implement may plan through a skill or subagent"; ok=1; }
+node -e 'process.exit(require("./'"$DEV"'/.claude-plugin/plugin.json").dependencies.some((d) => (d.name || d) === "superpowers") ? 1 : 0)' \
+  || { echo "  raftkit-dev still depends on superpowers"; ok=1; }
+grep -rlF 'superpowers' "$IMPL" "$FIX" "$SG" "$DOCS" "$DEV/agents" 2>/dev/null | grep -q . && { echo "  a dev-flow file still names superpowers"; ok=1; }
+grep -qF 'It must fail for the reason the `[AC]` names' "$IMPL/SKILL.md" || { echo "  implement carries no red-first method"; ok=1; }
+grep -qF 'Three strikes on the same error stops and reports' "$FIX/SKILL.md" || { echo "  fix carries no debugging method"; ok=1; }
+check "DF15 implement plans inline, and implement and fix carry their own TDD and debugging method" ok $ok
 
 # DF16 · the PR body carries the review findings and [AC] test coverage, and
 #        the STOP summary line counts findings the same way

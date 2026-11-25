@@ -31,7 +31,7 @@ Can't start the fix — the bug task is missing <sections>. Add them before a re
 
    Reported → ask all four in one message; echo the answers as the first lines of the next reply and proceed to the repro. A refused ask stops the run; the developer states the `Done when`, this skill never drafts it.
 
-   Branch by that convention; then steps 2 and 3 run as one subagent at the defect's tier (`implement/references/review.md`; ordinary debugging is `standard`, distributed state `hard`), loading `superpowers:systematic-debugging` first, given the contract, both steps verbatim and the branch SHA to confirm before its first edit. Relay what it returns verbatim.
+   Branch by that convention; then steps 2 and 3 run as one subagent at the defect's tier (`implement/references/review.md`; ordinary debugging is `standard`, distributed state `hard`), following the debugging method below, given the contract, both steps verbatim and the branch SHA to confirm before its first edit. Relay what it returns verbatim.
 2. **Reproduce, then make it red.** Replicate the defect in the stated environment (never a silent substitute), and encode it as a test that fails for the reason the bug describes. A test that passes, or fails for another reason, is not a repro. Cannot reproduce → stop with this, back to QA on the ticketed path and to the developer in session on the reported one. Never fix blind.
 
 ```output
@@ -57,6 +57,13 @@ Next story: /clear first.
 ```
 
 Declining the bug record is a first-class outcome: the repro test and the PR stand.
+
+## Debugging method
+
+1. Reproduce: one command that shows the failure every time.
+2. Write down one hypothesis naming the cause.
+3. Change one variable to test it, then rerun the repro.
+4. Wrong: revert that change and form the next hypothesis. Three strikes on the same error stops and reports; the developer decides.
 
 ## Incidents
 
