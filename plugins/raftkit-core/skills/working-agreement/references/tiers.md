@@ -9,7 +9,3 @@ The vocabulary for the `tier` a plan names against each phase, and for the `mode
 | `hard` | the session model's alias, or `opus` under `opusplan` | Cross-layer design, distributed-state bugs, anything the developer chose the session model for. |
 
 A phase whose tier is unstated is `standard`.
-
-## Reading, not writing
-
-`bulk-reader` is the one dispatch that is not a phase: a Haiku subagent that answers a question from files too large to page into the session, and returns cited bullets instead of their contents. The `PreToolUse` shunt in `raftkit-core` names it when it declines an oversized read. It reports; it never edits, and it is never given a file that is itself an instruction to follow.

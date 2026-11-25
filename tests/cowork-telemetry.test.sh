@@ -4,8 +4,8 @@
 # Claude Code reports itself through hooks. Cowork has no hooks and emits no
 # event when a skill runs, so the only signal is the skill announcing itself.
 # CW1-CW10 pin that contract, its disclosure and its boundaries. The role
-# skills point at raftkit-core:rules for it (CW4, CW4b); this skill holds the
-# rationale and is read by exact name.
+# skills point at raftkit-core:rules for it (CW4, CW4b); the rationale lives in
+# docs/maintainers/cowork-telemetry.md, which no run loads.
 #
 # The announcement wording is a cross-repo contract: the already-merged
 # receiver in Raft-Labs/raftkit-admin matches it with a regex. If the shape
@@ -30,7 +30,7 @@ check() { # <name> <expected: ok|fail> <actual exit code>
   fi
 }
 
-CT=plugins/raftkit-core/skills/cowork-telemetry/SKILL.md
+CT=docs/maintainers/cowork-telemetry.md
 RULES=plugins/raftkit-core/skills/rules/SKILL.md
 HELP=plugins/raftkit-core/commands/help.md
 README=README.md
@@ -44,8 +44,8 @@ for f in "$CT" "$RULES" "$HELP" "$README"; do [[ -f "$f" ]] || absent="$absent $
 check "CW0 every file this suite asserts against exists" ok $?
 [[ -n "$absent" ]] && { echo "  absent:$absent"; echo "$failures test(s) failed"; exit 1; }
 
-grep -q 'user-invocable: false' "$CT"
-check "CW1 cowork-telemetry ships as machinery, not a user-invocable skill" ok $?
+[[ ! -e plugins/raftkit-core/skills/cowork-telemetry ]] && ! grep -q '^name:' "$CT"
+check "CW1 cowork-telemetry is a maintainer doc, not a skill" ok $?
 
 # The shape the admin receiver's regex matches, plus a worked example.
 joined "$CT" | grep -q 'Using <plugin>:<skill>' \
@@ -121,8 +121,7 @@ check "CW6 the announcement is not a write and adds no one-stop exception" ok $?
 
 # One line is the entire allowance -- no skill reports anything itself.
 joined "$CT" | grep -qi 'No skill calls an endpoint' \
-  && joined "$CT" | grep -qi 'needs its own decision, not an extension of this one' \
-  && joined "$RULES" | grep -qi 'no skill calls an endpoint, spools a file, or reports anything itself'
+  && joined "$CT" | grep -qi 'needs its own decision, not an extension of this one'
 check "CW7 one line is the whole allowance — no skill reports anything itself" ok $?
 
 # The README and the rules both offer an env-var opt-out. It does nothing in
@@ -130,7 +129,6 @@ check "CW7 one line is the whole allowance — no skill reports anything itself"
 joined "$CT" | grep -qi 'sets an environment variable the hooks read' \
   && joined "$CT" | grep -qi 'no hooks in Cowork' \
   && joined "$CT" | grep -qi 'no per-session switch inside Cowork' \
-  && joined "$RULES" | grep -qi 'does nothing in Cowork' \
   && joined "$README" | grep -qi 'has no effect in Cowork'
 check "CW8 the opt-out is described accurately for Cowork, not implied" ok $?
 
@@ -142,9 +140,9 @@ joined "$CT" | grep -qi 'then dropped' \
   && joined "$README" | grep -qi 'then dropped'
 check "CW9 assistant responses are read for the match and never stored" ok $?
 
-grep -q '| `cowork-telemetry` |' "$HELP" \
-  && joined "$HELP" | grep -qi 'Cowork has no hooks'
-check "CW10 core help lists the skill and qualifies the telemetry claim" ok $?
+! grep -q 'cowork-telemetry' "$HELP" \
+  && { ! grep -q 'RAFTKIT_TELEMETRY=off' "$HELP" || joined "$HELP" | grep -qi 'Cowork has no hooks'; }
+check "CW10 core help lists no cowork-telemetry skill and qualifies any opt-out claim" ok $?
 
 echo
 if [[ "$failures" -gt 0 ]]; then

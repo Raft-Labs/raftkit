@@ -52,12 +52,15 @@ check_contains() { # <name> <haystack> <needle>
 }
 
 RULES=plugins/raftkit-core/skills/rules/SKILL.md
-REF=plugins/raftkit-core/skills/rules/references/plain-language.md
+REF=docs/maintainers/plain-language.md
 
-# --- CONTRACT: rules names it, plain-language.md carries it ---
+# --- CONTRACT: rules states it; the lint's reference is a maintainer doc ---
 
-grep -qF '## Plain output' "$RULES" && grep -qF 'plain-language.md' "$RULES"
-check "PL1 rules names the plain-language contract and links the reference" ok $?
+grep -qF '## Plain output' "$RULES" && grep -qF 'WEESLD' "$RULES"
+check "PL1 rules states the plain-output rule and the WEESLD ban" ok $?
+
+! grep -rqF 'plain-language.md' plugins
+check "PL1b no plugin file loads plain-language.md: it is off the runtime path" ok $?
 
 [[ -f "$REF" ]]
 check "PL2 plain-language.md exists" ok $?
