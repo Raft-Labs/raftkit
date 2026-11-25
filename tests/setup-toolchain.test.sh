@@ -398,13 +398,38 @@ if [[ "$nodir" != /usr/bin && "$nodir" != /bin ]] && PATH="$PP/bin:/usr/bin:/bin
   check "P11 without node on PATH the hook runs the full gates" ok $?
 else echo "PASS: P11 without node on PATH the hook runs the full gates (node shares /usr/bin here; covered by P9's fallback)"; fi
 
+# ---- R1–R4 · pr-auto-review retired; review-only CI is the opt-in ------------
+retired=""
+for f in "$SETUP/assets/fix-loop-prompt.md" "$SETUP/assets/pr-auto-review.yml" "$SETUP/scripts/render-pr-auto-review.mjs" \
+  "$SETUP/references/pr-auto-review.md" plugins/raftkit-dev/evals/pr-auto-review tests/pr-auto-review-loop-guard.test.sh tests/pr-auto-review-render.test.sh; do
+  [[ -e "$f" ]] && retired+=" $f"
+done
+[[ -z "$retired" ]] && ! grep -rqiE 'pr-auto-review|fix-loop|auto-review' "$SETUP"
+check "R1 the auto-commit workflow, its prompt, renderer, reference, tests and evals are gone${retired:+ (still:$retired)}" ok $?
+RO="$SETUP/assets/review-only.yml"
+[[ -f "$RO" && "$(wc -l < "$RO" | tr -d ' ')" -le 40 ]] && grep -q 'raftkit-governance-pack' "$RO" \
+  && grep -qE '^  pull_request:' "$RO" && ! grep -q 'pull_request_target' "$RO" \
+  && grep -qE '^  contents: read$' "$RO" && ! grep -qE 'contents: write|git push|--no-verify' "$RO" \
+  && grep -q 'anthropics/claude-code-action@' "$RO" && grep -q 'github_token: \${{ secrets.GITHUB_TOKEN }}' "$RO" \
+  && { [[ "$PYYAML_OK" -eq 0 ]] || python3 -c "import yaml; yaml.safe_load(open('$RO'))"; }
+check "R2 review-only.yml: at most 40 lines, pull_request only, a read-only contents token" ok $?
+tools="$(grep -oE -- '--allowedTools "[^"]*"' "$RO" 2>/dev/null)"
+[[ -n "$tools" ]] && ! grep -qE '(^|[",])(Edit|Write|MultiEdit|NotebookEdit|Bash)([",]|$)' <<<"$tools" \
+  && ! grep -qE 'Bash\((git|gh pr (merge|review|edit))' <<<"$tools" && grep -qF 'Bash(gh pr comment:*)' <<<"$tools" \
+  && grep -qiE 'never .*commit.*merge|never .*merge.*commit' "$RO"
+check "R3 the review only comments: no edit tool, no bare Bash, no git, merge, approve or edit; told never to commit or merge" ok $?
+nn="$(grep -m1 'No skill ever auto-sends' CLAUDE.md)"
+[[ -n "$nn" ]] && ! grep -qiE 'exactly one exception|pr-auto-review' <<<"$nn" && ! grep -q 'pr-auto-review' CLAUDE.md \
+  && grep -qF 'assets/review-only.yml' "$SETUP/references/components.md"
+check "R4 CLAUDE.md's never-auto rule has no exception; setup offers review-only CI instead" ok $?
+
 # ---- S41–S43 · allowlist + version ------------------------------------------
 # Persistent suite tests the allowlist ALGORITHM synthetically (no branch SHAs —
 # squash-safe); the real PR range audit is explicit:
 #   bash tests/setup-toolchain.test.sh --scope-check <base> <head>
 # tests/workflow-integration.test.sh is allowed solely for the separately
 # approved squash-safe scope-check refactor (cross-story test maintenance).
-allow='^(tests/setup-toolchain\.test\.sh|tests/workflow-integration\.test\.sh|tests/fixtures/toolchain/|plugins/raftkit-dev/evals/setup-toolchain/|plugins/raftkit-dev/\.claude-plugin/plugin\.json|\.claude-plugin/marketplace\.json|plugins/raftkit-dev/skills/setup/(SKILL\.md|references/(components|pr-auto-review)\.md|assets/(pre-push|quality-guardrail\.yml)|scripts/(detect-toolchain|render-assets)\.mjs))'
+allow='^(tests/setup-toolchain\.test\.sh|tests/workflow-integration\.test\.sh|tests/fixtures/toolchain/|plugins/raftkit-dev/evals/setup-toolchain/|plugins/raftkit-dev/\.claude-plugin/plugin\.json|\.claude-plugin/marketplace\.json|plugins/raftkit-dev/skills/setup/(SKILL\.md|references/components\.md|assets/(pre-push|quality-guardrail\.yml)|scripts/(detect-toolchain|render-assets)\.mjs))'
 syn_ok=$'tests/setup-toolchain.test.sh\ntests/workflow-integration.test.sh\ntests/fixtures/toolchain/npm/package.json\nplugins/raftkit-dev/skills/setup/scripts/render-assets.mjs\nplugins/raftkit-dev/.claude-plugin/plugin.json'
 [[ -z "$(grep -Ev "$allow" <<<"$syn_ok" || true)" ]]
 check "S41a allowlist admits approved Story D paths (synthetic)" ok $?

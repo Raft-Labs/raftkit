@@ -49,7 +49,7 @@ import mds from "./.raftkit/mds-eslint.config.mjs";
 export default [...yourExistingConfig, ...mds];
 ```
 
-   Accepting the PR auto-review workflow appends it to the success line and prints the one manual step this skill cannot do:
+   Accepting the review-only CI workflow appends it to the success line and prints the one manual step this skill cannot do:
 
 ```output
 Required next step: add ANTHROPIC_API_KEY to this repo's Actions secrets — Settings, Secrets and variables, Actions, New repository secret.

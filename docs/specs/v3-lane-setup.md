@@ -37,3 +37,13 @@ Out of scope: everything else — `verify.mjs`, `tests/budgets.json`, `tests/str
 - Engines stay derived from `plugins/raftkit-dev/.claude-plugin/plugin.json` (`check-engines.mjs` E4, `merge-settings.mjs` managed `enabledPlugins`). superpowers leaves the engine check the moment the dev lane (proposal story 5) drops it from that manifest; nothing in setup hardcodes it. E15 now pins that no setup file, eval or toolchain fixture names it.
 - `tests/init-settings.test.sh` O10 now uses `security-guidance@claude-plugins-official` as the never-disabled engine, so it keeps passing after superpowers leaves `plugin.json`.
 - Outside this lane, still naming superpowers as an engine example: `plugins/raftkit-core/hooks/lib/refusals.json` `missing-engine` example (change to `Missing: pr-review-toolkit. Install it with: claude plugin install pr-review-toolkit@claude-plugins-official`, which setup's SKILL.md now emits); `plugins/raftkit-dev/evals/plain-language/setup-missing-engine/prompt.md` line 7. `README.md`'s quick-start install line is updated here to three engines.
+
+### Story 13 — retire pr-auto-review (D3)
+
+- `tests/budgets.json` `files`: remove the `plugins/raftkit-dev/skills/setup/assets/fix-loop-prompt.md` entry (2520 words / 3910 tokens); structure S18 fails on it until then. The new `assets/review-only.yml` is YAML, not markdown, so it needs no `files` entry.
+- `raftkit-dev/setup` total drops by the deleted `references/pr-auto-review.md`; the raftkit-dev plugin word/token totals drop by it and by `fix-loop-prompt.md`. Re-measure after merge.
+- `tests/telemetry.test.sh` line ~702, "CLAUDE.md's non-negotiable names exactly one exception", fails by design: invert it to `! grep -qiE 'exactly one exception|pr-auto-review' <<<"$gates"` ("CLAUDE.md's never-auto rule has no exception"). The next check ("blocker telemetry is not an exception") still passes.
+- Deleted suites: `tests/pr-auto-review-loop-guard.test.sh`, `tests/pr-auto-review-render.test.sh`. Drop them from any suite list or CI matrix that names them.
+- `plugins/raftkit-dev/commands/help.md`: the `setup` row says "optional PR auto-review" → "optional review-only CI"; the rename line's `pr-auto-review → setup` is history and can stay.
+- `README.md` line 67 (v1→v2 rename table, `pr-auto-review` → `raftkit-dev:setup`) is history and stays.
+- Before release (D3): check installed client repos for `.github/workflows/pr-auto-review.yml`; setup no longer owns that file, so a re-run reports it as foreign rather than updating it.

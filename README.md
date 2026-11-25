@@ -131,7 +131,7 @@ Assistant responses are read for that announcement and for refusals, then droppe
 
 ## For project repos
 
-Run `/raftkit-dev:setup` inside a project repo the first time you open it with raftkit-dev installed. In one transaction it merges the RaftLabs working agreement and the Module Design Standard into the repo's `CLAUDE.md`, registers the raftkit marketplace in `.claude/settings.json` (so teammates are prompted to install raftkit on trust), installs the pre-push hook, the CI quality guardrail and the review config, and offers the opt-in PR auto-review workflow. It shows the whole plan and stops once before writing anything, then verifies what it wrote. Re-running it reports drift instead of redoing the work.
+Run `/raftkit-dev:setup` inside a project repo the first time you open it with raftkit-dev installed. In one transaction it merges the RaftLabs working agreement and the Module Design Standard into the repo's `CLAUDE.md`, registers the raftkit marketplace in `.claude/settings.json` (so teammates are prompted to install raftkit on trust), installs the pre-push hook, the CI quality guardrail and the review config, and offers an opt-in review-only CI workflow that comments on PRs and never commits or merges. It shows the whole plan and stops once before writing anything, then verifies what it wrote. Re-running it reports drift instead of redoing the work.
 
 ## Releasing (maintainers)
 
