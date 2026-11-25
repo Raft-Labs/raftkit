@@ -35,4 +35,4 @@ Workflows per change type and the scaffolder's permission defaults: `references/
 
 ## Integrations
 
-Encrypted env files are read through `envx`, the project's own seam, never decrypted by hand. A schema or architecture change hands its change set to `raftkit-dev:docs` so the schema docs stay in step. Activation in a repository is proposed by `raftkit-dev:setup`, whose engine preflight confirms what this skill calls.
+Encrypted env files are read through `envx`, the project's own seam, never decrypted by hand. A schema or architecture change hands its change set to `raftkit-dev:docs` so the schema docs stay in step. Activation in a repository is proposed by `raftkit-dev:setup`.

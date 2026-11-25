@@ -275,14 +275,22 @@ const m = JSON.parse(fs.readFileSync("plugins/raftkit-hasura/.claude-plugin/plug
 const market = JSON.parse(fs.readFileSync(".claude-plugin/marketplace.json", "utf8"));
 const entry = market.plugins.find((p) => p.name === "raftkit-hasura");
 const deps = (m.dependencies ?? []).map((d) => (typeof d === "string" ? d : d.name));
-if (m.name !== "raftkit-hasura" || m.version !== "1.0.0" || !deps.includes("raftkit-core")) process.exit(1);
+const a = m.version.split(".").map(Number);
+if (m.name !== "raftkit-hasura" || !(a[0] >= 1) || !deps.includes("raftkit-core")) process.exit(1);
 if (!entry || entry.source !== "./plugins/raftkit-hasura" || entry.description !== m.description) process.exit(1);
 NODE
-check "HR15 raftkit-hasura 1.0.0 depends on raftkit-core and is listed in the marketplace in description lockstep" ok $?
+check "HR15 raftkit-hasura ≥1.0.0 depends on raftkit-core and is listed in the marketplace in description lockstep" ok $?
 
 [[ ! -e plugins/raftkit-dev/skills/hasura && ! -e plugins/raftkit-dev/evals/hasura ]] \
   && ! grep -rqE 'raftkit-dev:hasura|raftkit-dev hasura' "$HP" plugins/raftkit-dev/skills
 check "HR26 Hasura ships only in raftkit-hasura, and nothing names it as a raftkit-dev skill" ok $?
+
+COMP=plugins/raftkit-dev/skills/setup/references/components.md
+! grep -rqE 'detect-hasura|hasura\.json --write|skills/hasura/scripts' plugins/raftkit-dev/skills/setup \
+  && grep -qF 'claude plugin install raftkit-hasura@raftkit' "$COMP" \
+  && grep -qF '`raftkit-hasura:hasura` records `.raftkit/hasura.json` itself' "$COMP" \
+  && ! grep -q 'engine preflight' "$S"
+check "HR27 setup only names the opt-in raftkit-hasura plugin; the hasura skill records its own config" ok $?
 
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures test(s) failed"

@@ -404,7 +404,8 @@ for f in "$SETUP/assets/fix-loop-prompt.md" "$SETUP/assets/pr-auto-review.yml" "
   "$SETUP/references/pr-auto-review.md" plugins/raftkit-dev/evals/pr-auto-review tests/pr-auto-review-loop-guard.test.sh tests/pr-auto-review-render.test.sh; do
   [[ -e "$f" ]] && retired+=" $f"
 done
-[[ -z "$retired" ]] && ! grep -rqiE 'pr-auto-review|fix-loop|auto-review' "$SETUP"
+MIG='A marker listing `pr-auto-review`'
+[[ -z "$retired" ]] && ! grep -rhiE 'pr-auto-review|fix-loop|auto-review' "$SETUP" | grep -qvF "$MIG"
 check "R1 the auto-commit workflow, its prompt, renderer, reference, tests and evals are gone${retired:+ (still:$retired)}" ok $?
 RO="$SETUP/assets/review-only.yml"
 [[ -f "$RO" && "$(wc -l < "$RO" | tr -d ' ')" -le 40 ]] && grep -q 'raftkit-governance-pack' "$RO" \
@@ -422,6 +423,10 @@ nn="$(grep -m1 'No skill ever auto-sends' CLAUDE.md)"
 [[ -n "$nn" ]] && ! grep -qiE 'exactly one exception|pr-auto-review' <<<"$nn" && ! grep -q 'pr-auto-review' CLAUDE.md \
   && grep -qF 'assets/review-only.yml' "$SETUP/references/components.md"
 check "R4 CLAUDE.md's never-auto rule has no exception; setup offers review-only CI instead" ok $?
+mig="$(grep -F "$MIG" "$SETUP/references/components.md")"
+[[ -n "$mig" ]] && grep -qF '.github/workflows/pr-auto-review.yml' <<<"$mig" && grep -qF '`review-only-ci`' <<<"$mig" \
+  && grep -qF 'leaves `optional_components`' <<<"$mig"
+check "R5 a re-run on a marker listing pr-auto-review drafts the old workflow's removal and offers review-only CI" ok $?
 
 # ---- S41–S43 · allowlist + version ------------------------------------------
 # Persistent suite tests the allowlist ALGORITHM synthetically (no branch SHAs —

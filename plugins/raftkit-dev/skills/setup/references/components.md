@@ -79,7 +79,7 @@ Object keys merge additively and `permissions.allow` and `symlinkDirectories` ar
 
 ## Conditional capabilities
 
-Hasura is detected, not installed: when the opt-in `raftkit-hasura` plugin is installed and the repository has a Hasura config with sibling `migrations/` and `metadata/` directories, the plan offers to record the discovered conventions in `.raftkit/hasura.json` so `raftkit-hasura:hasura` reads them instead of re-deriving them. Its only writer is raftkit-hasura's `skills/hasura/scripts/detect-hasura.mjs --root <repo> --write`, run on go, with `--env HASURA_ROOT=<dir>` when detection lists several roots; setup never writes the file by hand. Declining changes nothing else.
+Hasura is detected, not installed: when the repository has a Hasura config with sibling `migrations/` and `metadata/` directories, the plan names the opt-in `raftkit-hasura` plugin and its install command (`claude plugin install raftkit-hasura@raftkit`); `raftkit-hasura:hasura` records `.raftkit/hasura.json` itself.
 
 ## The marker
 
@@ -95,4 +95,4 @@ Hasura is detected, not installed: when the opt-in `raftkit-hasura` plugin is in
 }
 ```
 
-`optional_components` lists only accepted opt-ins (`review-only-ci`, `allow-rules`, `sg-push-sweep-off`, `disable-plugins`); a declined one goes in `optional_components_declined` so the ask is not repeated. `pack_version` is the raftkit-core version, so a repo carrying an older pack is detected on the next run.
+`optional_components` lists only accepted opt-ins (`review-only-ci`, `allow-rules`, `sg-push-sweep-off`, `disable-plugins`); a declined one goes in `optional_components_declined` so the ask is not repeated. A marker listing `pr-auto-review` makes the re-run draft a labelled removal of `.github/workflows/pr-auto-review.yml` (retired: it auto-commits) and offer `review-only-ci` in its place; on go the id leaves `optional_components`. `pack_version` is the raftkit-core version, so a repo carrying an older pack is detected on the next run.

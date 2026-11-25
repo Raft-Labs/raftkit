@@ -45,7 +45,7 @@ The marketplace ships these six plugins. PM and QA plugins target the Claude app
 
 ## Getting help
 
-Every plugin ships a help command — run it inside a Claude Code session:
+Every role plugin ships a help command — run it inside a Claude Code session:
 
 ```
 /raftkit-pm:help        # PM workflow: profile, story, estimate, status, meeting, routine

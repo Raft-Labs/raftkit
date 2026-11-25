@@ -31,11 +31,13 @@ Out of scope: everything else — `verify.mjs`, `tests/budgets.json`, `tests/str
 - `plugins/raftkit-dev/scripts/verify.mjs` lines 10–11 still say "The pre-push hook does not use this script and keeps its full gates." Proposal story 2 asks for that stale comment to be fixed: replace with "The pre-push hook reads this cache (green only, same commands, under an hour) and runs its gates in full on any miss." Not edited here: verify.mjs is outside this lane.
 - Cache contract the hook now depends on: `<git common dir>/raftkit/verify.json`, an array of `{ tree, results: { <role>: { command: "<pm> run <role>", at: ISO } } }`, reuse window 1 h (`REUSE_MS`). Any change to that shape or window in verify.mjs must change `setup/assets/pre-push` in the same diff.
 - Budget: `raftkit-dev/setup` total grows by ~45 words (components.md, one paragraph).
+- `verify.mjs` re-stamps `at = now` on a reused (cached) result, so repeated verify runs on one tree keep an entry "fresh" past an hour after the gates last ran, and the hook's under-an-hour check trusts it. In verify.mjs keep the original `at` for a reused result: `if (r.code === 0 && !r.cached) entry.results[r.role] = {...}` (a cached entry is left as is). Add a `tests/verify.test.sh` case where two runs 50 min apart leave `at` unchanged.
 
 ### Drop superpowers from setup
 
 - Engines stay derived from `plugins/raftkit-dev/.claude-plugin/plugin.json` (`check-engines.mjs` E4, `merge-settings.mjs` managed `enabledPlugins`). superpowers leaves the engine check the moment the dev lane (proposal story 5) drops it from that manifest; nothing in setup hardcodes it. E15 now pins that no setup file, eval or toolchain fixture names it.
 - `tests/init-settings.test.sh` O10 now uses `security-guidance@claude-plugins-official` as the never-disabled engine, so it keeps passing after superpowers leaves `plugin.json`.
+- `CLAUDE.md` line 3: drop superpowers and change "the four `raftkit-dev` declares" to "the three" in the same edit as raftkit-dev's `plugin.json` (dev lane, story 5; gated on D2).
 - Outside this lane, still naming superpowers as an engine example: `plugins/raftkit-core/hooks/lib/refusals.json` `missing-engine` example (change to `Missing: pr-review-toolkit. Install it with: claude plugin install pr-review-toolkit@claude-plugins-official`, which setup's SKILL.md now emits); `plugins/raftkit-dev/evals/plain-language/setup-missing-engine/prompt.md` line 7. `README.md`'s quick-start install line is updated here to three engines.
 
 ### Story 13 — retire pr-auto-review (D3)
@@ -46,7 +48,7 @@ Out of scope: everything else — `verify.mjs`, `tests/budgets.json`, `tests/str
 - Deleted suites: `tests/pr-auto-review-loop-guard.test.sh`, `tests/pr-auto-review-render.test.sh`. Drop them from any suite list or CI matrix that names them.
 - `plugins/raftkit-dev/commands/help.md`: the `setup` row says "optional PR auto-review" → "optional review-only CI"; the rename line's `pr-auto-review → setup` is history and can stay.
 - `README.md` line 67 (v1→v2 rename table, `pr-auto-review` → `raftkit-dev:setup`) is history and stays.
-- Before release (D3): check installed client repos for `.github/workflows/pr-auto-review.yml`; setup no longer owns that file, so a re-run reports it as foreign rather than updating it.
+- Migration (review fix): a setup re-run on a marker listing `pr-auto-review` drafts a labelled removal of `.github/workflows/pr-auto-review.yml` and offers `review-only-ci` in its place; on go the id leaves `optional_components` (components.md, pinned by setup-toolchain R5). D3 release checklist: list the client repos whose marker names `pr-auto-review` and re-run setup in each (or delete the file by hand) before the release, so no repo keeps the auto-committing workflow once CLAUDE.md says no exception exists.
 
 ### Story 14a — Hasura becomes `raftkit-hasura` (D4)
 
@@ -57,7 +59,10 @@ Out of scope: everything else — `verify.mjs`, `tests/budgets.json`, `tests/str
 - `plugins/raftkit-dev/commands/help.md`: the description's "Hasura migrations → raftkit-dev:hasura" and the `hasura` table row must go. Until they do, `scripts/validate.sh` fails ("table references nonexistent skill(s): hasura"), so `tests/validate.test.sh` "valid repo passes" fails on this branch. A one-line pointer to `raftkit-hasura:hasura` belongs in whichever help survives story 15.
 - `plugins/raftkit-core/hooks/lib/skill-aliases.json`: the `//` note lists hasura among skills that kept their name; telemetry now reports it with `skill_plugin` = `raftkit-hasura`, so that series splits at release, as discovery-interview's did.
 - `CLAUDE.md` first line still says "one repo shipping five plugins"; it is now six (outside this lane's two CLAUDE.md edits).
+- Setup no longer runs a raftkit-hasura script (it cannot locate another plugin's install path). On a Hasura repository its plan names the opt-in plugin and `claude plugin install raftkit-hasura@raftkit`; `raftkit-hasura:hasura` writes `.raftkit/hasura.json` itself through its own `detect-hasura.mjs --write`. Pinned by `tests/hasura.test.sh` HR27. Budget: `raftkit-dev/setup` total drops ~40 words.
+- HR15 now checks raftkit-hasura's version as ≥1.0.0, so a later version bump does not break it.
 - raftkit-hasura depends on raftkit-core only. Its SKILL.md still hands schema docs to `raftkit-dev:docs` and names `raftkit-dev:setup` for activation; both stay valid while raftkit-dev is installed for every developer.
+- `README.md` "Getting help" now says "Every role plugin ships a help command"; raftkit-hasura has no help command, by design (story 15 moves to one help).
 - Org-sync default (D4): the admin removes raftkit-docs from the org-sync set and does not add raftkit-hasura. README now states that split.
 
 ### Story 14b — raftkit-docs thinned (D4)
