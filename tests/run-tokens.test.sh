@@ -3,7 +3,7 @@
 # per-stage wall-clock minutes (intake, plan, build, review, stop) split at
 # markers v2.1 and v3 runs both leave in the same place, and cache-read tokens
 # reported apart from a list-price cost that follows each model's price. The
-# plain line, quoted by older STOPs and pinned in tests/shunt.test.sh, is
+# plain line, quoted by older STOPs and pinned in tests/telemetry.test.sh section 16, is
 # unchanged; any failure is "Token total: not measured".
 set -uo pipefail
 export NODE_DISABLE_COLORS=1 FORCE_COLOR=0 NO_COLOR=1

@@ -5,7 +5,7 @@ The vocabulary for the `tier` a plan names against each phase, and for the `mode
 | Tier | Agent `model` | Work |
 |---|---|---|
 | `mechanical` | `haiku` | Renames, moves, fixtures, log parsing, generated-file edits. |
-| `standard` | `sonnet` | Components, tests, single-file refactors, ordinary debugging. Reviewers, the simplifier and the Explore survey. |
+| `standard` | `sonnet` | Components, tests, single-file refactors, ordinary debugging. Reviewers and the Explore survey. |
 | `hard` | the session model's alias, or `opus` under `opusplan` | Cross-layer design, distributed-state bugs, anything the developer chose the session model for. |
 
 A phase whose tier is unstated is `standard`.

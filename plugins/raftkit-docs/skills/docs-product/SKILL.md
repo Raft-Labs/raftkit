@@ -57,9 +57,9 @@ Sync and verify outcome lines are `raftkit-dev:docs`'s own.
 
 ## Guardrails
 
-- **Plain English out** — every line a human reads follows `raftkit-core:rules`' plain-language rules; a house term gets its one-line gloss on first use.
+- **Plain language** — every line a human reads follows `raftkit-core:rules`' plain-language rules; a house term gets its one-line gloss on first use.
 
-## Out of scope
+## Never
 
 - Any Asana write; ticking `[AC]` or `Testing`.
 - Package-manager and hook work, and running installs (`raftkit-dev:setup`).

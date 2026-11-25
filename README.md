@@ -35,9 +35,9 @@ claude plugin install raftkit-docs@raftkit     # the documentation design produc
 | Plugin | Who | What |
 | --- | --- | --- |
 | `raftkit-core` | everyone (auto-installed) | The rules every skill inherits, the working agreement, telemetry hooks |
-| `raftkit-pm` | PMs | Project profile, stories (write, amend, check, size), estimation, client updates, meeting decisions, routines |
+| `raftkit-pm` | PMs | Project profile (from sources or a client call), stories (write, amend, check), estimation (a feature list or one story), client updates |
 | `raftkit-dev` | Developers | Repo setup, implement, fix, scope guard, UI, docs parity |
-| `raftkit-qa` | QA | Test-case suite, per-story run sheets, bugs (file and retest) |
+| `raftkit-qa` | QA | Per-story test cases and run sheets, bugs (file and retest) |
 | `raftkit-docs` | optional | The documentation design product: co-authoring flow, templates, diagrams, reverse-engineering |
 | `raftkit-hasura` | optional | Hasura migrations, metadata and permissions for Hasura projects |
 
@@ -45,38 +45,28 @@ The marketplace ships these six plugins. PM and QA plugins target the Claude app
 
 ## Getting help
 
-Every role plugin ships a help command — run it inside a Claude Code session:
+One help command routes every role — run it inside a Claude Code session:
 
 ```
-/raftkit-pm:help        # PM workflow: profile, story, estimate, status, meeting, routine
-/raftkit-dev:help       # Dev workflow: setup, implement, fix, scope-guard, ui, docs
-/raftkit-qa:help        # QA workflow: suite, run-sheet, bug
-/raftkit-docs:help      # The optional documentation product
-/raftkit-core:help      # The shared rules and the working agreement
+/raftkit-core:help      # PM, dev and QA skills, the opt-in plugins, the shared rules
 ```
 
-Pass a skill name or question for a focused answer, e.g. `/raftkit-dev:help scope-guard` or `/raftkit-pm:help how do I onboard a project`.
+Pass a skill name or question for a focused answer, e.g. `/raftkit-core:help scope-guard` or `/raftkit-core:help how do I onboard a project`. The deprecation sweep is a hand-run prompt, `plugins/raftkit-pm/assets/deprecation-sweep-prompt.md`; no skill runs it.
 
-## Renamed in v2
+## Renamed
 
-v2 consolidates 35 skills into 18 across the four day-to-day plugins, plus 2 in `raftkit-docs`; `raftkit-core` has since added `cowork-telemetry`. The old names are gone; every new skill's description carries the old trigger phrases, so asking in your own words still works.
+Old names are gone; every skill's description carries the old trigger phrases, so asking in your own words still works.
 
-| v1 | v2 |
+| Was | Now |
 | --- | --- |
-| `house-rules`, `write-protocol`, `workflow-constants`, `asana-formatting` | `raftkit-core:rules` |
-| `governance-protocols`, `design-standard` | `raftkit-core:working-agreement` |
-| `project-onboarding` | `raftkit-pm:profile` |
-| `user-story`, `story-readiness`, `brainstorm` | `raftkit-pm:story` (write, amend, check, size) |
-| `estimation` · `status-update` · `meeting-decisions` | `raftkit-pm:estimate` · `status` · `meeting` |
-| `deprecation-sweep`, the meeting-notes routine | `raftkit-pm:routine` |
-| `story-skill-generator` | retired |
-| `init`, `setup-project`, `capability-preflight`, `pr-auto-review` | `raftkit-dev:setup` |
-| `pr`, `simplify`, `ultrathink` | folded into `raftkit-dev:implement` |
-| `fix-bug`, `fix-production-error` | `raftkit-dev:fix` |
-| `ui-creation`, `recipes` | `raftkit-dev:ui` |
-| the docs design product | the opt-in `raftkit-docs` plugin |
-| `test-suite` · `test-run-sheet` | `raftkit-qa:suite` · `run-sheet` |
-| `file-bug`, `retest` | `raftkit-qa:bug` (file and retest) |
+| `raftkit-pm:meeting` | `raftkit-pm:profile` (from a call) |
+| `raftkit-pm:story` size mode | `raftkit-pm:estimate` (one story) |
+| `raftkit-pm:routine` | retired; the deprecation-sweep prompt is a hand-run asset |
+| `raftkit-qa:suite` · `run-sheet` | `raftkit-qa:test-cases` |
+| `raftkit-dev:hasura` | the opt-in `raftkit-hasura:hasura` |
+| `raftkit-docs:discovery-interview` | folded into `raftkit-docs:docs-product` |
+| PR auto-review | the opt-in review-only CI from `raftkit-dev:setup` |
+| the role `help` commands | `/raftkit-core:help` |
 
 ## Updates
 
@@ -97,7 +87,7 @@ You need access to the RaftLabs GitHub org — ask in #raftkit.
 
 **Claude Code too old:** dependency auto-install needs v2.1.143+. Run `claude update`, then retry.
 
-**`/raftkit-dev:help` (or any `raftkit-*` command) not found:** your marketplace cache may predate the plugin split — an old install can be pinned to a single `raftkit` plugin with no `help` command at all. `claude plugin marketplace update` cannot recover a cache pinned to a rewritten history; remove and re-add instead:
+**`/raftkit-core:help` (or any `raftkit-*` command) not found:** your marketplace cache may predate the plugin split — an old install can be pinned to a single `raftkit` plugin with no `help` command at all. `claude plugin marketplace update` cannot recover a cache pinned to a rewritten history; remove and re-add instead:
 
 ```bash
 claude plugin marketplace remove raftkit
@@ -111,7 +101,7 @@ Confirm with `claude plugin list` — you should see `raftkit-core` plus your ro
 
 RaftKit measures its own use so we can see who has adopted it and where people get stuck. It runs as plugin hooks in `raftkit-core` — active automatically in Claude Code once any raftkit plugin is installed, with nothing to configure.
 
-**Collected in every session:** your git name and email, GitHub login, OS user; the repository (`owner/repo`) and branch you are working in, so a blocker can be traced to its project; which RaftKit skills you run, when a skill stops for your approval or hard-stops, which line it emitted, and whether your next message answered it; token use per run and session, read from the session's own transcripts; the previous session's cost as Claude Code recorded it for this project in `~/.claude.json` (only its cost fields are read); the commits and pull requests you make (a PR's number, never its content); which tool failed and its exit code; when the read shunt declines a file, its extension and line count; which RaftKit skills the skill listing described; plugin and platform versions.
+**Collected in every session:** your git name and email, GitHub login, OS user; the repository (`owner/repo`) and branch you are working in, so a blocker can be traced to its project; which RaftKit skills you run, when a skill stops for your approval or hard-stops, which line it emitted, and whether your next message answered it; token use per run and session, read from the session's own transcripts; the previous session's cost as Claude Code recorded it for this project in `~/.claude.json` (only its cost fields are read); the commits and pull requests you make (a PR's number, never its content); which tool failed and its exit code; which RaftKit skills the skill listing described; plugin and platform versions.
 
 **Collected only in a session where a RaftKit skill ran:** the text of your prompts, the first 512 characters of each, and of failed tool calls, the first 200 characters of the error, which can quote command output or file contents. A background agent's report that arrives as a prompt is never kept. Text passes through a credential scrubber that strips API keys, tokens and private-key blocks before it is written anywhere.
 
@@ -133,7 +123,7 @@ Cowork sessions run in a sandbox with no host filesystem and no hooks, so none o
 
 Cowork reports through its own OpenTelemetry export instead, which an admin turns on once under Admin settings. It covers prompts, tool failures and errors on its own, but emits no event when a skill runs, so each `raftkit-pm` and `raftkit-qa` skill names itself in its first reply — `Using raftkit-pm:story`. That line is the only record that a skill ran at all. No skill calls an endpoint, spools a file, or reports anything itself.
 
-Assistant responses are read for that announcement and for refusals, then dropped — they are never stored. The real switch is the admin's OTLP endpoint: unset it and nothing is exported, for anyone. There is no per-session equivalent inside Cowork. See `raftkit-core/skills/cowork-telemetry`.
+Assistant responses are read for that announcement and for refusals, then dropped — they are never stored. The real switch is the admin's OTLP endpoint: unset it and nothing is exported, for anyone. There is no per-session equivalent inside Cowork. See `docs/maintainers/cowork-telemetry.md`.
 
 ## For project repos
 

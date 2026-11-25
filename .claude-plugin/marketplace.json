@@ -12,26 +12,26 @@
     {
       "name": "raftkit-core",
       "source": "./plugins/raftkit-core",
-      "description": "RaftKit rules (Asana constants, the one human stop per run, fetch-once live reads, Asana HTML, free tier, scope line, escalation, readiness, plain output), the RaftLabs working agreement and Module Design Standard, usage and token telemetry hooks, and the bulk-read shunt with its bulk-reader subagent.",
+      "description": "RaftKit rules (Asana constants, the one human stop per run, fetch-once live reads, Asana HTML, free tier, scope line, escalation, readiness, plain output), the RaftLabs working agreement and Module Design Standard, and usage and token telemetry hooks.",
       "category": "core"
     },
     {
       "name": "raftkit-pm",
       "source": "./plugins/raftkit-pm",
-      "description": "PM skills: the Project Profile, one story skill (author, amend, check, size), feature-list estimation, the weekly client update, meeting decisions, and routine handover — each with one stop before any write.",
+      "description": "PM skills: the Project Profile (from sources or a client call), one story skill (author, amend, check), estimation of a feature list or one story, and the weekly client update — each with one stop before any write.",
       "category": "role"
     },
     {
       "name": "raftkit-dev",
       "source": "./plugins/raftkit-dev",
-      "description": "Developer skills: repo setup, story implementation, bug and incident fixes, scope audit, UI, Hasura migrations, and docs parity — one stop per run.",
+      "description": "Developer skills: repo setup, story implementation, bug and incident fixes, scope audit, UI, and docs parity — one stop per run.",
       "category": "role"
     },
     {
       "name": "raftkit-qa",
       "source": "./plugins/raftkit-qa",
       "category": "role",
-      "description": "QA skills: the project test-case suite in a QA-owned Sheet, per-story run sheets, and one bug skill that files from Jam evidence and retests fixes — each with one stop before any write."
+      "description": "QA skills: per-story test cases in a QA-owned Sheet with a manual run sheet, and one bug skill that files from Jam evidence and retests fixes — each with one stop before any write."
     },
     {
       "name": "raftkit-docs",

@@ -5,4 +5,4 @@ flags: i
 match: not_contains
 ---
 
-None of the banned filler phrases in raftkit-core's plain-language reference appears in the reply.
+None of the banned filler phrases in RaftKit's maintained plain-language list appears in the reply.

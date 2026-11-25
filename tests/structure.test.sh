@@ -139,13 +139,13 @@ check "S14 every refusals.json rule matches its example and is still emitted by 
 
 if [[ "$strict" == true ]]; then
   unlisted=""
-  for d in plugins/raftkit-core/skills/*/ plugins/raftkit-pm/skills/*/ plugins/raftkit-dev/skills/*/ plugins/raftkit-qa/skills/*/; do
+  for d in plugins/raftkit-core/skills/*/ plugins/raftkit-pm/skills/*/ plugins/raftkit-dev/skills/*/ plugins/raftkit-qa/skills/*/ plugins/raftkit-hasura/skills/*/ plugins/raftkit-docs/skills/*/; do
     key="$(basename "$(dirname "$(dirname "$d")")")/$(basename "$d")"
     grep -qxF "$key" <<<"$listed" || unlisted="$unlisted $key"
   done
   [[ -z "$unlisted" ]]; check "S15 strict: every skill on disk has a budget entry${unlisted:+ (missing:$unlisted)}" ok $?
 
-  for plugin in raftkit-core raftkit-pm raftkit-dev raftkit-qa raftkit-docs; do
+  for plugin in raftkit-core raftkit-pm raftkit-dev raftkit-qa raftkit-docs raftkit-hasura; do
     c="$(cap "$(jsonq ".plugins[\"$plugin\"]")")"; n="$(plugincat "$plugin" | wc -w | tr -d ' ')"; fits "$n" "$c"
     check "S16 strict: $plugin skills total within budget ($n <= $c words)" ok $?
     c="$(cap "$(jsonq ".plugin_tokens[\"$plugin\"]")")"; n="$(plugincat "$plugin" | ctoks)"; fits "$n" "$c"

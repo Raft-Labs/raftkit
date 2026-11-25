@@ -6,7 +6,7 @@ user-invocable: true
 
 # estimate
 
-A feature list → FE, BE and QA hour ranges per feature, totalled, in one Google Sheet. Load `raftkit-core:rules` first unless it is already in this conversation. The watermark opens every output, no request or flag disables it, and the approval chain follows whenever numbers appear.
+Load `raftkit-core:rules` first unless it is already in this conversation. The watermark opens every output, no request or flag disables it, and the approval chain follows whenever numbers appear.
 
 **The unit is a feature**: one line of the list, one row; never an invented task.
 
@@ -16,7 +16,7 @@ The feature list: pasted, a document, or a read-only source Sheet whose feature 
 
 ## One story
 
-One story is a one-feature list: read it live, let its gaps widen the range (no readiness check), and reply in chat in the shape below without the Sheet name or the STOP line. Ask for no Drive folder. Cite any earlier estimate of the same work. A Sheet only if the PM asks, then run step 4.
+One story is a one-feature list: read it live, let its gaps widen the range (no readiness check), and reply in chat in the shape below, minus the Sheet name and STOP line. Ask for no Drive folder. Cite any earlier estimate of the same work. A Sheet only if the PM asks, then run step 4.
 
 ## Run
 

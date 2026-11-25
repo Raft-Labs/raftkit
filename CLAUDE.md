@@ -1,6 +1,6 @@
 # RaftKit — Project Context
 
-RaftKit is RaftLabs' private Claude plugin **marketplace**: one repo shipping five plugins that package the RaftLabs way of delivering software. The plugins **orchestrate** proven third-party plugins — superpowers, security-guidance, pr-review-toolkit and frontend-design, the four `raftkit-dev` declares, plus the Asana connector — **they rebuild nothing**. Asana is the workflow spine: work enters as a templated user story and exits as a squash-merged PR with QA-verified acceptance criteria.
+RaftKit is RaftLabs' private Claude plugin **marketplace**: one repo shipping six plugins that package the RaftLabs way of delivering software. The plugins use native Claude Code first and **orchestrate** proven third-party plugins for what native lacks — security-guidance, pr-review-toolkit and frontend-design, the three `raftkit-dev` declares, plus the Asana connector. Asana is the workflow spine: work enters as a templated user story and exits as a squash-merged PR with QA-verified acceptance criteria.
 
 Methodology, for what RaftKit produces and for RaftKit itself: **the story is the spec, its acceptance criteria become failing tests, and code exists to turn them green.** Plans are written down and shown, not gated. A run stops exactly once, before anything leaves the session.
 
@@ -21,9 +21,9 @@ GIDs live in exactly one place: `plugins/raftkit-core/skills/rules/SKILL.md`. Re
 .claude-plugin/marketplace.json     # single source of what is installable
 plugins/
   raftkit-core/   # rules, working-agreement, telemetry hooks
-  raftkit-pm/     # profile, story, estimate, status, meeting, routine     (Cowork)
+  raftkit-pm/     # profile, story, estimate, status                       (Cowork)
   raftkit-dev/    # setup, implement, fix, scope-guard, ui, docs           (Claude Code)
-  raftkit-qa/     # suite, run-sheet, bug                                  (Cowork)
+  raftkit-qa/     # test-cases, bug                                        (Cowork)
   raftkit-docs/   # docs-product                                           (opt-in; Claude Code)
   raftkit-hasura/ # hasura                                                 (opt-in; Claude Code)
 ```
@@ -54,7 +54,7 @@ Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Veri
 
 | Decision (Asana task) | Impact here |
 |---|---|
-| Phase file limit (`1216550892331152`) | Rule 2 of the working agreement ships two files as its value |
+| Phase file limit (`1216550892331152`) | Rule 2 of the working agreement leaves the per-phase file limit open; phases are `[AC]` slices built in the main thread |
 
 Closed, and now facts:
 
@@ -64,4 +64,4 @@ Closed, and now facts:
 ## Pending with the founders
 
 - **The working agreement** (`raftkit-core/skills/working-agreement/references/working-agreement.md`) replaces protocols 1–5 and needs Ashit's sign-off before the release to `main`. Its sha256 is pinned in `tests/budgets.json`, so any edit is deliberate.
-- **Unattended Asana writes** by a scheduled routine (`raftkit-pm:routine`) are not switched on until the founders record that decision.
+- **Unattended Asana writes** by a scheduled routine are not switched on until the founders record that decision. `raftkit-pm:routine` is deleted; its meeting-notes prompt does not ship.

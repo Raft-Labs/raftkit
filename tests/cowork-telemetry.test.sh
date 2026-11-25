@@ -78,7 +78,7 @@ for f in plugins/raftkit-pm/skills/*/SKILL.md plugins/raftkit-qa/skills/*/SKILL.
     || missing="$missing $f"
   grep -q 'cowork-telemetry' "$f" && stale="$stale $f"
 done
-[[ -z "$missing" && -z "$stale" && "$count" -ge 9 ]]
+[[ -z "$missing" && -z "$stale" && "$count" -ge 6 ]] # v3: pm 4 + qa 2
 check "CW4 every pm and qa skill carries the announcement, pointing at rules ($count skills)" ok $?
 [[ -n "$missing" ]] && echo "  missing:$missing"
 [[ -n "$stale" ]] && echo "  still points at cowork-telemetry:$stale"

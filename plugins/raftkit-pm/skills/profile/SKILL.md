@@ -6,7 +6,7 @@ user-invocable: true
 
 # profile
 
-Turn what the PM has into one Project Profile: the tagged, cited source of truth every other skill reads. Load `raftkit-core:rules` first unless it is already in this conversation.
+Load `raftkit-core:rules` first unless it is already in this conversation.
 
 **Mode**: decisions or tasks from one call, with a Profile in place → **from a call**; anything else, a call included → **sources**.
 
@@ -34,14 +34,14 @@ Read at once the whole transcript, the Profile and the workspace members, then d
 
 ## Stop once
 
-Show the draft as it will be written (lists, never tables), the project as `<name> (gid)`, and every subtask or task to be created or overwritten. The PM may approve parts: "delta yes, tasks except #3."
+Show the draft as it will be written, the project as `<name> (gid)`, and every subtask or task to be created or overwritten. The PM may approve parts: "delta yes, tasks except #3."
 
 ```output
 Profile draft for Riverside Bookings (1216…). 4 subtasks, 38 facts: ✅ 21 / ⚠️ 12 / ❓ 5. 2 conflicts.
 **STOP** — approve to write, edit to change, or decline.
 ```
 
-**On go**, write the approved parts; read back once. A timed-out write is looked up by name before any retry. Report:
+**On go**, write the approved parts. A timed-out write is looked up by name before any retry. Report:
 
 ```output
 38 facts — ✅ 21 / ⚠️ 12 / ❓ 5. Top gaps: payment provider, refund window.

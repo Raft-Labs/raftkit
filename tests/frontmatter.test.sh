@@ -194,28 +194,27 @@ scanned="$(sed -nE 's/^checked ([0-9]+) frontmatter block.*/\1/p' <<<"$real_out"
 [[ -n "$scanned" && "$scanned" -ge 150 ]]
 check "FM4c scanned the whole tree, not a subset ($scanned blocks, floor 150)" ok $?
 
-# --- REGRESSION PIN: the six files that carried the defect ---
+# --- REGRESSION PIN: the files that carried the defect and still exist ---
+# (v3 deleted meeting and run-sheet; FM4 still covers the fault tree-wide.)
 #
 # Pinned by path so the fix cannot be silently reverted. The rule is applied
 # by the checker above; this asserts the specific files a strict parser used
 # to reject are the ones being covered.
 
-six=(
+pinned=(
   plugins/raftkit-core/skills/working-agreement/SKILL.md
-  plugins/raftkit-pm/skills/meeting/SKILL.md
   plugins/raftkit-pm/skills/estimate/SKILL.md
-  plugins/raftkit-qa/skills/run-sheet/SKILL.md
   plugins/raftkit-qa/skills/bug/SKILL.md
   plugins/raftkit-docs/skills/docs-product/SKILL.md
 )
 missing=""
-for f in "${six[@]}"; do [[ -f "$f" ]] || missing="$missing $f"; done
+for f in "${pinned[@]}"; do [[ -f "$f" ]] || missing="$missing $f"; done
 [[ -z "$missing" ]]
-check "FM5a all six formerly-broken skills still exist" ok $?
+check "FM5a all four remaining formerly-broken skills still exist" ok $?
 [[ -n "$missing" ]] && echo "  missing:$missing"
 
-node "$CHECKER" "${six[@]}" >/dev/null 2>&1
-check_exit "FM5b all six formerly-broken skills are free of the fault (exit 0)" 0 $?
+node "$CHECKER" "${pinned[@]}" >/dev/null 2>&1
+check_exit "FM5b all four remaining formerly-broken skills are free of the fault (exit 0)" 0 $?
 
 # --- MUTATION: the checker is not vacuous against real content ---
 #
