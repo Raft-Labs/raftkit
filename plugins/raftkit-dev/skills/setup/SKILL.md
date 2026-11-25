@@ -21,7 +21,7 @@ Not a git repository. Run setup from inside a git repo — nothing was written.
    Run `scripts/check-engines.mjs --root <repo>` once. Exit 3 means `raftkit-core` is missing and there is nothing to install: stop. Each missing or disabled engine is named with its command, and setup carries on:
 
 ```output
-Missing: superpowers. Install it with: claude plugin install superpowers@claude-plugins-official
+Missing: pr-review-toolkit. Install it with: claude plugin install pr-review-toolkit@claude-plugins-official
 Setup continues without it; the skills that need it will say so.
 ```
 

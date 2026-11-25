@@ -31,3 +31,9 @@ Out of scope: everything else — `verify.mjs`, `tests/budgets.json`, `tests/str
 - `plugins/raftkit-dev/scripts/verify.mjs` lines 10–11 still say "The pre-push hook does not use this script and keeps its full gates." Proposal story 2 asks for that stale comment to be fixed: replace with "The pre-push hook reads this cache (green only, same commands, under an hour) and runs its gates in full on any miss." Not edited here: verify.mjs is outside this lane.
 - Cache contract the hook now depends on: `<git common dir>/raftkit/verify.json`, an array of `{ tree, results: { <role>: { command: "<pm> run <role>", at: ISO } } }`, reuse window 1 h (`REUSE_MS`). Any change to that shape or window in verify.mjs must change `setup/assets/pre-push` in the same diff.
 - Budget: `raftkit-dev/setup` total grows by ~45 words (components.md, one paragraph).
+
+### Drop superpowers from setup
+
+- Engines stay derived from `plugins/raftkit-dev/.claude-plugin/plugin.json` (`check-engines.mjs` E4, `merge-settings.mjs` managed `enabledPlugins`). superpowers leaves the engine check the moment the dev lane (proposal story 5) drops it from that manifest; nothing in setup hardcodes it. E15 now pins that no setup file, eval or toolchain fixture names it.
+- `tests/init-settings.test.sh` O10 now uses `security-guidance@claude-plugins-official` as the never-disabled engine, so it keeps passing after superpowers leaves `plugin.json`.
+- Outside this lane, still naming superpowers as an engine example: `plugins/raftkit-core/hooks/lib/refusals.json` `missing-engine` example (change to `Missing: pr-review-toolkit. Install it with: claude plugin install pr-review-toolkit@claude-plugins-official`, which setup's SKILL.md now emits); `plugins/raftkit-dev/evals/plain-language/setup-missing-engine/prompt.md` line 7. `README.md`'s quick-start install line is updated here to three engines.

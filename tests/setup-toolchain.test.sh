@@ -240,7 +240,6 @@ mkplug() { # <dir> <plugin.json body> [hooks.json body]
 }
 SYNC_STOP='{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"${CLAUDE_PLUGIN_ROOT}/scripts/on-stop.sh"}]}]}}'
 mkplug core '{"name":"raftkit-core","version":"9.9.9"}'
-mkplug sp '{"name":"superpowers"}'
 mkplug sg '{"name":"security-guidance"}' '{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"sg.sh","asyncRewake":true}]}]}}'
 mkplug fd '{"name":"frontend-design"}' "$SYNC_STOP"
 mkplug warp '{"name":"warp"}' "$SYNC_STOP"
@@ -257,7 +256,6 @@ mkplug off '{"name":"off"}' "$SYNC_STOP"
 pl() { printf '{"id":"%s","version":"1.0.0","scope":"user","enabled":%s,"installPath":"%s"}' "$1" "$2" "$EW/p/$3"; }
 { echo '['
   pl raftkit-core@raftkit true core; echo ','
-  pl superpowers@claude-plugins-official true sp; echo ','
   pl security-guidance@claude-plugins-official true sg; echo ','
   pl frontend-design@claude-plugins-official false fd; echo ','
   pl warp@claude-code-warp true warp; echo ','
@@ -327,6 +325,8 @@ eng "$EW/repo-files" "$EW/plugins.json"
 check "E14 a file named packages or apps is skipped, never a crash" ok $?
 node "$DETECT" --root "$EW/repo-files" --json >/dev/null 2>&1
 check "S46 detect-toolchain skips a file named packages or apps too" ok $?
+! grep -rqi 'superpowers' "$SETUP" plugins/raftkit-dev/evals/setup-toolchain tests/fixtures/toolchain
+check "E15 no setup file, eval or fixture names superpowers: engines come only from raftkit-dev's plugin.json" ok $?
 
 # ---- P1–P11 · pre-push reuses verify.mjs's green cache for the pushed tree ----
 # A real verify.mjs run writes the cache; the rendered hook reads it. A fake npm
