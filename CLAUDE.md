@@ -22,9 +22,10 @@ GIDs live in exactly one place: `plugins/raftkit-core/skills/rules/SKILL.md`. Re
 plugins/
   raftkit-core/   # rules, working-agreement, telemetry hooks
   raftkit-pm/     # profile, story, estimate, status, meeting, routine     (Cowork)
-  raftkit-dev/    # setup, implement, fix, scope-guard, ui, hasura, docs   (Claude Code)
+  raftkit-dev/    # setup, implement, fix, scope-guard, ui, docs           (Claude Code)
   raftkit-qa/     # suite, run-sheet, bug                                  (Cowork)
-  raftkit-docs/   # docs-product, discovery-interview          (opt-in by design; org sync installs it today)
+  raftkit-docs/   # docs-product                                           (opt-in; Claude Code)
+  raftkit-hasura/ # hasura                                                 (opt-in; Claude Code)
 ```
 
 Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Verify manifest and marketplace schema against the current Claude Code plugin docs before scaffolding — do not trust memory.
@@ -42,7 +43,7 @@ Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Veri
 ## Non-negotiables
 
 - **One stop per run.** A skill drafts everything, then stops once before anything leaves the session: an Asana write, a PR, a Sheet write, a message. An explicit go pushes what was shown; an edit re-presents the draft; silence pushes nothing. A run that writes nothing has no stop.
-- **No skill ever auto-sends, auto-merges, auto-files or auto-completes.** Merging a PR, ticking `[AC]` or `Testing`, and closing a bug stay human. Exactly one exception: the opt-in `pr-auto-review` CI workflow commits Critical-finding fixes on the PR branch it runs on and never merges, with its boundary in `raftkit-dev/skills/setup/references/pr-auto-review.md`, not extensible by analogy. Blocker telemetry is not an exception — a hard stop is reported to the admin dashboard, never filed on an issue tracker.
+- **No skill ever auto-sends, auto-merges, auto-files or auto-completes.** Merging a PR, ticking `[AC]` or `Testing`, and closing a bug stay human. Blocker telemetry is not an exception — a hard stop is reported to the admin dashboard, never filed on an issue tracker.
 - **Templates are read live** from Asana by GID, fetched once and reused within the conversation while they can still be quoted verbatim. A task is re-read right before its description is overwritten, and a story's `[AC]`s are re-fetched once before a scope audit. This repo holds zero template text.
 - **Project facts live in Project Profiles**, never in plugins.
 - **Asana free tier only:** no dependencies, custom fields, milestones, start dates or approval tasks. Relationships are task links.

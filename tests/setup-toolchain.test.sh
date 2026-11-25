@@ -240,7 +240,6 @@ mkplug() { # <dir> <plugin.json body> [hooks.json body]
 }
 SYNC_STOP='{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"${CLAUDE_PLUGIN_ROOT}/scripts/on-stop.sh"}]}]}}'
 mkplug core '{"name":"raftkit-core","version":"9.9.9"}'
-mkplug sp '{"name":"superpowers"}'
 mkplug sg '{"name":"security-guidance"}' '{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"sg.sh","asyncRewake":true}]}]}}'
 mkplug fd '{"name":"frontend-design"}' "$SYNC_STOP"
 mkplug warp '{"name":"warp"}' "$SYNC_STOP"
@@ -257,7 +256,6 @@ mkplug off '{"name":"off"}' "$SYNC_STOP"
 pl() { printf '{"id":"%s","version":"1.0.0","scope":"user","enabled":%s,"installPath":"%s"}' "$1" "$2" "$EW/p/$3"; }
 { echo '['
   pl raftkit-core@raftkit true core; echo ','
-  pl superpowers@claude-plugins-official true sp; echo ','
   pl security-guidance@claude-plugins-official true sg; echo ','
   pl frontend-design@claude-plugins-official false fd; echo ','
   pl warp@claude-code-warp true warp; echo ','
@@ -327,6 +325,108 @@ eng "$EW/repo-files" "$EW/plugins.json"
 check "E14 a file named packages or apps is skipped, never a crash" ok $?
 node "$DETECT" --root "$EW/repo-files" --json >/dev/null 2>&1
 check "S46 detect-toolchain skips a file named packages or apps too" ok $?
+! grep -rqi 'superpowers' "$SETUP" plugins/raftkit-dev/evals/setup-toolchain tests/fixtures/toolchain
+check "E15 no setup file, eval or fixture names superpowers: engines come only from raftkit-dev's plugin.json" ok $?
+
+# ---- P1–P11 · pre-push reuses verify.mjs's green cache for the pushed tree ----
+# A real verify.mjs run writes the cache; the rendered hook reads it. A fake npm
+# logs each gate it runs, and fails while $PP/red exists.
+VERIFY="$PWD/plugins/raftkit-dev/scripts/verify.mjs"
+PP="$(mktemp -d)"; tmpdirs+=("$PP"); mkdir -p "$PP/bin" "$PP/repo"
+printf '#!/bin/sh\necho "$*" >> "$PP_LOG"\n[ -f "$PP_RED" ] && exit 1\nexit 0\n' > "$PP/bin/npm"; chmod +x "$PP/bin/npm"
+PR="$PP/repo"
+printf '{"name":"pp","scripts":{"lint":"x","test":"y"}}' > "$PR/package.json"; echo '{}' > "$PR/package-lock.json"
+( cd "$PR" && giso git init -q -b main && giso git add -A && giso git -c user.email=t@t -c user.name=t commit -qm init )
+rnd npm "" none "lint test" none "$PR/package.json"; HOOK_R="$ODIR/pre-push"
+CACHE_F="$PR/.git/raftkit/verify.json"
+ZERO=0000000000000000000000000000000000000000
+ppenv() { giso env PATH="${PPPATH:-$PP/bin:$PATH}" PP_LOG="$PP/log" PP_RED="$PP/red" "$@"; }
+pv() { ( cd "$PR" && ppenv node "$VERIFY" ) >/dev/null 2>&1; }
+pp() { # <pre-push stdin>: runs the rendered hook in the repo
+  : > "$PP/log"
+  PPOUT=$(cd "$PR" && printf '%s\n' "$1" | ppenv sh "$HOOK_R" origin git@example.invalid:x.git 2>&1); PPRC=$?
+}
+gates_ran() { grep -c 'run ' "$PP/log" | tr -d ' '; }
+line() { printf 'refs/heads/main %s refs/heads/main %s' "$1" "$ZERO"; }
+pcommit() { ( cd "$PR" && echo "$1" > "$1.txt" && giso git add -A && giso git -c user.email=t@t -c user.name=t commit -qm "$1" ); git -C "$PR" rev-parse HEAD; }
+recache() { node -e 'const fs=require("fs"); const c=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); new Function("c", process.argv[2])(c); fs.writeFileSync(process.argv[1], JSON.stringify(c))' "$CACHE_F" "$1"; }
+
+H1=$(git -C "$PR" rev-parse HEAD); pv
+pp "$(line "$H1")"
+[[ $PPRC -eq 0 && "$(gates_ran)" -eq 0 ]] && grep -q 'verify cache' <<<"$PPOUT"
+check "P1 a green verify of the pushed tree, under an hour old, for the same gates skips the re-run" ok $?
+cp "$CACHE_F" "$PP/cache.bak"
+H2=$(pcommit second)
+pp "$(line "$H2")"
+[[ $PPRC -eq 0 && "$(gates_ran)" -eq 2 ]]
+check "P2 a pushed tree the cache has not seen runs the full gates" ok $?
+recache 'for (const e of c) for (const r of Object.values(e.results)) r.at = new Date(Date.now() - 2*3600*1000).toISOString()'
+pp "$(line "$H1")"
+[[ "$(gates_ran)" -eq 2 ]]
+check "P3 a cache entry older than an hour runs the full gates" ok $?
+cp "$PP/cache.bak" "$CACHE_F"; recache 'for (const e of c) delete e.results.test'
+pp "$(line "$H1")"
+[[ "$(gates_ran)" -eq 2 ]]
+check "P4 a cache missing one of the hook's gates runs the full gates" ok $?
+cp "$PP/cache.bak" "$CACHE_F"; recache 'for (const e of c) e.results.lint.command = "pnpm run lint"'
+pp "$(line "$H1")"
+[[ "$(gates_ran)" -eq 2 ]]
+check "P5 a cached gate run with another command runs the full gates" ok $?
+cp "$PP/cache.bak" "$CACHE_F"
+pp "$(line "$H1")"$'\n'"refs/heads/other $H2 refs/heads/other $ZERO"
+[[ "$(gates_ran)" -eq 2 ]]
+check "P6 every pushed tree must be cached: one miss runs the full gates" ok $?
+pp "(delete) $ZERO refs/heads/gone $H1"
+[[ $PPRC -eq 0 && "$(gates_ran)" -eq 2 ]]
+check "P7 a push with no tree to check runs the full gates, as before" ok $?
+touch "$PP/red"; H3=$(pcommit third); pv
+pp "$(line "$H3")"
+[[ $PPRC -ne 0 && "$(gates_ran)" -ge 1 ]] && grep -q 'pre-push blocked' <<<"$PPOUT"
+check "P8 a red verify is never cached: the hook runs the gates and blocks the push" ok $?
+rm -f "$PP/red"; echo 'not json' > "$CACHE_F"
+pp "$(line "$H1")"
+[[ $PPRC -eq 0 && "$(gates_ran)" -eq 2 ]]
+check "P9 an unreadable cache runs the full gates" ok $?
+cp "$PP/cache.bak" "$CACHE_F"; before_cache="$(shasum "$CACHE_F")"; pp "$(line "$H1")"; pp "$(line "$H2")"
+[[ "$before_cache" == "$(shasum "$CACHE_F")" ]] && sh -n "$HOOK_R" \
+  && ! grep -qE 'CLAUDE_PLUGIN_ROOT|no-verify' "$SETUP/assets/pre-push" "$HOOK_R"
+check "P10 the hook reads the cache, never writes it, and needs no plugin install" ok $?
+nodir="$(dirname "$(command -v node)")"
+if [[ "$nodir" != /usr/bin && "$nodir" != /bin ]] && PATH="$PP/bin:/usr/bin:/bin" command -v git >/dev/null && ! PATH="$PP/bin:/usr/bin:/bin" command -v node >/dev/null; then
+  PPPATH="$PP/bin:/usr/bin:/bin" pp "$(line "$H1")"
+  [[ $PPRC -eq 0 && "$(gates_ran)" -eq 2 ]]
+  check "P11 without node on PATH the hook runs the full gates" ok $?
+else echo "PASS: P11 without node on PATH the hook runs the full gates (node shares /usr/bin here; covered by P9's fallback)"; fi
+
+# ---- R1–R4 · pr-auto-review retired; review-only CI is the opt-in ------------
+retired=""
+for f in "$SETUP/assets/fix-loop-prompt.md" "$SETUP/assets/pr-auto-review.yml" "$SETUP/scripts/render-pr-auto-review.mjs" \
+  "$SETUP/references/pr-auto-review.md" plugins/raftkit-dev/evals/pr-auto-review tests/pr-auto-review-loop-guard.test.sh tests/pr-auto-review-render.test.sh; do
+  [[ -e "$f" ]] && retired+=" $f"
+done
+MIG='A marker listing `pr-auto-review`'
+[[ -z "$retired" ]] && ! grep -rhiE 'pr-auto-review|fix-loop|auto-review' "$SETUP" | grep -qvF "$MIG"
+check "R1 the auto-commit workflow, its prompt, renderer, reference, tests and evals are gone${retired:+ (still:$retired)}" ok $?
+RO="$SETUP/assets/review-only.yml"
+[[ -f "$RO" && "$(wc -l < "$RO" | tr -d ' ')" -le 40 ]] && grep -q 'raftkit-governance-pack' "$RO" \
+  && grep -qE '^  pull_request:' "$RO" && ! grep -q 'pull_request_target' "$RO" \
+  && grep -qE '^  contents: read$' "$RO" && ! grep -qE 'contents: write|git push|--no-verify' "$RO" \
+  && grep -q 'anthropics/claude-code-action@' "$RO" && grep -q 'github_token: \${{ secrets.GITHUB_TOKEN }}' "$RO" \
+  && { [[ "$PYYAML_OK" -eq 0 ]] || python3 -c "import yaml; yaml.safe_load(open('$RO'))"; }
+check "R2 review-only.yml: at most 40 lines, pull_request only, a read-only contents token" ok $?
+tools="$(grep -oE -- '--allowedTools "[^"]*"' "$RO" 2>/dev/null)"
+[[ -n "$tools" ]] && ! grep -qE '(^|[",])(Edit|Write|MultiEdit|NotebookEdit|Bash)([",]|$)' <<<"$tools" \
+  && ! grep -qE 'Bash\((git|gh pr (merge|review|edit))' <<<"$tools" && grep -qF 'Bash(gh pr comment:*)' <<<"$tools" \
+  && grep -qiE 'never .*commit.*merge|never .*merge.*commit' "$RO"
+check "R3 the review only comments: no edit tool, no bare Bash, no git, merge, approve or edit; told never to commit or merge" ok $?
+nn="$(grep -m1 'No skill ever auto-sends' CLAUDE.md)"
+[[ -n "$nn" ]] && ! grep -qiE 'exactly one exception|pr-auto-review' <<<"$nn" && ! grep -q 'pr-auto-review' CLAUDE.md \
+  && grep -qF 'assets/review-only.yml' "$SETUP/references/components.md"
+check "R4 CLAUDE.md's never-auto rule has no exception; setup offers review-only CI instead" ok $?
+mig="$(grep -F "$MIG" "$SETUP/references/components.md")"
+[[ -n "$mig" ]] && grep -qF '.github/workflows/pr-auto-review.yml' <<<"$mig" && grep -qF '`review-only-ci`' <<<"$mig" \
+  && grep -qF 'leaves `optional_components`' <<<"$mig"
+check "R5 a re-run on a marker listing pr-auto-review drafts the old workflow's removal and offers review-only CI" ok $?
 
 # ---- S41–S43 · allowlist + version ------------------------------------------
 # Persistent suite tests the allowlist ALGORITHM synthetically (no branch SHAs —
@@ -334,7 +434,7 @@ check "S46 detect-toolchain skips a file named packages or apps too" ok $?
 #   bash tests/setup-toolchain.test.sh --scope-check <base> <head>
 # tests/workflow-integration.test.sh is allowed solely for the separately
 # approved squash-safe scope-check refactor (cross-story test maintenance).
-allow='^(tests/setup-toolchain\.test\.sh|tests/workflow-integration\.test\.sh|tests/fixtures/toolchain/|plugins/raftkit-dev/evals/setup-toolchain/|plugins/raftkit-dev/\.claude-plugin/plugin\.json|\.claude-plugin/marketplace\.json|plugins/raftkit-dev/skills/setup/(SKILL\.md|references/(components|pr-auto-review)\.md|assets/(pre-push|quality-guardrail\.yml)|scripts/(detect-toolchain|render-assets)\.mjs))'
+allow='^(tests/setup-toolchain\.test\.sh|tests/workflow-integration\.test\.sh|tests/fixtures/toolchain/|plugins/raftkit-dev/evals/setup-toolchain/|plugins/raftkit-dev/\.claude-plugin/plugin\.json|\.claude-plugin/marketplace\.json|plugins/raftkit-dev/skills/setup/(SKILL\.md|references/components\.md|assets/(pre-push|quality-guardrail\.yml)|scripts/(detect-toolchain|render-assets)\.mjs))'
 syn_ok=$'tests/setup-toolchain.test.sh\ntests/workflow-integration.test.sh\ntests/fixtures/toolchain/npm/package.json\nplugins/raftkit-dev/skills/setup/scripts/render-assets.mjs\nplugins/raftkit-dev/.claude-plugin/plugin.json'
 [[ -z "$(grep -Ev "$allow" <<<"$syn_ok" || true)" ]]
 check "S41a allowlist admits approved Story D paths (synthetic)" ok $?

@@ -1,42 +1,25 @@
-# Scaffolding — optional bootstrap, always asked
+# Scaffolding (phase 12, optional)
 
-Phase 12 is optional and only ever offered after refinement. The rule that
-governs it: **always ask before running anything that touches the filesystem
-outside docs.** Every command is named to the developer before it runs.
+Offer it only after refinement. Name every command before it runs. Ask before touching anything outside docs. Questions follow `interview.md`; approval is per command.
 
-## Flow
-
-1. Offer the archetype-matched bootstrap (the exact CLI from
-   `stack-and-domain-recipes.md`), or a hand-rolled setup document when no
-   recipe fits. Ask the scaffold questions under the normal interview contract
-   — no exception here, because the approval gate above is per command, not per
-   question.
+1. Offer the chosen archetype's official bootstrap CLI, or a hand-written setup doc when none fits.
 2. Run the approved bootstrap. Show what it created.
-3. Post-scaffold, propose (each its own approval):
-   - environment setup via the project's env mechanism;
-   - the project-local docs companion (`assets/companion/`), rendered by
-     `scripts/render-companion.mjs` — this plugin installs it, never
-     `raftkit-dev:setup`;
-   - supporting capabilities — every install routes through
-     `raftkit-dev:setup`'s engine check and its approved
-     transactional install; this skill proposes, it never installs;
-   - copying `assets/templates/` into the project's docs tree as its local
-     template set;
+3. Propose each of these as its own approval:
+   - environment setup through the project's env mechanism;
+   - the docs companion (`assets/companion/`), rendered by `scripts/render-companion.mjs` — this plugin installs it, never `raftkit-dev:setup`;
+   - supporting capabilities, every install through `raftkit-dev:setup`; this skill proposes, never installs;
+   - copying `assets/templates/` into the project's docs tree;
    - the first commit and CI wiring.
 
 ## Never auto-run
 
-These are never executed without a fresh, explicit, per-action approval:
+Each needs a fresh, explicit, per-action approval:
 
-- `db:push` or any schema push that bypasses migrations — always
-  migration-based.
-- Any push to main.
-- Cloud resource creation without the profile/account named and confirmed.
-- Mobile release builds.
+- a schema push that bypasses migrations;
+- any push to main;
+- cloud resources without the named, confirmed account;
+- mobile release builds.
 
 ## Boundaries
 
-Scaffolding never bypasses `raftkit-dev:setup`'s governance-pack install, never
-modifies global or system configuration, and never proceeds past a failed
-step — a partial scaffold is reported exactly as far as it got, with the
-recovery options.
+Never bypass `raftkit-dev:setup`'s governance pack. Never change global or system config. Never continue past a failed step: report a partial scaffold exactly as far as it got, with the recovery options.

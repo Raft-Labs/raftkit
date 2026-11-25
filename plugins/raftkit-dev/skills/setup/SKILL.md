@@ -21,7 +21,7 @@ Not a git repository. Run setup from inside a git repo — nothing was written.
    Run `scripts/check-engines.mjs --root <repo>` once. Exit 3 means `raftkit-core` is missing and there is nothing to install: stop. Each missing or disabled engine is named with its command, and setup carries on:
 
 ```output
-Missing: superpowers. Install it with: claude plugin install superpowers@claude-plugins-official
+Missing: pr-review-toolkit. Install it with: claude plugin install pr-review-toolkit@claude-plugins-official
 Setup continues without it; the skills that need it will say so.
 ```
 
@@ -49,7 +49,7 @@ import mds from "./.raftkit/mds-eslint.config.mjs";
 export default [...yourExistingConfig, ...mds];
 ```
 
-   Accepting the PR auto-review workflow appends it to the success line and prints the one manual step this skill cannot do:
+   Accepting the review-only CI workflow appends it to the success line and prints the one manual step this skill cannot do:
 
 ```output
 Required next step: add ANTHROPIC_API_KEY to this repo's Actions secrets — Settings, Secrets and variables, Actions, New repository secret.
