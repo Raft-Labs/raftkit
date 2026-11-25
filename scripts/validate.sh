@@ -53,6 +53,17 @@ for dir in plugins/*/; do
   [[ -z "$stale" ]] || fail "$help table references nonexistent skill(s): $(echo "$stale" | tr '\n' ' ')"
 done
 
+# The core help is the one router: every skill of every other plugin appears in it
+# as `raftkit-<plugin>:<skill>`, and every such route names a skill on disk.
+core_help=plugins/raftkit-core/commands/help.md
+[[ -f "$core_help" ]] || fail "$core_help missing"
+routes="$(grep -oE '`raftkit-[a-z]+:[a-z0-9-]+`' "$core_help" | tr -d '`' | grep -v '^raftkit-core:' | sort -u)"
+role_skills="$(for d in plugins/*/skills/*/; do p="$(basename "$(dirname "$(dirname "$d")")")"; [[ "$p" != raftkit-core && -f "${d}SKILL.md" ]] && echo "$p:$(basename "$d")"; done | sort -u)"
+missing="$(comm -23 <(echo "$role_skills") <(echo "$routes"))"
+[[ -z "$missing" ]] || fail "$core_help has no route for: $(echo "$missing" | tr '\n' ' ')"
+stale="$(comm -13 <(echo "$role_skills") <(echo "$routes"))"
+[[ -z "$stale" ]] || fail "$core_help routes to nonexistent skill(s): $(echo "$stale" | tr '\n' ' ')"
+
 # A content change only reaches installed machines via a version bump (versions are
 # pinned in plugin.json), so a changed plugin dir must also change its version.
 # Both the diff and the base version are anchored at the merge base — a bump that
