@@ -12,7 +12,7 @@ One story, one branch, one PR, one stop. Load `raftkit-core:rules` first unless 
 
 In plan mode: read only (no `git fetch`, branch, build or verify), show the plan and end.
 
-1. **Intake, in one turn**: the story and every `[AC]` subtask; the Feature Template; the Project Profile; the squash target and branch convention from the repo's own docs; the `pr-review-toolkit` agents available; `git fetch` of the target; the baseline build and `node ${CLAUDE_PLUGIN_ROOT}/scripts/verify.mjs --only typecheck`. A miss stops here: an engine with `Missing: <engine>. Install it with: claude plugin install <engine>@claude-plugins-official`, a red baseline with the failing output verbatim (`no typecheck script` is not red), and no documented target with:
+1. **Intake, in one turn**: the story and every `[AC]` subtask; the Feature Template; the Project Profile; the squash target and branch convention from the repo's own docs; the `pr-review-toolkit` agents available; `git fetch` of the target, pinning `<base-sha>` to `git merge-base FETCH_HEAD HEAD`; the baseline build and `node ${CLAUDE_PLUGIN_ROOT}/scripts/verify.mjs --only typecheck`. A miss stops here: an engine with `Missing: <engine>. Install it with: claude plugin install <engine>@claude-plugins-official`, a red baseline with the failing output verbatim (`no typecheck script` is not red), and no documented target with:
 
 ```output
 no documented squash target — add the target branch and branch naming to CLAUDE.md, then re-run
@@ -22,7 +22,7 @@ no documented squash target — add the target branch and branch naming to CLAUD
 2. **Check readiness** inline against the fetched template (`raftkit-core:rules` → `references/readiness.md`). A gap the developer answers in the plan message goes into the plan record before the phases run and into the stop's story comment. Any other gap (commercial, client-facing, or unanswered) ends the run with the gap list drafted as a story comment.
 3. **Plan inline, in the open**, never through a planning skill or a `Plan` subagent. Branch first, by the documented convention. Phases keep to working-agreement rule 2's file limit, each naming its files, tier and tests. Write the plan to `docs/specs/<branch>.md` and show it without waiting, with one line when this chat already holds another run. `--plan-only` stops here having written only the record.
 4. **Build.** Independent phases run in parallel, dependent ones in order, each a subagent at its tier's model (`references/review.md`) with `isolation: "worktree"`, given only its files, the story text it needs and the branch SHA, which it confirms with `git merge-base --is-ancestor <sha> HEAD` before its first edit; a failed check means no setup: run the phases in order without isolation. Every phase follows the method below, one failing test per acceptance criterion. Each phase makes one conventional commit, tests and code together, which the parent cherry-picks onto the branch in plan order; only the parent marks phases done in the record, and commits it with the last phase.
-5. **Review once, in parallel**: re-fetch the story's `[AC]`s, then run `references/review.md` with `references/simplify.md`.
+5. **Review once** by `references/review.md`: inline simplify, then one gate batch running the reviewer, the `[AC]` re-fetch, `node ${CLAUDE_PLUGIN_ROOT}/scripts/verify.mjs`, `node ${CLAUDE_PLUGIN_ROOT}/scripts/scope-check.mjs --base <base-sha>` and `node ${CLAUDE_PLUGIN_ROOT}/skills/docs/scripts/validate-docs.mjs --root . --base <base-sha>` together, then one triage commit and a final verify.
 6. **Stop once** with everything that leaves the session: the PR title and description, the Asana comment, the `Development` tick, and the line `node ${CLAUDE_PLUGIN_ROOT}/scripts/run-tokens.mjs ${CLAUDE_SESSION_ID} --stages` prints, quoted as printed (`Token total: not measured` if it cannot run). See `references/pr.md`.
 
 ```output
@@ -50,4 +50,4 @@ A failure that resists the quick fix: reproduce it with one command, write down 
 
 ## Standalone
 
-On a branch that already has the work: "raise the PR" runs step 6 onward, "check scope" runs `scope-guard` alone, "simplify this" runs the simplify pass alone. Each resolves the squash target as step 1 does.
+On a branch that already has the work: "raise the PR" runs step 6 onward, "check scope" runs `scope-guard` alone, "simplify this" runs `references/review.md` step 1 alone. Each resolves the squash target as step 1 does.

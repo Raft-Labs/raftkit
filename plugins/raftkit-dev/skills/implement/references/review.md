@@ -1,30 +1,35 @@
-# The review pass
+# The review tail
 
-One pass on the final diff, after the phases are green and before the stop.
+After every `[AC]` is green: one inline simplify commit, one gate batch, one triage commit, one final verify. Every check reads `git diff <base-sha> HEAD`, the base pinned at intake; nothing fetches again. A check that reports clean on an empty range checked nothing: treat it as failed.
 
-## Dispatch
+## 1 · Simplify, inline
 
-Every Agent call passes `model` for its tier (`raftkit-core:working-agreement` → `references/tiers.md`): a phase at its own tier; the simplifier, the reviewers and the verifier at `sonnet`, raised only for a finding that needs more. No subagent is given the Feature Template; the simplifier and the reviewers get the range command below, never diff text, and the parent never loads the diff itself.
+Read your own diff against the design standard in the repo's `CLAUDE.md`. Remove only what is clearly dead:
 
-## Order
+- single-caller abstractions — a seam that a test in the diff exercises stays, and is listed;
+- parameters, options and flags never given a non-default;
+- speculative generality with no caller in the diff;
+- narration comments. Keep every comment that says what the code cannot.
 
-1. **Simplify first**, alone: dispatch `pr-review-toolkit:code-simplifier` with `model: "sonnet"` on the range below only. Its findings are triaged by `references/simplify.md`. Re-run the suite with `verify.mjs --only test`; a red test reverts the change that caused it before the fan-out starts.
-2. **Then the fan-out**, all at once on the merge-base diff:
-   - `pr-review-toolkit:code-reviewer` with `model: "sonnet"`, scored against the repo's `CLAUDE.md`, which carries the design standard.
-   - `pr-review-toolkit:type-design-analyzer`, `pr-review-toolkit:silent-failure-hunter` and `pr-review-toolkit:pr-test-analyzer`, each with `model: "sonnet"`. Never through `review-pr`, which runs them one after another.
-   - `raftkit-dev:verifier` with `model: "sonnet"`, given the `[AC]`s, the out-of-scope list, the plan record path and the range command. It runs `scope-guard`, `docs`, lint, typecheck and the suite; relay its blocks verbatim.
-   - The security-guidance hook evidence already emitted during the edits. Nothing to invoke; never claim a review that did not run.
+Anything uncertain is listed at the stop, never applied. Never edit a file outside the diff. Commit the removals alone, so the pass reverts cleanly; no empty commit. Red before the pass → skip it and name the failing test. A test that goes red reverts the change that broke it.
 
-## Anchoring
+## 2 · Gate batch, one turn, all in parallel
 
-The parent runs `git fetch origin <squash-target>` once, before the simplifier, and pins `<base-sha>` to `git merge-base FETCH_HEAD HEAD`. Every reviewer gets this range, never the tools' unstaged default, which is empty once the work is committed:
+- **Re-fetch the `[AC]`s** (on `fix`, the bug's `Done when`) and diff them against the plan table. Name every changed, added or removed criterion at the stop.
+- **One reviewer**: `pr-review-toolkit:code-reviewer` with `model: "sonnet"`. Brief it with the range command, the `[AC]`s verbatim, the `Do NOT build:` line, the plan table and the path of the repo's `CLAUDE.md`; never diff text, never the Feature Template. It judges:
+  - correctness and silent failures (swallowed errors, empty catches, fallbacks that hide a failure);
+  - whether each test asserts its `[AC]`, not merely runs the code;
+  - the design standard in `CLAUDE.md`;
+  - scope, hunk by hunk, by `raftkit-dev:scope-guard`'s audit, with the `scope-check` flags as candidates. It returns scope-guard's output block exactly.
+- **`verify.mjs`** in full: lint, typecheck, suite.
+- **`scope-check.mjs`** on the pinned base.
+- **`validate-docs.mjs`** on the pinned base; `raftkit-dev:docs` step 4 maps its exit to the docs line.
+- The security-guidance notes already emitted. Nothing to invoke; never claim a review that did not run.
 
-```
-git diff <base-sha> HEAD
-```
+## 3 · Triage once
 
-A reviewer reporting clean without naming a non-empty range reviewed nothing: treat that as a failed invocation.
+Fix every finding in one commit, or answer it in the PR's review-findings section with the reason. Silence resolves nothing. A BEYOND item blocks until it is removed or signed off by a named human; a MISSING item until it is built or explained. Deferred security-guidance notes land here.
 
-## Findings
+## 4 · Final verify
 
-Every finding is fixed on the branch, in one review-fix commit, or answered in the PR's review-findings section with the reason no change is needed. Silence resolves nothing. A `scope-guard` flag is different: a BEYOND item blocks until it is removed or signed off by name, and a MISSING item until it is built or explained.
+Run `verify.mjs` once more on the final tree. It is a cache hit when triage committed nothing.

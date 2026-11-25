@@ -52,3 +52,10 @@ Filled in per story below; the integration agent owns `tests/budgets.json` and `
 - Lane setup: drop superpowers from `setup/scripts/check-engines.mjs`, from the `Missing: superpowers …` example in `setup/SKILL.md` line 24, and from `evals/plain-language/setup-missing-engine/prompt.md` if it should list only current engines.
 - `refusals.json` `capability-unavailable` example names superpowers; the pattern is engine-agnostic, so it still passes S14. Change the example to `security-guidance` when setup's line changes (that entry is not an addition, so this lane leaves it).
 - `README.md` line 24 and `CLAUDE.md` line 3 name superpowers among raftkit-dev's declared dependencies: now three (security-guidance, pr-review-toolkit, frontend-design).
+
+### Story 6
+- `plugins/raftkit-dev/agents/verifier.md` is deleted, and with it `plugins/raftkit-dev/agents/`; `implement/references/simplify.md` is folded into `review.md` step 1 and deleted.
+- `raftkit-core/skills/working-agreement/references/tiers.md` row `standard` still says "Reviewers, the simplifier and the Explore survey": the simplifier is now inline in the parent. Lane core: drop "the simplifier".
+- `plugins/raftkit-dev/commands/help.md` lines 14 and 23 say "one parallel review pass" and "test-first phases": after stories 6–7 it is "inline simplify, one gate batch (one reviewer + verify, scope-check, docs scripts)" and "[AC] slices in the main thread".
+- `tokens.mjs` `runStages` still recognises `raftkit-dev:verifier` as a review marker on purpose: it measures v2.1 transcripts for the baseline.
+- `dev-flow` DF5, DF11 and DF19 are rewritten for one reviewer, the three gate scripts and the range pinned at intake.

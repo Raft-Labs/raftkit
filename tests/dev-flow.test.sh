@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Contracts of the raftkit-dev story and bug flow (implement, fix, scope-guard,
-# docs, the verifier agent) that another component, the platform, or a live
+# docs) that another component, the platform, or a live
 # template depends on. Each check pins an interface — a string another
 # component reads, a path two skills must agree on, a model a dispatch passes —
 # or the one clause that carries an acceptance criterion, never wording for its
@@ -60,13 +60,14 @@ check "DF4 scope-guard reads the out-of-scope list from the Do NOT build line" o
 
 # DF5 · every named agent dispatch in implement and fix passes a model. The
 #       frontmatter of pr-review-toolkit's agents pins opus; only the
-#       per-invocation model moves them. The five review agents must be named,
-#       so the check cannot pass on a file that dispatches nothing. The phase
-#       and fix-loop subagents dispatch at their tier's model (tiers.md).
+#       per-invocation model moves them. The one reviewer must be named, so
+#       the check cannot pass on a file that dispatches nothing, and no other
+#       toolkit agent is. The phase and fix-loop subagents dispatch at their
+#       tier's model (tiers.md).
 ok=0
-for a in code-simplifier code-reviewer type-design-analyzer silent-failure-hunter pr-test-analyzer; do
-  grep -rqF "pr-review-toolkit:$a" "$IMPL" || { echo "  review agent not dispatched: $a"; ok=1; }
-done
+grep -qF '`pr-review-toolkit:code-reviewer` with `model: "sonnet"`' "$IMPL/references/review.md" || { echo "  the reviewer is not dispatched at sonnet"; ok=1; }
+others="$(grep -rhoE 'pr-review-toolkit:[a-z-]+' "$IMPL" "$FIX" | grep -vx 'pr-review-toolkit:code-reviewer' | sort -u)"
+[[ -z "$others" ]] || { echo "  more than one reviewer: $others"; ok=1; }
 while IFS= read -r hit; do
   grep -qE 'model: "(haiku|sonnet|opus)"' <<<"$hit" || { echo "  dispatch without a model: $hit"; ok=1; }
 done < <(grep -rnE 'pr-review-toolkit:[a-z-]+|raftkit-dev:verifier' "$IMPL" "$FIX" --include='*.md')
@@ -120,21 +121,22 @@ bad="$(grep -rhoE 'verify\.mjs --only [a-z]+' "$IMPL" "$FIX" "$DEV/agents" 2>/de
 [[ -z "$bad" ]] || { echo "  unknown gate: $bad"; ok=1; }
 check "DF10 implement and fix run their gates through verify.mjs" ok $ok
 
-# DF11 · the review tail runs in raftkit-dev:verifier, a Sonnet agent that can
-#        run checks (Bash) but holds no tool that writes a file or dispatches
-V=$DEV/agents/verifier.md
-vfm() { awk 'NR==1&&$0!="---"{exit} NR>1&&$0=="---"{exit} NR>1{print}' "$V"; }
+# DF11 · the review tail is one reviewer plus scripts, no wrapper agent: the
+#        reviewer's brief carries the [AC]s, the Do NOT build line and the plan
+#        table and returns scope-guard's block; the gate batch runs the three
+#        scripts beside it; BEYOND clears only by a named human
+R=$IMPL/references/review.md
 ok=0
-[[ -f "$V" ]] || { echo "  missing $V"; ok=1; }
-if [[ -f "$V" ]]; then
-  [[ "$(vfm | sed -n 's/^name: *//p')" == verifier ]] || { echo "  name is not verifier"; ok=1; }
-  [[ "$(vfm | sed -n 's/^model: *//p')" == sonnet ]] || { echo "  model is not sonnet"; ok=1; }
-  tools="$(vfm | sed -n 's/^tools: *//p')"
-  grep -q '"Bash"' <<<"$tools" || { echo "  no Bash in tools"; ok=1; }
-  grep -qE '"(Write|Edit|MultiEdit|NotebookEdit|Agent|Task)"' <<<"$tools" && { echo "  a write or dispatch tool in: $tools"; ok=1; }
-fi
-grep -qF '`raftkit-dev:verifier`' "$IMPL/references/review.md" || { echo "  review.md does not dispatch the verifier"; ok=1; }
-check "DF11 the verifier agent is Sonnet, read-and-run only, and dispatched by review.md" ok $ok
+[[ -e "$DEV/agents/verifier.md" ]] && { echo "  the verifier agent still exists"; ok=1; }
+grep -rqF 'raftkit-dev:verifier' "$IMPL" "$FIX" "$SG" "$DOCS" && { echo "  a dev-flow skill still names the verifier"; ok=1; }
+grep -qF 'the `[AC]`s verbatim, the `Do NOT build:` line, the plan table' "$R" || { echo "  the reviewer brief lacks the [AC]s, Do NOT build or plan table"; ok=1; }
+grep -qF "It returns scope-guard's output block exactly." "$R" || { echo "  the reviewer does not return scope-guard's block"; ok=1; }
+for s in verify.mjs scope-check.mjs validate-docs.mjs; do
+  grep -qF "**\`$s\`**" "$R" || { echo "  the gate batch does not run $s"; ok=1; }
+  grep -qF "$s" "$IMPL/SKILL.md" || { echo "  implement does not invoke $s"; ok=1; }
+done
+grep -qF 'signed off by a named human' "$R" || { echo "  BEYOND clears without a named human"; ok=1; }
+check "DF11 one reviewer and three scripts make the review tail; the verifier agent is gone" ok $ok
 
 # DF12 · the plan record has one writer. Parallel phases committing the same
 #        file race on the index or conflict on merge-back, and a third file
@@ -205,17 +207,15 @@ grep -qF 'the parent cherry-picks' <<<"$build" || { echo "  no step lands a phas
 grep -qF 'baseRef: "head"' "$DEV/skills/setup/scripts/merge-settings.mjs" || { echo "  setup no longer branches worktrees from HEAD"; ok=1; }
 check "DF18 implement runs each phase in a worktree and cherry-picks its commit onto the branch" ok $ok
 
-# DF19 · the review range is pinned once, by the parent. The simplifier, four
-#        reviewers and the verifier start together; a range that fetches makes
-#        them race on refs/remotes/origin/<target> once the target has moved,
-#        and a failed fetch reads as a scope block or a failed reviewer.
+# DF19 · the review range is pinned once, at intake. The reviewer and the
+#        scripts start together; a range that fetches makes them race on
+#        refs/remotes/origin/<target> once the target has moved, and a failed
+#        fetch reads as a scope block or a failed reviewer.
 ok=0
 R=$IMPL/references/review.md
-range="$(awk '/^## Anchoring/{a=1} a&&/^```/{n++; next} a&&n==1' "$R")"
-grep -qF 'git diff <base-sha> HEAD' <<<"$range" || { echo "  reviewers are not briefed with the pinned range"; ok=1; }
-grep -q 'fetch' <<<"$range" && { echo "  the range reviewers run still fetches"; ok=1; }
-grep -qF 'The parent runs `git fetch origin <squash-target>` once' "$R" || { echo "  nobody fetches the target before the range is pinned"; ok=1; }
-check "DF19 the parent fetches once and every reviewer gets a range that does not fetch" ok $ok
+grep -qF 'Every check reads `git diff <base-sha> HEAD`, the base pinned at intake; nothing fetches again.' "$R" || { echo "  checks are not given the pinned range"; ok=1; }
+grep -q 'git fetch' "$R" && { echo "  the review tail still fetches"; ok=1; }
+check "DF19 every check in the review tail reads the range pinned at intake" ok $ok
 
 # DF20 · fix keeps separate repro and fix commits (1.11). Steps 2 and 3 run in
 #        a subagent handed only those steps verbatim, so the rule has to live in
