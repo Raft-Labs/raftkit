@@ -23,7 +23,12 @@ claude plugin install raftkit-dev@raftkit   # or raftkit-pm / raftkit-qa
 
 Installing any role plugin automatically installs `raftkit-core` alongside it. `raftkit-dev` additionally auto-installs three declared dependencies from the official Claude marketplace — `security-guidance`, `pr-review-toolkit`, `frontend-design` — the engines its skills call by name. Inside a Claude Code session, the same commands work as `/plugin marketplace add` and `/plugin install`. Verify with `claude plugin list` — you should see your role plugin, `raftkit-core`, and (for `raftkit-dev`) the three auto-installed engines.
 
-`raftkit-docs` is opt-in by design: day-to-day delivery does not need it. Org sync installs it today, along with the other four.
+`raftkit-docs` and `raftkit-hasura` are opt-in: day-to-day delivery does not need them. Install one only when a project uses it:
+
+```bash
+claude plugin install raftkit-hasura@raftkit   # Hasura projects
+claude plugin install raftkit-docs@raftkit     # the documentation design product
+```
 
 ## Plugins
 
@@ -31,11 +36,12 @@ Installing any role plugin automatically installs `raftkit-core` alongside it. `
 | --- | --- | --- |
 | `raftkit-core` | everyone (auto-installed) | The rules every skill inherits, the working agreement, telemetry hooks |
 | `raftkit-pm` | PMs | Project profile, stories (write, amend, check, size), estimation, client updates, meeting decisions, routines |
-| `raftkit-dev` | Developers | Repo setup, implement, fix, scope guard, UI, Hasura, docs parity |
+| `raftkit-dev` | Developers | Repo setup, implement, fix, scope guard, UI, docs parity |
 | `raftkit-qa` | QA | Test-case suite, per-story run sheets, bugs (file and retest) |
 | `raftkit-docs` | optional | The documentation design product: co-authoring flow, templates, diagrams, reverse-engineering |
+| `raftkit-hasura` | optional | Hasura migrations, metadata and permissions for Hasura projects |
 
-v2 ships these five plugins. PM and QA plugins target the Claude apps/Cowork runtime. The org-wide install is verified in Claude Code and Cowork: org sync installs all five RaftKit plugins, but not `raftkit-dev`'s engines, and `/raftkit-dev:setup` names any missing engine with its install command. The org install auto-updates, so anything merged to `main` reaches every user.
+The marketplace ships these six plugins. PM and QA plugins target the Claude apps/Cowork runtime. The org-wide install is verified in Claude Code and Cowork: org sync installs `raftkit-core`, `raftkit-pm`, `raftkit-dev` and `raftkit-qa`, but not the two opt-in plugins or `raftkit-dev`'s engines, and `/raftkit-dev:setup` names any missing engine with its install command. The org install auto-updates, so anything merged to `main` reaches every user.
 
 ## Getting help
 
@@ -43,7 +49,7 @@ Every plugin ships a help command — run it inside a Claude Code session:
 
 ```
 /raftkit-pm:help        # PM workflow: profile, story, estimate, status, meeting, routine
-/raftkit-dev:help       # Dev workflow: setup, implement, fix, scope-guard, ui, hasura, docs
+/raftkit-dev:help       # Dev workflow: setup, implement, fix, scope-guard, ui, docs
 /raftkit-qa:help        # QA workflow: suite, run-sheet, bug
 /raftkit-docs:help      # The optional documentation product
 /raftkit-core:help      # The shared rules and the working agreement

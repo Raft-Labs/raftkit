@@ -36,7 +36,13 @@
     {
       "name": "raftkit-docs",
       "source": "./plugins/raftkit-docs",
-      "description": "Opt-in documentation product: the co-authoring design flow, 29 adaptable templates, diagrams, reverse-engineering, scaffolding, and the project-local docs companion. Parity checks on a story stay in raftkit-dev.",
+      "description": "Opt-in documentation product: the co-authoring design flow and its interview, 9 adaptable templates, diagrams, reverse-engineering, scaffolding, and the project-local docs companion. Parity checks on a story stay in raftkit-dev.",
+      "category": "role"
+    },
+    {
+      "name": "raftkit-hasura",
+      "source": "./plugins/raftkit-hasura",
+      "description": "Opt-in Hasura skill for developers on Hasura projects: race-safe migrations with metadata and permissions, the project's own Make targets, stage queries — never edits an applied migration.",
       "category": "role"
     }
   ]

@@ -17,7 +17,8 @@ check() {
 }
 joined() { cat "$@" 2>/dev/null | tr '\n' ' ' | tr -s ' '; }
 
-H=plugins/raftkit-dev/skills/hasura
+HP=plugins/raftkit-hasura
+H=$HP/skills/hasura
 S=$H/SKILL.md
 DETECT=$H/scripts/detect-hasura.mjs
 
@@ -262,21 +263,26 @@ cenv=$(node -e 'const j=JSON.parse(require("fs").readFileSync(process.argv[1],"u
 check "HR25 several candidate roots are reported, --write needs the chosen one, and the cache's env.HASURA_ROOT steers the scaffolder from any directory" ok $?
 rm -rf "$ax"
 
-eval_count=$(find plugins/raftkit-dev/evals/hasura -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+eval_count=$(find $HP/evals/hasura -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
 [[ "${eval_count:-0}" -ge 8 ]] \
-  && ! find plugins/raftkit-dev/evals/hasura -mindepth 1 -maxdepth 1 -type d '!' -exec test -f '{}/prompt.md' ';' -print 2>/dev/null | grep -q . \
-  && ! find plugins/raftkit-dev/evals/hasura -mindepth 1 -maxdepth 1 -type d '!' -exec sh -c 'ls "$1"/graders/*.md >/dev/null 2>&1' _ '{}' ';' -print 2>/dev/null | grep -q .
+  && ! find $HP/evals/hasura -mindepth 1 -maxdepth 1 -type d '!' -exec test -f '{}/prompt.md' ';' -print 2>/dev/null | grep -q . \
+  && ! find $HP/evals/hasura -mindepth 1 -maxdepth 1 -type d '!' -exec sh -c 'ls "$1"/graders/*.md >/dev/null 2>&1' _ '{}' ';' -print 2>/dev/null | grep -q .
 check "HR14 at least eight hasura eval cases each include a prompt and grader" ok $?
 
 node - <<'NODE'
 const fs = require("fs");
-const dev = JSON.parse(fs.readFileSync("plugins/raftkit-dev/.claude-plugin/plugin.json", "utf8"));
+const m = JSON.parse(fs.readFileSync("plugins/raftkit-hasura/.claude-plugin/plugin.json", "utf8"));
 const market = JSON.parse(fs.readFileSync(".claude-plugin/marketplace.json", "utf8"));
-const a = dev.version.split(".").map(Number), min = [0,20,0];
-if ((a[0]-min[0] || a[1]-min[1] || a[2]-min[2]) < 0) process.exit(1);
-if (market.plugins.find((p) => p.name === "raftkit-dev").description !== dev.description) process.exit(1);
+const entry = market.plugins.find((p) => p.name === "raftkit-hasura");
+const deps = (m.dependencies ?? []).map((d) => (typeof d === "string" ? d : d.name));
+if (m.name !== "raftkit-hasura" || m.version !== "1.0.0" || !deps.includes("raftkit-core")) process.exit(1);
+if (!entry || entry.source !== "./plugins/raftkit-hasura" || entry.description !== m.description) process.exit(1);
 NODE
-check "HR15 manifest at least 0.20.0 with marketplace description lockstep" ok $?
+check "HR15 raftkit-hasura 1.0.0 depends on raftkit-core and is listed in the marketplace in description lockstep" ok $?
+
+[[ ! -e plugins/raftkit-dev/skills/hasura && ! -e plugins/raftkit-dev/evals/hasura ]] \
+  && ! grep -rqE 'raftkit-dev:hasura|raftkit-dev hasura' "$HP" plugins/raftkit-dev/skills
+check "HR26 Hasura ships only in raftkit-hasura, and nothing names it as a raftkit-dev skill" ok $?
 
 if [[ "$failures" -gt 0 ]]; then
   echo "$failures test(s) failed"

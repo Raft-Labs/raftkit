@@ -47,3 +47,28 @@ Out of scope: everything else — `verify.mjs`, `tests/budgets.json`, `tests/str
 - `plugins/raftkit-dev/commands/help.md`: the `setup` row says "optional PR auto-review" → "optional review-only CI"; the rename line's `pr-auto-review → setup` is history and can stay.
 - `README.md` line 67 (v1→v2 rename table, `pr-auto-review` → `raftkit-dev:setup`) is history and stays.
 - Before release (D3): check installed client repos for `.github/workflows/pr-auto-review.yml`; setup no longer owns that file, so a re-run reports it as foreign rather than updating it.
+
+### Story 14a — Hasura becomes `raftkit-hasura` (D4)
+
+- `tests/budgets.json` `skills`: rename the key `raftkit-dev/hasura` → `raftkit-hasura/hasura`, numbers unchanged (skill_md 500 / 970 tokens, total 4000 / 7390 tokens, writes true, v2 true). Measured after the move: SKILL.md 546 words, plugin 3869 words / 7390 tokens.
+- `tests/budgets.json` `plugins` / `plugin_tokens`: add `"raftkit-hasura": 4000` and `"raftkit-hasura": 7400`. `raftkit-dev` loses the Hasura skill (≈3870 words / 7390 tokens); re-measure it after all lanes merge.
+- `tests/structure.test.sh`: S15's strict loop (`for d in plugins/raftkit-core/skills/*/ ... raftkit-qa/skills/*/`) and S16's plugin list (`raftkit-core raftkit-pm raftkit-dev raftkit-qa raftkit-docs`) must add `raftkit-hasura`.
+- `plugins/raftkit-dev/.claude-plugin/plugin.json` description still says "Hasura migrations"; drop it (e.g. "Developer skills: repo setup, story implementation, bug and incident fixes, scope audit, UI, and docs parity — one stop per run.") and set the same string on the `raftkit-dev` entry in `.claude-plugin/marketplace.json` in the same edit. This lane left the marketplace entry unchanged so `scripts/validate.sh`'s lockstep check, `setup-toolchain.test.sh` S43 and the old HR15 stay green. Bump raftkit-dev's version for the removal.
+- `plugins/raftkit-dev/commands/help.md`: the description's "Hasura migrations → raftkit-dev:hasura" and the `hasura` table row must go. Until they do, `scripts/validate.sh` fails ("table references nonexistent skill(s): hasura"), so `tests/validate.test.sh` "valid repo passes" fails on this branch. A one-line pointer to `raftkit-hasura:hasura` belongs in whichever help survives story 15.
+- `plugins/raftkit-core/hooks/lib/skill-aliases.json`: the `//` note lists hasura among skills that kept their name; telemetry now reports it with `skill_plugin` = `raftkit-hasura`, so that series splits at release, as discovery-interview's did.
+- `CLAUDE.md` first line still says "one repo shipping five plugins"; it is now six (outside this lane's two CLAUDE.md edits).
+- raftkit-hasura depends on raftkit-core only. Its SKILL.md still hands schema docs to `raftkit-dev:docs` and names `raftkit-dev:setup` for activation; both stay valid while raftkit-dev is installed for every developer.
+- Org-sync default (D4): the admin removes raftkit-docs from the org-sync set and does not add raftkit-hasura. README now states that split.
+
+### Story 14b — raftkit-docs thinned (D4)
+
+- No pm, qa or dev skill loads `discovery-interview` (grep of `plugins/raftkit-{pm,qa,dev,hasura}` is empty). It is folded into `docs-product/references/interview.md` (~420 words) and the skill directory is deleted.
+- docs-product now: SKILL.md 711 words / 1313 tokens; SKILL.md + references 2929 words / 4867 tokens. References: `design-flow.md`, `interview.md`, `generation.md`, `existing-docs.md`, `scaffolding.md`, `story-adapter.md`, `bug-adapter.md` (the last two unchanged). Deleted: `stack-and-domain-recipes.md`, `stack-anti-patterns.md`, and the eight references merged into the four new ones.
+- Templates kept (9): readme, claude-md (the companion's CLAUDE.md template), architecture-overview, module, feature, api-rest, schema-dbml, adr, test-plan. Deleted (20): api-appsync, api-graphql-hasura, api-orpc, api-webhook-incoming, api-webhook-outgoing, async-job, changelog, changes-log, compliance-pii, decisions, design-guidelines, glossary, nfr, observability, rbac-matrix, schema-drizzle, schema-hasura, state-machine, tech-stack, workflow. The companion asset and its renderer are untouched.
+- `tests/budgets.json` `skills`: delete `raftkit-docs/discovery-interview`. Set `raftkit-docs/docs-product` to skill_md 720 / skill_md_tokens 1320, total 3000 / total_tokens 4900, and drop `as_is` (it is rewritten, so the shape checks now apply; its description is 52 words).
+- `tests/budgets.json` `plugins` / `plugin_tokens`: `raftkit-docs` 38110 → 9000 words, 64800 → 15300 tokens (measured 8913 / 15246; templates count here).
+- `tests/structure.test.sh` S1 fails on `raftkit-dev/hasura` and `raftkit-docs/discovery-interview` until those budget keys change (story 14a note and above); S18/S19 fail on the `fix-loop-prompt.md` entry (story 13 note). Those five are the only structure failures on this branch.
+- `plugins/raftkit-docs/commands/help.md` (outside this lane): drop the `discovery-interview` table row and the description's last sentence ("discovery-interview is the design flow's own interview contract, never run alone."); change "29 adaptable templates" to "9 adaptable templates". `scripts/validate.sh` fails on that row (after the `hasura` row in raftkit-dev's help). Verified on a scratch copy: with both rows removed, `scripts/validate.sh` passes.
+- `plugins/raftkit-core/hooks/lib/skill-aliases.json` `//` note mentions discovery-interview's earlier move; the skill is now gone, so its telemetry series ends.
+- raftkit-docs version 1.1.0 → 2.0.0 (a skill removed); marketplace description in lockstep.
+- `README.md` "Renamed in v2" section ("plus 2 in `raftkit-docs`") is history and stays.

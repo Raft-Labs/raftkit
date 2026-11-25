@@ -22,9 +22,10 @@ GIDs live in exactly one place: `plugins/raftkit-core/skills/rules/SKILL.md`. Re
 plugins/
   raftkit-core/   # rules, working-agreement, telemetry hooks
   raftkit-pm/     # profile, story, estimate, status, meeting, routine     (Cowork)
-  raftkit-dev/    # setup, implement, fix, scope-guard, ui, hasura, docs   (Claude Code)
+  raftkit-dev/    # setup, implement, fix, scope-guard, ui, docs           (Claude Code)
   raftkit-qa/     # suite, run-sheet, bug                                  (Cowork)
-  raftkit-docs/   # docs-product, discovery-interview          (opt-in by design; org sync installs it today)
+  raftkit-docs/   # docs-product                                           (opt-in; Claude Code)
+  raftkit-hasura/ # hasura                                                 (opt-in; Claude Code)
 ```
 
 Each plugin: `.claude-plugin/plugin.json` + `skills/<skill-name>/SKILL.md`. Verify manifest and marketplace schema against the current Claude Code plugin docs before scaffolding — do not trust memory.

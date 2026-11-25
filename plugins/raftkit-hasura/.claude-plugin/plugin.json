@@ -1,0 +1,11 @@
+{
+  "name": "raftkit-hasura",
+  "version": "1.0.0",
+  "description": "Opt-in Hasura skill for developers on Hasura projects: race-safe migrations with metadata and permissions, the project's own Make targets, stage queries — never edits an applied migration.",
+  "author": {
+    "name": "RaftLabs"
+  },
+  "dependencies": [
+    "raftkit-core"
+  ]
+}
