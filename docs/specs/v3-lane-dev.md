@@ -75,3 +75,9 @@ Filled in per story below; the integration agent owns `tests/budgets.json` and `
 
 ### verify.mjs comment
 - The header no longer claims the pre-push hook ignores the cache. `tests/verify.test.sh` V18 now pins only that the hook keeps `__QUALITY_SCRIPTS__` as its fallback, so lane setup's cache lookup in the hook does not break it; lane setup owns the test for the lookup itself.
+
+### D1 (gated: do not release before Ashit's sign-off)
+- Re-pin `working_agreement_sha256` in `tests/budgets.json` to `1db69ecfdcef78c823ee85cafc0392b73758fa4bcce1fefeb7b397e496a4eb30`. Until then `structure` S12 and `init-settings` (line ~313, which compares the installed block to the pinned sha) fail.
+- Body is 310 words, exactly the S13 cap.
+- `raftkit-core/skills/working-agreement/SKILL.md` line 18 says "The two-file limit in rule 2 is Ashit's value": rule 2 no longer states a number. Lane core: "Any per-phase file limit in rule 2 is the open phase-file-limit decision in this repo's CLAUDE.md." Its protocol map ("decomposition and scope reduction → 2") is still accurate enough.
+- Repo `CLAUDE.md` "Open decisions" row: "Rule 2 of the working agreement ships two files as its value" → "Rule 2 leaves the per-phase file limit open; phases are [AC] slices built in the main thread".
