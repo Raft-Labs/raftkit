@@ -6,10 +6,12 @@
 //
 // The run starts at the RaftKit skill invocation that opened it. --session
 // counts the whole session instead, to compare against Claude Code's own cost
-// ledger.
+// ledger. --stages appends cache reads, cost-weighted tokens and per-stage
+// wall-clock minutes (tokens.mjs runStages names the markers).
 //
 // Contract: exactly one line on stdout, always exit 0, writes nothing.
 //   Token total: <N> tokens (main <a>, subagents <b>; <model>: <n>, ...) — measured
+//   ... — measured; cache-read <c>, cost-weighted <w> input-token equivalents; minutes: intake <m>, ...
 //   Token total: not measured
 // Never an estimate. Never the <subagent_tokens> of a task notification, which
 // reports an agent's final context size, not what it was billed.
@@ -90,7 +92,11 @@ async function main() {
     .sort((a, b) => b[1] - a[1])
     .map(([m, n]) => `${m}: ${fmt(n)}`)
     .join(", ");
-  say(`Token total: ${fmt(t.total)} tokens (main ${fmt(t.main)}, subagents ${fmt(t.sidechain)}${models ? `; ${models}` : ""}) — measured`);
+  const line = `Token total: ${fmt(t.total)} tokens (main ${fmt(t.main)}, subagents ${fmt(t.sidechain)}${models ? `; ${models}` : ""}) — measured`;
+  if (!flags.includes("--stages")) return say(line);
+  const stages = typeof lib.runStages === "function" ? lib.runStages(transcript, sinceMs) : null;
+  const minutes = stages?.length ? stages.map((s) => `${s.name} ${(s.ms / 60000).toFixed(1)}`).join(", ") : "not measured";
+  say(`${line}; cache-read ${fmt(t.cache_read)}, cost-weighted ${fmt(t.weighted || 0)} input-token equivalents; minutes: ${minutes}`);
 }
 
 main()

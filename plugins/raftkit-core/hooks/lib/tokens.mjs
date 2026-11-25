@@ -48,7 +48,10 @@ export function tierOf(model) {
 }
 
 const num = (v) => (Number.isFinite(v) ? v : 0);
-const emptySums = () => ({ input: 0, output: 0, cache_read: 0, cache_creation: 0, billed: 0, side_billed: 0, messages: 0, by_model: {} });
+const emptySums = () => ({ input: 0, output: 0, cache_read: 0, cache_creation: 0, billed: 0, side_billed: 0, weighted: 0, messages: 0, by_model: {} });
+// Cost-weighted tokens are input-token equivalents. The price ratios are the
+// same for every current model: output 5x, cache write 1.25x, cache read 0.1x.
+const weightOf = (p) => p.i + 5 * p.o + 1.25 * p.cc + 0.1 * p.cr;
 const newPart = (side, agent = "") => ({ offset: 0, side, agent, since: 0, pending: null, sums: emptySums() });
 
 function usageOf(usage) {
@@ -85,6 +88,7 @@ function add(sums, p) {
   sums.cache_read += p.cr;
   sums.cache_creation += p.cc;
   sums.billed += billed;
+  sums.weighted = (sums.weighted || 0) + weightOf(p);
   if (p.side) sums.side_billed += billed;
   sums.messages += 1;
   if (billed > 0) sums.by_model[p.model] = (sums.by_model[p.model] || 0) + billed;
@@ -212,7 +216,7 @@ function foldSubagents(files, transcriptPath, sessionId, opts) {
 /** Totals over the parts, the open message of each included. */
 function report(main, files) {
   const out = {
-    input: 0, output: 0, cache_read: 0, cache_creation: 0,
+    input: 0, output: 0, cache_read: 0, cache_creation: 0, weighted: 0,
     main: 0, sidechain: 0, total: 0, messages: 0,
     by_model: {}, by_tier: {}, by_agent: {},
   };
@@ -223,6 +227,7 @@ function report(main, files) {
     out.output += s.output;
     out.cache_read += s.cache_read;
     out.cache_creation += s.cache_creation;
+    out.weighted += s.weighted || 0;
     out.messages += s.messages;
     if (part.side) {
       out.sidechain += s.billed;
@@ -375,6 +380,72 @@ export function runStart(transcriptPath) {
     }
   }
   return start;
+}
+
+// ------------------------------------------------------------------ stages
+// Stages split at the run's start, its first branch creation, its first docs/specs/ write, its first reviewer dispatch, full verify.mjs or scope-check.mjs, its run-tokens.mjs call, and its STOP line (else the last record).
+
+const STAGES = ["intake", "plan", "build", "review", "stop"];
+const REVIEWER = /^(pr-review-toolkit:|raftkit-dev:verifier$)/;
+
+/** Which stage a tool call opens, or "". */
+function stageOpenedBy(block) {
+  const input = block.input || {};
+  const cmd = String(input.command || "");
+  if (block.name === "Bash") {
+    if (/\bgit\s+(checkout\s+-[bB]|switch\s+-[cC])\s/.test(cmd)) return "plan";
+    if (/run-tokens\.mjs\b/.test(cmd)) return "stop";
+    if (/scope-check\.mjs\b/.test(cmd) || (/verify\.mjs\b/.test(cmd) && !/--only\b/.test(cmd))) return "review";
+    return "";
+  }
+  if (/^(Write|Edit|MultiEdit)$/.test(block.name) && /(^|\/)docs\/specs\/[^/]+\.md$/.test(String(input.file_path || ""))) return "build";
+  if (/^(Agent|Task)$/.test(block.name) && REVIEWER.test(String(input.subagent_type || ""))) return "review";
+  return "";
+}
+
+/**
+ * Wall-clock minutes per stage of the run from `sinceMs` (0: the session),
+ * main thread only. A stage whose marker never appears folds into the one
+ * before it ("intake+plan"). null when the transcript has no timestamps.
+ */
+export function runStages(transcriptPath, sinceMs = 0) {
+  let text;
+  try {
+    text = readFileSync(transcriptPath, "utf8");
+  } catch {
+    return null;
+  }
+  const opened = { intake: 0 };
+  let last = 0;
+  let stopAt = 0;
+  for (const line of text.split("\n")) {
+    const rec = parseJson(line, null);
+    const at = Date.parse(rec?.timestamp);
+    if (!rec || !Number.isFinite(at) || at < sinceMs) continue;
+    if (stopAt) break;
+    if (!opened.intake) opened.intake = at;
+    last = at;
+    const content = rec.type === "assistant" ? rec.message?.content : null;
+    for (const block of Array.isArray(content) ? content : []) {
+      if (block?.type === "text" && /^\*\*STOP\*\*/m.test(block.text || "")) stopAt = at;
+      if (block?.type !== "tool_use") continue;
+      const stage = stageOpenedBy(block);
+      const prev = Math.max(...Object.values(opened));
+      if (stage && !opened[stage] && STAGES.indexOf(stage) > STAGES.indexOf(Object.keys(opened).at(-1)) && at >= prev) opened[stage] = at;
+    }
+  }
+  if (!opened.intake) return null;
+  const end = stopAt || last;
+  const out = [];
+  for (const [i, name] of STAGES.entries()) {
+    if (opened[name] === undefined) {
+      if (out.length) out.at(-1).name += `+${name}`;
+      continue;
+    }
+    const next = STAGES.slice(i + 1).map((s) => opened[s]).find((v) => v !== undefined) ?? end;
+    out.push({ name, ms: Math.max(0, next - opened[name]) });
+  }
+  return out;
 }
 
 /** The newest transcript for a session id under Claude Code's projects dir, or "". */
