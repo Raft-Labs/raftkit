@@ -6,7 +6,7 @@ user-invocable: true
 
 # scope-guard
 
-One branch, one story, two lists. Load `raftkit-core:rules` first unless it is already in this conversation. `implement` and `fix` call this through `raftkit-dev:verifier`, which passes the `[AC]`s, the out-of-scope list, the plan record path and the range command; a standalone run fetches them itself.
+One branch, one story, two lists. Load `raftkit-core:rules` first unless it is already in this conversation. `implement` and `fix` inject the `[AC]`s, the out-of-scope list, the plan record path and a pinned base-sha into their reviewer's brief; a standalone run fetches them itself.
 
 **Fail-closed and report-only.** Every changed hunk maps to an acceptance criterion or it lands in BEYOND. The audit lists and blocks; a human removes flagged code or signs it off.
 
@@ -22,14 +22,16 @@ An unusable git state stops with the exact remedy (`git status`, then `git switc
 
 ## Audit
 
-Anchor the diff at the merge-base with the branch the PR will target, fetching that branch first so changes landing on the base after the branch diverged are never blamed on it:
+With an injected base-sha, the diff is `git diff <base-sha> HEAD`; never fetch. Standalone, anchor at the merge-base with the branch the PR will target, fetching it first so changes landing on the base are never blamed on the branch:
 
 ```
 git fetch origin <base-branch>
 git diff "$(git merge-base FETCH_HEAD HEAD)" HEAD
 ```
 
-Walk it file group by file group. Each changed item is in scope when it maps to an `[AC]`, to a clarification recorded in the plan record, or to a documentation file that record lists; `docs/specs/<branch>.md` itself is always in scope. An item matching the out-of-scope list is an automatic BEYOND flag, not a judgment. Anything else is BEYOND. Then walk the other way: an `[AC]` with no corresponding change or test is MISSING. An empty diff is not a pass — every `[AC]` is MISSING.
+When the plan record has an `[AC]` table, run `node ${CLAUDE_PLUGIN_ROOT}/scripts/scope-check.mjs --base <base-sha>` first. Its flags are candidates to judge, never the verdict.
+
+Walk the diff hunk by hunk. A hunk is in scope when it serves an `[AC]`, a clarification recorded in the plan record, or a documentation file that record lists; `docs/specs/<branch>.md` itself is always in scope. A hunk matching the out-of-scope list is an automatic BEYOND flag, not a judgment. Anything else is BEYOND, even inside a planned file. Then walk the other way: an `[AC]` with no corresponding change or test is MISSING. An empty diff is not a pass — every `[AC]` is MISSING.
 
 ## Output
 
@@ -46,4 +48,4 @@ Scope-guard: clean — 0 beyond, 0 missing
 
 Otherwise the PR is blocked with the item counts. A BEYOND item clears by removal or by a logged sign-off naming the item, the reason and the developer; the item stays listed as signed off, never dropped. A MISSING item clears by being built or explained; when the story itself is wrong, the PM settles it through `raftkit-pm:story` amend.
 
-This skill never judges code quality: that is the review fan-out. It never edits the diff.
+This skill never judges code quality: that is the review. It never edits the diff.

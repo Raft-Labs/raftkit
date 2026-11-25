@@ -41,3 +41,8 @@ Filled in per story below; the integration agent owns `tests/budgets.json` and `
 - `run-tokens.mjs` without `--stages` prints the byte-identical v2.1 line, so `tests/shunt.test.sh` §8/§8b stays green. If lane core deletes `shunt.test.sh` with the Read shunt (story 3), move its §8 token-accounting and §8b run-tokens cases into `tests/run-tokens.test.sh` rather than dropping them.
 - `tokens.mjs` reports gain a `weighted` field (cost-weighted input-token equivalents); telemetry stop events carry it inside `tokens` (additive).
 - implement and fix STOPs now quote `run-tokens.mjs ${CLAUDE_SESSION_ID} --stages`; DF9 still matches.
+
+### Story 4
+- New suite `tests/scope-check.test.sh` with fixtures in `tests/fixtures/scope-check/`; new script `plugins/raftkit-dev/scripts/scope-check.mjs` (exit 0 clean, 1 flags, 2 not checked).
+- New reference `implement/references/plan.md` (the plan-record template) counts toward the implement `total` budget; final numbers are under "Budgets" below.
+- `dev-flow` DF22 pins the plan template's table header and hash comment to what `scope-check.mjs` parses.

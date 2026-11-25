@@ -221,6 +221,18 @@ check "DF20 fix's step 3 commits the repro test alone and the fix as a separate 
 grep -m1 '^1\. \*\*Intake' "$IMPL/SKILL.md" | grep -qF '(`no typecheck script` is not red)'
 check "DF21 implement's intake does not stop on a repo with no typecheck script" ok $?
 
+# DF22 · the plan record implement writes is the one scope-check.mjs parses:
+#        the template's table header and hash comment are what the script
+#        reads, and scope-guard runs the script on the injected base-sha
+PLAN=$IMPL/references/plan.md
+ok=0
+grep -qxF '| # | [AC] | Test file | Source files |' "$PLAN" || { echo "  plan.md has no [AC] table header"; ok=1; }
+grep -qxF '<!-- plan-table sha256: <hash> -->' "$PLAN" || { echo "  plan.md has no hash comment"; ok=1; }
+grep -qF 'plan-table sha256:' "$DEV/scripts/scope-check.mjs" || { echo "  scope-check reads no hash comment"; ok=1; }
+grep -qF 'node ${CLAUDE_PLUGIN_ROOT}/scripts/scope-check.mjs --base <base-sha>' "$SG/SKILL.md" || { echo "  scope-guard does not pre-filter with scope-check"; ok=1; }
+grep -qF 'With an injected base-sha, the diff is `git diff <base-sha> HEAD`; never fetch.' "$SG/SKILL.md" || { echo "  scope-guard fetches despite an injected base-sha"; ok=1; }
+check "DF22 implement's plan record is the table scope-check parses, and scope-guard runs it" ok $ok
+
 echo
 echo "dev-flow: $failures failure(s)"
 [[ "$failures" -eq 0 ]]
